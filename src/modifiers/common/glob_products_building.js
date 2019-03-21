@@ -246,7 +246,7 @@ class ProductsBuilding {
       const blank_clr = $p.cat.clrs.get();
       furn.furn_set.get_spec(contour, furn_cache).forEach((row) => {
         const elm = {elm: -contour.cnstr, clr: blank_clr};
-        const row_spec = new_spec_row({elm, row_base: row, origin: row.origin, spec, ox});
+        const row_spec = new_spec_row({elm, row_base: row, origin: row.origin, specify: row.specify, spec, ox});
 
         if(row.is_procedure_row) {
           row_spec.elm = row.handle_height_min;
@@ -711,7 +711,7 @@ class ProductsBuilding {
       base_spec(scheme);
 
       // сворачиваем
-      spec.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
+      spec.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,specify,dop', 'qty,totqty,totqty1');
 
 
       //console.timeEnd("base_spec");
@@ -841,7 +841,7 @@ class ProductsBuilding {
    * @param [origin]
    * @return {TabularSectionRow.cat.characteristics.specification}
    */
-  static new_spec_row({row_spec, elm, row_base, nom, origin, spec, ox}) {
+  static new_spec_row({row_spec, elm, row_base, nom, origin, specify, spec, ox}) {
     if(!row_spec) {
       // row_spec = this.ox.specification.add();
       row_spec = spec.add();
@@ -861,6 +861,9 @@ class ProductsBuilding {
     row_spec.elm = elm.elm;
     if(origin) {
       row_spec.origin = origin;
+    }
+    if(specify) {
+      row_spec.specify = specify;
     }
     return row_spec;
   }
