@@ -58,8 +58,10 @@ class CalcOrderList extends Component {
       })
       .then((data) => {
         data.docs.forEach((doc) => {
-          doc.ref = doc._id.split('|')[1];
-          delete doc._id;
+          if(!doc.ref) {
+            doc.ref = doc._id.split('|')[1];
+            delete doc._id;
+          }
         });
         return data;
       });

@@ -33,6 +33,9 @@ module.exports = function settings(prm) {
     // расположение couchdb для nodejs
     couch_local: env.COUCHLOCAL || 'http://cou221:5984/wb_',
 
+    // расположение адаптера postgres
+    pg_path: env.PGPATH || "/r/postgres/wb_",
+
     // фильтр для репликации с CouchDB не используем
     pouch_filter: {
       meta: 'auth/meta',

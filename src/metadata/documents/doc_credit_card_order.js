@@ -7,7 +7,12 @@
  * Created 10.10.2016
  */
 
-// перед записью рассчитываем итоги
-$p.DocCredit_card_order.prototype.before_save = function () {
-  this.doc_amount = this.payment_details.aggregate([], 'amount');
-};
+
+import {FrmObj, before_save} from './common';
+
+export default function ({doc, DocCredit_card_order}) {
+
+  DocCredit_card_order.prototype.before_save = before_save;
+
+  doc.credit_card_order.FrmObj = FrmObj;
+}

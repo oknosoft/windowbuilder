@@ -76,8 +76,8 @@ class AdditionsGroup extends React.Component {
     }
   };
 
-  onRowUpdated = (e, row) => {
-    if(e && e.updated.hasOwnProperty('inset')){
+  onRowUpdated = (updated, row) => {
+    if(updated && updated.hasOwnProperty('inset')){
       const {meta} = this.props;
       $p.cat.clrs.selection_exclude_service(meta.fields.clr, row.inset);
       if(!row.clr.empty()){

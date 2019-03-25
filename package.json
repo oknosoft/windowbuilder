@@ -32,11 +32,12 @@
     "metadata-abstract-ui": "2.0.18-beta.4",
     "metadata-core": "2.0.18-beta.4",
     "metadata-dhtmlx": "2.0.18-beta.4",
-    "metadata-external": "2.0.18-beta.4",
     "metadata-pouchdb": "2.0.18-beta.4",
     "metadata-react": "2.0.18-beta.4",
     "metadata-redux": "2.0.18-beta.4",
-    "paper-jsdom-canvas": "^0.12.0"
+    "paper-jsdom-canvas": "^0.12.0",
+    "react-data-grid": "^6.1.0-0",
+    "react-data-grid-addons": "^6.1.0-0"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
@@ -49,7 +50,7 @@
     "chalk": "^2.4.2",
     "css-loader": "0.28.11",
     "dotenv": "^6.2.0",
-    "eslint": "^5.14.1",
+    "eslint": "^5.15.3",
     "eslint-config-react-app": "^2.1.0",
     "eslint-loader": "^2.1.2",
     "eslint-plugin-babel": "^5.3.0",
@@ -77,15 +78,15 @@
     "postcss-loader": "^3.0",
     "raf": "^3.4.1",
     "raw-loader": "^0.5.1",
-    "react": "^16.8.3",
+    "react": "^16.8.5",
     "react-dev-utils": "^5.0.3",
-    "react-dom": "^16.8.3",
+    "react-dom": "^16.8.5",
     "rimraf": "^2.6.3",
     "style-loader": "^0.23.1",
     "sw-precache-webpack-plugin": "^0.11.5",
     "url-loader": "^1.1.2",
     "webpack": "^3.12.0",
-    "webpack-dev-server": "^2.11.3",
+    "webpack-dev-server": "^2.11.5",
     "webpack-manifest-plugin": "^2.0.4"
   },
   "scripts": {
