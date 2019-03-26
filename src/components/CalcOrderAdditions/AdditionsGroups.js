@@ -43,6 +43,7 @@ export default class AdditionsGroups extends React.Component {
     fill_data.call(this, this.props.dialog.ref);
     this.fill_schemas(alasql_schemas());
     $p.dp.buyers_order.on('update', this.inset_change);
+    this.portalTarget = this.context.dnr.portalTarget();
   }
 
   componentWillUnmount() {
@@ -58,7 +59,7 @@ export default class AdditionsGroups extends React.Component {
   }
 
   render() {
-    const {items, components, dp} = this;
+    const {items, components, dp, portalTarget} = this;
     const {schemas} = this.state || {};
 
     return <List>
@@ -75,6 +76,7 @@ export default class AdditionsGroups extends React.Component {
             group={group}
             {...cmp}
             scheme={schemas.get(group)}
+            portalTarget={portalTarget}
           />;
 
         })
@@ -91,5 +93,9 @@ export default class AdditionsGroups extends React.Component {
 AdditionsGroups.propTypes = {
   dialog: PropTypes.object.isRequired,
 };
+
+AdditionsGroups.contextTypes = {
+  dnr: PropTypes.object
+}
 
 
