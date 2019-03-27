@@ -87,7 +87,6 @@ export default class AdditionsGroups extends React.Component {
       }
     </List>;
   }
-
 }
 
 AdditionsGroups.propTypes = {
@@ -96,6 +95,6 @@ AdditionsGroups.propTypes = {
 
 AdditionsGroups.contextTypes = {
   dnr: PropTypes.object
-}
+};
 
 

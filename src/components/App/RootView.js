@@ -82,7 +82,7 @@ class RootView extends Component {
             <DumbScreen {...props} />
             :
             <Router history={history}>
-              <Route component={AppView}/>
+              <AppView history={history} location={history.location} />
             </Router>)
           :
           <BrowserCompatibility/>

@@ -1,6 +1,6 @@
 {
   "name": "windowbuilder",
-  "version": "2.0.243",
+  "version": "2.0.244",
   "description": "Order dealer for windows and stained glass",
   "repository": {
     "type": "git",
@@ -29,12 +29,12 @@
     "@jscad/openjscad": "^1.6.1",
     "dxf-writer": "^1.2.0",
     "genetic-cutting": "github:oknosoft/genetic-cutting",
-    "metadata-abstract-ui": "2.0.18-beta.4",
-    "metadata-core": "2.0.18-beta.4",
-    "metadata-dhtmlx": "2.0.18-beta.4",
-    "metadata-pouchdb": "2.0.18-beta.4",
-    "metadata-react": "2.0.18-beta.4",
-    "metadata-redux": "2.0.18-beta.4",
+    "metadata-abstract-ui": "2.0.18-beta.5",
+    "metadata-core": "2.0.18-beta.5",
+    "metadata-dhtmlx": "2.0.18-beta.5",
+    "metadata-pouchdb": "2.0.18-beta.5",
+    "metadata-react": "2.0.18-beta.5",
+    "metadata-redux": "2.0.18-beta.5",
     "paper-jsdom-canvas": "^0.12.0",
     "react-data-grid": "^6.1.0-0",
     "react-data-grid-addons": "^6.1.0-0"
@@ -94,7 +94,8 @@
     "build": "node scripts/build.js && node scripts/appcache.js",
     "test": "node scripts/test.js --env=jsdom",
     "meta:prebuild": "node scripts/meta.prebuild.js",
-    "meta:link": "node scripts/meta.link.js"
+    "meta:link": "node scripts/meta.link.js",
+    "rm-old-router": "rm ./node_modules/react-router-redux/node_modules/react-router"
   },
   "jest": {
     "collectCoverageFrom": [
