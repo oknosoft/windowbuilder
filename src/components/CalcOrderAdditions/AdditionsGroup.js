@@ -118,7 +118,7 @@ class AdditionsGroup extends React.Component {
   render() {
 
     const {props, state: {count}, handleAdd, handleRemove} = this;
-    const {Renderer, group, dp, classes, scheme, meta, portalTarget} = props;
+    const {Renderer, group, dp, classes, scheme, meta} = props;
     const {ref, presentation} = group;
     const style = {flex: 'initial'};
     if(count) {
@@ -149,7 +149,6 @@ class AdditionsGroup extends React.Component {
             meta={meta}
             onRowUpdated={this.onRowUpdated}
             onCellSelected={this.onCellSelected}
-            portalTarget={portalTarget}
           />
         </div>
       </Collapse>
