@@ -7,7 +7,11 @@
  * Created 10.10.2016
  */
 
-// перед записью рассчитываем итоги
-$p.DocDebit_cash_order.prototype.before_save = function () {
-  this.doc_amount = this.payment_details.aggregate([], 'amount');
-};
+import {FrmObj, before_save} from './common';
+
+export default function ({doc, DocDebit_cash_order}) {
+
+  DocDebit_cash_order.prototype.before_save = before_save;
+
+  doc.debit_cash_order.FrmObj = FrmObj;
+}

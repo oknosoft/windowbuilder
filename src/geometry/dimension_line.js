@@ -177,10 +177,16 @@ class DimensionLine extends paper.Group {
           }
       });
       project.move_points(delta, false);
-      setTimeout(function () {
-        this.deselect_all_points(true);
-        this.register_update();
-      }.bind(project), 200);
+      if(project._attr._from_service) {
+        project.deselect_all_points(true);
+        project.register_update();
+      }
+      else {
+        setTimeout(function () {
+          this.deselect_all_points(true);
+          this.register_update();
+        }.bind(project), 200);
+      }
     }
 
   }
@@ -284,15 +290,15 @@ class DimensionLine extends paper.Group {
     if(align == $p.enm.text_aligns.left) {
       children.text.position = bs
         .add(path.getTangentAt(0).multiply(font_size))
-        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
+        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.9 : 2)));
     }
     else if(align == $p.enm.text_aligns.right) {
       children.text.position = es
         .add(path.getTangentAt(0).multiply(-font_size))
-        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
+        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.9 : 2)));
     }
     else {
-      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
+      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.9 : 2)));
       if(length < 20) {
         children.text.position = children.text.position.add(path.getTangentAt(0).multiply(font_size / 3));
       }

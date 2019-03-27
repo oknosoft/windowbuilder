@@ -117,11 +117,11 @@ class Pricing {
       const value = prices[ref];
 
       if (!onom || !onom._data){
-        $p.record_log({
-          class: 'error',
-          note,
-          obj: {nom: ref, value}
-        });
+        // $p.record_log({
+        //   class: 'error',
+        //   note,
+        //   obj: {nom: ref, value}
+        // });
         continue;
       }
       onom._data._price = value;
@@ -140,6 +140,12 @@ class Pricing {
   sync_local(pouch, step = 0) {
     return pouch.remote.templates.get(`_local/price_${step}`)
       .then((remote) => {
+
+        if(pouch.remote.templates === pouch.local.templates) {
+          this.build_cache_local(remote);
+          return this.sync_local(pouch, ++step);
+        }
+
         return pouch.local.templates.get(`_local/price_${step}`)
           .catch(() => ({}))
           .then((local) => {
@@ -158,15 +164,16 @@ class Pricing {
 
             // грузим цены из remote
             this.build_cache_local(remote);
-
             return this.sync_local(pouch, ++step);
           })
       })
       .catch((err) => {
         if(step !== 0) {
-          pouch.local.templates.get(`_local/price_${step}`)
-            .then((local) => pouch.local.templates.remove(local))
-            .catch(() => null);
+          if(pouch.remote.templates !== pouch.local.templates) {
+            pouch.local.templates.get(`_local/price_${step}`)
+              .then((local) => pouch.local.templates.remove(local))
+              .catch(() => null);
+          }
           return true;
         }
       });
@@ -174,14 +181,14 @@ class Pricing {
 
   // из локальной базы или direct
   by_local(step = 0) {
-    const {pouch} = $p.adapters;
+    const {adapters: {pouch}, job_prm} = $p;
 
     if(!pouch.local.templates) {
       return Promise.resolve(false);
     }
 
     // если мы в idb, но подключены к серверу, тянем цены оттуда
-    const pre = step === 0 && pouch.local.templates.adapter !== 'http' && pouch.authorized ?
+    const pre = step === 0 && (pouch.local.templates.adapter !== 'http' || (job_prm.user_node && job_prm.user_node.templates)) && pouch.authorized ?
       pouch.remote.templates.info()
         .then(() => this.sync_local(pouch))
         .catch((err) => null)

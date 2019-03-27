@@ -120,7 +120,7 @@ class Scheme extends paper.Project {
    */
   _dp_listener(obj, fields) {
 
-    const {_attr, ox, _scope} = this;
+    const {_attr, ox} = this;
 
     if(_attr._loading || _attr._snapshot || obj != this._dp) {
       return;
@@ -148,7 +148,7 @@ class Scheme extends paper.Project {
       obj.sys.refill_prm(ox, 0, true);
 
       // обновляем свойства изделия и створки
-      _scope.eve.emit_async('rows', ox, {extra_fields: true, params: true});
+      obj._manager.emit_async('rows', obj, {extra_fields: true});
 
       // информируем контуры о смене системы, чтобы пересчитать материал профилей и заполнений
       for (const contour of this.contours) {
@@ -472,6 +472,11 @@ class Scheme extends paper.Project {
     }
 
     _attr._loading = true;
+
+    if(from_service) {
+      _attr._from_service = true;
+    }
+
     this.ox = null;
     this.clear();
 
@@ -518,7 +523,7 @@ class Scheme extends paper.Project {
     let elm;
     if(attr.elm > 0) {
       elm = this.getItem({class: BuilderElement, elm: attr.elm});
-      elm.draw_fragment && elm.draw_fragment();
+      elm && elm.draw_fragment && elm.draw_fragment();
     }
     else if(attr.elm < 0) {
       const cnstr = -attr.elm;
@@ -666,7 +671,7 @@ class Scheme extends paper.Project {
    */
   clear() {
     const {_attr} = this;
-    const pnames = '_bounds,_update_timer,_loading,_snapshot,_silent';
+    const pnames = '_bounds,_update_timer,_loading,_snapshot,_silent,_from_service';
     for (let fld in _attr) {
       if(!pnames.match(fld)) {
         delete _attr[fld];
@@ -784,11 +789,9 @@ class Scheme extends paper.Project {
     if(other.length && Math.abs(delta.x) > 1) {
       this.do_align(auto_align, profiles);
     }
-    else {
-      // иначе перерисовываем контуры
-      setTimeout(() => {
-        this.contours.forEach(l => l.redraw());
-      }, 100);
+    // иначе перерисовываем контуры
+    else if(!this._attr._from_service) {
+      setTimeout(() => this.contours.forEach(l => l.redraw()), 70);
     }
 
     _dp._manager.emit_async('update', {}, {x1: true, x2: true, y1: true, y2: true, a1: true, a2: true, cnn1: true, cnn2: true, info: true});
@@ -826,7 +829,8 @@ class Scheme extends paper.Project {
     // вызываем метод save_coordinates в слое соединителей
     this.l_connective.save_coordinates();
 
-    $p.products_building.recalc(this, attr);
+    // пересчет спецификации и цен
+    return $p.products_building.recalc(this, attr);
 
   }
 
@@ -877,10 +881,13 @@ class Scheme extends paper.Project {
    * @method get_svg
    * @param [attr] {Object} - указывает видимость слоёв и элементов, используется для формирования эскиза части изделия
    */
-  get_svg(attr) {
+  get_svg(attr = {}) {
     this.deselectAll();
-
-    const svg = this.exportSVG();
+    const options = attr.export_options || {};
+    if(!options.precision) {
+      options.precision = 1;
+    }
+    const svg = this.exportSVG(options);
     const bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
 
     svg.setAttribute('x', bounds.x);

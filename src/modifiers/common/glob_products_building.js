@@ -175,7 +175,7 @@ class ProductsBuilding {
       const {cnn_type, specification, selection_params} = cnn;
       const {ii, xx, acn} = $p.enm.cnn_types;
 
-      specification.each((row) => {
+      specification.forEach((row) => {
         const {nom} = row;
         if(!nom || nom.empty() || nom == art1 || nom == art2) {
           return;
@@ -244,9 +244,9 @@ class ProductsBuilding {
 
       // получаем спецификацию фурнитуры и переносим её в спецификацию изделия
       const blank_clr = $p.cat.clrs.get();
-      furn.furn_set.get_spec(contour, furn_cache).each((row) => {
+      furn.furn_set.get_spec(contour, furn_cache).forEach((row) => {
         const elm = {elm: -contour.cnstr, clr: blank_clr};
-        const row_spec = new_spec_row({elm, row_base: row, origin: row.origin, spec, ox});
+        const row_spec = new_spec_row({elm, row_base: row, origin: row.origin, specify: row.specify, spec, ox});
 
         if(row.is_procedure_row) {
           row_spec.elm = row.handle_height_min;
@@ -285,7 +285,7 @@ class ProductsBuilding {
       }
 
       // проверка геометрии
-      furn.open_tunes.each((row) => {
+      furn.open_tunes.forEach((row) => {
         const elm = contour.profile_by_furn_side(row.side, cache);
         const prev = contour.profile_by_furn_side(row.side === 1 ? side_count : row.side - 1, cache);
         const next = contour.profile_by_furn_side(row.side === side_count ? 1 : row.side + 1, cache);
@@ -711,7 +711,7 @@ class ProductsBuilding {
       base_spec(scheme);
 
       // сворачиваем
-      spec.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
+      spec.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,specify,dop', 'qty,totqty,totqty1');
 
 
       //console.timeEnd("base_spec");
@@ -738,6 +738,11 @@ class ProductsBuilding {
         scheme.notify(scheme, 'scheme_snapshot', attr);
       }
 
+      function finish() {
+        delete scheme._attr._saving;
+        ox._data._loading = false;
+      }
+
       // информируем мир о записи продукции
       if(attr.save) {
 
@@ -749,9 +754,10 @@ class ProductsBuilding {
           ox.svg = scheme.get_svg();
         }
 
-        ox.save().then(() => {
+        return ox.save().then(() => {
           attr.svg !== false && $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
-          delete scheme._attr._saving;
+          finish();
+
           ox.calc_order.characteristic_saved(scheme, attr);
           scheme._scope && scheme._scope.eve.emit('characteristic_saved', scheme, attr);
 
@@ -759,7 +765,7 @@ class ProductsBuilding {
           // console.profileEnd();
         })
           .then(() => {
-            if(scheme._scope || attr.close) {
+            if(!scheme._attr._from_service && (scheme._scope || attr.close)) {
               return new Promise((resolve, reject) => {
                 setTimeout(() => ox.calc_order._modified && ox.calc_order.save()
                   .then(resolve)
@@ -772,7 +778,7 @@ class ProductsBuilding {
             // console.timeEnd("save");
             // console.profileEnd();
 
-            delete scheme._attr._saving;
+            finish();
 
             if(err.msg && err.msg._shown) {
               return;
@@ -794,10 +800,8 @@ class ProductsBuilding {
           });
       }
       else {
-        delete scheme._attr._saving;
+        return Promise.resolve(finish());
       }
-
-      ox._data._loading = false;
 
     };
 
@@ -837,7 +841,7 @@ class ProductsBuilding {
    * @param [origin]
    * @return {TabularSectionRow.cat.characteristics.specification}
    */
-  static new_spec_row({row_spec, elm, row_base, nom, origin, spec, ox}) {
+  static new_spec_row({row_spec, elm, row_base, nom, origin, specify, spec, ox}) {
     if(!row_spec) {
       // row_spec = this.ox.specification.add();
       row_spec = spec.add();
@@ -857,6 +861,9 @@ class ProductsBuilding {
     row_spec.elm = elm.elm;
     if(origin) {
       row_spec.origin = origin;
+    }
+    if(specify) {
+      row_spec.specify = specify;
     }
     return row_spec;
   }

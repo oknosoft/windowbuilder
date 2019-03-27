@@ -27,7 +27,7 @@ $p.cat.production_params.__define({
 					pmgr = $p[at[0]][at[1]];
 					if(pmgr){
 						if(pmgr.class_name=="enm.open_directions")
-							pmgr.each(function(v){
+							pmgr.forEach(function(v){
 								if(v.name!=$p.enm.tso.folding)
 									res.push({value: v.ref, text: v.synonym});
 							});
@@ -105,7 +105,7 @@ $p.CatProduction_params.prototype.__define({
 			else if(!Array.isArray(elm_types))
 				elm_types = [elm_types];
 
-			this.elmnts.each((row) => {
+			this.elmnts.forEach((row) => {
 				if(!row.nom.empty() && elm_types.indexOf(row.elm_type) != -1 &&
 					(by_default == "rows" || !__noms.some((e) => row.nom == e.nom)))
 					__noms.push(row);

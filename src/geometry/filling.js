@@ -303,7 +303,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     const {bounds} = path;
     _attr._text.content = this.formula();
 
-    const textBounds = bounds.scale(0.9);
+    const textBounds = bounds.scale(0.88);
     textBounds.width = textBounds.width > maxTextWidth ? maxTextWidth : textBounds.width;
     textBounds.height = textBounds.height > maxTextWidth ? maxTextWidth : textBounds.height;
 
@@ -311,15 +311,16 @@ class Filling extends AbstractFilling(BuilderElement) {
       const turn = textBounds.width * 1.5 < textBounds.height;
       if(turn){
         textBounds.width = elm_font_size;
+        _attr._text.rotation = 270;
       }
       else{
         textBounds.height = elm_font_size;
+        _attr._text.rotation = 0;
       }
       _attr._text.fitBounds(textBounds);
       _attr._text.point = turn
         ? bounds.bottomRight.add([-fontSize, -fontSize * 0.6])
         : bounds.bottomLeft.add([fontSize * 0.6, -fontSize]);
-      _attr._text.rotation = turn ? 270 : 0;
     }
     else{
       textBounds.height = elm_font_size;

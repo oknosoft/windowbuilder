@@ -133,18 +133,18 @@ const items = [
         need_meta: true,
         need_user: true,
       },
-      {
-        text: 'Банк приход',
-        navigate: '/doc.debit_bank_order/list',
-        need_meta: true,
-        need_user: true,
-      },
-      {
-        text: 'Банк расход',
-        navigate: '/doc.credit_bank_order/list',
-        need_meta: true,
-        need_user: true,
-      },
+      // {
+      //   text: 'Банк приход',
+      //   navigate: '/doc.debit_bank_order/list',
+      //   need_meta: true,
+      //   need_user: true,
+      // },
+      // {
+      //   text: 'Банк расход',
+      //   navigate: '/doc.credit_bank_order/list',
+      //   need_meta: true,
+      //   need_user: true,
+      // },
       {
         text: 'Поступление товаров услуг',
         navigate: '/doc.purchase/list',

@@ -1843,7 +1843,17 @@ class Contour extends AbstractFilling(paper.Layer) {
     }, (prow) => {
       const {param} = prow;
       const links = param.params_links({grid: {selection: {cnstr}}, obj: prow});
-      const hide = links.some((link) => link.hide);
+      // вычисляемые скрываем всегда
+      let hide = !param.show_calculated && param.is_calculated;
+      // если для параметра есть связи - сокрытие по связям
+      if(!hide){
+        if(links.length) {
+          hide = links.some((link) => link.hide);
+        }
+        else {
+          hide = prow.hide;
+        }
+      };
 
       // проверим вхождение значения в доступные и при необходимости изменим
       if (links.length && param.linked_values(links, prow)) {

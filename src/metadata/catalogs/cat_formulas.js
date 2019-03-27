@@ -16,11 +16,17 @@ exports.CatFormulasManager = class CatFormulasManager extends Object {
   }
 
   load_formulas() {
-    const {md, utils} = this._owner.$p;
+    const {md, utils, wsql} = this._owner.$p;
+    const {isNode, isBrowser} = wsql.alasql.utils;
     const parents = [this.predefined('printing_plates'), this.predefined('modifiers')];
     const filtered = [];
     this.forEach((v) => {
-      !v.disabled && parents.indexOf(v.parent) !== -1 && filtered.push(v)
+      if(!v.disabled && parents.includes(v.parent)){
+        if(v.context === 1 && !isBrowser || v.context === 2 && !isNode) {
+          return;
+        }
+        filtered.push(v);
+      }
     });
     filtered.sort((a, b) => a.sorting_field - b.sorting_field).forEach((formula) => {
       // формируем списки печатных форм и внешних обработок

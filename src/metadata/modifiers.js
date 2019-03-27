@@ -22,6 +22,11 @@ import common from './common/index';
 import export_dxf from '../openjscad/export_dxf';
 
 export default function ($p) {
+
+  // правим состав полей прочистки
+  const {_sys_fields} = $p.classes.Meta;
+  _sys_fields.push.apply(_sys_fields, ['partner', 'department', 'organization', 'obj_delivery_state']);
+
   // catalogs($p);
   // documents($p);
   // chartscharacteristics($p);

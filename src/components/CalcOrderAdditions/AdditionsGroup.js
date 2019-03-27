@@ -76,8 +76,8 @@ class AdditionsGroup extends React.Component {
     }
   };
 
-  onRowUpdated = (e, row) => {
-    if(e && e.updated.hasOwnProperty('inset')){
+  onRowUpdated = (updated, row) => {
+    if(updated && updated.hasOwnProperty('inset')){
       const {meta} = this.props;
       $p.cat.clrs.selection_exclude_service(meta.fields.clr, row.inset);
       if(!row.clr.empty()){
@@ -118,7 +118,7 @@ class AdditionsGroup extends React.Component {
   render() {
 
     const {props, state: {count}, handleAdd, handleRemove} = this;
-    const {Renderer, group, dp, classes, scheme, meta} = props;
+    const {Renderer, group, dp, classes, scheme, meta, portalTarget} = props;
     const {ref, presentation} = group;
     const style = {flex: 'initial'};
     if(count) {
@@ -149,6 +149,7 @@ class AdditionsGroup extends React.Component {
             meta={meta}
             onRowUpdated={this.onRowUpdated}
             onCellSelected={this.onCellSelected}
+            portalTarget={portalTarget}
           />
         </div>
       </Collapse>

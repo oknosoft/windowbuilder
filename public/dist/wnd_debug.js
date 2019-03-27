@@ -238,7 +238,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
       }
       else if(this.sys.production.count() > 1) {
-        this.sys.production.each((row) => {
+        this.sys.production.forEach((row) => {
 
           if(setted) {
             return false;
@@ -328,7 +328,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     return project.load(this, true)
       .then(() => {
 
-        project.save_coordinates({save: true, svg: false});
+        project.save_coordinates(Object.assign({save: true, svg: false}, attr));
 
       })
       .then(() => {
@@ -842,7 +842,7 @@ $p.cat.clrs.__define({
 
       attr.toolbar_click = function (btn_id, wnd){
 
-        if(btn_id=="btn_select" && !eclr.clr_in.empty() && !eclr.clr_out.empty()) {
+        if(btn_id == 'btn_select' && !eclr.clr_in.empty() && !eclr.clr_out.empty()) {
 
           if(eclr.clr_in == eclr.clr_out) {
             pwnd.on_select.call(pwnd, eclr.clr_in);
@@ -858,7 +858,7 @@ $p.cat.clrs.__define({
               $p.cat.clrs.create({
                 clr_in: eclr.clr_in,
                 clr_out: eclr.clr_out,
-                name: eclr.clr_in.name + " \\ " + eclr.clr_out.name,
+                name: `${eclr.clr_in.name} \\ ${eclr.clr_out.name}`,
                 parent: $p.job_prm.builder.composite_clr_folder
               })
                 .then((obj) => obj.register_on_server())
@@ -878,57 +878,57 @@ $p.cat.clrs.__define({
 
       const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
 
-			function get_option_list(selection, val) {
+      function get_option_list(selection, val) {
 
-				selection.clr_in = $p.utils.blank.guid;
-				selection.clr_out = $p.utils.blank.guid;
+        selection.clr_in = $p.utils.blank.guid;
+        selection.clr_out = $p.utils.blank.guid;
 
-				if(attr.selection){
-					attr.selection.some((sel) => {
-						for(var key in sel){
-							if(key == "ref"){
-								selection.ref = sel.ref;
-								return true;
-							}
-						}
-					});
-				}
+        if(attr.selection) {
+          attr.selection.some((sel) => {
+            for (var key in sel) {
+              if(key == 'ref') {
+                selection.ref = sel.ref;
+                return true;
+              }
+            }
+          });
+        }
 
-				return this.constructor.prototype.get_option_list.call(this, selection, val);
-			}
+        return this.constructor.prototype.get_option_list.call(this, selection, val);
+      }
 
 			return (wnd instanceof Promise ? wnd : Promise.resolve(wnd))
 				.then((wnd) => {
 
 					const tb_filter = wnd.elmnts.filter;
 
-					tb_filter.__define({
-						get_filter: {
-							value() {
-								const res = {
-									selection: []
-								};
-								if(clr_in.getSelectedValue())
-									res.selection.push({clr_in: clr_in.getSelectedValue()});
-								if(clr_out.getSelectedValue())
-									res.selection.push({clr_out: clr_out.getSelectedValue()});
-								if(res.selection.length)
-									res.hide_tree = true;
-								return res;
-							}
-						}
-					});
+          tb_filter.__define({
+            get_filter: {
+              value() {
+                const res = {
+                  selection: []
+                };
+                if(clr_in.getSelectedValue()) {
+                  res.selection.push({clr_in: clr_in.getSelectedValue()});
+                }
+                if(clr_out.getSelectedValue()) {
+                  res.selection.push({clr_out: clr_out.getSelectedValue()});
+                }
+                if(res.selection.length) {
+                  res.hide_tree = true;
+                }
+                return res;
+              }
+            }
+          });
 
-					wnd.attachEvent("onClose", () => {
-
-						clr_in.unload();
-						clr_out.unload();
-
-						eclr.clr_in = $p.utils.blank.guid;
-						eclr.clr_out = $p.utils.blank.guid;
-
-						return true;
-					});
+          wnd.attachEvent('onClose', () => {
+            clr_in.unload();
+            clr_out.unload();
+            eclr.clr_in = $p.utils.blank.guid;
+            eclr.clr_out = $p.utils.blank.guid;
+            return true;
+          });
 
 
 					eclr.clr_in = $p.utils.blank.guid;
@@ -997,6 +997,9 @@ $p.cat.clrs.__define({
 $p.CatClrs = class CatClrs extends $p.CatClrs {
 
   register_on_server() {
+    if(this.parent !== $p.job_prm.builder.composite_clr_folder) {
+      return Promise.reject(new Error('composite_clr_folder'));
+    }
     const {pouch} = $p.adapters;
     return pouch.save_obj(this, {db: pouch.remote.ram});
   }
@@ -1090,11 +1093,11 @@ $p.cat.cnns.__define({
       a1 = this._nomcache[ref1];
       if(!a1[ref2]){
         a2 = (a1[ref2] = []);
-        this.each((cnn) => {
+        this.forEach((cnn) => {
           let is_nom1 = art1glass ? (cnn.art1glass && thickness1 >= cnn.tmin && thickness1 <= cnn.tmax && cnn.cnn_type == $p.enm.cnn_types.Наложение) : false,
             is_nom2 = art2glass ? (cnn.art2glass && thickness2 >= cnn.tmin && thickness2 <= cnn.tmax) : false;
 
-          cnn.cnn_elmnts.each((row) => {
+          cnn.cnn_elmnts.forEach((row) => {
             if(is_nom1 && is_nom2){
               return false;
             }
@@ -1497,7 +1500,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
       }
 
       const {param} = prm_row;
-      project._dp.sys.furn_params.each((row) => {
+      project._dp.sys.furn_params.forEach((row) => {
         if(row.param == param){
           if(row.forcibly || forcibly){
             prm_row.value = row.value;
@@ -1532,9 +1535,9 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
     afurn_set.push(this.ref);
 
-    this.selection_params.each((row) => {aprm.indexOf(row.param)==-1 && !row.param.is_calculated && aprm.push(row.param)});
+    this.selection_params.forEach((row) => {aprm.indexOf(row.param)==-1 && !row.param.is_calculated && aprm.push(row.param)});
 
-    this.specification.each((row) => {row.nom instanceof $p.CatFurns && row.nom.add_furn_prm(aprm, afurn_set)});
+    this.specification.forEach((row) => {row.nom instanceof $p.CatFurns && row.nom.add_furn_prm(aprm, afurn_set)});
 
     return aprm;
 
@@ -1609,6 +1612,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
             const procedure_row = res.add(dop_row);
             procedure_row.origin = this;
+            procedure_row.specify = row_furn.nom;
             procedure_row.handle_height_max = contour.cnstr;
             if(dop_row.transfer_option == НаПримыкающий){
               const nearest = elm.nearest();
@@ -1637,7 +1641,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
           if(dop_row.is_set_row){
             const {nom} = dop_row;
-            nom && nom.get_spec(contour, cache).each((sub_row) => {
+            nom && nom.get_spec(contour, cache).forEach((sub_row) => {
               if(sub_row.is_procedure_row){
                 res.add(sub_row);
               }
@@ -1647,14 +1651,16 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
             });
           }
           else{
-            res.add(dop_row).origin = this;
+            const row_spec = res.add(dop_row);
+            row_spec.origin = this;
+            row_spec.specify = row_furn.nom;
           }
         });
       }
 
       if(row_furn.is_set_row){
         const {nom} = row_furn;
-        nom && nom.get_spec(contour, cache, exclude_dop).each((sub_row) => {
+        nom && nom.get_spec(contour, cache, exclude_dop).forEach((sub_row) => {
           if(sub_row.is_procedure_row){
             res.add(sub_row);
           }
@@ -2777,7 +2783,7 @@ $p.cat.production_params.__define({
 					pmgr = $p[at[0]][at[1]];
 					if(pmgr){
 						if(pmgr.class_name=="enm.open_directions")
-							pmgr.each(function(v){
+							pmgr.forEach(function(v){
 								if(v.name!=$p.enm.tso.folding)
 									res.push({value: v.ref, text: v.synonym});
 							});
@@ -2835,7 +2841,7 @@ $p.CatProduction_params.prototype.__define({
 			else if(!Array.isArray(elm_types))
 				elm_types = [elm_types];
 
-			this.elmnts.each((row) => {
+			this.elmnts.forEach((row) => {
 				if(!row.nom.empty() && elm_types.indexOf(row.elm_type) != -1 &&
 					(by_default == "rows" || !__noms.some((e) => row.nom == e.nom)))
 					__noms.push(row);
@@ -2970,6 +2976,495 @@ $p.CatProduction_params.prototype.__define({
 
 
 
+(($p) => {
+
+  Object.assign($p.RepMaterials_demand.prototype, {
+
+    print_data() {
+      return this.calc_order.print_data().then((order) => {
+        return this.calculate012()
+          .then((specification) => {
+
+            return Object.assign(order, {specification, _grouping: this.scheme.dimensions})
+          })
+      })
+    },
+
+    calculate012() {
+
+      const {specification, production, scheme, discard, _manager} = this;
+      const arefs = [];
+      const aobjs = [];
+      const spec_flds = Object.keys($p.cat.characteristics.metadata('specification').fields);
+      const rspec_flds = Object.keys(_manager.metadata('specification').fields);
+
+      production.forEach((row) => {
+        if(!row.use){
+          return;
+        }
+        if (!row.characteristic.empty() && row.characteristic.is_new() && arefs.indexOf(row.characteristic.ref) == -1) {
+          arefs.push(row.characteristic.ref)
+          aobjs.push(row.characteristic.load())
+        }
+      })
+
+      specification.clear();
+      if (!specification._rows) {
+        specification._rows = []
+      } else {
+        specification._rows.length = 0;
+      }
+
+      return Promise.all(aobjs)
+
+        .then((ares) => {
+
+          arefs.length = 0;
+          aobjs.length = 0;
+
+          production.forEach((row) => {
+            if(!row.use){
+              return;
+            }
+            if (!row.characteristic.empty() && !row.characteristic.calc_order.empty()
+              && row.characteristic.calc_order.is_new() && arefs.indexOf(row.characteristic.calc_order.ref) == -1) {
+              arefs.push(row.characteristic.calc_order.ref)
+              aobjs.push(row.characteristic.calc_order.load())
+            }
+            row.characteristic.specification.forEach((sprow) => {
+              if (!sprow.characteristic.empty() && sprow.characteristic.is_new() && arefs.indexOf(sprow.characteristic.ref) == -1) {
+                arefs.push(sprow.characteristic.ref)
+                aobjs.push(sprow.characteristic.load())
+              }
+            })
+          });
+
+          return Promise.all(aobjs)
+
+        })
+
+        .then(() => {
+
+          const prows = {};
+
+          const selection = [];
+          scheme.selection.forEach((row) => {
+            if(row.use){
+              selection.push(row)
+            }
+          })
+
+          production.forEach((row) => {
+            if(!row.use){
+              return;
+            }
+            if (!row.characteristic.empty()) {
+              row.characteristic.specification.forEach((sprow) => {
+
+                if(discard(sprow, selection)){
+                  return;
+                }
+
+                let resrow = {};
+                spec_flds.forEach(fld => {
+                  if (rspec_flds.indexOf(fld) != -1) {
+                    resrow[fld] = sprow[fld]
+                  }
+                });
+                resrow = specification.add(resrow)
+
+                resrow.qty = resrow.qty * row.qty;
+                resrow.totqty = resrow.totqty * row.qty;
+                resrow.totqty1 = resrow.totqty1 * row.qty;
+                resrow.amount = resrow.amount * row.qty;
+                resrow.amount_marged = resrow.amount_marged * row.qty;
+
+
+                if (resrow.elm > 0) {
+                  resrow.cnstr = row.characteristic.coordinates.find_rows({elm: resrow.elm})[0].cnstr;
+                }
+                else if (resrow.elm < 0) {
+                  resrow.cnstr = -resrow.elm;
+                }
+
+                resrow.calc_order = row.characteristic;
+
+                if (!prows[row.characteristic.ref]) {
+                  prows[row.characteristic.ref] = row.characteristic.calc_order.production.find_rows({characteristic: row.characteristic});
+                  if (prows[row.characteristic.ref].length) {
+                    prows[row.characteristic.ref] = prows[row.characteristic.ref][0].row
+                  }
+                  else {
+                    prows[row.characteristic.ref] = 1
+                  }
+                }
+                resrow.product = prows[row.characteristic.ref];
+
+                this.material(resrow);
+
+              })
+            }
+          })
+
+          const dimentions = [], resources = [];
+          scheme.columns('ts').forEach(fld => {
+            const {key} = fld
+            if (this.resources.indexOf(key) != -1) {
+              resources.push(key)
+            } else {
+              dimentions.push(key)
+            }
+          })
+          specification.group_by(dimentions, resources);
+          specification.forEach((row) => {
+
+            row.qty = row.qty.round(3);
+            row.totqty = row.totqty.round(3);
+            row.totqty1 = row.totqty1.round(3);
+            row.price = row.price.round(3);
+            row.amount = row.amount.round(3);
+            row.amount_marged = row.amount_marged.round(3);
+
+            specification._rows.push(row);
+          })
+          return specification._rows;
+        })
+    },
+
+    generate() {
+
+      return this.print_data().then((data) => {
+
+        const doc = new $p.SpreadsheetDocument(void(0), {fill_template: this.on_fill_template.bind(this)});
+
+        this.scheme.composition.find_rows({use: true}, (row) => {
+          doc.append(this.templates(row.field), data);
+        });
+
+        return doc;
+      })
+    },
+
+    discard(row, selection) {
+      return selection.some((srow) => {
+
+        const left = srow.left_value.split('.');
+        let left_value = row[left[0]];
+        for(let i = 1; i < left.length; i++){
+          left_value = left_value[left[i]];
+        }
+
+        const {comparison_type, right_value} = srow;
+        const {comparison_types} = $p.enm;
+
+        switch (comparison_type) {
+        case comparison_types.eq:
+          return left_value != right_value;
+
+        case comparison_types.ne:
+          return left_value == right_value;
+
+        case comparison_types.lt:
+          return !(left_value < right_value);
+
+        case comparison_types.gt:
+          return !(left_value > right_value);
+
+        case comparison_types.in:
+          return !left_value || right_value.indexOf(left_value.toString()) == -1;
+
+        case comparison_types.nin:
+          return right_value.indexOf(left_value.toString()) != -1;
+        }
+
+      })
+    },
+
+    form_obj(pwnd, attr) {
+
+      this._data._modified = false;
+
+      const {calc_order, _manager} = this;
+
+      this.wnd = this.draw_tabs($p.iface.dat_blank(null, {
+        width: 720,
+        height: 400,
+        modal: true,
+        center: true,
+        pwnd: pwnd,
+        allow_close: true,
+        allow_minmax: true,
+        caption: `<b>${calc_order.presentation}</b>`
+      }));
+      const {elmnts} = this.wnd;
+
+      elmnts.grids.production = this.draw_production(elmnts.tabs.cells("prod"));
+
+
+      this.listener = this.listener.bind(this);
+      this._manager.on('update', this.listener);
+
+      this.wnd.attachEvent("onClose", () => {
+        this._manager.off('update', this.listener);
+        elmnts.scheme.unload && elmnts.scheme.unload();
+        for(let grid in elmnts.grids){
+          elmnts.grids[grid].unload && elmnts.grids[grid].unload()
+        }
+        return true;
+      });
+
+      $p.cat.scheme_settings.get_scheme(_manager.class_name + '.specification')
+        .then((scheme) => {
+          this.scheme = scheme;
+        });
+
+      this.fill_by_order();
+
+      return Promise.resolve({wnd: this.wnd, o: this});
+
+    },
+
+    draw_tabs(wnd) {
+
+      const items = [
+        {id: "info", type: "text", text: "Вариант настроек:"},
+        {id: "scheme", type: "text", text: "<div style='width: 300px; margin-top: -2px;' name='scheme'></div>"}
+      ];
+      if($p.current_user.role_available("ИзменениеТехнологическойНСИ")){
+        items.push(
+          {id: "save", type: "button", text: "<i class='fa fa-floppy-o fa-fw'></i>", title: 'Сохранить вариант'},
+          {id: "sep", type: "separator"},
+          {id: "saveas", type: "button", text: "<i class='fa fa-plus-square fa-fw'></i>", title: 'Сохранить как...'});
+      }
+      items.push(
+        {id: "sp", type: "spacer"},
+        {id: "print", type: "button", text: "<i class='fa fa-print fa-fw'></i>", title: 'Печать отчета'});
+
+      wnd.attachToolbar({
+        items: items,
+        onClick: (name) => {
+          if(this.scheme.empty()){
+            return $p.msg.show_msg({
+              type: "alert-warning",
+              text: "Не выбран вариант настроек",
+              title: $p.msg.main_title
+            });
+          }
+          if(name == 'print'){
+            this.generate().then((doc) => doc.print());
+          }
+          else if(name == 'save'){
+            this.scheme.save().then((scheme) => scheme.set_default());
+          }
+          else if(name == 'saveas'){
+            $p.iface.query_value(this.scheme.name.replace(/[0-9]/g, '') + Math.floor(10 + Math.random() * 21), 'Укажите название варианта')
+              .then((name) => {
+                const proto = this.scheme._obj._clone();
+                delete proto.ref;
+                proto.name = name;
+                return this.scheme._manager.create(proto);
+              })
+              .then((scheme) => scheme.save())
+              .then((scheme) => this.scheme = scheme.set_default())
+              .catch((err) => null);
+          }
+        }
+      })
+
+      wnd.elmnts.scheme = new $p.iface.OCombo({
+        parent: wnd.cell.querySelector('[name=scheme]'),
+        obj: this,
+        field: "scheme",
+        width: 280
+      });
+
+      wnd.elmnts.tabs = wnd.attachTabbar({
+        arrows_mode: "auto",
+        tabs: [
+          {id: "prod", text: "Продукция", active:  true},
+          {id: "composition", text: "Состав"},
+          {id: "columns", text: "Колонки"},
+          {id: "selection", text: "Отбор"},
+          {id: "dimensions", text: "Группировка"},
+        ]
+      });
+
+      return wnd;
+    },
+
+
+    draw_production(cell) {
+      return cell.attachTabular({
+        obj: this,
+        ts: "production",
+        ts_captions: {
+          "fields":["use","characteristic","qty"],
+          "headers":",Продукция,Штук",
+          "widths":"40,*,150",
+          "min_widths":"40,200,120",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ref,calck"
+        }
+      })
+    },
+
+    draw_columns(cell) {
+      return cell.attachTabular({
+        obj: this.scheme,
+        ts: "fields",
+        reorder: true,
+        ts_captions: {
+          "fields":["use","field","caption"],
+          "headers":",Поле,Заголовок",
+          "widths":"40,200,*",
+          "min_widths":"40,200,200",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ed,ed"
+        }
+      });
+    },
+
+    draw_composition(cell) {
+      this.composition_parts();
+      return cell.attachTabular({
+        obj: this.scheme,
+        ts: "composition",
+        reorder: true,
+        ts_captions: {
+          "fields":["use","field","definition"],
+          "headers":",Элемент,Описание",
+          "widths":"40,160,*",
+          "min_widths":"40,120,200",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ed,ed"
+        }
+      });
+    },
+
+    draw_selection(cell) {
+      return cell.attachTabular({
+        obj: this.scheme,
+        ts: "selection",
+        reorder: true,
+        ts_captions: {
+          "fields":["use","left_value","comparison_type","right_value"],
+          "headers":",Левое значение,Вид сравнения,Правое значение",
+          "widths":"40,200,100,*",
+          "min_widths":"40,200,100,200",
+          "aligns":"",
+          "sortings":"na,na,na,na",
+          "types":"ch,ed,ref,ed"
+        }
+      });
+    },
+
+    draw_dimensions(cell) {
+      return cell.attachTabular({
+        obj: this.scheme,
+        ts: "dimensions",
+        reorder: true,
+        ts_captions: {
+          "fields":["use","parent","field"],
+          "headers":",Таблица,Поле",
+          "widths":"40,200,*",
+          "min_widths":"40,200,200",
+          "aligns":"",
+          "sortings":"na,na,na",
+          "types":"ch,ed,ed"
+        }
+      });
+    },
+
+    composition_parts(refill) {
+      const {composition} = this.scheme;
+      if(!composition.count()){
+        refill = true;
+      }
+      if(refill){
+        this.templates().forEach((template, index) => {
+          const {attributes} = template;
+          composition.add({
+            field: attributes.id ? attributes.id.value : index,
+            kind: attributes.kind ? attributes.kind.value : 'obj',
+            definition: attributes.definition ? attributes.definition.value : 'Описание отсутствует',
+          })
+        });
+      }
+    },
+
+    templates(name) {
+
+      const {children} = this.formula._template.content;
+
+      if(name){
+        return children.namedItem(name);
+      }
+      const res = [];
+      for(let i = 0; i < children.length; i++){
+        res.push(children.item(i))
+      }
+      return res;
+    },
+
+    on_fill_template(template, data) {
+
+      if(template.attributes.tabular && template.attributes.tabular.value == "specification"){
+        const specification = data.specification.map((row) => {
+          return {
+            product: row.product,
+            grouping: row.grouping,
+            Номенклатура: row.nom.article + ' ' + row.nom.name + (!row.clr.empty() && !row.clr.predefined_name ? ' ' + row.clr.name : ''),
+            Размеры: row.sz,
+            Количество: row.qty.toFixed(),
+            Угол1: row.alp1,
+            Угол2: row.alp2,
+          }
+        });
+        return {specification, _grouping: data._grouping}
+      }
+      else if(template.attributes.tabular && template.attributes.tabular.value == "production"){
+        const production = [];
+        this.production.find_rows({use: true}, (row) => {
+          production.push(Object.assign(
+            this.calc_order.row_description(row),
+            data.ПродукцияЭскизы[row.characteristic.ref] ?
+              {svg: $p.iface.scale_svg(data.ПродукцияЭскизы[row.characteristic.ref], 170, 0)} : {}
+          ))
+        });
+        return Object.assign({}, data, {production});
+      }
+      return data;
+    },
+
+    listener(obj, fields) {
+      if(obj === this && fields.hasOwnProperty('scheme') && this.wnd && this.wnd.elmnts){
+        const {grids, tabs} = this.wnd.elmnts;
+
+        grids.columns && grids.columns.unload && grids.columns.unload();
+        grids.selection && grids.selection.unload && grids.selection.unload();
+        grids.composition && grids.composition.unload && grids.composition.unload();
+        grids.dimensions && grids.dimensions.unload && grids.dimensions.unload();
+
+        grids.columns = this.draw_columns(tabs.cells("columns"));
+        grids.selection = this.draw_selection(tabs.cells("selection"));
+        grids.composition = this.draw_composition(tabs.cells("composition"));
+        grids.dimensions = this.draw_dimensions(tabs.cells("dimensions"));
+      }
+    },
+
+  });
+
+})($p);
+
+
+
+
+
+
+
 class Pricing {
 
   constructor({md, adapters}) {
@@ -3068,11 +3563,6 @@ class Pricing {
       const value = prices[ref];
 
       if (!onom || !onom._data){
-        $p.record_log({
-          class: 'error',
-          note,
-          obj: {nom: ref, value}
-        });
         continue;
       }
       onom._data._price = value;
@@ -3090,6 +3580,12 @@ class Pricing {
   sync_local(pouch, step = 0) {
     return pouch.remote.templates.get(`_local/price_${step}`)
       .then((remote) => {
+
+        if(pouch.remote.templates === pouch.local.templates) {
+          this.build_cache_local(remote);
+          return this.sync_local(pouch, ++step);
+        }
+
         return pouch.local.templates.get(`_local/price_${step}`)
           .catch(() => ({}))
           .then((local) => {
@@ -3106,28 +3602,29 @@ class Pricing {
             }
 
             this.build_cache_local(remote);
-
             return this.sync_local(pouch, ++step);
           })
       })
       .catch((err) => {
         if(step !== 0) {
-          pouch.local.templates.get(`_local/price_${step}`)
-            .then((local) => pouch.local.templates.remove(local))
-            .catch(() => null);
+          if(pouch.remote.templates !== pouch.local.templates) {
+            pouch.local.templates.get(`_local/price_${step}`)
+              .then((local) => pouch.local.templates.remove(local))
+              .catch(() => null);
+          }
           return true;
         }
       });
   }
 
   by_local(step = 0) {
-    const {pouch} = $p.adapters;
+    const {adapters: {pouch}, job_prm} = $p;
 
     if(!pouch.local.templates) {
       return Promise.resolve(false);
     }
 
-    const pre = step === 0 && pouch.local.templates.adapter !== 'http' && pouch.authorized ?
+    const pre = step === 0 && (pouch.local.templates.adapter !== 'http' || (job_prm.user_node && job_prm.user_node.templates)) && pouch.authorized ?
       pouch.remote.templates.info()
         .then(() => this.sync_local(pouch))
         .catch((err) => null)
@@ -3726,7 +4223,7 @@ class ProductsBuilding {
       const {cnn_type, specification, selection_params} = cnn;
       const {ii, xx, acn} = $p.enm.cnn_types;
 
-      specification.each((row) => {
+      specification.forEach((row) => {
         const {nom} = row;
         if(!nom || nom.empty() || nom == art1 || nom == art2) {
           return;
@@ -3781,9 +4278,9 @@ class ProductsBuilding {
       contour.update_handle_height(furn_cache);
 
       const blank_clr = $p.cat.clrs.get();
-      furn.furn_set.get_spec(contour, furn_cache).each((row) => {
+      furn.furn_set.get_spec(contour, furn_cache).forEach((row) => {
         const elm = {elm: -contour.cnstr, clr: blank_clr};
-        const row_spec = new_spec_row({elm, row_base: row, origin: row.origin, spec, ox});
+        const row_spec = new_spec_row({elm, row_base: row, origin: row.origin, specify: row.specify, spec, ox});
 
         if(row.is_procedure_row) {
           row_spec.elm = row.handle_height_min;
@@ -3813,7 +4310,7 @@ class ProductsBuilding {
         return ok = false;
       }
 
-      furn.open_tunes.each((row) => {
+      furn.open_tunes.forEach((row) => {
         const elm = contour.profile_by_furn_side(row.side, cache);
         const prev = contour.profile_by_furn_side(row.side === 1 ? side_count : row.side - 1, cache);
         const next = contour.profile_by_furn_side(row.side === side_count ? 1 : row.side + 1, cache);
@@ -4162,7 +4659,7 @@ class ProductsBuilding {
 
       base_spec(scheme);
 
-      spec.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
+      spec.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,specify,dop', 'qty,totqty,totqty1');
 
 
 
@@ -4183,6 +4680,11 @@ class ProductsBuilding {
         scheme.notify(scheme, 'scheme_snapshot', attr);
       }
 
+      function finish() {
+        delete scheme._attr._saving;
+        ox._data._loading = false;
+      }
+
       if(attr.save) {
 
 
@@ -4190,15 +4692,16 @@ class ProductsBuilding {
           ox.svg = scheme.get_svg();
         }
 
-        ox.save().then(() => {
+        return ox.save().then(() => {
           attr.svg !== false && $p.msg.show_msg([ox.name, 'Спецификация рассчитана']);
-          delete scheme._attr._saving;
+          finish();
+
           ox.calc_order.characteristic_saved(scheme, attr);
           scheme._scope && scheme._scope.eve.emit('characteristic_saved', scheme, attr);
 
         })
           .then(() => {
-            if(scheme._scope || attr.close) {
+            if(!scheme._attr._from_service && (scheme._scope || attr.close)) {
               return new Promise((resolve, reject) => {
                 setTimeout(() => ox.calc_order._modified && ox.calc_order.save()
                   .then(resolve)
@@ -4209,7 +4712,7 @@ class ProductsBuilding {
           .catch((err) => {
 
 
-            delete scheme._attr._saving;
+            finish();
 
             if(err.msg && err.msg._shown) {
               return;
@@ -4231,10 +4734,8 @@ class ProductsBuilding {
           });
       }
       else {
-        delete scheme._attr._saving;
+        return Promise.resolve(finish());
       }
-
-      ox._data._loading = false;
 
     };
 
@@ -4254,7 +4755,7 @@ class ProductsBuilding {
     return ok;
   }
 
-  static new_spec_row({row_spec, elm, row_base, nom, origin, spec, ox}) {
+  static new_spec_row({row_spec, elm, row_base, nom, origin, specify, spec, ox}) {
     if(!row_spec) {
       row_spec = spec.add();
     }
@@ -4273,6 +4774,9 @@ class ProductsBuilding {
     row_spec.elm = elm.elm;
     if(origin) {
       row_spec.origin = origin;
+    }
+    if(specify) {
+      row_spec.specify = specify;
     }
     return row_spec;
   }
@@ -4490,9 +4994,9 @@ class SpecBuilding {
 $p.spec_building = new SpecBuilding($p);
 
 
-(function ({prototype}) {
-  const {value_mgr} = prototype;
-  prototype.value_mgr = function(row, f, mf, array_enabled, v) {
+(function ({classes: {DataManager, CatObj}, cat}) {
+  const {value_mgr} = DataManager.prototype;
+  DataManager.prototype.value_mgr = function(row, f, mf, array_enabled, v) {
 		const tmp = value_mgr.call(this, row, f, mf, array_enabled, v);
 		if(tmp){
       return tmp;
@@ -4504,7 +5008,61 @@ $p.spec_building = new SpecBuilding($p);
       return $p.cat.partners;
     }
 	}
-})($p.classes.DataManager);
+
+  CatObj.prototype.repurge = function() {
+    const {fields, tabular_sections} = this._metadata();
+    if(this.empty() || this.is_new()){
+      return;
+    }
+    const {_obj} = this;
+    if(_obj.timestamp && _obj.timestamp.moment < '2019-03') {
+      return;
+    }
+    for(const fld in fields) {
+      const {type} = fields[fld];
+      if(type.types.length === 1 && type.types[0] === 'number' && !_obj.hasOwnProperty(fld)) {
+        this._manager._owner.repurge.store.add(this);
+        _obj[fld] = 0;
+      }
+    }
+    for(const ts in tabular_sections) {
+      const {fields} = tabular_sections[ts];
+      this[ts].forEach(({_obj}) => {
+        for(const fld in fields) {
+          const {type} = fields[fld];
+          if(type.types.length === 1 && type.types[0] === 'number' && !_obj.hasOwnProperty(fld)) {
+            this._manager._owner.repurge.store.add(this);
+            _obj[fld] = 0;
+          }
+        }
+      });
+    }
+  }
+
+  cat.repurge = function () {
+    for(const name in this) {
+      if(name === 'users') {
+        continue;
+      }
+      const mgr = this[name];
+      if(mgr.cachable === 'ram') {
+        for(const ref in mgr.by_ref) {
+          mgr.by_ref[ref].repurge();
+        }
+      }
+    }
+    let queue = Promise.resolve();
+    const {pouch} = this.$p.adapters;
+    const attr = {db: pouch.remote.ram}
+    cat.repurge.store.forEach((o) => {
+      queue = queue.then(() => pouch.save_obj(o, attr));
+    });
+
+  }
+
+  cat.repurge.store = new Set();
+
+})($p);
 
 
 $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
@@ -5279,16 +5837,15 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     let res = Promise.resolve();
     const ax = [];
 
-    for (let i = 0; i < dp.production.count(); i++) {
-      const row_spec = dp.production.get(i);
+    dp.production.forEach((row_dp) => {
       let row_prod;
 
-      if(row_spec.inset.empty()) {
-        row_prod = this.production.add(row_spec);
+      if(row_dp.inset.empty()) {
+        row_prod = this.production.add(row_dp);
         row_prod.unit = row_prod.nom.storage_unit;
-        if(!row_spec.clr.empty()) {
-          $p.cat.characteristics.find_rows({owner: row_spec.nom}, (ox) => {
-            if(ox.clr == row_spec.clr) {
+        if(!row_dp.clr.empty()) {
+          $p.cat.characteristics.find_rows({owner: row_dp.nom}, (ox) => {
+            if(ox.clr == row_dp.clr) {
               row_prod.characteristic = ox;
               return false;
             }
@@ -5297,13 +5854,14 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         res = res.then(() => row_prod);
       }
       else {
-        const len_angl = new $p.DocCalc_order.FakeLenAngl(row_spec);
-        const elm = new $p.DocCalc_order.FakeElm(row_spec);
+        const len_angl = new $p.DocCalc_order.FakeLenAngl(row_dp);
+        const elm = new $p.DocCalc_order.FakeElm(row_dp);
         res = res
-          .then(() => this.create_product_row({row_spec, elm, len_angl, params: dp.product_params, create: true}))
+          .then(() => this.create_product_row({row_spec: row_dp, elm, len_angl, params: dp.product_params, create: true}))
           .then((row_prod) => {
-            row_spec.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
+            row_dp.inset.calculate_spec({elm, len_angl, ox: row_prod.characteristic});
             row_prod.characteristic.specification.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,dop', 'qty,totqty,totqty1');
+            row_dp.characteristic = row_prod.characteristic;
             return row_prod;
           });
       }
@@ -5316,8 +5874,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         }, true))
           .then((tx) => [].push.apply(ax, tx));
       });
-
-    }
+    });
 
     return res.then(() => ax);
   }
@@ -5410,7 +5967,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       this.department = department;
     }
     const {current_user, cat} = $p;
-    if(this.department.empty() || this.department.is_new()) {
+    if(current_user && this.department.empty() || this.department.is_new()) {
       current_user.acl_objs && current_user.acl_objs.find_rows({by_default: true, type: cat.divisions.class_name}, (row) => {
         if(this.department != row.acl_obj) {
           this.department = row.acl_obj;
@@ -5906,7 +6463,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
     attr.draw_tabular_sections = (o, wnd, tabular_init) => {
 
       const refs = [];
-      o.production.each((row) => {
+      o.production.forEach((row) => {
         if(!$p.utils.is_empty_guid(row._obj.characteristic) && row.characteristic.is_new()) {
           refs.push(row._obj.characteristic);
         }
@@ -5921,7 +6478,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             _in_header_stat_s: function(tag,index,data){
               const calck=function(){
                 let sum=0;
-                o.production.each((row) => {
+                o.production.forEach((row) => {
                   sum += row.s * row.quantity;
                 });
                 return sum.toFixed(2);
@@ -7159,21 +7716,6 @@ $p.doc.calc_order.__define({
 })($p);
 
 
-$p.DocCredit_card_order.prototype.before_save = function () {
-  this.doc_amount = this.payment_details.aggregate([], 'amount');
-};
-
-
-$p.DocDebit_bank_order.prototype.before_save = function () {
-  this.doc_amount = this.payment_details.aggregate([], 'amount');
-};
-
-
-$p.DocDebit_cash_order.prototype.before_save = function () {
-  this.doc_amount = this.payment_details.aggregate([], 'amount');
-};
-
-
 
 $p.doc.nom_prices_setup.metadata().tabular_sections.goods.fields.nom_characteristic._option_list_local = true;
 
@@ -7268,14 +7810,6 @@ $p.on('tabular_paste', (clip) => {
   }
 
 });
-
-
-
-$p.DocSelling.prototype.before_save = function () {
-  this.doc_amount = this.goods.aggregate([], 'amount') + this.services.aggregate([], 'amount');
-};
-
-
 
 
 (function(_mgr){
@@ -7508,495 +8042,6 @@ $p.DocSelling.prototype.before_save = function () {
 
 
 })($p);
-
-
-(($p) => {
-
-  Object.assign($p.RepMaterials_demand.prototype, {
-
-    print_data() {
-      return this.calc_order.print_data().then((order) => {
-        return this.calculate012()
-          .then((specification) => {
-
-            return Object.assign(order, {specification, _grouping: this.scheme.dimensions})
-          })
-      })
-    },
-
-    calculate012() {
-
-      const {specification, production, scheme, discard, _manager} = this;
-      const arefs = [];
-      const aobjs = [];
-      const spec_flds = Object.keys($p.cat.characteristics.metadata('specification').fields);
-      const rspec_flds = Object.keys(_manager.metadata('specification').fields);
-
-      production.each((row) => {
-        if(!row.use){
-          return;
-        }
-        if (!row.characteristic.empty() && row.characteristic.is_new() && arefs.indexOf(row.characteristic.ref) == -1) {
-          arefs.push(row.characteristic.ref)
-          aobjs.push(row.characteristic.load())
-        }
-      })
-
-      specification.clear();
-      if (!specification._rows) {
-        specification._rows = []
-      } else {
-        specification._rows.length = 0;
-      }
-
-      return Promise.all(aobjs)
-
-        .then((ares) => {
-
-          arefs.length = 0;
-          aobjs.length = 0;
-
-          production.each((row) => {
-            if(!row.use){
-              return;
-            }
-            if (!row.characteristic.empty() && !row.characteristic.calc_order.empty()
-              && row.characteristic.calc_order.is_new() && arefs.indexOf(row.characteristic.calc_order.ref) == -1) {
-              arefs.push(row.characteristic.calc_order.ref)
-              aobjs.push(row.characteristic.calc_order.load())
-            }
-            row.characteristic.specification.each((sprow) => {
-              if (!sprow.characteristic.empty() && sprow.characteristic.is_new() && arefs.indexOf(sprow.characteristic.ref) == -1) {
-                arefs.push(sprow.characteristic.ref)
-                aobjs.push(sprow.characteristic.load())
-              }
-            })
-          });
-
-          return Promise.all(aobjs)
-
-        })
-
-        .then(() => {
-
-          const prows = {};
-
-          const selection = [];
-          scheme.selection.forEach((row) => {
-            if(row.use){
-              selection.push(row)
-            }
-          })
-
-          production.each((row) => {
-            if(!row.use){
-              return;
-            }
-            if (!row.characteristic.empty()) {
-              row.characteristic.specification.each((sprow) => {
-
-                if(discard(sprow, selection)){
-                  return;
-                }
-
-                let resrow = {};
-                spec_flds.forEach(fld => {
-                  if (rspec_flds.indexOf(fld) != -1) {
-                    resrow[fld] = sprow[fld]
-                  }
-                });
-                resrow = specification.add(resrow)
-
-                resrow.qty = resrow.qty * row.qty;
-                resrow.totqty = resrow.totqty * row.qty;
-                resrow.totqty1 = resrow.totqty1 * row.qty;
-                resrow.amount = resrow.amount * row.qty;
-                resrow.amount_marged = resrow.amount_marged * row.qty;
-
-
-                if (resrow.elm > 0) {
-                  resrow.cnstr = row.characteristic.coordinates.find_rows({elm: resrow.elm})[0].cnstr;
-                }
-                else if (resrow.elm < 0) {
-                  resrow.cnstr = -resrow.elm;
-                }
-
-                resrow.calc_order = row.characteristic;
-
-                if (!prows[row.characteristic.ref]) {
-                  prows[row.characteristic.ref] = row.characteristic.calc_order.production.find_rows({characteristic: row.characteristic});
-                  if (prows[row.characteristic.ref].length) {
-                    prows[row.characteristic.ref] = prows[row.characteristic.ref][0].row
-                  }
-                  else {
-                    prows[row.characteristic.ref] = 1
-                  }
-                }
-                resrow.product = prows[row.characteristic.ref];
-
-                this.material(resrow);
-
-              })
-            }
-          })
-
-          const dimentions = [], resources = [];
-          scheme.columns('ts').forEach(fld => {
-            const {key} = fld
-            if (this.resources.indexOf(key) != -1) {
-              resources.push(key)
-            } else {
-              dimentions.push(key)
-            }
-          })
-          specification.group_by(dimentions, resources);
-          specification.forEach((row) => {
-
-            row.qty = row.qty.round(3);
-            row.totqty = row.totqty.round(3);
-            row.totqty1 = row.totqty1.round(3);
-            row.price = row.price.round(3);
-            row.amount = row.amount.round(3);
-            row.amount_marged = row.amount_marged.round(3);
-
-            specification._rows.push(row);
-          })
-          return specification._rows;
-        })
-    },
-
-    generate() {
-
-      return this.print_data().then((data) => {
-
-        const doc = new $p.SpreadsheetDocument(void(0), {fill_template: this.on_fill_template.bind(this)});
-
-        this.scheme.composition.find_rows({use: true}, (row) => {
-          doc.append(this.templates(row.field), data);
-        });
-
-        return doc;
-      })
-    },
-
-    discard(row, selection) {
-      return selection.some((srow) => {
-
-        const left = srow.left_value.split('.');
-        let left_value = row[left[0]];
-        for(let i = 1; i < left.length; i++){
-          left_value = left_value[left[i]];
-        }
-
-        const {comparison_type, right_value} = srow;
-        const {comparison_types} = $p.enm;
-
-        switch (comparison_type) {
-        case comparison_types.eq:
-          return left_value != right_value;
-
-        case comparison_types.ne:
-          return left_value == right_value;
-
-        case comparison_types.lt:
-          return !(left_value < right_value);
-
-        case comparison_types.gt:
-          return !(left_value > right_value);
-
-        case comparison_types.in:
-          return !left_value || right_value.indexOf(left_value.toString()) == -1;
-
-        case comparison_types.nin:
-          return right_value.indexOf(left_value.toString()) != -1;
-        }
-
-      })
-    },
-
-    form_obj(pwnd, attr) {
-
-      this._data._modified = false;
-
-      const {calc_order, _manager} = this;
-
-      this.wnd = this.draw_tabs($p.iface.dat_blank(null, {
-        width: 720,
-        height: 400,
-        modal: true,
-        center: true,
-        pwnd: pwnd,
-        allow_close: true,
-        allow_minmax: true,
-        caption: `<b>${calc_order.presentation}</b>`
-      }));
-      const {elmnts} = this.wnd;
-
-      elmnts.grids.production = this.draw_production(elmnts.tabs.cells("prod"));
-
-
-      this.listener = this.listener.bind(this);
-      this._manager.on('update', this.listener);
-
-      this.wnd.attachEvent("onClose", () => {
-        this._manager.off('update', this.listener);
-        elmnts.scheme.unload && elmnts.scheme.unload();
-        for(let grid in elmnts.grids){
-          elmnts.grids[grid].unload && elmnts.grids[grid].unload()
-        }
-        return true;
-      });
-
-      $p.cat.scheme_settings.get_scheme(_manager.class_name + '.specification')
-        .then((scheme) => {
-          this.scheme = scheme;
-        });
-
-      this.fill_by_order();
-
-      return Promise.resolve({wnd: this.wnd, o: this});
-
-    },
-
-    draw_tabs(wnd) {
-
-      const items = [
-        {id: "info", type: "text", text: "Вариант настроек:"},
-        {id: "scheme", type: "text", text: "<div style='width: 300px; margin-top: -2px;' name='scheme'></div>"}
-      ];
-      if($p.current_user.role_available("ИзменениеТехнологическойНСИ")){
-        items.push(
-          {id: "save", type: "button", text: "<i class='fa fa-floppy-o fa-fw'></i>", title: 'Сохранить вариант'},
-          {id: "sep", type: "separator"},
-          {id: "saveas", type: "button", text: "<i class='fa fa-plus-square fa-fw'></i>", title: 'Сохранить как...'});
-      }
-      items.push(
-        {id: "sp", type: "spacer"},
-        {id: "print", type: "button", text: "<i class='fa fa-print fa-fw'></i>", title: 'Печать отчета'});
-
-      wnd.attachToolbar({
-        items: items,
-        onClick: (name) => {
-          if(this.scheme.empty()){
-            return $p.msg.show_msg({
-              type: "alert-warning",
-              text: "Не выбран вариант настроек",
-              title: $p.msg.main_title
-            });
-          }
-          if(name == 'print'){
-            this.generate().then((doc) => doc.print());
-          }
-          else if(name == 'save'){
-            this.scheme.save().then((scheme) => scheme.set_default());
-          }
-          else if(name == 'saveas'){
-            $p.iface.query_value(this.scheme.name.replace(/[0-9]/g, '') + Math.floor(10 + Math.random() * 21), 'Укажите название варианта')
-              .then((name) => {
-                const proto = this.scheme._obj._clone();
-                delete proto.ref;
-                proto.name = name;
-                return this.scheme._manager.create(proto);
-              })
-              .then((scheme) => scheme.save())
-              .then((scheme) => this.scheme = scheme.set_default())
-              .catch((err) => null);
-          }
-        }
-      })
-
-      wnd.elmnts.scheme = new $p.iface.OCombo({
-        parent: wnd.cell.querySelector('[name=scheme]'),
-        obj: this,
-        field: "scheme",
-        width: 280
-      });
-
-      wnd.elmnts.tabs = wnd.attachTabbar({
-        arrows_mode: "auto",
-        tabs: [
-          {id: "prod", text: "Продукция", active:  true},
-          {id: "composition", text: "Состав"},
-          {id: "columns", text: "Колонки"},
-          {id: "selection", text: "Отбор"},
-          {id: "dimensions", text: "Группировка"},
-        ]
-      });
-
-      return wnd;
-    },
-
-
-    draw_production(cell) {
-      return cell.attachTabular({
-        obj: this,
-        ts: "production",
-        ts_captions: {
-          "fields":["use","characteristic","qty"],
-          "headers":",Продукция,Штук",
-          "widths":"40,*,150",
-          "min_widths":"40,200,120",
-          "aligns":"",
-          "sortings":"na,na,na",
-          "types":"ch,ref,calck"
-        }
-      })
-    },
-
-    draw_columns(cell) {
-      return cell.attachTabular({
-        obj: this.scheme,
-        ts: "fields",
-        reorder: true,
-        ts_captions: {
-          "fields":["use","field","caption"],
-          "headers":",Поле,Заголовок",
-          "widths":"40,200,*",
-          "min_widths":"40,200,200",
-          "aligns":"",
-          "sortings":"na,na,na",
-          "types":"ch,ed,ed"
-        }
-      });
-    },
-
-    draw_composition(cell) {
-      this.composition_parts();
-      return cell.attachTabular({
-        obj: this.scheme,
-        ts: "composition",
-        reorder: true,
-        ts_captions: {
-          "fields":["use","field","definition"],
-          "headers":",Элемент,Описание",
-          "widths":"40,160,*",
-          "min_widths":"40,120,200",
-          "aligns":"",
-          "sortings":"na,na,na",
-          "types":"ch,ed,ed"
-        }
-      });
-    },
-
-    draw_selection(cell) {
-      return cell.attachTabular({
-        obj: this.scheme,
-        ts: "selection",
-        reorder: true,
-        ts_captions: {
-          "fields":["use","left_value","comparison_type","right_value"],
-          "headers":",Левое значение,Вид сравнения,Правое значение",
-          "widths":"40,200,100,*",
-          "min_widths":"40,200,100,200",
-          "aligns":"",
-          "sortings":"na,na,na,na",
-          "types":"ch,ed,ref,ed"
-        }
-      });
-    },
-
-    draw_dimensions(cell) {
-      return cell.attachTabular({
-        obj: this.scheme,
-        ts: "dimensions",
-        reorder: true,
-        ts_captions: {
-          "fields":["use","parent","field"],
-          "headers":",Таблица,Поле",
-          "widths":"40,200,*",
-          "min_widths":"40,200,200",
-          "aligns":"",
-          "sortings":"na,na,na",
-          "types":"ch,ed,ed"
-        }
-      });
-    },
-
-    composition_parts(refill) {
-      const {composition} = this.scheme;
-      if(!composition.count()){
-        refill = true;
-      }
-      if(refill){
-        this.templates().forEach((template, index) => {
-          const {attributes} = template;
-          composition.add({
-            field: attributes.id ? attributes.id.value : index,
-            kind: attributes.kind ? attributes.kind.value : 'obj',
-            definition: attributes.definition ? attributes.definition.value : 'Описание отсутствует',
-          })
-        });
-      }
-    },
-
-    templates(name) {
-
-      const {children} = this.formula._template.content;
-
-      if(name){
-        return children.namedItem(name);
-      }
-      const res = [];
-      for(let i = 0; i < children.length; i++){
-        res.push(children.item(i))
-      }
-      return res;
-    },
-
-    on_fill_template(template, data) {
-
-      if(template.attributes.tabular && template.attributes.tabular.value == "specification"){
-        const specification = data.specification.map((row) => {
-          return {
-            product: row.product,
-            grouping: row.grouping,
-            Номенклатура: row.nom.article + ' ' + row.nom.name + (!row.clr.empty() && !row.clr.predefined_name ? ' ' + row.clr.name : ''),
-            Размеры: row.sz,
-            Количество: row.qty.toFixed(),
-            Угол1: row.alp1,
-            Угол2: row.alp2,
-          }
-        });
-        return {specification, _grouping: data._grouping}
-      }
-      else if(template.attributes.tabular && template.attributes.tabular.value == "production"){
-        const production = [];
-        this.production.find_rows({use: true}, (row) => {
-          production.push(Object.assign(
-            this.calc_order.row_description(row),
-            data.ПродукцияЭскизы[row.characteristic.ref] ?
-              {svg: $p.iface.scale_svg(data.ПродукцияЭскизы[row.characteristic.ref], 170, 0)} : {}
-          ))
-        });
-        return Object.assign({}, data, {production});
-      }
-      return data;
-    },
-
-    listener(obj, fields) {
-      if(obj === this && fields.hasOwnProperty('scheme') && this.wnd && this.wnd.elmnts){
-        const {grids, tabs} = this.wnd.elmnts;
-
-        grids.columns && grids.columns.unload && grids.columns.unload();
-        grids.selection && grids.selection.unload && grids.selection.unload();
-        grids.composition && grids.composition.unload && grids.composition.unload();
-        grids.dimensions && grids.dimensions.unload && grids.dimensions.unload();
-
-        grids.columns = this.draw_columns(tabs.cells("columns"));
-        grids.selection = this.draw_selection(tabs.cells("selection"));
-        grids.composition = this.draw_composition(tabs.cells("composition"));
-        grids.dimensions = this.draw_dimensions(tabs.cells("dimensions"));
-      }
-    },
-
-  });
-
-})($p);
-
-
-
-
-
 
 
 function eXcell_rsvg(cell){ 

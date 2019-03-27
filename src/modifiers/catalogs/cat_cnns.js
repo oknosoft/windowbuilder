@@ -86,12 +86,12 @@ $p.cat.cnns.__define({
       if(!a1[ref2]){
         a2 = (a1[ref2] = []);
         // для всех элементов справочника соединения
-        this.each((cnn) => {
+        this.forEach((cnn) => {
           // если в строках соединяемых элементов есть наша - добавляем
           let is_nom1 = art1glass ? (cnn.art1glass && thickness1 >= cnn.tmin && thickness1 <= cnn.tmax && cnn.cnn_type == $p.enm.cnn_types.Наложение) : false,
             is_nom2 = art2glass ? (cnn.art2glass && thickness2 >= cnn.tmin && thickness2 <= cnn.tmax) : false;
 
-          cnn.cnn_elmnts.each((row) => {
+          cnn.cnn_elmnts.forEach((row) => {
             if(is_nom1 && is_nom2){
               return false;
             }

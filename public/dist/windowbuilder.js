@@ -1156,7 +1156,7 @@ class Editor extends EditorInvisible {
 
     this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
 
-    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '2px', name: 'left', height: '294px',
+    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '2px', name: 'left', height: '320px',
       image_path: '/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
@@ -1165,13 +1165,13 @@ class Editor extends EditorInvisible {
         {name: 'pen', css: 'tb_cursor-pen-freehand', tooltip: 'Добавить профиль'},
         {name: 'lay_impost', css: 'tb_cursor-lay-impost', tooltip: 'Вставить раскладку или импосты'},
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: 'Арка {Crtl}, {Alt}, {Пробел}'},
+        {name: 'cut', css: 'tb_cursor-cut', tooltip: 'Тип соединения'},
         {name: 'fx', text: '<i class="fa fa-magic fa-fw"></i>', tooltip: 'Действия', sub:
             {
-              width: '120px',
+              width: '70px',
               height:'28px',
               align: 'hor',
               buttons: [
-                {name: 'cut', float: 'left', css: 'tb_cursor-cut', tooltip: 'Разрыв-объединение T'},
                 {name: 'm1', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>1</sub></small>', tooltip: 'Импост по 0-штапику'},
                 {name: 'm2', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>2</sub></small>', tooltip: 'T в угол'},
                 ],
@@ -1326,6 +1326,8 @@ class Editor extends EditorInvisible {
     new ToolArc();
 
     new ToolCut();
+
+    new ToolM2();
 
     new ToolPen();
 
@@ -1506,19 +1508,6 @@ class Editor extends EditorInvisible {
     switch (name) {
     case 'm1':
       this.project.magnetism.m1();
-      break;
-
-    case 'm2':
-      this.tools.some((tool) => {
-        if(tool.options.name == 'cut'){
-          tool.activate();
-          return true;
-        }
-      });
-      break;
-
-    case 'cut':
-      $p.msg.show_not_implemented();
       break;
 
     default:
@@ -4230,7 +4219,15 @@ class Contour extends AbstractFilling(paper.Layer) {
     }, (prow) => {
       const {param} = prow;
       const links = param.params_links({grid: {selection: {cnstr}}, obj: prow});
-      const hide = links.some((link) => link.hide);
+      let hide = !param.show_calculated && param.is_calculated;
+      if(!hide){
+        if(links.length) {
+          hide = links.some((link) => link.hide);
+        }
+        else {
+          hide = prow.hide;
+        }
+      };
 
       if (links.length && param.linked_values(links, prow)) {
         notify = true;
@@ -5061,10 +5058,16 @@ class DimensionLine extends paper.Group {
           }
       });
       project.move_points(delta, false);
-      setTimeout(function () {
-        this.deselect_all_points(true);
-        this.register_update();
-      }.bind(project), 200);
+      if(project._attr._from_service) {
+        project.deselect_all_points(true);
+        project.register_update();
+      }
+      else {
+        setTimeout(function () {
+          this.deselect_all_points(true);
+          this.register_update();
+        }.bind(project), 200);
+      }
     }
 
   }
@@ -5163,15 +5166,15 @@ class DimensionLine extends paper.Group {
     if(align == $p.enm.text_aligns.left) {
       children.text.position = bs
         .add(path.getTangentAt(0).multiply(font_size))
-        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
+        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.9 : 2)));
     }
     else if(align == $p.enm.text_aligns.right) {
       children.text.position = es
         .add(path.getTangentAt(0).multiply(-font_size))
-        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
+        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.9 : 2)));
     }
     else {
-      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.3 : 2)));
+      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.9 : 2)));
       if(length < 20) {
         children.text.position = children.text.position.add(path.getTangentAt(0).multiply(font_size / 3));
       }
@@ -6192,8 +6195,6 @@ EditorInvisible.BuilderElement = BuilderElement;
 
 
 
-
-
 class Filling extends AbstractFilling(BuilderElement) {
 
   constructor(attr) {
@@ -6274,7 +6275,6 @@ class Filling extends AbstractFilling(BuilderElement) {
 
   }
 
-
   save_coordinates() {
 
     const {_row, project, profiles, bounds, imposts, nom} = this;
@@ -6351,7 +6351,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     imposts.forEach((curr) => curr.save_coordinates());
   }
 
-
   create_leaf() {
 
     const {project} = this;
@@ -6372,11 +6371,9 @@ class Filling extends AbstractFilling(BuilderElement) {
     contour.activate();
   }
 
-
   cnn_side() {
     return $p.enm.cnn_sides.Изнутри;
   }
-
 
   nearest() {
     return null;
@@ -6414,7 +6411,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
   }
 
-
   redraw() {
 
     this.sendToBack();
@@ -6442,7 +6438,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     const {bounds} = path;
     _attr._text.content = this.formula();
 
-    const textBounds = bounds.scale(0.9);
+    const textBounds = bounds.scale(0.88);
     textBounds.width = textBounds.width > maxTextWidth ? maxTextWidth : textBounds.width;
     textBounds.height = textBounds.height > maxTextWidth ? maxTextWidth : textBounds.height;
 
@@ -6450,15 +6446,16 @@ class Filling extends AbstractFilling(BuilderElement) {
       const turn = textBounds.width * 1.5 < textBounds.height;
       if(turn){
         textBounds.width = elm_font_size;
+        _attr._text.rotation = 270;
       }
       else{
         textBounds.height = elm_font_size;
+        _attr._text.rotation = 0;
       }
       _attr._text.fitBounds(textBounds);
       _attr._text.point = turn
         ? bounds.bottomRight.add([-fontSize, -fontSize * 0.6])
         : bounds.bottomLeft.add([fontSize * 0.6, -fontSize]);
-      _attr._text.rotation = turn ? 270 : 0;
     }
     else{
       textBounds.height = elm_font_size;
@@ -6477,7 +6474,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
   }
 
-
   draw_fragment() {
     const {l_dimensions, layer, path} = this;
     this.visible = true;
@@ -6490,7 +6486,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     l_dimensions.redraw(true);
     layer.zoom_fit();
   }
-
 
   set_inset(v, ignore_select) {
 
@@ -6544,7 +6539,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     super.set_inset(inset);
   }
 
-
   set_clr(v, ignore_select) {
     if(!ignore_select && this.project.selectedItems.length > 1){
       this.project.selected_glasses().forEach((elm) => {
@@ -6555,7 +6549,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
     super.set_clr(v);
   }
-
 
   purge_paths() {
     const paths = this.children.filter((child) => child instanceof paper.Path);
@@ -6571,7 +6564,6 @@ class Filling extends AbstractFilling(BuilderElement) {
       destination: path.bounds.topRight
     });
   }
-
 
   formula(by_art) {
     let res;
@@ -6594,7 +6586,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     return res || (by_art ? this.inset.article || this.inset.name : this.inset.name);
   }
 
-
   deselect_onlay_points() {
     for(const {generatrix} of this.imposts) {
       generatrix.segments.forEach((segm) => {
@@ -6608,7 +6599,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
   }
 
-
   get imposts() {
     return this.getItems({class: Onlay});
   }
@@ -6617,7 +6607,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     return this._attr._profiles || [];
   }
 
-
   remove_onlays() {
     for(let onlay of this.imposts){
       onlay.remove();
@@ -6625,21 +6614,17 @@ class Filling extends AbstractFilling(BuilderElement) {
   }
 
 
-
   get area() {
     return (this.bounds.area / 1e6).round(5);
   }
-
 
   get form_area() {
     return (this.path.area/1e6).round(5);
   }
 
-
   interiorPoint() {
     return this.path.interiorPoint;
   }
-
 
   get is_rectangular() {
     const {profiles, path} = this;
@@ -6649,7 +6634,6 @@ class Filling extends AbstractFilling(BuilderElement) {
   get generatrix() {
     return this.path;
   }
-
 
   get path() {
     return this._attr.path;
@@ -6771,11 +6755,9 @@ class Filling extends AbstractFilling(BuilderElement) {
     return res;
   }
 
-
   get outer_profiles() {
     return this.profiles;
   }
-
 
   get perimeter() {
     const res = [];
@@ -6797,7 +6779,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     const {path} = this;
     return path ? path.bounds : new paper.Rectangle();
   }
-
 
   perimeter_inner(size = 0) {
     const {center} = this.bounds;
@@ -6836,7 +6817,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     });
   }
 
-
   bounds_light(size = 0) {
     const path = new paper.Path({insert: false});
     for (const {sub_path} of this.perimeter_inner(size)) {
@@ -6849,32 +6829,26 @@ class Filling extends AbstractFilling(BuilderElement) {
     return path.bounds;
   }
 
-
   get x1() {
     return (this.bounds.left - this.project.bounds.x).round(1);
   }
-
 
   get x2() {
     return (this.bounds.right - this.project.bounds.x).round(1);
   }
 
-
   get y1() {
     return (this.project.bounds.height + this.project.bounds.y - this.bounds.bottom).round(1);
   }
-
 
   get y2() {
     return (this.project.bounds.height + this.project.bounds.y - this.bounds.top).round(1);
   }
 
-
   get info() {
     const {elm, bounds, thickness} = this;
     return "№" + elm + " w:" + bounds.width.toFixed(0) + " h:" + bounds.height.toFixed(0) + " z:" + thickness.toFixed(0);
   }
-
 
   get oxml() {
     const oxml = {
@@ -7601,15 +7575,20 @@ class Magnetism {
 
     for(const profile of selected.profiles) {
       if(profile !== selected.profile) {
+        let pushed;
         if(profile.b.is_nearest(point, true)) {
           nodes.push({profile, point: 'b'});
+          pushed = true;
         }
         if(profile.e.is_nearest(point, true)) {
           nodes.push({profile, point: 'e'});
+          pushed = true;
         }
-        const px = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).getNearestPoint(point);
-        if(px.is_nearest(point, true)) {
-          nodes.push({profile, point: 't'});
+        if(!pushed) {
+          const px = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).getNearestPoint(point);
+          if(px.is_nearest(point, true)) {
+            nodes.push({profile, point: 't'});
+          }
         }
       }
     }
@@ -9088,9 +9067,6 @@ class ProfileItem extends GeneratrixElement {
       _row.r = min_radius + 0.0001;
       full = true;
     }
-    if(height && height > min_radius) {
-      height = min_radius;
-    }
 
     if(selected) {
       this.selected = false;
@@ -9104,7 +9080,7 @@ class ProfileItem extends GeneratrixElement {
       if(full || height) {
         const start = b.add(e).divide(2);
         const vector = p.subtract(start);
-        vector.normalize(height || min_radius);
+        vector.length = (height || min_radius);
         p = start.add(vector);
       }
       generatrix.arcTo(p, e);
@@ -10895,7 +10871,7 @@ class Scheme extends paper.Project {
 
   _dp_listener(obj, fields) {
 
-    const {_attr, ox, _scope} = this;
+    const {_attr, ox} = this;
 
     if(_attr._loading || _attr._snapshot || obj != this._dp) {
       return;
@@ -10921,7 +10897,7 @@ class Scheme extends paper.Project {
 
       obj.sys.refill_prm(ox, 0, true);
 
-      _scope.eve.emit_async('rows', ox, {extra_fields: true, params: true});
+      obj._manager.emit_async('rows', obj, {extra_fields: true});
 
       for (const contour of this.contours) {
         contour.on_sys_changed();
@@ -11169,6 +11145,11 @@ class Scheme extends paper.Project {
     }
 
     _attr._loading = true;
+
+    if(from_service) {
+      _attr._from_service = true;
+    }
+
     this.ox = null;
     this.clear();
 
@@ -11196,7 +11177,7 @@ class Scheme extends paper.Project {
     let elm;
     if(attr.elm > 0) {
       elm = this.getItem({class: BuilderElement, elm: attr.elm});
-      elm.draw_fragment && elm.draw_fragment();
+      elm && elm.draw_fragment && elm.draw_fragment();
     }
     else if(attr.elm < 0) {
       const cnstr = -attr.elm;
@@ -11308,7 +11289,7 @@ class Scheme extends paper.Project {
 
   clear() {
     const {_attr} = this;
-    const pnames = '_bounds,_update_timer,_loading,_snapshot,_silent';
+    const pnames = '_bounds,_update_timer,_loading,_snapshot,_silent,_from_service';
     for (let fld in _attr) {
       if(!pnames.match(fld)) {
         delete _attr[fld];
@@ -11412,10 +11393,8 @@ class Scheme extends paper.Project {
     if(other.length && Math.abs(delta.x) > 1) {
       this.do_align(auto_align, profiles);
     }
-    else {
-      setTimeout(() => {
-        this.contours.forEach(l => l.redraw());
-      }, 100);
+    else if(!this._attr._from_service) {
+      setTimeout(() => this.contours.forEach(l => l.redraw()), 70);
     }
 
     _dp._manager.emit_async('update', {}, {x1: true, x2: true, y1: true, y2: true, a1: true, a2: true, cnn1: true, cnn2: true, info: true});
@@ -11444,7 +11423,7 @@ class Scheme extends paper.Project {
 
     this.l_connective.save_coordinates();
 
-    $p.products_building.recalc(this, attr);
+    return $p.products_building.recalc(this, attr);
 
   }
 
@@ -11482,10 +11461,13 @@ class Scheme extends paper.Project {
     }
   }
 
-  get_svg(attr) {
+  get_svg(attr = {}) {
     this.deselectAll();
-
-    const svg = this.exportSVG();
+    const options = attr.export_options || {};
+    if(!options.precision) {
+      options.precision = 1;
+    }
+    const svg = this.exportSVG(options);
     const bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
 
     svg.setAttribute('x', bounds.x);
@@ -12990,158 +12972,376 @@ ToolCoordinates.defaultProps = {
 
 
 
-class ToolCut extends paper.Tool {
+class ToolCut extends ToolElement{
 
   constructor() {
-    super();
-    this.options = {name: 'cut'};
-    this.on({activate: this.on_activate});
-  }
 
-  on_activate() {
-    const {project, tb_left} = this._scope;
-    const previous = tb_left.get_selected();
+    super()
 
-    Promise.resolve().then(() => {
+    Object.assign(this, {
+      options: {name: 'cut'},
+      mouseStartPos: new paper.Point(),
+      nodes: null,
+      hitItem: null,
+      cont: null,
+      square: null,
+      profile: null,
+    })
 
-      const {selected} = project.magnetism;
+    this.on({
 
-      if(selected.break) {
-        $p.msg.show_msg({
-          type: 'alert-info',
-          text: `Выделено более одного узла`,
-          title: 'Соединение Т в угол'
-        });
-      }
-      else if(!selected.profile) {
-        $p.msg.show_msg({
-          type: 'alert-info',
-          text: `Не выделено ни одного узла профиля`,
-          title: 'Соединение Т в угол'
-        });
-      }
-      else {
+      activate() {
+        this.on_activate('cursor-arrow-cut');
+      },
 
-        const nodes = project.magnetism.filter(selected);
+      deactivate() {
+        this.remove_cont();
+      },
 
-        if(nodes.length >= 3) {
+      keydown(event) {
+        if (event.key == 'escape') {
+          this.remove_cont();
+          this._scope.canvas_cursor('cursor-arrow-cut');
+        }
+      },
 
-          for(const elm of nodes) {
-            const cnn_point = elm.profile.cnn_point(elm.point);
-            if(cnn_point && cnn_point.is_x) {
-              this.split_angle(elm, nodes);
-              break;
-            }
-            else if(cnn_point && cnn_point.is_t) {
-              this.merge_angle(elm, nodes);
-              break;
-            }
+      mouseup(event) {
+
+        const hitItem = this.project.hitTest(event.point, {fill: true, stroke: false, segments: false});
+        if(hitItem && hitItem.item.parent instanceof Profile) {
+          let item = hitItem.item.parent;
+          if(event.modifiers.shift) {
+            item.selected = !item.selected;
           }
-
-        }
-      }
-    });
-
-    if(previous) {
-      return this._scope.select_tool(previous.replace('left_', ''));
-    }
-  }
-
-  merge_angle(impost, nodes) {
-
-    let point, profile, cnn;
-    nodes.some((elm) => {
-      if(elm !== impost && elm.point !== 't') {
-        profile = elm.profile;
-        point = profile.nearest(true) ? (profile.corns(elm.point === 'b' ? 1 : 2)) : profile[elm.point];
-        const cnns = $p.cat.cnns.nom_cnn(impost.profile, profile, [$p.enm.cnn_types.КрестВСтык]);
-        if(cnns.length) {
-          cnn = cnns[0];
-          return true;
-        }
-      }
-    });
-
-    if(cnn && !cnn.empty()) {
-
-      for (const elm of nodes) {
-        if((elm.profile === impost || !elm.profile.nearest(true)) && elm.point !== 't' && !point.equals(elm.profile[elm.point])) {
-          elm.profile[elm.point] = point;
-        };
-      }
-
-      const {rays, project} = impost.profile;
-      const ray = rays[impost.point];
-      if(ray.cnn != cnn || ray.profile != profile) {
-        ray.clear();
-        ray.cnn = cnn;
-        ray.profile = profile;
-        project.register_change();
-      }
-    }
-    else {
-      const p1 = impost.profile ? impost.profile.inset.presentation : '...';
-      const p2 = profile ? profile.inset.presentation : '...';
-      $p.msg.show_msg({
-        type: 'alert-info',
-        text: `Не найдено соединение 'Крест в стык' для профилей ${p1} и ${p2}`,
-        title: 'Соединение Т в угол'
-      });
-    }
-
-  }
-
-  split_angle(impost, nodes) {
-
-    let point, profile, cnn;
-    nodes.some((elm) => {
-      if(elm !== impost && elm.point !== 't') {
-        profile = elm.profile;
-        if(profile.nearest(true)) {
-          const {outer} = profile.rays
-          const offset = elm.point === 'b' ? outer.getOffsetOf(profile.corns(1)) + 100 : outer.getOffsetOf(profile.corns(2)) - 100;
-          point = outer.getPointAt(offset);
+          else {
+            this.project.deselectAll();
+            item.selected = true;
+          }
+          item.attache_wnd(this._scope._acc.elm);
+          this.profile = item;
         }
         else {
-          point = profile[elm.point];
+          this.profile = null;
         }
-        const cnns = $p.cat.cnns.nom_cnn(impost.profile, profile, [$p.enm.cnn_types.ТОбразное]);
-        if(cnns.length) {
-          cnn = cnns[0];
-          return true;
+
+        this.remove_cont();
+        this._scope.canvas_cursor('cursor-arrow-cut');
+
+      },
+
+      mousemove: this.hitTest
+
+    })
+
+  }
+
+  create_cont() {
+    const {nodes} = this;
+    if(!this.cont && nodes.length) {
+      const point = nodes[0].profile[nodes[0].point];
+      const pt = this.project.view.projectToView(point);
+
+      const buttons = [];
+      if(nodes.length > 2) {
+        buttons.push({name: 'cut', float: 'left', css: 'tb_cursor-cut tb_disable', tooltip: 'Разорвать Т'});
+        buttons.push({name: 'uncut', float: 'left', css: 'tb_cursor-uncut', tooltip: 'Объединить разрыв в Т'});
+      }
+      else if(nodes.some(({point}) => point === 't')) {
+        buttons.push({name: 'cut', float: 'left', css: 'tb_cursor-cut', tooltip: 'Разорвать Т'});
+        buttons.push({name: 'uncut', float: 'left', css: 'tb_cursor-uncut tb_disable', tooltip: 'Объединить разрыв в Т'});
+      }
+      else {
+        buttons.push({name: 'diagonal', float: 'left', css: 'tb_cursor-diagonal', tooltip: 'Диагональное'});
+        buttons.push({name: 'vh', float: 'left', css: 'tb_cursor-vh', tooltip: 'Угловое к горизонтали'});
+        buttons.push({name: 'hv', float: 'left', css: 'tb_cursor-hv', tooltip: 'Угловое к вертикали'});
+      }
+      const types = new Set();
+      for(const {profile, point} of nodes) {
+        if(point === 'b' || point === 'e') {
+          const cnn = profile.rays[point];
+          const cnns = $p.cat.cnns.nom_cnn(profile, cnn.profile, nodes.length > 2 ? undefined : cnn.cnn_types);
+          for(const tcnn of cnns) {
+            types.add(tcnn.cnn_type);
+          }
         }
       }
-    });
+      for(const btn of buttons) {
+        if(!btn.css.includes('tb_disable')) {
+          if(btn.name === 'uncut' && !types.has($p.enm.cnn_types.t) ||
+            btn.name === 'vh' && !types.has($p.enm.cnn_types.ah) ||
+            btn.name === 'hv' && !types.has($p.enm.cnn_types.av) ||
+            btn.name === 'diagonal' && !types.has($p.enm.cnn_types.ad)
+          ){
+            btn.css += ' tb_disable';
+          }
+          else if(['diagonal', 'vh', 'hv'].includes(btn.name) && nodes.every(({profile, point}) => {
+            const {cnn} = profile.rays[point];
+            const type = btn.name === 'diagonal' ? $p.enm.cnn_types.ad : (btn.name === 'vh' ? $p.enm.cnn_types.ah : $p.enm.cnn_types.av);
+            return cnn && cnn.cnn_type === type;
+          })){
+            btn.css += ' tb_disable';
+          }
+        }
+      }
 
-    if(cnn && !cnn.empty()) {
+      this.cont = new $p.iface.OTooolBar({
+        wrapper: this._scope._wrapper,
+        top: `${pt.y + 10}px`,
+        left: `${pt.x - 20}px`,
+        name: 'tb_cut',
+        height: '28px',
+        width: `${29 * buttons.length + 1}px`,
+        buttons,
+        onclick: this.tb_click.bind(this),
+      });
 
-      impost.profile[impost.point] = point === profile.b ? profile.generatrix.getPointAt(100) : profile.generatrix.getPointAt(profile.generatrix.length - 100);
-
-      const {rays, project} = impost.profile;
-      const ray = rays[impost.point];
-      ray.clear();
-      ray.cnn = cnn;
-      ray.profile = profile;
-      project.register_change();
-    }
-    else {
-      const p1 = impost.profile ? impost.profile.inset.presentation : '...';
-      const p2 = profile ? profile.inset.presentation : '...';
-      $p.msg.show_msg({
-        type: 'alert-info',
-        text: `Не найдено соединение Т для профилей ${p1} и ${p2}`,
-        title: 'Соединение Т из угла'
+      this.square = new paper.Path.Rectangle({
+        point: point.add([-50, -50]),
+        size: [100, 100],
+        strokeColor: 'blue',
+        strokeWidth: 3,
+        dashArray: [8, 8],
       });
     }
-
+    this._scope.canvas_cursor('cursor-arrow-white');
   }
 
-  merge_t() {
-
+  remove_cont() {
+    this.cont && this.cont.unload();
+    this.square && this.square.remove();
+    this.nodes = null;
+    this.cont = null;
+    this.square = null;
   }
 
-  split_t() {
+  tb_click(name) {
+    const {nodes} = this;
+    if(!nodes) {
+      return;
+    }
+    if(['diagonal', 'vh', 'hv'].includes(name)) {
+      const type = name === 'diagonal' ? $p.enm.cnn_types.ad : (name === 'vh' ? $p.enm.cnn_types.ah : $p.enm.cnn_types.av);
+      for(const {profile, point} of nodes) {
+        if(point === 'b' || point === 'e') {
+          const cnn = profile.rays[point];
+          if(cnn.cnn.cnn_type !== type) {
+            const cnns = $p.cat.cnns.nom_cnn(profile, cnn.profile, [type]);
+            if(cnns.length) {
+              cnn.cnn = cnns[0];
+              this.project.register_change();
+            }
+          }
+        }
+      }
+    }
+    else if(name === 'cut') {
+      this.do_cut();
+    }
+    else if(name === 'uncut') {
+      this.do_uncut();
+    }
+    this.remove_cont();
+  }
 
+  deselect() {
+    const {project, profile} = this;
+    if(profile) {
+      profile.detache_wnd();
+      this.profile = null;
+    }
+    project.deselectAll();
+    project.register_change();
+  }
+
+  do_cut(){
+    let impost, rack;
+    for(const node of this.nodes) {
+      if(node.point === 'b' || node.point === 'e') {
+        impost = node;
+      }
+      else if(node.point === 't') {
+        rack = node;
+      }
+    }
+    if(!impost || !rack) {
+      return;
+    }
+
+
+    let cnn = rack.profile.cnn_point('e');
+    const base = cnn.cnn;
+    cnn && cnn.profile && cnn.profile_point && cnn.profile.rays[cnn.profile_point].clear(true);
+    cnn.clear(true);
+    impost.profile.rays[impost.point].clear(true);
+
+    const {generatrix} = rack.profile;
+    if(generatrix.hasOwnProperty('insert')) {
+      delete generatrix.insert;
+    }
+
+    const loc = generatrix.getNearestLocation(impost.profile[impost.point]);
+    const rack2 = new Profile({generatrix: generatrix.splitAt(loc), proto: rack.profile});
+
+    cnn = rack2.cnn_point('e');
+    if(base && cnn && cnn.profile) {
+      if(!cnn.cnn || cnn.cnn.cnn_type !== base.cnn_type){
+        const cnns = $p.cat.cnns.nom_cnn(rack2, cnn.profile, [base.cnn_type]);
+        if(cnns.includes(base)) {
+          cnn.cnn = base;
+        }
+        else if(cnns.length) {
+          cnn.cnn = cnns[0];
+        }
+      }
+      cnn = cnn.profile.cnn_point(cnn.profile_point);
+      if(cnn.profile === rack2) {
+        const cnns = $p.cat.cnns.nom_cnn(cnn.parent, rack2, [base.cnn_type]);
+        if(cnns.includes(base)) {
+          cnn.cnn = base;
+        }
+        else if(cnns.length) {
+          cnn.cnn = cnns[0];
+        }
+      }
+    }
+
+    this.deselect();
+  }
+
+  do_uncut(){
+    const nodes = this.nodes.filter(({point}) => point === 'b' || point === 'e');
+    let impost, rack1, rack2;
+    for(const n1 of nodes) {
+      for(const n2 of nodes) {
+        if(n1 === n2) continue;
+        const angle = n1.profile.generatrix.angle_to(n2.profile.generatrix, n1.profile[n1.point]);
+        if(!rack1 && !rack2) {
+          if(angle < 20 || angle > 340) {
+            rack1 = n1;
+            rack2 = n2;
+          }
+        }
+        else if((angle > 70 && angle < 110) || (angle > 250 && angle < 290)) {
+          if(rack1 !== n1 && rack2 !== n1) {
+            impost = n1;
+          }
+          else if(rack1 !== n2 && rack2 !== n2) {
+            impost = n2;
+          }
+        }
+      }
+    }
+    if(!impost || !rack1 || !rack2) {
+      return;
+    }
+
+    rack1.profile.rays[rack1.point].clear(true);
+    impost.profile.rays[impost.point].clear(true);
+
+    const p2 = rack2.profile[rack2.point === 'b' ? 'e' : 'b'];
+    rack1.profile[rack1.point] = p2;
+
+    let base;
+    let cnn = rack2.profile.cnn_point('b');
+    if(rack2.point === 'e') {
+      base = cnn.cnn;
+    }
+    cnn && cnn.profile && cnn.profile_point && cnn.profile.rays[cnn.profile_point].clear(true);
+    cnn = rack2.profile.cnn_point('e');
+    if(rack2.point === 'b') {
+      base = cnn.cnn;
+    }
+    cnn && cnn.profile && cnn.profile_point && cnn.profile.rays[cnn.profile_point].clear(true);
+    const imposts = rack2.profile.joined_imposts();
+    for(const ji of imposts.inner.concat(imposts.outer)) {
+      cnn = ji.cnn_point('b');
+      if(cnn.profile === rack2.profile) {
+        cnn.clear(true);
+      }
+      cnn = ji.cnn_point('e');
+      if(cnn.profile === rack2.profile) {
+        cnn.clear(true);
+      }
+    }
+    rack2.profile.rays.clear(true);
+    rack2.profile.removeChildren();
+    rack2.profile.remove();
+
+    cnn = rack1.profile.cnn_point(rack1.point);
+    if(base && cnn && cnn.profile) {
+      if(!cnn.cnn || cnn.cnn.cnn_type !== base.cnn_type){
+        const cnns = $p.cat.cnns.nom_cnn(rack1.profile, cnn.profile, [base.cnn_type]);
+        if(cnns.includes(base)) {
+          cnn.cnn = base;
+        }
+        else if(cnns.length) {
+          cnn.cnn = cnns[0];
+        }
+        cnn = cnn.profile.cnn_point(cnn.profile_point);
+        if(cnn.profile === rack1.profile) {
+          const cnns = $p.cat.cnns.nom_cnn(cnn.parent, rack1.profile, [base.cnn_type]);
+          if(cnns.includes(base)) {
+            cnn.cnn = base;
+          }
+          else if(cnns.length) {
+            cnn.cnn = cnns[0];
+          }
+        }
+      }
+    }
+
+    this.deselect();
+  }
+
+  nodes_different(nn) {
+    const {nodes} = this;
+    if(!nodes || nn.length !== nodes.length) {
+      return true;
+    }
+    for(const n1 in nodes) {
+      let ok;
+      for(const n2 in nn) {
+        if(n1.profile === n2.profile && n1.point === n2.point) {
+          ok = true;
+          break;
+        }
+      }
+      if(!ok) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  hitTest(event) {
+
+    const hitSize = 30;
+    this.hitItem = null;
+
+    if (event.point) {
+      this.hitItem = this.project.hitTest(event.point, { ends: true, tolerance: hitSize });
+    }
+
+    if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
+      const {activeLayer, magnetism} = this.project;
+      const profile = this.hitItem.item.parent;
+      if(profile.parent === activeLayer) {
+        const {profiles} = activeLayer;
+        const {b, e} = profile;
+        const selected = {profiles, profile, point: b.getDistance(event.point) < e.getDistance(event.point) ? 'b' : 'e'};
+        const nodes = magnetism.filter(selected);
+        if(this.nodes_different(nodes)) {
+          this.remove_cont();
+          this.nodes = nodes;
+          this.create_cont();
+        }
+      }
+    }
+    else {
+      this._scope.canvas_cursor('cursor-arrow-cut');
+    }
+
+    return true;
   }
 
 }
@@ -14106,6 +14306,164 @@ class ToolLayImpost extends ToolElement {
         this._scope.tools[1].activate();
       }, 100);
   }
+}
+
+
+
+class ToolM2 extends paper.Tool {
+
+  constructor() {
+    super();
+    this.options = {name: 'm2'};
+    this.on({activate: this.on_activate});
+  }
+
+  on_activate() {
+    const {project, tb_left} = this._scope;
+    const previous = tb_left.get_selected();
+
+    Promise.resolve().then(() => {
+
+      const {selected} = project.magnetism;
+
+      if(selected.break) {
+        $p.msg.show_msg({
+          type: 'alert-info',
+          text: `Выделено более одного узла`,
+          title: 'Соединение Т в угол'
+        });
+      }
+      else if(!selected.profile) {
+        $p.msg.show_msg({
+          type: 'alert-info',
+          text: `Не выделено ни одного узла профиля`,
+          title: 'Соединение Т в угол'
+        });
+      }
+      else {
+
+        const nodes = project.magnetism.filter(selected);
+
+        if(nodes.length >= 3) {
+
+          for(const elm of nodes) {
+            const cnn_point = elm.profile.cnn_point(elm.point);
+            if(cnn_point && cnn_point.is_x) {
+              this.split_angle(elm, nodes);
+              break;
+            }
+            else if(cnn_point && cnn_point.is_t) {
+              this.merge_angle(elm, nodes);
+              break;
+            }
+          }
+
+        }
+      }
+    });
+
+    if(previous) {
+      return this._scope.select_tool(previous.replace('left_', ''));
+    }
+  }
+
+  merge_angle(impost, nodes) {
+
+    let point, profile, cnn;
+    nodes.some((elm) => {
+      if(elm !== impost && elm.point !== 't') {
+        profile = elm.profile;
+        point = profile.nearest(true) ? (profile.corns(elm.point === 'b' ? 1 : 2)) : profile[elm.point];
+        const cnns = $p.cat.cnns.nom_cnn(impost.profile, profile, [$p.enm.cnn_types.КрестВСтык]);
+        if(cnns.length) {
+          cnn = cnns[0];
+          return true;
+        }
+      }
+    });
+
+    if(cnn && !cnn.empty()) {
+
+      for (const elm of nodes) {
+        if((elm.profile === impost || !elm.profile.nearest(true)) && elm.point !== 't' && !point.equals(elm.profile[elm.point])) {
+          elm.profile[elm.point] = point;
+        };
+      }
+
+      const {rays, project} = impost.profile;
+      const ray = rays[impost.point];
+      if(ray.cnn != cnn || ray.profile != profile) {
+        ray.clear();
+        ray.cnn = cnn;
+        ray.profile = profile;
+        project.register_change();
+      }
+    }
+    else {
+      const p1 = impost.profile ? impost.profile.inset.presentation : '...';
+      const p2 = profile ? profile.inset.presentation : '...';
+      $p.msg.show_msg({
+        type: 'alert-info',
+        text: `Не найдено соединение 'Крест в стык' для профилей ${p1} и ${p2}`,
+        title: 'Соединение Т в угол'
+      });
+    }
+
+  }
+
+  split_angle(impost, nodes) {
+
+    let point, profile, cnn;
+    nodes.some((elm) => {
+      if(elm !== impost && elm.point !== 't') {
+        profile = elm.profile;
+        if(profile.nearest(true)) {
+          const {outer} = profile.rays
+          const offset = elm.point === 'b' ? outer.getOffsetOf(profile.corns(1)) + 100 : outer.getOffsetOf(profile.corns(2)) - 100;
+          point = outer.getPointAt(offset);
+        }
+        else {
+          point = profile[elm.point];
+        }
+        const cnns = $p.cat.cnns.nom_cnn(impost.profile, profile, [$p.enm.cnn_types.ТОбразное]);
+        if(cnns.length) {
+          cnn = cnns[0];
+          return true;
+        }
+      }
+    });
+
+    if(cnn && !cnn.empty()) {
+
+      impost.profile[impost.point] = point === profile.b ? profile.generatrix.getPointAt(100) : profile.generatrix.getPointAt(profile.generatrix.length - 100);
+
+      const {rays, project} = impost.profile;
+      const ray = rays[impost.point];
+      ray.clear();
+      ray.cnn = cnn;
+      ray.profile = profile;
+      project.register_change();
+    }
+    else {
+      const p1 = impost.profile ? impost.profile.inset.presentation : '...';
+      const p2 = profile ? profile.inset.presentation : '...';
+      $p.msg.show_msg({
+        type: 'alert-info',
+        text: `Не найдено соединение Т для профилей ${p1} и ${p2}`,
+        title: 'Соединение Т из угла'
+      });
+    }
+
+  }
+
+  merge_t() {
+
+  }
+
+  split_t() {
+
+  }
+
 }
 
 
