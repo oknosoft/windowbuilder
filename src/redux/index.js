@@ -5,14 +5,14 @@ import rootReducer from './reducers';
 import dynamicMiddlewares from 'redux-dynamic-middlewares';
 
 // маршрутизация url
-import createHistory from 'history/createBrowserHistory';
+import {createBrowserHistory} from 'history';
 import {routerMiddleware} from 'react-router-redux';
 
 // асинхронные действия
 import thunk from 'redux-thunk';
 
 // Create a history of your choosing (we're using a browser history in this case)
-export const history = createHistory();
+export const history = createBrowserHistory();
 
 export default function configureStore(preloadedState) {
   return createStore(
