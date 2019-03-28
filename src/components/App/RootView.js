@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 
 import {ConnectedRouter as Router} from 'react-router-redux';
-import {Route} from 'react-router';
 
 // статусы "загружено и т.д." в ствойствах компонента
 import {withMeta} from 'metadata-redux';

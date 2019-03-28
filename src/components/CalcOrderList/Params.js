@@ -19,7 +19,7 @@ class Params extends React.Component {
     return <div>
       <DataField _obj={scheme} _fld="date_from"/>
       <DataField _obj={scheme} _fld="date_till"/>
-    </div>
+    </div>;
   }
 
 }
