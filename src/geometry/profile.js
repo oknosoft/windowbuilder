@@ -731,7 +731,7 @@ class ProfileItem extends GeneratrixElement {
   get dx0() {
     const {cnn} = this.rays.b;
     const main_row = cnn && cnn.main_row(this);
-    return main_row && main_row.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? -main_row.sz : 0;
+    return main_row && main_row.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? -main_row.sz : cnn.sz;
   }
 
   setSelection(selection) {
