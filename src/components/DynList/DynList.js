@@ -28,7 +28,6 @@ class DynList extends MDNRComponent {
 
     this.state = {
       selectedRow: null,
-      scrollToRow: 0,
       scrollSetted: false,
       rowCount: 0,
       settings_open: false,
@@ -89,7 +88,7 @@ class DynList extends MDNRComponent {
     fakeRows.clear();
     ranges.length = 0;
 
-    const newState = {scheme, columns, scrollToRow: 0, rowCount: 0, selectedRow: null};
+    const newState = {scheme, columns, rowCount: 0, selectedRow: null};
     this.setState(newState, () => {
       this.loadMoreRows({
         startIndex: 0,
@@ -111,13 +110,27 @@ class DynList extends MDNRComponent {
 
     for(let j = startIndex; j < stopIndex; j++) {
       fakeRows.set(j, {});
+      const nrange = {startIndex, stopIndex};
+      let merged;
+      for(const range of ranges) {
+        if(range.stopIndex >= nrange.startIndex && range.stopIndex <= nrange.stopIndex) {
+          range.stopIndex = Math.max(range.stopIndex, nrange.stopIndex);
+          merged = true;
+        }
+        if(range.startIndex <= nrange.stopIndex && range.startIndex >= nrange.startIndex) {
+          range.startIndex = Math.min(range.startIndex, nrange.startIndex);
+          merged = true;
+        }
+      }
+      if(!merged) {
+        ranges.push(nrange);
+      }
     }
 
     return Promise.resolve().then(() => {
       const newState = {no_rows: false, network_error: null};
       if(scrollSetted) {
         newState.scrollSetted = false;
-        newState.scrollToRow = 0;
         newState.ref = '';
       }
       this.setState(newState);
@@ -138,7 +151,7 @@ class DynList extends MDNRComponent {
         // выполняем запрос
         const sprm = {
           columns,
-          skip: startIndex ? startIndex - 1 : 0,
+          skip: startIndex,
           limit: increment + 1,
         };
         if(sprm.limit < LIMIT / 2) {
@@ -169,24 +182,10 @@ class DynList extends MDNRComponent {
                   scrollSetted: true,
                   ref: '',
                 }
-                if(!flag && scroll !== null) {
-                  newState.selectedRow = scroll;
-                  newState.scrollToRow = newState.selectedRow + 4 < count ? newState.selectedRow + 4 : newState.selectedRow;
-                }
-                this.setState(newState);
-                if(newState.scrollToRow && (!_list[newState.selectedRow] || !_list[newState.scrollToRow])) {
-                  const opt = {
-                    startIndex: newState.scrollToRow - DataList.LIMIT / 2,
-                    stopIndex: newState.scrollToRow + DataList.LIMIT / 2,
-                  };
-                  if(opt.startIndex < 1) {
-                    opt.startIndex = 1;
-                  }
-                  if(opt.stopIndex > count) {
-                    opt.stopIndex = count;
-                  }
-                  this.loadMoreRows(opt);
-                }
+                this.setState(newState, () => {
+                  //selectRow
+                  this.grid.openCellEditor(scroll, 0);
+                });
               }
             }
           })
@@ -211,7 +210,7 @@ class DynList extends MDNRComponent {
     // Обновить количество записей.
     if(this._mounted) {
       if(rowCount === undefined) {
-        rowCount = rows.size > 1 ? rows.size : 0;
+        rowCount = rows.size;
       }
       const newState = {
         no_rows: !rowCount,
@@ -225,15 +224,67 @@ class DynList extends MDNRComponent {
     if(i < 0) {
       return undefined;
     }
-    const {rows, fakeRows, ranges}  = this;
+    const {rows}  = this;
     const row = rows.get(i);
     if(!row) {
-      // todo: учесть диапазоны
+      const {fakeRows, ranges, state: {rowCount}}  = this;
+      // todo: если i > диапазона, читаем вперёд, иначе - назад
       if(!fakeRows.get(i)) {
-        this.loadMoreRows({
-          startIndex: i,
-          stopIndex: i + LIMIT - 1,
-        });
+        if(rowCount && i > rowCount - (LIMIT / 2)) {
+          this.loadMoreRows({
+            startIndex: rowCount - LIMIT,
+            stopIndex: rowCount + 1,
+          });
+        }
+        else {
+          // ищем ближайший диапазон
+          let dist = Infinity;
+          let crange;
+          for(const range of ranges) {
+            const cdist = Math.min(Math.abs(range.startIndex - i), Math.abs(range.stopIndex - i));
+            if(cdist < dist) {
+              crange = range;
+              dist = cdist;
+            }
+          }
+          // определяем направление
+          if(crange && i <= crange.startIndex) {
+            let lim = crange.startIndex - i;
+            if(lim < LIMIT) {
+              this.loadMoreRows({
+                startIndex: crange.startIndex - LIMIT,
+                stopIndex: crange.startIndex,
+              });
+            }
+            else {
+              this.loadMoreRows({
+                startIndex: i - LIMIT,
+                stopIndex: i + 1,
+              });
+            }
+          }
+          else if(crange && i >= crange.stopIndex) {
+            let lim = i - crange.stopIndex;
+            if(lim < LIMIT) {
+              this.loadMoreRows({
+                startIndex: crange.stopIndex,
+                stopIndex: crange.stopIndex + LIMIT,
+              });
+            }
+            else {
+              this.loadMoreRows({
+                startIndex: i,
+                stopIndex: i + LIMIT,
+              });
+            }
+          }
+          else {
+            this.loadMoreRows({
+              startIndex: i,
+              stopIndex: i + LIMIT,
+            });
+          }
+        }
       }
 
       return fakeRows.get(i);
@@ -262,10 +313,14 @@ class DynList extends MDNRComponent {
     this.setState({info_text});
   }
 
+  get selectedRow() {
+    const {state: {selectedRow}, rows} = this;
+    return typeof selectedRow === 'number' ? rows.get(selectedRow) : selectedRow;
+  }
+
   // обработчик выбора значения в списке
   handleSelect = () => {
-    const {state: {selectedRow}, props: {handlers, _mgr}} = this;
-    const row = this.rows.get(state.selectedRow);
+    const {selectedRow: row, props: {handlers, _mgr}} = this;
     if(row) {
       handlers.handleSelect && handlers.handleSelect(row, _mgr);
     }
@@ -282,9 +337,7 @@ class DynList extends MDNRComponent {
 
   // обработчик редактирования элемента списка
   handleEdit = () => {
-    const {_list, _meta, state, props} = this;
-    const {handlers, _mgr} = props;
-    const row = this.rows.get(state.selectedRow);
+    const {_meta, selectedRow: row, props: {handlers, _mgr}} = this;
     if(!row || $p.utils.is_empty_guid(row.ref)) {
       handlers.handleIfaceState({
         component: '',
@@ -299,9 +352,7 @@ class DynList extends MDNRComponent {
 
   // обработчик удаления элемента списка
   handleRemove = () => {
-    const {_meta, state, props} = this;
-    const {handlers, _mgr} = props;
-    const row = this.rows.get(state.selectedRow);
+    const {_meta, selectedRow: row, props: {handlers, _mgr}} = this;
 
     if(!row || $p.utils.is_empty_guid(row.ref)) {
       handlers.handleIfaceState({
@@ -325,15 +376,13 @@ class DynList extends MDNRComponent {
 
   // обработчик печати теущей строки
   handlePrint = () => {
-    const row = this.rows.get(this.state.selectedRow);
-    const {handlers, _mgr} = this.props;
+    const {selectedRow: row, props: {handlers, _mgr}} = this;
     row && handlers.handlePrint && handlers.handlePrint(row, _mgr);
   };
 
   // обработчик вложений теущей строки
   handleAttachments = () => {
-    const row = this.rows.get(this.state.selectedRow);
-    const {handlers, _mgr} = this.props;
+    const {selectedRow: row, props: {handlers, _mgr}} = this;
     row && handlers.handleAttachments && handlers.handleAttachments(row, _mgr);
   };
 
@@ -386,7 +435,7 @@ class DynList extends MDNRComponent {
       // диалог предупреждений при удалении
       confirm_text && <Confirm
         key="confirm"
-        title={_meta.synonym}
+        title={this._meta.synonym}
         text={confirm_text}
         handleOk={this._handleRemove}
         handleCancel={this.handleConfirmClose}
@@ -396,7 +445,7 @@ class DynList extends MDNRComponent {
       // диалог информации
       info_text && <Confirm
         key="info"
-        title={_meta.synonym}
+        title={this._meta.synonym}
         text={info_text}
         handleOk={this.handleInfoText}
         handleCancel={this.handleInfoText}
@@ -424,11 +473,12 @@ class DynList extends MDNRComponent {
         rowGetter={this.rowGetter}
         rowsCount={rowCount}
         onCellDeSelected={(v) => {
-          v = this.grid;
+          this.setState({selectedRow: null});
         }}
         onCellSelected={(v) => {
-          v = this.grid;
+          this.setState({selectedRow: this.rows.get(v.rowIdx) || v.rowIdx});
         }}
+        onRowDoubleClick={props.selectionMode ? this.handleSelect : this.handleEdit}
       />
     ];
   }
