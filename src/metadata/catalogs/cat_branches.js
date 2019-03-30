@@ -14,20 +14,27 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
       if($p.job_prm.properties && $p.current_user && !$p.current_user.branch.empty() && $p.job_prm.builder) {
 
         const {ПараметрВыбора} = $p.enm.parameters_keys_applying;
-        const {furn, sys} = $p.job_prm.properties;
+        const {furn, sys, inset} = $p.job_prm.properties;
 
         // накапливаем
         $p.current_user.branch.load()
           .then(({keys}) => {
-            const branch_filter = $p.job_prm.builder.branch_filter = {furn: [], sys: []};
+            const branch_filter = $p.job_prm.builder.branch_filter = {furn: [], sys: [], inset: []};
             keys.forEach(({acl_obj}) => {
               if(acl_obj.applying == ПараметрВыбора) {
-                acl_obj.params.forEach(({property, value}) => {
+                acl_obj.params.forEach(({property, value, txt_row}) => {
                   if(property === furn) {
                     branch_filter.furn.push(value);
                   }
                   else if(property === sys) {
                     branch_filter.sys.push(value);
+                  }
+                  else if(property === inset) {
+                    if (txt_row) {
+                      branch_filter.inset = branch_filter.inset.concat(JSON.parse(txt_row));
+                    } else {
+                      branch_filter.inset.push(value);
+                    }
                   }
                 });
               }
@@ -50,6 +57,13 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
                 name: "ref",
                 path: {inh: branch_filter.sys}
               }];
+            }
+            if(branch_filter.inset.length) {
+              const mf = $p.dp.buyers_order.metadata('production').fields.inset;
+              mf.choice_params.push({
+                name: "ref",
+                path: {in: branch_filter.inset}
+              });
             }
 
           });
