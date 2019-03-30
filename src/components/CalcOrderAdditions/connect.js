@@ -59,7 +59,16 @@ export function fill_data(ref) {
 
 export function find_inset(insert_type) {
   if(!this._inset) {
+    const {branch_filter} = $p.job_prm.builder;
     const inset = $p.cat.inserts.find_rows({available: true, insert_type})
+      .reduce((curr, next) => {
+        if (branch_filter && branch_filter.inset) {
+          branch_filter.inset.indexOf(next.ref) !== -1 && curr.push(next);
+        } else {
+          curr.push(next);
+        }
+        return curr;
+      }, [])
       .reduce((curr, next) => !curr.empty() && curr.priority >= next.priority ? curr : next, $p.cat.inserts.get());
     if (!inset.empty()) {
       this._inset = inset;
