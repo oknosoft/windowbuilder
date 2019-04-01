@@ -50,26 +50,26 @@ function NomTable({_obj, classes}) {
   const fragments = _obj.fragments();
   fragments.forEach((characteristics, nom) => {
     for(const [characteristic, rows] of characteristics) {
-      const rows = _obj.cutting.find_rows({nom, characteristic});
+      const crows = _obj.cutting.find_rows({nom, characteristic});
       const cuts_in = _obj.cuts.find_rows({record_kind: debit_credit_kinds.credit, nom, characteristic});
       const cuts_out = _obj.cuts.find_rows({record_kind: debit_credit_kinds.debit, nom, characteristic});
 
-      const products_len = rows.reduce((sum, row) => sum + row.len, 0);
+      const products_len = crows.reduce((sum, row) => sum + row.len, 0);
       const workpieces_len = cuts_in.reduce((sum, row) => sum + row.len, 0);
       const scraps_len = cuts_out.reduce((sum, row) => sum + row.len, 0);
       const knifewidth = nom.knifewidth || 7;
       const workpieces = cuts_in.map(({len, stick}) => {
-        rows.forEach((row) => {
+        crows.forEach((row) => {
           if(stick === row.stick) {
             len -= (row.len + knifewidth);
           }
         });
         return len > 0 ? len : 0;
       });
-      const scraps_percent = (workpieces_len - products_len - scraps_len - rows.length * knifewidth) * 100 / workpieces_len;
+      const scraps_percent = (workpieces_len - products_len - scraps_len - crows.length * knifewidth) * 100 / workpieces_len;
 
       const status = {
-        rows,
+        rows: crows,
         cuts_in,
         workpieces,
         products_len,

@@ -110,20 +110,29 @@ $p.wsql.init((prm) => {
       debug('Получаем скрипт таблиц alasql');
       $p.md.create_tables((sql) => {
 
-        text = '/* eslint-disable */\nmodule.exports = function meta($p) {\n\n'
+        text = '/* eslint-disable */\nmodule.exports = function meta_init($p) {\n\n'
           + '$p.wsql.alasql(\'' + sql + '\', []);\n\n'
           + '$p.md.init(' + JSON.stringify(_m) + ');\n\n'
           + text + '};';
 
         debug('Записываем результат');
-        const fname = path.resolve(__dirname, '../src/metadata/init.js');
+        let fname = path.resolve(__dirname, '../public/dist/init.js');
         fs.writeFile(fname, text, 'utf8', (err) => {
           if (err) {
             debug(err);
             process.exit(1);
           } else {
             debug(`Успешно записан > ${fname}`);
-            process.exit(0);
+            fname = path.resolve(__dirname, '../src/metadata/init.js');
+            fs.writeFile(fname, text.replace('module.exports =', 'export default'), 'utf8', (err) => {
+              if (err) {
+                debug(err);
+                process.exit(1);
+              } else {
+                debug(`Успешно записан > ${fname}`);
+                process.exit(0);
+              }
+            });
           }
         });
 
@@ -152,7 +161,7 @@ function create_modules(_m) {
       ireg: {mgr: 'InfoRegManager', proto: 'RegisterRow'},
       areg: {mgr: 'AccumRegManager', proto: 'RegisterRow'},
       dp: {mgr: 'DataProcessorsManager', proto: 'DataProcessorObj'},
-      rep: {mgr: 'DataProcessorsManager', proto: 'DataProcessorObj'},
+      rep: {mgr: 'DataProcessorsManager', proto: 'DataProcessorObj', dir: 'reports'},
     };
   let text = `(function(){
   const {EnumManager,CatManager,DocManager,DataProcessorsManager,ChartOfCharacteristicManager,ChartOfAccountManager,

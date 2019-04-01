@@ -11,7 +11,7 @@ import PropTypes from 'prop-types';
 
 import IconButton from '@material-ui/core/IconButton';
 //import DataList from 'metadata-react/DataList';
-import DataList from '../DynList';
+import DataList from 'metadata-react/DynList';
 import WindowSizer from 'metadata-react/WindowSize';
 import {withObj} from 'metadata-redux';
 import qs from 'qs';
@@ -26,46 +26,6 @@ class CalcOrderList extends Component {
   handleSelect = (row, _mgr) => {
     this.handleRequestClose();
     this.props.handleSelect(row, _mgr);
-  };
-
-  find_rows = (selector, scheme) => {
-    const {remote, props} = $p.adapters.pouch;
-    const {username, password} = remote.doc.__opts.auth;
-
-    scheme.append_selection(selector.selector);
-    selector.sort = [{date: 'desc'}];
-
-    const opts = {
-      method: 'post',
-      credentials: 'include',
-      headers: {
-        Authorization: `Basic ${btoa(unescape(encodeURIComponent(username + ':' + password)))}`,
-        suffix: props._suffix || '0'
-      },
-      body: JSON.stringify(selector)
-    };
-
-    return fetch('/r/_find', opts)
-      .then((res) => {
-        if(res.status <= 201) {
-          return res.json();
-        }
-        else {
-          return res.text()
-            .then((text) => {
-              throw new Error(`${res.statusText}: ${text}`);
-            });
-        }
-      })
-      .then((data) => {
-        data.docs.forEach((doc) => {
-          if(!doc.ref) {
-            doc.ref = doc._id.split('|')[1];
-            delete doc._id;
-          }
-        });
-        return data;
-      });
   };
 
   render() {
@@ -87,10 +47,10 @@ class CalcOrderList extends Component {
         _acl={'e'}
         _ref={prm.ref}
         handlers={handlers}
-        find_rows={this.find_rows}
         //selectionMode
         //denyAddDel
         //show_variants
+        indexer
         show_search
         {...sizes}
       />
