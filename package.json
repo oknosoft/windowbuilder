@@ -29,14 +29,13 @@
     "@jscad/openjscad": "^1.6.1",
     "dxf-writer": "^1.2.0",
     "genetic-cutting": "github:oknosoft/genetic-cutting",
-    "metadata-abstract-ui": "2.0.18-beta.5",
-    "metadata-core": "2.0.18-beta.5",
-    "metadata-dhtmlx": "2.0.18-beta.5",
-    "metadata-pouchdb": "2.0.18-beta.5",
-    "metadata-react": "2.0.18-beta.5",
-    "metadata-redux": "2.0.18-beta.5",
-    "paper-jsdom-canvas": "^0.12.0",
-    "react-data-grid-addons": "^6.1.0-0"
+    "metadata-abstract-ui": "2.0.19-beta.1",
+    "metadata-core": "2.0.19-beta.1",
+    "metadata-dhtmlx": "2.0.19-beta.1",
+    "metadata-pouchdb": "2.0.19-beta.1",
+    "metadata-react": "2.0.19-beta.1",
+    "metadata-redux": "2.0.19-beta.1",
+    "paper-jsdom-canvas": "^0.12.0"
   },
   "devDependencies": {
     "@babel/core": "7.2.2",
