@@ -52,14 +52,16 @@ class AppRoot extends Component {
     let comp;
     if($p.wsql.get_user_param('ram_indexer')) {
       comp = import('../CalcOrderList/CalcOrderList.js');
-      const orders = items.splice(0, 1);
-      items[0].items.unshift({
-        text: 'Расчеты-заказы',
-        navigate: '/',
-        need_meta: true,
-        need_user: true,
-        icon: orders.icon,
-      });
+      if(items[0].id === 'orders') {
+        const orders = items.splice(0, 1);
+        items[0].items.unshift({
+          text: 'Расчеты-заказы',
+          navigate: '/',
+          need_meta: true,
+          need_user: true,
+          icon: orders.icon,
+        });
+      }
     }
     else {
      comp = import('../CalcOrderList/CalcOrderListDhtmlx');

@@ -110,8 +110,7 @@
     "build": "node scripts/build.js && node scripts/appcache.js",
     "test": "node scripts/test.js --env=jsdom",
     "meta:prebuild": "node scripts/meta.prebuild.js",
-    "meta:link": "node scripts/meta.link.js",
-    "rm-old-router": "rm ./node_modules/react-router-redux/node_modules/react-router"
+    "meta:link": "node scripts/meta.link.js"
   },
   "eslintConfig": {
     "extends": "react-app"

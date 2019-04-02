@@ -1,1 +1,1 @@
-src="https://cdn.jsdelivr.net/combine/gh/paperjs/paper.js@v0.11.5/dist/paper-core.min.js,gh/flitbit/diff@v0.3.8/releases/deep-diff-0.3.8.min.js"
+src="https://cdn.jsdelivr.net/combine/npm/paper@0.12.0/dist/paper-core.min.js,npm/deep-diff@1.0.2/dist/deep-diff.min.js"
