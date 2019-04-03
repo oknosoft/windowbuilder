@@ -3473,6 +3473,7 @@ class BuilderElement extends paper.Group {
         arc_ccw: _xfields.arc_ccw,
         a1: Object.assign({}, _xfields.x1, {synonym: "Угол1"}),
         a2: Object.assign({}, _xfields.x1, {synonym: "Угол2"}),
+        offset: Object.assign({}, _xfields.x1, {synonym: "Смещение"}),
       }
     };
   }
@@ -5980,6 +5981,20 @@ class ProfileItem extends GeneratrixElement {
     return this.d1 - this.width;
   }
 
+  get offset() {
+    const {_row} = this;
+    return (_row && _row.offset) || 0;
+  }
+
+  set offset(v) {
+    const {_row, _attr} = this;
+    if(_row) {
+      _row.offset = parseFloat(v) || 0;
+      delete _attr.d0;
+      this.project.register_change();
+    }
+  }
+
   hhpoint(side) {
     const {layer, rays} = this;
     const {h_ruch, furn} = layer;
@@ -6186,7 +6201,8 @@ class ProfileItem extends GeneratrixElement {
       ' ': [
         {id: 'info', path: 'o.info', type: 'ro'},
         'inset',
-        'clr'
+        'clr',
+        'offset'
       ],
       'Начало': ['x1','y1','a1','cnn1'],
       'Конец': ['x2','y2','a2','cnn2']
@@ -7308,7 +7324,7 @@ class Profile extends ProfileItem {
   get d0() {
     const {_attr} = this;
     if(!_attr.hasOwnProperty('d0')) {
-      _attr.d0 = 0;
+      _attr.d0 = this.offset;
       const nearest = this.nearest();
       if(nearest) {
         _attr.d0 -= nearest.d2 + (_attr._nearest_cnn ? _attr._nearest_cnn.sz : 20);
@@ -11449,9 +11465,9 @@ class SpecBuilding {
 $p.spec_building = new SpecBuilding($p);
 
 
-(function ({prototype}) {
-  const {value_mgr} = prototype;
-  prototype.value_mgr = function(row, f, mf, array_enabled, v) {
+(function ({classes: {DataManager, CatObj}, cat}) {
+  const {value_mgr} = DataManager.prototype;
+  DataManager.prototype.value_mgr = function(row, f, mf, array_enabled, v) {
 		const tmp = value_mgr.call(this, row, f, mf, array_enabled, v);
 		if(tmp){
       return tmp;
@@ -11463,7 +11479,61 @@ $p.spec_building = new SpecBuilding($p);
       return $p.cat.partners;
     }
 	}
-})($p.classes.DataManager);
+
+  CatObj.prototype.repurge = function() {
+    const {fields, tabular_sections} = this._metadata();
+    if(this.empty() || this.is_new()){
+      return;
+    }
+    const {_obj} = this;
+    if(_obj.timestamp && _obj.timestamp.moment < '2019-03') {
+      return;
+    }
+    for(const fld in fields) {
+      const {type} = fields[fld];
+      if(type.types.length === 1 && type.types[0] === 'number' && !_obj.hasOwnProperty(fld)) {
+        this._manager._owner.repurge.store.add(this);
+        _obj[fld] = 0;
+      }
+    }
+    for(const ts in tabular_sections) {
+      const {fields} = tabular_sections[ts];
+      this[ts].forEach(({_obj}) => {
+        for(const fld in fields) {
+          const {type} = fields[fld];
+          if(type.types.length === 1 && type.types[0] === 'number' && !_obj.hasOwnProperty(fld)) {
+            this._manager._owner.repurge.store.add(this);
+            _obj[fld] = 0;
+          }
+        }
+      });
+    }
+  }
+
+  cat.repurge = function () {
+    for(const name in this) {
+      if(name === 'users') {
+        continue;
+      }
+      const mgr = this[name];
+      if(mgr.cachable === 'ram') {
+        for(const ref in mgr.by_ref) {
+          mgr.by_ref[ref].repurge();
+        }
+      }
+    }
+    let queue = Promise.resolve();
+    const {pouch} = this.$p.adapters;
+    const attr = {db: pouch.remote.ram}
+    cat.repurge.store.forEach((o) => {
+      queue = queue.then(() => pouch.save_obj(o, attr));
+    });
+
+  }
+
+  cat.repurge.store = new Set();
+
+})($p);
 
 
 (function(_mgr){

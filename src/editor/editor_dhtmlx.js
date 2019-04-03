@@ -36,7 +36,7 @@ class Editor extends EditorInvisible {
 
     super();
 
-    const _editor = this;
+    const _editor = window.paper = this;
 
     this.activate();
 

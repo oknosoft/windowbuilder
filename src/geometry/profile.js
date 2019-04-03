@@ -372,6 +372,35 @@ class ProfileItem extends GeneratrixElement {
     return this.d1 - this.width;
   }
 
+  get offset() {
+    const {_row} = this;
+    return (_row && _row.offset) || 0;
+  }
+
+  set offset(v) {
+    const {_row, _attr, selected} = this;
+    v = parseFloat(v) || 0;
+    if(_row && _row.offset !== v) {
+      _row.offset = v;
+      if(selected) {
+        this.selected = false;
+      }
+      const nearests = this.joined_nearests ? this.joined_nearests() : [];
+      if(this.joined_imposts) {
+        const imposts = this.joined_imposts();
+        nearests.push.apply(nearests, imposts.inner.concat(imposts.outer));
+      }
+      for(const profile of nearests) {
+        profile._attr._rays && profile._attr._rays.clear();
+      }
+      _attr._rays && _attr._rays.clear();
+      this.project.register_change(true);
+      if(selected) {
+        this.selected = true;
+      }
+    }
+  }
+
   /**
    * ### Точка проекции высоты ручки на ребро профиля
    *
@@ -695,7 +724,8 @@ class ProfileItem extends GeneratrixElement {
       ' ': [
         {id: 'info', path: 'o.info', type: 'ro'},
         'inset',
-        'clr'
+        'clr',
+        'offset'
       ],
       'Начало': ['x1','y1','a1','cnn1'],
       'Конец': ['x2','y2','a2','cnn2']
@@ -2048,7 +2078,7 @@ class Profile extends ProfileItem {
   get d0() {
     const {_attr} = this;
     if(!_attr.hasOwnProperty('d0')) {
-      _attr.d0 = 0;
+      _attr.d0 = this.offset;
       const nearest = this.nearest();
       if(nearest) {
         _attr.d0 -= nearest.d2 + (_attr._nearest_cnn ? _attr._nearest_cnn.sz : 20);
