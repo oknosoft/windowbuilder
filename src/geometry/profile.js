@@ -388,7 +388,7 @@ class ProfileItem extends GeneratrixElement {
       const nearests = this.joined_nearests ? this.joined_nearests() : [];
       if(this.joined_imposts) {
         const imposts = this.joined_imposts();
-        nearests.push.apply(nearests, imposts.inner.concat(imposts.outer));
+        nearests.push.apply(nearests, imposts.inner.map((v) => v.profile).concat(imposts.outer.map((v) => v.profile)));
       }
       for(const profile of nearests) {
         profile._attr._rays && profile._attr._rays.clear();

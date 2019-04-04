@@ -8,20 +8,20 @@
  * Created 23.12.2015
  */
 
-(function($p){
+(function({cat: {characteristics}, wsql, CatCharacteristics, utils, enm, doc, job_prm, iface}){
 
-	const _mgr = $p.cat.characteristics;
+  const {prototype} = characteristics.constructor;
 	let selection_block, wnd;
 
 	class SelectionBlock {
 
-	  constructor(_mgr) {
+	  constructor() {
 
 	    this._obj = {
-        calc_order: $p.wsql.get_user_param('template_block_calc_order')
+        calc_order: wsql.get_user_param('template_block_calc_order')
       }
 
-      this._meta = Object.assign(_mgr.metadata()._clone(), {
+      this._meta = Object.assign(characteristics.metadata()._clone(), {
         form: {
           selection: {
             fields: ['presentation', 'svg'],
@@ -42,13 +42,13 @@
 
     get _manager() {
 	    return {
-        value_mgr: $p.md.value_mgr,
+        value_mgr: characteristics.value_mgr,
         class_name: 'dp.fake'
       }
     }
 
     get calc_order() {
-      return $p.CatCharacteristics.prototype._getter.call(this, 'calc_order');
+      return CatCharacteristics.prototype._getter.call(this, 'calc_order');
     }
     set calc_order(v) {
 
@@ -68,7 +68,6 @@
         wnd.elmnts.filter.call_event();
       }
 
-      const {utils, enm, wsql, doc} = $p;
       if(!utils.is_empty_guid(_obj.calc_order) && wsql.get_user_param('template_block_calc_order') != _obj.calc_order) {
         const tmp = doc.calc_order.by_ref[_obj.calc_order];
         tmp && tmp.obj_delivery_state === enm.obj_delivery_states.Шаблон && wsql.set_user_param('template_block_calc_order', _obj.calc_order);
@@ -78,23 +77,23 @@
   }
 
 	// попробуем подсунуть типовой форме выбора виртуальные метаданные - с деревом и ограниченным списком значений
-	_mgr.form_selection_block = function(pwnd, attr = {}){
+  characteristics.form_selection_block = function(pwnd, attr = {}){
 
 		if(!selection_block){
-			selection_block = new SelectionBlock(_mgr);
+			selection_block = new SelectionBlock();
 		}
     selection_block.attr = attr;
 
 		// объект отбора по ссылке на расчет в продукции
-		if($p.job_prm.builder.base_block && (selection_block.calc_order.empty() || selection_block.calc_order.is_new())){
-			$p.job_prm.builder.base_block.some((o) => {
+		if(job_prm.builder.base_block && (selection_block.calc_order.empty() || selection_block.calc_order.is_new())){
+			job_prm.builder.base_block.some((o) => {
 				selection_block.calc_order = o;
 				return true;
 			});
 		}
 
 		// начальное значение - выбранные в предыдущий раз типовой блок
-    attr.initial_value = $p.wsql.get_user_param('template_block_initial_value');
+    attr.initial_value = wsql.get_user_param('template_block_initial_value');
 
 		// подсовываем типовой форме списка изменённые метаданные
 		attr.metadata = selection_block._meta;
@@ -113,7 +112,7 @@
       });
 
 			// получаем документ расчет
-			return $p.doc.calc_order.get(calc_order, true, true)
+			return doc.calc_order.get(calc_order, true, true)
 				.then((o) => {
 
 					// получаем массив ссылок на характеристики в табчасти продукции
@@ -135,13 +134,13 @@
 							}
 						}
 					});
-					return crefs.length ? _mgr.adapter.load_array(_mgr, crefs, false, _mgr.adapter.local.templates) : crefs;
+					return crefs.length ? characteristics.adapter.load_array(characteristics, crefs, false, characteristics.adapter.local.templates) : crefs;
 				})
 				.then(() => {
 
 					// если это характеристика продукции - добавляем
 					crefs.forEach((o) => {
-						o = _mgr.get(o, false, true);
+						o = characteristics.get(o, false, true);
 						if(o && !o.calc_order.empty() && o.coordinates.count()){
 							ares.push(o);
 						}
@@ -163,12 +162,12 @@
 
 				})
         // конвертируем в xml для вставки в грид
-				.then(() => $p.iface.data_to_grid.call(_mgr, crefs, attr));
+				.then(() => iface.data_to_grid.call(characteristics, crefs, attr));
 
 		};
 
 		// создаём форму списка
-		wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
+		wnd = prototype.form_selection.call(this, pwnd, attr);
 
 		const {toolbar, filter} = wnd.elmnts;
     'btn_new,btn_edit,btn_delete,bs_print,bs_create_by_virtue,bs_go_to'.split(',').forEach(name => toolbar.hideItem(name));
@@ -177,7 +176,7 @@
     const fdiv = filter.add_filter({text: 'Расчет', name: 'calc_order'}).custom_selection.calc_order.parentNode;
 		fdiv.removeChild(fdiv.firstChild);
 
-    filter.custom_selection.calc_order = new $p.iface.OCombo({
+    filter.custom_selection.calc_order = new iface.OCombo({
 			parent: fdiv,
 			obj: selection_block,
 			field: "calc_order",
@@ -186,7 +185,7 @@
 
 			  setTimeout(() => {
           const l = [];
-          const {base_block, branch_filter} = $p.job_prm.builder;
+          const {base_block, branch_filter} = job_prm.builder;
 
           base_block.forEach(({note, presentation, ref, production}) => {
             if(branch_filter && branch_filter.sys && branch_filter.sys.length && production.count()) {
@@ -219,12 +218,13 @@
 
           resolve(l);
 
-        }, $p.job_prm.builder.base_block ? 0 : 1000);
+        }, job_prm.builder.base_block ? 0 : 1000);
 			})
 		});
     filter.custom_selection.calc_order.getBase().style.border = "none";
 
 		return wnd;
 	};
+
 
 })($p);

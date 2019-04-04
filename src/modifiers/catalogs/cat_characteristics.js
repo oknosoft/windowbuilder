@@ -10,6 +10,17 @@
  * Created 16.03.2016
  */
 
+// переопределяем value_mgr
+(function({cat: {characteristics, nom}}){
+  const {value_mgr} = characteristics.constructor.prototype;
+  characteristics.value_mgr = function(_obj, f, mf, array_enabled, v) {
+    if(f === 'owner') {
+      return nom;
+    }
+    return value_mgr.call(characteristics, _obj, f, mf, array_enabled, v);
+  }
+})($p);
+
 // при старте приложения, загружаем в ОЗУ обычные характеристики (без ссылок на заказы)
 $p.md.once('predefined_elmnts_inited', () => {
   const _mgr = $p.cat.characteristics;
@@ -32,7 +43,7 @@ $p.md.once('predefined_elmnts_inited', () => {
         return;
       };
       _mgr.metadata().form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
-    })
+    });
 });
 
 // свойства объекта характеристики

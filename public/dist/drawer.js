@@ -5987,11 +5987,26 @@ class ProfileItem extends GeneratrixElement {
   }
 
   set offset(v) {
-    const {_row, _attr} = this;
-    if(_row) {
-      _row.offset = parseFloat(v) || 0;
-      delete _attr.d0;
-      this.project.register_change();
+    const {_row, _attr, selected} = this;
+    v = parseFloat(v) || 0;
+    if(_row && _row.offset !== v) {
+      _row.offset = v;
+      if(selected) {
+        this.selected = false;
+      }
+      const nearests = this.joined_nearests ? this.joined_nearests() : [];
+      if(this.joined_imposts) {
+        const imposts = this.joined_imposts();
+        nearests.push.apply(nearests, imposts.inner.map((v) => v.profile).concat(imposts.outer.map((v) => v.profile)));
+      }
+      for(const profile of nearests) {
+        profile._attr._rays && profile._attr._rays.clear();
+      }
+      _attr._rays && _attr._rays.clear();
+      this.project.register_change(true);
+      if(selected) {
+        this.selected = true;
+      }
     }
   }
 
@@ -11768,6 +11783,16 @@ $p.spec_building = new SpecBuilding($p);
 })($p);
 
 
+(function({cat: {characteristics, nom}}){
+  const {value_mgr} = characteristics.constructor.prototype;
+  characteristics.value_mgr = function(_obj, f, mf, array_enabled, v) {
+    if(f === 'owner') {
+      return nom;
+    }
+    return value_mgr.call(characteristics, _obj, f, mf, array_enabled, v);
+  }
+})($p);
+
 $p.md.once('predefined_elmnts_inited', () => {
   const _mgr = $p.cat.characteristics;
 
@@ -11787,7 +11812,7 @@ $p.md.once('predefined_elmnts_inited', () => {
         return;
       };
       _mgr.metadata().form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
-    })
+    });
 });
 
 $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {

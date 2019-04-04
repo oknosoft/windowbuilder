@@ -272,7 +272,7 @@ function state_filter(id) {
 
 export function set_state_and_title(id, handleIfaceState) {
   handleIfaceState({
-    component: 'CalcOrderList',
+    component: '',
     name: 'state_filter',
     value: id,
   });

@@ -66,7 +66,9 @@ class AppRoot extends Component {
     else {
      comp = import('../CalcOrderList/CalcOrderListDhtmlx');
     }
-    comp.then((module) => CalcOrderList = module.default);
+    comp.then((module) => {
+      CalcOrderList = module.default;
+    });
   }
 
   render() {
