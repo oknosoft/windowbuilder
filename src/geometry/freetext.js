@@ -110,9 +110,7 @@ class FreeText extends paper.PointText {
       font_family: this.font_family,
       font_size: this.font_size,
       bold: this.bold,
-      align: this.align.ref,
-      bounds_x: this.project.bounds.x,
-      bounds_y: this.project.bounds.y
+      align: this.align.ref
     });
   }
 
