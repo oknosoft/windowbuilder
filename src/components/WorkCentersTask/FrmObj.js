@@ -261,4 +261,6 @@ FrmObj.propTypes = {
   handlers: PropTypes.object.isRequired, // обработчики редактирования объекта
 };
 
+FrmObj.rname = 'FrmObj';
+
 export default withStyles(withIface(FrmObj));

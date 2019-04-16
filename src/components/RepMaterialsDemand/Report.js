@@ -113,4 +113,6 @@ class RepMaterialsDemand extends Component {
   }
 }
 
+RepMaterialsDemand.rname = 'RepMaterialsDemand';
+
 export default withIface(RepMaterialsDemand);

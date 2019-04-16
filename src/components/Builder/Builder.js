@@ -49,6 +49,8 @@ class Builder extends DhtmlxCell {
 
 }
 
+Builder.rname = 'Builder';
+
 export default WindowSizer(withIface(Builder));
 
 

@@ -41,6 +41,8 @@ class CalcOrderList extends DhtmlxCell {
 
 }
 
+CalcOrderList.rname = 'CalcOrderList';
+
 export default WindowSizer(withIface(CalcOrderList));
 
 

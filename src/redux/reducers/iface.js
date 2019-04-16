@@ -52,7 +52,7 @@ const initialState = {
     title: 'Заказ дилера',
   },
   CalcOrderList: {
-    state_filter: '',
+    //state_filter: '',
   },
   NavDrawer: {
     open: false,

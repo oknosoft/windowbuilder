@@ -59,6 +59,8 @@ class DataObjPage extends DhtmlxCell {
 
 }
 
+DataObjPage.rname = 'DataObjPage';
+
 export default withIface(DataObjPage);
 
 

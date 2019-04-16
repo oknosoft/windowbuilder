@@ -152,4 +152,6 @@ About.propTypes = {
   handleIfaceState: PropTypes.func.isRequired,
 };
 
+About.rname = 'About';
+
 export default withStyles(styleSheet)(withIface(About));

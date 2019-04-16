@@ -62,6 +62,7 @@ CalcOrderList.propTypes = {
   handlers: PropTypes.object.isRequired,
 };
 
+CalcOrderList.rname = 'CalcOrderList';
 
 export default WindowSizer(withObj(CalcOrderList));
 
