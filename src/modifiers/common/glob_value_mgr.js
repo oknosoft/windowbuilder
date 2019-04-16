@@ -7,7 +7,7 @@
  * Created 10.10.2016
  */
 
-(function ({classes: {DataManager, CatObj}, cat}) {
+(function ({classes: {DataManager, CatObj, RefDataManager, DataObj}, cat}) {
   const {value_mgr} = DataManager.prototype;
   DataManager.prototype.value_mgr = function(row, f, mf, array_enabled, v) {
 		const tmp = value_mgr.call(this, row, f, mf, array_enabled, v);
@@ -71,6 +71,67 @@
       queue = queue.then(() => pouch.save_obj(o, attr));
     });
 
+  }
+
+  DataObj.prototype.broken_links = function(){
+    const res = [];
+    const {fields, tabular_sections} = this._metadata();
+    const {md} = $p;
+
+    if(this.empty() || this.is_new()){
+      return res;
+    }
+
+    const {_obj} = this;
+
+    for (const fld in fields) {
+      const {type} = fields[fld];
+      if (type.is_ref && _obj.hasOwnProperty(fld) && _obj[fld] && !$p.utils.is_empty_guid(_obj[fld])) {
+        let finded = false;
+        type.types.forEach((m_type) => {
+          const _mgr = md.mgr_by_class_name(m_type);
+          finded = finded || !_mgr.get(_obj[fld], false, false).is_new();
+        })
+        if (!finded) {
+          res.push({'obj': _obj, fld, 'ts': '', 'row': 0, 'value': _obj[fld], type});
+        }
+      }
+    }
+
+    for(const ts in tabular_sections) {
+      const ts_fields = tabular_sections[ts].fields;
+      if (_obj.hasOwnProperty(ts)) {
+        _obj[ts].forEach((row) => {
+          for(const fld in ts_fields) {
+            const {type} = ts_fields[fld];
+            if (type.is_ref && row.hasOwnProperty(fld) && row[fld] && !$p.utils.is_empty_guid(row[fld])) {
+              let finded = false;
+              type.types.forEach((m_type) => {
+                const _mgr = md.mgr_by_class_name(m_type);
+                finded = finded || !_mgr.get(row[fld], false, false).is_new();
+              })
+              if (!finded) {
+                res.push({'obj': _obj, fld, ts, 'row': row.row, 'value': row[fld], type});
+              }
+            }
+          }
+        })
+      }
+    }
+
+    return res;
+  }
+
+  RefDataManager.prototype.broken_links = function () {
+    const res = [];
+    if (this.metadata().cachable == 'ram'){
+      for(const ref in this.by_ref) {
+        this.by_ref[ref].broken_links().forEach((item)=>{
+          res.push(item);
+        });
+      }
+    }
+    return res;
   }
 
   cat.repurge.store = new Set();
