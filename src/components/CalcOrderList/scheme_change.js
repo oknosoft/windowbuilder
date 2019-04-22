@@ -17,6 +17,9 @@ export default function handleSchemeChange(scheme) {
     if(!current_user.branch.empty()) {
       apply_ref_filter('manager', [current_user.ref], scheme, 'cat.users');
     }
+    else {
+      apply_ref_filter('obj_delivery_state', [], scheme);
+    }
   }
 }
 

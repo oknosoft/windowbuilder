@@ -73,30 +73,53 @@ class Params extends React.Component {
       cat.users.find_rows({branch: current_user.branch}, manager.push.bind(manager));
     }
     else {
-      cat.divisions.forEach(department.push.bind(department));
-      cat.users.forEach(manager.push.bind(manager));
+      cat.divisions.forEach((v) => {!v.is_new() && department.push(v)});
+      cat.users.forEach((v) => {!v.is_new() && manager.push(v)});
     }
 
 
     this.state = {
-      obj_delivery_state: [states[0].ref],
+      obj_delivery_state: [],
       department: [],
       manager: [],
     }
 
     const {selection} = this.props.scheme;
 
+    selection.find_rows({left_value: 'obj_delivery_state', use: true}, (row) => {
+      if(row.right_value) {
+        const {obj_delivery_state} = this.state;
+        for(const ref of row.right_value.split(',')) {
+          if(ref === 'Черновик' || ref === 'Отозван') {
+            !obj_delivery_state.includes('draft') && obj_delivery_state.push('draft');
+          }
+          else if(ref === 'Отправлен') {
+            obj_delivery_state.push('sent');
+          }
+          else if(ref === 'Подтвержден') {
+            obj_delivery_state.push('confirmed');
+          }
+          else if(ref === 'Отклонен') {
+            obj_delivery_state.push('declined');
+          }
+          else if(ref === 'Шаблон') {
+            obj_delivery_state.push('template');
+          }
+        }
+      }
+    });
+
     if(department.length){
       department.sort(sort);
       selection.find_rows({left_value: 'department', use: true}, (row) => {
-        row.right_value && this.state.department.push.apply(this.state.department, row.right_value.split());
+        row.right_value && this.state.department.push.apply(this.state.department, row.right_value.split(','));
       });
     }
 
     if(manager.length){
       manager.sort(sort);
       selection.find_rows({left_value: 'manager', use: true}, (row) => {
-        row.right_value && this.state.manager.push.apply(this.state.manager, row.right_value.split());
+        row.right_value && this.state.manager.push.apply(this.state.manager, row.right_value.split(','));
       });
     }
   }
