@@ -72,7 +72,8 @@ exports.CatFormulas = class CatFormulas extends Object {
     if(!_data._formula && this.formula){
       try{
         if(this.async){
-          const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+          const afn = eval('async function(){}');
+          const AsyncFunction = Object.getPrototypeOf(afn).constructor;
           _data._formula = (new AsyncFunction("obj,$p,attr", this.formula)).bind(this);
         }
         else{

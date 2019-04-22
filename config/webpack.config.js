@@ -336,7 +336,6 @@ module.exports = function(webpackEnv) {
                 customize: require.resolve(
                   'babel-preset-react-app/webpack-overrides'
                 ),
-                
                 plugins: [
                   [
                     require.resolve('babel-plugin-named-asset-import'),
@@ -354,7 +353,7 @@ module.exports = function(webpackEnv) {
                 // directory for faster rebuilds.
                 cacheDirectory: true,
                 cacheCompression: isEnvProduction,
-                compact: isEnvProduction,
+                compact: false, //isEnvProduction,
               },
             },
             // Process any JS outside of the app with Babel.
