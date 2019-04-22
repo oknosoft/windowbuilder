@@ -13,6 +13,7 @@ import FormGroup from '@material-ui/core/FormGroup';
 import DataField from 'metadata-react/DataField';
 import ChipList from 'metadata-react/DataField/ChipList';
 import withStyles from '@material-ui/core/styles/withStyles';
+import {apply_ref_filter} from './scheme_change';
 
 
 const styles = theme => ({
@@ -69,9 +70,7 @@ class Params extends React.Component {
       current_user.branch.divisions.forEach((v) => {
         department.push(v.acl_obj);
       });
-      cat.users.find_rows({branch: current_user.branch}, (v) => {
-        manager.push(v);
-      });
+      cat.users.find_rows({branch: current_user.branch}, manager.push.bind(manager));
     }
     else {
       cat.divisions.forEach(department.push.bind(department));
@@ -85,73 +84,27 @@ class Params extends React.Component {
       manager: [],
     }
 
+    const {selection} = this.props.scheme;
+
     if(department.length){
       department.sort(sort);
-      this.state.department.push(current_department && department.some((v) => v == current_department) ? current_department : department[0].ref);
+      selection.find_rows({left_value: 'department', use: true}, (row) => {
+        row.right_value && this.state.department.push.apply(this.state.department, row.right_value.split());
+      });
     }
 
     if(manager.length){
       manager.sort(sort);
-      if(current_user && !current_user.branch.empty()) {
-        this.state.manager.push(current_user.ref);
-        this.apply_ref_filter('manager', this.state.manager);
-      }
+      selection.find_rows({left_value: 'manager', use: true}, (row) => {
+        row.right_value && this.state.manager.push.apply(this.state.manager, row.right_value.split());
+      });
     }
   }
 
   handleChange = (area) => ({target}) => {
     this.setState({[area]: target.value });
-    this.apply_ref_filter(area, target.value);
+    apply_ref_filter.call(this, area, target.value);
   };
-
-  apply_ref_filter(left_value, objs) {
-    const {selection} = this.props.scheme || {};
-    if(!selection) return;
-    let row = selection.find({left_value});
-    if(!row) {
-      row = selection.add({left_value});
-    }
-    if(!objs.length) {
-      row.use = false;
-      return;
-    }
-    row.use = true;
-    row.left_value_type = 'path';
-    row.right_value_type = this[left_value]._mgr.class_name;
-
-    // для статусов отбор особый
-    if(left_value === 'obj_delivery_state') {
-      const tmp = [];
-      for(const ref of objs) {
-        if(ref === 'draft') {
-          tmp.push('Черновик');
-          tmp.push('Отозван');
-        }
-        else if(ref === 'sent') {
-          tmp.push('Отправлен');
-        }
-        else if(ref === 'confirmed') {
-          tmp.push('Подтвержден');
-        }
-        else if(ref === 'declined') {
-          tmp.push('Отклонен');
-        }
-        else if(ref === 'template') {
-          tmp.push('Шаблон');
-        }
-      }
-      objs = tmp;
-    }
-
-    if(objs.length > 1) {
-      row.comparison_type = 'in';
-      row.right_value = objs.join();
-    }
-    else {
-      row.comparison_type = 'eq';
-      row.right_value = objs[0];
-    }
-  }
 
   render() {
     const {scheme, handleFilterChange, classes} = this.props;

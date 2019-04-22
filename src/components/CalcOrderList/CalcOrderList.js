@@ -15,12 +15,13 @@ import DataList from 'metadata-react/DynList';
 import WindowSizer from 'metadata-react/WindowSize';
 import {withObj} from 'metadata-redux';
 import qs from 'qs';
+import handleSchemeChange from './scheme_change';
 
 class CalcOrderList extends Component {
 
   constructor(props, context) {
     super(props, context);
-    //this.state = {open: false};
+    this.handlers = Object.assign({}, this.props.handlers, {handleSchemeChange: handleSchemeChange.bind(this)});
   }
 
   handleSelect = (row, _mgr) => {
@@ -30,7 +31,7 @@ class CalcOrderList extends Component {
 
   render() {
 
-    const {props: {windowHeight, windowWidth, handlers, location}, state} = this;
+    const {props: {windowHeight, windowWidth, location}, state, handlers} = this;
 
     const sizes = {
       windowHeight,
