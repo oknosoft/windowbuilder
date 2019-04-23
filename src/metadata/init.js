@@ -956,8 +956,7 @@ set params(v){this._setter_ts('params',v)}
     if(!_data._formula && this.formula){
       try{
         if(this.async){
-          const afn = eval('async function(){}');
-          const AsyncFunction = Object.getPrototypeOf(afn).constructor;
+          const AsyncFunction = Object.getPrototypeOf(eval('(async function(){})')).constructor;
           _data._formula = (new AsyncFunction("obj,$p,attr", this.formula)).bind(this);
         }
         else{
