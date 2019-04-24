@@ -104,6 +104,7 @@ DhtmlxCell.propTypes = {
   handleIfaceState: PropTypes.func.isRequired,
   handleNavigate: PropTypes.func.isRequired,
   dialog: PropTypes.object,
+  match: PropTypes.object,
 };
 
 export default DhtmlxCell;

@@ -198,7 +198,6 @@ module.exports = function(webpackEnv) {
               inline: 2,
               //keep_fnames: true,
             },
-            compress: false,
             mangle: {
               safari10: true,
             },

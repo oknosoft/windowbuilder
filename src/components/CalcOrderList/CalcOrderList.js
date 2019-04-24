@@ -9,7 +9,7 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
-import IconButton from '@material-ui/core/IconButton';
+//import IconButton from '@material-ui/core/IconButton';
 //import DataList from 'metadata-react/DataList';
 import DataList from 'metadata-react/DynList';
 import WindowSizer from 'metadata-react/WindowSize';
@@ -24,14 +24,14 @@ class CalcOrderList extends Component {
     this.handlers = Object.assign({}, this.props.handlers, {handleSchemeChange: handleSchemeChange.bind(this)});
   }
 
-  handleSelect = (row, _mgr) => {
-    this.handleRequestClose();
-    this.props.handleSelect(row, _mgr);
-  };
+  // handleSelect = (row, _mgr) => {
+  //   this.handleRequestClose();
+  //   this.props.handleSelect(row, _mgr);
+  // };
 
   render() {
 
-    const {props: {windowHeight, windowWidth, location}, state, handlers} = this;
+    const {props: {windowHeight, windowWidth, location}, handlers} = this;
 
     const sizes = {
       windowHeight,
@@ -61,6 +61,9 @@ class CalcOrderList extends Component {
 
 CalcOrderList.propTypes = {
   handlers: PropTypes.object.isRequired,
+  windowHeight: PropTypes.number,
+  windowWidth: PropTypes.number,
+  location: PropTypes.object,
 };
 
 CalcOrderList.rname = 'CalcOrderList';

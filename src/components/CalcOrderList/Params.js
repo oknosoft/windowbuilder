@@ -55,10 +55,9 @@ class Params extends React.Component {
         }
       },
       class_name: 'enm.obj_delivery_states',
-    }
+    };
 
-    const {current_user, wsql, cat} = $p;
-    const current_department = wsql.get_user_param('current_department');
+    const {current_user, cat} = $p;
 
     const department = this.department = [];
     department._mgr = cat.divisions;
@@ -73,8 +72,8 @@ class Params extends React.Component {
       cat.users.find_rows({branch: current_user.branch}, manager.push.bind(manager));
     }
     else {
-      cat.divisions.forEach((v) => {!v.is_new() && department.push(v)});
-      cat.users.forEach((v) => {!v.is_new() && manager.push(v)});
+      cat.divisions.forEach((v) => {!v.is_new() && department.push(v);});
+      cat.users.forEach((v) => {!v.is_new() && manager.push(v);});
     }
 
 
@@ -82,7 +81,7 @@ class Params extends React.Component {
       obj_delivery_state: [],
       department: [],
       manager: [],
-    }
+    };
 
     const {selection} = this.props.scheme;
 
@@ -130,7 +129,7 @@ class Params extends React.Component {
   };
 
   render() {
-    const {scheme, handleFilterChange, classes} = this.props;
+    const {scheme, classes} = this.props;
     const {obj_delivery_state, department, manager} = this.state;
     return <div className={classes.group}>
       <FormGroup key="dates" row>
@@ -165,6 +164,7 @@ class Params extends React.Component {
 
 Params.propTypes = {
   scheme: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
   handleFilterChange: PropTypes.func.isRequired,
 };
 

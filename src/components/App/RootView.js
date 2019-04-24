@@ -1,4 +1,5 @@
-import React, {Component} from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 
 import {ConnectedRouter as Router} from 'react-router-redux';
 
@@ -18,7 +19,7 @@ import SecondInstance from 'metadata-react/App/SecondInstance';
 import {MuiThemeProvider} from '@material-ui/core/styles';
 import theme from '../../styles/muiTheme';
 
-class RootView extends Component {
+class RootView extends React.Component {
 
   constructor(props) {
     super(props);
@@ -90,5 +91,13 @@ class RootView extends Component {
     </MuiThemeProvider>;
   }
 }
+
+RootView.propTypes = {
+  user: PropTypes.object,
+  history: PropTypes.object,
+  data_empty: PropTypes.bool,
+  couch_direct: PropTypes.bool,
+  offline: PropTypes.bool,
+};
 
 export default withMeta(RootView);

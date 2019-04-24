@@ -4,7 +4,7 @@ import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import IconPrint from '@material-ui/icons/Print';
-import IconClose from '@material-ui/icons/Close';
+//import IconClose from '@material-ui/icons/Close';
 import Dialog from '@material-ui/core/Dialog';
 import Slide from '@material-ui/core/Slide';
 

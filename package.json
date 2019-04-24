@@ -117,11 +117,9 @@
     "extends": "react-app"
   },
   "browserslist": [
-    "last 1 version",
-    "> 1%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
+    "last 1 chrome version",
+    "last 1 firefox version",
+    "last 1 safari version"
   ],
   "jest": {
     "collectCoverageFrom": [

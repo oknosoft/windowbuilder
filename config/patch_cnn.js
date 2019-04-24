@@ -43,8 +43,9 @@ export const predefined = {
     log_level: 'warn',
     templates: true,
     use_google_geo: 'AIzaSyCpDPeBnIbhNJuCiq_WG58lVUHF_5nDKSQ',
+    crazy_ram: true,
   },
-  //'localhost': {zone: 21, splash: {img: '', text: ''}, splash: {css: 'splash21', title: false}, log_level: 'warn', templates: true}, //
+  //'localhost': {zone: 21, splash: {img: '', text: ''}, splash: {css: 'splash21', title: false}, log_level: 'warn', templates: true, crazy_ram: true}, //
   'rusokon.': {
     zone: 19,
     host: 'https://rusokon.oknosoft.ru/',
@@ -87,7 +88,7 @@ export function patch_cnn() {
     const prm = predefined[elm];
     if(location.host.match(elm)) {
       wsql.get_user_param('zone') != prm.zone && wsql.set_user_param('zone', prm.zone);
-      'log_level,splash,templates,use_google_geo'.split(',').forEach((name) => {
+      'log_level,splash,templates,use_google_geo,crazy_ram'.split(',').forEach((name) => {
         if(prm.hasOwnProperty(name)) {
           job_prm[name] = prm[name];
         }
