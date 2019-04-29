@@ -8382,7 +8382,9 @@ class WndAddressData {
     this.city = "";
     this.street =	"";
     this.postal_code = "";
-    this.marker = {};
+    this.marker = null;
+    this.poly_area = null;
+    this.poly_direction = null;
     this.flat = "";
 
     this._house = "";
@@ -8566,7 +8568,6 @@ class WndAddress {
         }
       }
     });
-    this.refresh_coordinates();
 
     elmnts.cell_map = elmnts.layout.cells('c');
     elmnts.cell_map.hideHeader();
@@ -8585,6 +8586,25 @@ class WndAddress {
       animation: maps.Animation.DROP,
       position: mapParams.center
     });
+    v.poly_area = new maps.Polygon(
+      {
+        map: elmnts.map,
+        strokeColor     : '#aaff80',
+        strokeOpacity   : 0.35,
+        strokeWeight    : 1,
+        fillColor       : "#ccffaa",
+        fillOpacity     : 0.2,
+      });
+    v.poly_direction = new maps.Polygon(
+      {
+        map: elmnts.map,
+        strokeColor     : '#aa80ff',
+        strokeOpacity   : 0.4,
+        strokeWeight    : 1,
+        fillColor       : "#ccaaff",
+        fillOpacity     : 0.2,
+      });
+    this.refresh_coordinates();
     this._marker_toggle_bounce = maps.event.addListener(v.marker, 'click', this.marker_toggle_bounce.bind(this));
     this._marker_dragend = maps.event.addListener(v.marker, 'dragend', this.marker_dragend.bind(this));
 
@@ -8669,6 +8689,21 @@ class WndAddress {
       v.longitude = longitude;
     }
     v.latitude && wnd && wnd.elmnts && wnd.elmnts.toolbar.setValue('coordinates', `${v.latitude.toFixed(8)} ${v.longitude.toFixed(8)}`);
+
+    const {delivery_area, poly_area, poly_direction} = v;
+    const {LatLng} = google.maps;
+    for(const poly of [poly_area, poly_direction]) {
+      poly.getPath().clear();
+    }
+    if(delivery_area.coordinates.count() > 2) {
+      poly_area.setPath(delivery_area.coordinates._obj.map((v) => new LatLng(v.latitude, v.longitude)));
+    }
+    $p.cat.delivery_directions.forEach(({composition, coordinates}) => {
+      if(composition.find({elm: delivery_area})) {
+        poly_direction.setPath(coordinates._obj.map((v) => new LatLng(v.latitude, v.longitude)));
+        return false;
+      }
+    });
   }
 
   addr_changed() {
