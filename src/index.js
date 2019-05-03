@@ -3,7 +3,8 @@ import('font-awesome/css/font-awesome.min.css');
 import './styles/roboto/font.css';
 import './styles/root.css';
 
-import React, {Component} from "react";
+import React from "react";
+import PropTypes from 'prop-types';
 import {render} from 'react-dom';
 
 
@@ -13,7 +14,11 @@ import RootView from './components/App/RootView';
 
 const store = configureStore();
 
-class RootProvider extends Component {
+class RootProvider extends React.Component {
+
+  getChildContext() {
+    return {store};
+  }
 
   componentDidMount() {
 
@@ -36,7 +41,8 @@ class RootProvider extends Component {
   }
 }
 
-render(
-  <RootProvider />,
-  document.getElementById('root'),
-);
+RootProvider.childContextTypes = {
+  store: PropTypes.object,
+};
+
+render(<RootProvider />, document.getElementById('root'));

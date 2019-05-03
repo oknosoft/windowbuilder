@@ -8594,6 +8594,7 @@ class WndAddress {
         strokeWeight    : 1,
         fillColor       : "#ccffaa",
         fillOpacity     : 0.2,
+        geodesic        : true
       });
     v.poly_direction = new maps.Polygon(
       {
@@ -8603,6 +8604,7 @@ class WndAddress {
         strokeWeight    : 1,
         fillColor       : "#ccaaff",
         fillOpacity     : 0.2,
+        geodesic        : true
       });
     this.refresh_coordinates();
     this._marker_toggle_bounce = maps.event.addListener(v.marker, 'click', this.marker_toggle_bounce.bind(this));
