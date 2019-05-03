@@ -49,10 +49,12 @@ class FrmObj extends DataObj {
 
   constructor(props, context) {
     super(props, context);
-    this.state.index = 0;
-    this.state.schemas_ready = typeof schemas.planning === 'object';
-    this.state.statuses = [];
-    this.state.run = false;
+    Object.assign(this.state, {
+      index: 0,
+      schemas_ready: typeof schemas.planning === 'object',
+      statuses: [],
+      run: false,
+    });
   }
 
   componentDidMount() {

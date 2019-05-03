@@ -5,7 +5,8 @@ import {Switch, Route} from 'react-router';
 import WindowSizer from 'metadata-react/WindowSize';
 import {withObj} from 'metadata-redux';
 
-import DataList from 'metadata-react/DataList';
+//import DataList from 'metadata-react/DataList';
+import DataList from 'metadata-react/DynList';
 import DataObj from '../DataObjPage';
 import MetaObjPage from '../MetaObjPage';
 import NotFoundPage from '../NotFoundPage';

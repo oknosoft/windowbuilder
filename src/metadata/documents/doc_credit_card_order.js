@@ -8,11 +8,12 @@
  */
 
 
-import {FrmObj, before_save} from './common';
+import {before_save} from './common';
+import MoneyDoc from '../../components/MoneyDoc';
 
 export default function ({doc, DocCredit_card_order}) {
 
   DocCredit_card_order.prototype.before_save = before_save;
 
-  doc.credit_card_order.FrmObj = FrmObj;
+  doc.credit_card_order.FrmObj = MoneyDoc;
 }

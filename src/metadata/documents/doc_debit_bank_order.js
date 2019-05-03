@@ -7,11 +7,12 @@
  * Created 10.10.2016
  */
 
-import {FrmObj, before_save} from './common';
+import {before_save} from './common';
+import MoneyDoc from '../../components/MoneyDoc';
 
 export default function ({doc, DocDebit_bank_order}) {
 
   DocDebit_bank_order.prototype.before_save = before_save;
 
-  doc.debit_bank_order.FrmObj = FrmObj;
+  doc.debit_bank_order.FrmObj = MoneyDoc;
 }
