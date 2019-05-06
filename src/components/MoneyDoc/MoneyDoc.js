@@ -18,24 +18,36 @@ import {withIface} from 'metadata-redux';
 class MoneyDoc extends DataObj {
 
   renderFields() {
-    const {_meta, _obj} = this.state;
+    const {state: {_meta: {fields}, _obj}, props: {classes}} = this;
 
-    return (
-      <FormGroup row key={`group_sys`}>
+    return [
+      <FormGroup row key="group_sys">
         <DataField _obj={_obj} _fld="number_doc"/>
         <DataField _obj={_obj} _fld="date"/>
-      </FormGroup>
-    );
+      </FormGroup>,
+      <FormGroup row key="row1">
+        <DataField _obj={_obj} _fld="organization"/>
+        <DataField _obj={_obj} _fld="partner"/>
+        <DataField _obj={_obj} _fld="department"/>
+      </FormGroup>,
+      <FormGroup row key="row2" className={classes.paddingBottom}>
+        {fields.hasOwnProperty('cashbox') && <DataField _obj={_obj} _fld="cashbox"/>}
+        {fields.hasOwnProperty('bank_account') && <DataField _obj={_obj} _fld="bank_account"/>}
+        <DataField _obj={_obj} _fld="responsible"/>
+        <DataField _obj={_obj} _fld="doc_amount" read_only/>
+      </FormGroup>,
+    ];
   }
 
   renderTabularSections() {
     const {_obj} = this.state;
 
-    return (
-      <FormGroup style={{height: 300}}>
+    return [
+      <FormGroup key="rows" style={{height: 300}}>
         <TabularSection _obj={_obj} _tabular="payment_details"/>
-      </FormGroup>
-    );
+      </FormGroup>,
+      <DataField key="note" _obj={_obj} _fld="note"/>
+    ];
   }
 }
 
