@@ -8690,22 +8690,23 @@ class WndAddress {
       v.latitude = latitude;
       v.longitude = longitude;
     }
-    v.latitude && wnd && wnd.elmnts && wnd.elmnts.toolbar.setValue('coordinates', `${v.latitude.toFixed(8)} ${v.longitude.toFixed(8)}`);
-
-    const {delivery_area, poly_area, poly_direction} = v;
-    const {LatLng} = google.maps;
-    for(const poly of [poly_area, poly_direction]) {
-      poly.getPath().clear();
-    }
-    if(delivery_area.coordinates.count() > 2) {
-      poly_area.setPath(delivery_area.coordinates._obj.map((v) => new LatLng(v.latitude, v.longitude)));
-    }
-    $p.cat.delivery_directions.forEach(({composition, coordinates}) => {
-      if(composition.find({elm: delivery_area})) {
-        poly_direction.setPath(coordinates._obj.map((v) => new LatLng(v.latitude, v.longitude)));
-        return false;
+    if(wnd && wnd.elmnts) {
+      v.latitude && wnd.elmnts.toolbar.setValue('coordinates', `${v.latitude.toFixed(8)} ${v.longitude.toFixed(8)}`);
+      const {delivery_area, poly_area, poly_direction} = v;
+      const {LatLng} = google.maps;
+      for(const poly of [poly_area, poly_direction]) {
+        poly.getPath().clear();
       }
-    });
+      if(delivery_area.coordinates.count() > 2) {
+        poly_area.setPath(delivery_area.coordinates._obj.map((v) => new LatLng(v.latitude, v.longitude)));
+      }
+      $p.cat.delivery_directions.forEach(({composition, coordinates}) => {
+        if(composition.find({elm: delivery_area})) {
+          poly_direction.setPath(coordinates._obj.map((v) => new LatLng(v.latitude, v.longitude)));
+          return false;
+        }
+      });
+    }
   }
 
   addr_changed() {
