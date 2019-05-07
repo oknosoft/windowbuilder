@@ -8,6 +8,6 @@ export default function ($p) {
     //import('@jscad/openjscad')
     import('dxf-writer/src/Drawing')
       .then((jscad) => import('./exec_js_dxf')
-        .then(({exec_dxf}) => exec_dxf(scheme, jscad)));
+        .then(({exec_dxf}) => exec_dxf(scheme, jscad.default || jscad)));
   });
 }
