@@ -85,11 +85,11 @@ exports.CchProperties = class CchProperties extends Object {
    * @type Boolean
    */
   get is_calculated() {
-    return ($p.job_prm.properties.calculated || []).indexOf(this) != -1;
+    return ($p.job_prm.properties.calculated || []).includes(this) || !this.calculated.empty();
   }
 
   get show_calculated() {
-    return ($p.job_prm.properties.show_calculated || []).indexOf(this) != -1;
+    return ($p.job_prm.properties.show_calculated || []).includes(this) || this.showcalc;
   }
 
   /**
@@ -103,6 +103,9 @@ exports.CchProperties = class CchProperties extends Object {
     if(!this._calculated_value) {
       if(this._formula) {
         this._calculated_value = $p.cat.formulas.get(this._formula);
+      }
+      else if(!this.calculated.empty()) {
+        this._calculated_value = this.calculated;
       }
       else {
         return;
