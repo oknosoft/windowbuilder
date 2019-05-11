@@ -17,6 +17,10 @@ exports.CatChoice_paramsManager = class CatChoice_paramsManager extends Object {
       if(obj.runtime) {
         continue;
       }
+      // выполняем формулу условия
+      if(!obj.condition_formula.empty() && !obj.condition_formula.execute(obj)) {
+        continue;
+      }
       // для всех полей из состава метаданных
       obj.composition.forEach(({field}) => {
         const path = field.split('.');
@@ -35,23 +39,12 @@ exports.CatChoice_paramsManager = class CatChoice_paramsManager extends Object {
         if(!mf.choice_params) {
           mf.choice_params = [];
         }
-        // бежим по ключу, вычисляемые параметры с типом, отличным от типа текущего поля, должны выполняться
-        let ok = true;
+        // дополняем отбор
         obj.key.params.forEach((row) => {
-          if(row.property.is_calculated && row.property.type.types.every((type) => !mf.type.types.includes(type))) {
-            ok = utils.check_compare(row.property.calculated_value({}), row.property.extract_value(row), row.comparison_type, comparison_types);
-            if(!ok) {
-              return false;
-            }
-          }
-        });
-        ok && obj.key.params.forEach((row) => {
-          if(row.property.type.types.some((type) => mf.type.types.includes(type))) {
-            mf.choice_params.push({
-              name: "ref",
-              path: {[row.comparison_type.valueOf()]: row.property.extract_value(row)}
-            })
-          }
+          mf.choice_params.push({
+            name: obj.field || 'ref',
+            path: {[row.comparison_type.valueOf()]: row.property.extract_value(row)}
+          });
         });
       });
     }

@@ -15683,6 +15683,7 @@ $p.DocCalc_orderProductionRow.pfields = 'price_internal,quantity,discount_percen
       "cat.cash_flow_articles",
       "cat.nonstandard_attributes",
       "cat.projects",
+      "cat.choice_params",
       "cat.nom_prices_types",
       "doc.nom_prices_setup"
     ];

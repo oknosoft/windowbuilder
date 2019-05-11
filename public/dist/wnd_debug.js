@@ -7656,6 +7656,7 @@ $p.doc.calc_order.__define({
       "cat.cash_flow_articles",
       "cat.nonstandard_attributes",
       "cat.projects",
+      "cat.choice_params",
       "cat.nom_prices_types",
       "doc.nom_prices_setup"
     ];
