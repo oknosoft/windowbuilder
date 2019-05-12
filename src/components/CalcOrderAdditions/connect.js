@@ -57,10 +57,25 @@ export function fill_data(ref) {
   dp._data._loading = false;
 }
 
+// ищет первую, наиболее приоритетную вставку данного типа
 export function find_inset(insert_type) {
   if(!this._inset) {
-    this._inset = $p.cat.inserts.find_rows({available: true, insert_type})
-      .reduce((curr, next) => curr.priority >= next.priority ? curr : next);
+    const {choice_params} = $p.dp.buyers_order.metadata('production').fields.inset;
+    const filter = {insert_type};
+    choice_params && choice_params.forEach(({name, path}) => {
+      if(name === 'insert_type') {
+        return;
+      }
+      if(filter.hasOwnProperty(name)) {
+        filter[name] = [filter[name]];
+        filter[name].push(path);
+      }
+      else {
+        filter[name] = path;
+      }
+    });
+    this._inset = $p.cat.inserts.find_rows(filter)
+      .reduce((curr, next) => curr && curr.priority >= next.priority ? curr : next, null);
   }
   return this._inset;
 }
