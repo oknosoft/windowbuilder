@@ -391,13 +391,14 @@ class Contour extends AbstractFilling(paper.Layer) {
       if (!curr.anext) {
         curr.anext = [];
         segments.forEach((segm) => {
-          if (segm == curr || segm.profile == curr.profile)
+          if (segm == curr || segm.profile == curr.profile){
             return;
+          }
           // если конец нашего совпадает с началом следующего...
           // и если существует соединение нашего со следующим
           if (curr.has_cnn(segm, nodes, segments)) {
-
-            if (segments.length < 3 || curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b)) >= 0)
+            const angle = curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b));
+            if (segments.length < 3 || angle >= 0 || Math.abs(angle + 180) < 1)
               curr.anext.push(segm);
           }
 
