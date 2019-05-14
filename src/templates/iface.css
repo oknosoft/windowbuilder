@@ -127,7 +127,8 @@
   margin-left:  1px;
   padding-left:  4px;
   padding-right:  4px;
-  cursor: pointer
+  cursor: pointer;
+  user-select: none;
 }
 .rsvg_selected {
   border: 1px silver solid;
