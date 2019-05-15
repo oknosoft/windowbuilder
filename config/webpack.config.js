@@ -196,10 +196,10 @@ module.exports = function(webpackEnv) {
               // Pending futher investigation:
               // https://github.com/terser-js/terser/issues/120
               inline: 2,
-              //keep_fnames: true,
+              keep_fnames: true,
             },
             mangle: {
-              safari10: true,
+              safari10: false,
             },
             output: {
               ecma: 7,

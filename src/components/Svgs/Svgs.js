@@ -31,7 +31,7 @@ const styles = theme => ({
 
 class Svgs extends React.Component {
 
-  state = {selected: ''}
+  state = {selected: ''};
 
   render() {
     const {classes, hidden, height, reverseHide, handleNavigate, imgs} = this.props;
