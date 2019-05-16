@@ -4025,7 +4025,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     if(!ignore_select){
       const {project, elm, clr} = this;
       const {glass_specification} = project.ox;
-      const proto = glass_specification.find_rows({elm});
 
       if(!inset.clr_group.empty() && inset.clr_group.clr_conformity.count() &&
           !inset.clr_group.clr_conformity._obj.some((row) => row.clr1 == clr || row.clr1 == clr.parent)) {
@@ -4041,32 +4040,16 @@ class Filling extends AbstractFilling(BuilderElement) {
         }
       }
 
-      if(proto.length) {
-        glass_specification.clear({elm});
-        proto.length = 0;
-        inset.specification.forEach((row) => {
-          if(row.nom instanceof $p.CatInserts){
-            proto.push(glass_specification.add({
-              elm,
-              inset: row.nom,
-              clr: row.clr,
-            }))
-          }
-        });
-      }
+      glass_specification.clear({elm});
 
       project.selected_glasses().forEach((selm) => {
         if(selm !== this){
           selm.set_inset(inset, true);
           glass_specification.clear({elm: selm.elm});
-          proto.forEach((row) => glass_specification.add({
-            elm: selm.elm,
-            inset: row.inset,
-            clr: row.clr,
-          }));
         }
       });
     }
+
     super.set_inset(inset);
   }
 

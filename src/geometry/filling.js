@@ -369,7 +369,6 @@ class Filling extends AbstractFilling(BuilderElement) {
     if(!ignore_select){
       const {project, elm, clr} = this;
       const {glass_specification} = project.ox;
-      const proto = glass_specification.find_rows({elm});
 
       // проверим доступность цветов
       if(!inset.clr_group.empty() && inset.clr_group.clr_conformity.count() &&
@@ -386,36 +385,20 @@ class Filling extends AbstractFilling(BuilderElement) {
         }
       }
 
-      // если для заполнение определён состав - корректируем
-      if(proto.length) {
-        glass_specification.clear({elm});
-        proto.length = 0;
-        inset.specification.forEach((row) => {
-          if(row.nom instanceof $p.CatInserts){
-            proto.push(glass_specification.add({
-              elm,
-              inset: row.nom,
-              clr: row.clr,
-            }))
-          }
-        });
-      }
+      // если для заполнения был определён состав - очищаем
+      glass_specification.clear({elm});
 
       // транслируем изменения на остальные выделенные заполнения
       project.selected_glasses().forEach((selm) => {
         if(selm !== this){
           // копируем вставку
           selm.set_inset(inset, true);
-          // копируем состав заполнения
+          // сбрасываем состав заполнения
           glass_specification.clear({elm: selm.elm});
-          proto.forEach((row) => glass_specification.add({
-            elm: selm.elm,
-            inset: row.inset,
-            clr: row.clr,
-          }));
         }
       });
     }
+
     super.set_inset(inset);
   }
 
