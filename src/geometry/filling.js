@@ -389,7 +389,7 @@ class Filling extends AbstractFilling(BuilderElement) {
       // если для заполнение определён состав - корректируем
       if(proto.length) {
         glass_specification.clear({elm});
-        proto.length = 0;
+        /*proto.length = 0;
         inset.specification.forEach((row) => {
           if(row.nom instanceof $p.CatInserts){
             proto.push(glass_specification.add({
@@ -398,7 +398,7 @@ class Filling extends AbstractFilling(BuilderElement) {
               clr: row.clr,
             }))
           }
-        });
+        });*/
       }
 
       // транслируем изменения на остальные выделенные заполнения
@@ -408,11 +408,11 @@ class Filling extends AbstractFilling(BuilderElement) {
           selm.set_inset(inset, true);
           // копируем состав заполнения
           glass_specification.clear({elm: selm.elm});
-          proto.forEach((row) => glass_specification.add({
+          /*proto.forEach((row) => glass_specification.add({
             elm: selm.elm,
             inset: row.inset,
             clr: row.clr,
-          }));
+          }));*/
         }
       });
     }
