@@ -12,6 +12,8 @@ const path = require('path');
 process.env.DEBUG = 'prebuild:,-not_this';
 const debug = require('debug')('prebuild:');
 
+const patch = require('./meta.patch');
+
 debug('Читаем конструктор и плагины');
 
 // путь настроек приложения
@@ -78,24 +80,8 @@ $p.wsql.init((prm) => {
       delete _m._id;
       delete _m._rev;
 
-      // фильтруем метаданные для облегчения рабочего места
-      // let filter = {
-      //   cat: ['users','users_acl','stores','divisions','individuals','parameters_keys','work_shifts','work_center_kinds','work_centers','property_values'],
-      //   doc: ['planning_event'],
-      //   dp: [],
-      //   areg: [],
-      //   ireg: ['log']
-      // }, filtred_meta = {};
-      // for(var cls in _m){
-      //   if(!filter[cls]){
-      //     filtred_meta[cls] = _m[cls]
-      //   }else{
-      //     filtred_meta[cls] = {};
-      //     filter[cls].forEach(function (name) {
-      //       filtred_meta[cls][name] = _m[cls][name]
-      //     })
-      //   }
-      // }
+      // фильтруем и корректируем метаданные
+      patch(_m);
 
       return $p.md.init(_m);
     })
