@@ -281,6 +281,9 @@ class WndAddress {
   toolbar_click(btn_id){
     if(btn_id=="btn_select"){
       const {obj, v, wnd} = this;
+      const {elmnts: {pgrid, pgrid2}} = wnd;
+      pgrid && pgrid.editStop();
+      pgrid2 && pgrid2.editStop();
       this.assemble_address_fields();
       obj.coordinates = JSON.stringify([v.latitude, v.longitude]);
       wnd.close();
