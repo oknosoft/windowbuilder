@@ -51,7 +51,7 @@ class AdditionsGroup extends React.Component {
   handleRemove = () => {
     const {props, tabular, state} = this;
     if(tabular){
-      const {selected} = tabular._grid.state;
+      const {selected} = state;
       const row = tabular.rowGetter(selected && selected.hasOwnProperty('rowIdx') ? selected.rowIdx : 0);
       if(row){
         const {calc_order_row} = row.characteristic;
@@ -60,6 +60,7 @@ class AdditionsGroup extends React.Component {
         if(state.count) {
           this.setState({
             count: state.count - 1,
+            selected: null
           });
         }
         if(calc_order_row){
@@ -94,6 +95,7 @@ class AdditionsGroup extends React.Component {
 
   onCellSelected = (e) => {
     const {props: {meta}, tabular} = this;
+    this.setState({selected: e});
     if(tabular && tabular.state._columns){
       const column = tabular.state._columns[e.idx];
       const {key} = column;
