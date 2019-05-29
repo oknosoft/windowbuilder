@@ -1,6 +1,6 @@
 /**
  * ### Модуль сборки *.js по описанию метаданных
- * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2019
  * @module  metadata-prebuild
  */
 
@@ -150,9 +150,9 @@ function create_modules(_m) {
       rep: {mgr: 'DataProcessorsManager', proto: 'DataProcessorObj', dir: 'reports'},
     };
   let text = `(function(){
-  const {EnumManager,CatManager,DocManager,DataProcessorsManager,ChartOfCharacteristicManager,ChartOfAccountManager,
-    InfoRegManager,AccumRegManager,BusinessProcessManager,TaskManager,CatObj, DocObj, TabularSectionRow, DataProcessorObj,
-    RegisterRow, BusinessProcessObj, TaskObj} = $p.constructor.classes;
+  const {MetaEventEmitter,EnumManager,CatManager,DocManager,DataProcessorsManager,ChartOfCharacteristicManager,ChartOfAccountManager,
+    InfoRegManager,AccumRegManager,BusinessProcessManager,TaskManager,CatObj,DocObj,TabularSectionRow,DataProcessorObj,
+    RegisterRow,BusinessProcessObj,TaskObj} = $p.constructor.classes;
     
   const _define = Object.defineProperties;
 

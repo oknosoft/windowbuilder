@@ -10,6 +10,7 @@ const include = ['*'];
 const exclude = [
   'cat.abonents',
   'cat.servers',
+  'cat.property_values_hierarchy',
   'doc.registers_correction'
 ];
 

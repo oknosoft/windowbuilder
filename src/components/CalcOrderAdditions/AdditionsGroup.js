@@ -23,6 +23,7 @@ class AdditionsGroup extends React.Component {
 
   constructor(props) {
     super(props);
+    this.selectedRow = null;
     this.state = {count: props.count};
   }
 
@@ -49,30 +50,27 @@ class AdditionsGroup extends React.Component {
   };
 
   handleRemove = () => {
-    const {props, tabular, state} = this;
-    if(tabular){
-      const {selected} = tabular._grid.state;
-      const row = tabular.rowGetter(selected && selected.hasOwnProperty('rowIdx') ? selected.rowIdx : 0);
-      if(row){
-        const {calc_order_row} = row.characteristic;
-        row._owner.del(row);
-        tabular.forceUpdate();
-        if(state.count) {
-          this.setState({
-            count: state.count - 1,
-          });
-        }
-        if(calc_order_row){
-          calc_order_row._owner.del(calc_order_row);
-        }
-      }
-      else{
-        $p.msg.show_msg({
-          type: 'alert-info',
-          text: `Укажите строку для удаления (${props.group})`,
-          title: 'Удаление строки'
+    const {props, tabular, state, selectedRow} = this;
+    if(tabular && selectedRow){
+      const {calc_order_row} = selectedRow.characteristic;
+      selectedRow._owner.del(selectedRow);
+      this.selectedRow = null;
+      tabular.forceUpdate();
+      if(state.count) {
+        this.setState({
+          count: state.count - 1,
         });
       }
+      if(calc_order_row){
+        calc_order_row._owner.del(calc_order_row);
+      }
+    }
+    else{
+      $p.msg.show_msg({
+        type: 'alert-info',
+        text: `Укажите строку для удаления (${props.group})`,
+        title: 'Удаление строки'
+      });
     }
   };
 
@@ -97,7 +95,6 @@ class AdditionsGroup extends React.Component {
     if(tabular && tabular.state._columns){
       const column = tabular.state._columns[e.idx];
       const {key} = column;
-      const row = tabular.rowGetter(e.rowIdx);
       const mf = meta.fields[key] || {
         choice_params: [],
         type: {
@@ -106,11 +103,12 @@ class AdditionsGroup extends React.Component {
           _mgr: $p.cat.property_values,
         }
       };
+      this.selectedRow = tabular.rowGetter(e.rowIdx);
       if(key === 'clr') {
-        $p.cat.clrs.selection_exclude_service(mf, row.inset);
+        $p.cat.clrs.selection_exclude_service(mf, this.selectedRow.inset);
       }
       else if($p.utils.is_guid(key)) {
-        row.tune(key, mf, column);
+        this.selectedRow.tune(key, mf, column);
       }
     }
   }
@@ -149,6 +147,7 @@ class AdditionsGroup extends React.Component {
             meta={meta}
             onRowUpdated={this.onRowUpdated}
             onCellSelected={this.onCellSelected}
+            onCellDeSelected={() => this.selectedRow = null}
           />
         </div>
       </Collapse>
