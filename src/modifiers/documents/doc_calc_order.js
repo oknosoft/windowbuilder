@@ -196,14 +196,21 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       this.organization = value;
       if(this.contract.organization != value) {
         this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
-        this.new_number_doc();
+        !this.constructor.prototype.hasOwnProperty('new_number_doc') && this.new_number_doc();
       }
     }
     else if(field === 'partner' && this.contract.owner != value) {
       this.contract = $p.cat.contracts.by_partner_and_org(value, this.organization);
     }
     // если изменение инициировано человеком, дополним список изменённых полей
-    this._manager.emit_add_fields(this, ['contract']);
+    const ads = ['contract'];
+    if(field === 'obj_delivery_state') {
+      ads.push('extra_fields');
+      if(value != 'Шаблон') {
+        this.extra_fields.clear({property: {in: $p.cch.properties.templates_props}});
+      }
+    }
+    this._manager.emit_add_fields(this, ads);
 
   }
 

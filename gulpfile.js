@@ -47,7 +47,6 @@ gulp.task('build-drawer', function () {
     './src/modifiers/catalogs/cat_clrs.js',
     './src/modifiers/catalogs/cat_cnns.js',
     './src/modifiers/catalogs/cat_contracts.js',
-    //'./src/modifiers/catalogs/cat_divisions.js',
     './src/modifiers/catalogs/cat_elm_visualization.js',
     './src/modifiers/catalogs/cat_furns.js',
     './src/modifiers/catalogs/cat_insert_bind.js',
@@ -57,6 +56,7 @@ gulp.task('build-drawer', function () {
     './src/modifiers/catalogs/cat_production_params.js',
     './src/modifiers/documents/doc_calc_order.js',
     './src/modifiers/documents/doc_calc_order_templates.js',
+    './src/modifiers/documents/doc_calc_order_predefined_props.js',
   ])
     .pipe(concat('drawer.js'))
     .pipe(strip())

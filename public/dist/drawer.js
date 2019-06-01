@@ -14621,13 +14621,20 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       this.organization = value;
       if(this.contract.organization != value) {
         this.contract = $p.cat.contracts.by_partner_and_org(this.partner, value);
-        this.new_number_doc();
+        !this.constructor.prototype.hasOwnProperty('new_number_doc') && this.new_number_doc();
       }
     }
     else if(field === 'partner' && this.contract.owner != value) {
       this.contract = $p.cat.contracts.by_partner_and_org(value, this.organization);
     }
-    this._manager.emit_add_fields(this, ['contract']);
+    const ads = ['contract'];
+    if(field === 'obj_delivery_state') {
+      ads.push('extra_fields');
+      if(value != 'Шаблон') {
+        this.extra_fields.clear({property: {in: $p.cch.properties.templates_props}});
+      }
+    }
+    this._manager.emit_add_fields(this, ads);
 
   }
 
@@ -15736,6 +15743,60 @@ $p.DocCalc_orderProductionRow.pfields = 'price_internal,quantity,discount_percen
   pouch.once('pouch_doc_ram_loaded', direct_templates);
 
 })($p);
+
+
+$p.md.once('predefined_elmnts_inited', () => {
+  const {doc: {calc_order}, cat: {destinations}, cch: {properties}, enm: {obj_delivery_states}} = $p;
+  const dst = destinations.predefined('Документ_Расчет');
+  const predefined = [
+    {
+      class_name: 'cch.properties',
+      ref: '198ac4ac-8453-11e9-bc71-873e65ad9246',
+      name: 'Параметры из системы',
+      caption: 'Параметры из системы',
+      sorting_field: 1143,
+      available: true,
+      list: 0,
+      destination: dst.ref,
+      type: {types: ['boolean']}
+    },
+    {
+      class_name: 'cch.properties',
+      ref: '28278e46-8453-11e9-bc71-873e65ad9246',
+      name: 'Уточнять систему',
+      caption: 'Уточнять систему',
+      sorting_field: 1144,
+      available: true,
+      list: 0,
+      destination: dst.ref,
+      type: {types: ['boolean']}
+    },
+    {
+      class_name: 'cch.properties',
+      ref: '323b3eaa-8453-11e9-bc71-873e65ad9246',
+      name: 'Уточнять фурнитуру',
+      caption: 'Уточнять фурнитуру',
+      sorting_field: 1145,
+      available: true,
+      list: 0,
+      destination: dst.ref,
+      type: {types: ['boolean']}
+    }
+  ];
+  properties.load_array(predefined);
+
+  properties.templates_props = predefined.map(({ref}) => properties.get(ref));
+  properties.refill_props = properties.templates_props[0];
+  properties.specify_sys = properties.templates_props[1];
+  properties.specify_furn = properties.templates_props[2];
+
+  const {extra_fields} = Object.getPrototypeOf(calc_order);
+  calc_order.extra_fields = function (obj) {
+    const res = extra_fields.call(calc_order, obj);
+    return obj.obj_delivery_state === obj_delivery_states.Шаблон ? res.concat(properties.templates_props) : res;
+  }
+});
+
  
 return EditorInvisible;
 }

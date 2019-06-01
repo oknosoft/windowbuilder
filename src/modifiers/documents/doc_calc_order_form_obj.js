@@ -216,7 +216,7 @@
       wnd.elmnts.cell_note = wnd.elmnts.layout_header.cells('c');
       wnd.elmnts.cell_note.hideHeader();
       wnd.elmnts.cell_note.setHeight(100);
-      wnd.elmnts.cell_note.attachHTMLString('<textarea placeholder=\'Комментарий к заказу\' class=\'textarea_editor\'>' + o.note + '</textarea>');
+      wnd.elmnts.cell_note.attachHTMLString(`<textarea placeholder='Комментарий к заказу' class='textarea_editor'>${o.note}</textarea>`);
 
     };
 
