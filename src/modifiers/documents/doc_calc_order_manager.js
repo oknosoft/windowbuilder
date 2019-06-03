@@ -181,7 +181,6 @@
     dst._mixin(others, null, 'ref,date,number_doc,posted,_deleted,number_internal,production,planning,manager,obj_delivery_state'.split(','), true);
     // заполняем продукцию и сохраненные эскизы
     const map = new Map();
-    const db = _mgr.adapter.db(_mgr);
 
     // создаём характеристики и заполняем данными исходного заказа
     src.production.forEach((row) => {
@@ -191,6 +190,9 @@
         cx._mixin(row.characteristic._obj, null, 'ref,name,calc_order,timestamp'.split(','), true);
         cx._data._modified = true;
         cx._data._is_new = true;
+        if(cx.coordinates.count() && src.refill_props) {
+          cx._data.refill_props = true;
+        }
         map.set(row.characteristic, cx);
       }
       dst.production.add(prow);
@@ -203,6 +205,11 @@
         row.ordn = row.characteristic.leading_product = cx;
       }
     });
+
+    // если сказано перезаполнять параметры - перезаполняем и пересчитываем
+    if(src.refill_props) {
+      await dst.recalc();
+    }
 
     return dst.save();
   }

@@ -284,7 +284,7 @@ class Scheme extends paper.Project {
 
     // пересчитываем параметры изделия, если изменилась система
     if(setted) {
-      _dp.sys.refill_prm(ox);
+      _dp.sys.refill_prm(ox, 0, true);
     }
 
     // устанавливаем в _dp цвет по умолчанию
@@ -468,7 +468,15 @@ class Scheme extends paper.Project {
               (!from_service || !_scheme.ox.specification.count()) && resolve();
             });
         });
-      });
+      })
+        .then(() => {
+          // при необходимости, перезаполним параметры изделия и фурнитуры
+          if(_scheme.ox._data.refill_props) {
+            _scheme._dp.sys.refill_prm(_scheme.ox, 0, true, _scheme);
+            _scheme._scope._acc && _scheme._scope._acc.props.reload();
+            delete _scheme.ox._data.refill_props;
+          }
+        });
     }
 
     _attr._loading = true;

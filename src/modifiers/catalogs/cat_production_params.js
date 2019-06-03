@@ -145,7 +145,7 @@ $p.CatProduction_params.prototype.__define({
 	 * @param cnstr {Nomber} - номер конструкции. Если 0 - перезаполняем параметры изделия, иначе - фурнитуры
 	 */
 	refill_prm: {
-		value(ox, cnstr = 0, force) {
+		value(ox, cnstr = 0, force, project) {
 
 			const prm_ts = !cnstr ? this.product_params : this.furn_params;
 			const adel = [];
@@ -235,7 +235,10 @@ $p.CatProduction_params.prototype.__define({
             }
 
             if(changed) {
-              const contour = paper.project && paper.project.getItem({cnstr: row.cnstr});
+              if(!project && paper) {
+                project = paper.project;
+              }
+              const contour = project && project.getItem({cnstr: row.cnstr});
               if(contour) {
                 row.furn.refill_prm(contour);
                 contour.notify(contour, 'furn_changed');

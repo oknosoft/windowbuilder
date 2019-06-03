@@ -112,6 +112,7 @@ class AppRoot extends Component {
               <Route path="/meta" component={MetaTreePage} />
               <Route path="/login" component={FrmLogin} />
               <Route path="/settings" component={Settings} />
+              <Route path="/waiting" component={(tprops) => <DumbScreen {...tprops} repl={props.repl} />} />
               <Route component={NotFoundPage} />
             </Switch>
         ),

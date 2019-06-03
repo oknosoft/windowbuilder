@@ -212,6 +212,12 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           const ref = wnd.elmnts.grid.getSelectedRowId();
           if(ref) {
             const {calc_order} = $p.doc;
+            handlers.handleIfaceState({
+              component: '',
+              name: 'repl',
+              value: {root: {title: 'Длительная операция', text: 'Копирование и пересчет заказа'}},
+            });
+            handlers.handleNavigate(`/waiting`);
             calc_order.clone(ref)
               .then((doc) => {
                 handlers.handleNavigate(`/${calc_order.class_name}/${doc.ref}`);

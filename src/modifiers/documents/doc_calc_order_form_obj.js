@@ -458,7 +458,12 @@
           text: 'Документ изменён.<br />Перед созданием копии сохраните заказ'
         });
       };
-      handlers.handleNavigate(`/login`);
+      handlers.handleIfaceState({
+        component: '',
+        name: 'repl',
+        value: {root: {title: 'Длительная операция', text: 'Копирование и пересчет заказа'}},
+      });
+      handlers.handleNavigate(`/waiting`);
       _manager.clone(o)
         .then((doc) => {
           handlers.handleNavigate(`/${_manager.class_name}/${doc.ref}`);
@@ -823,9 +828,17 @@
               // добавляем строку
               o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
                 .then(({characteristic}) => {
+
                   // заполняем продукцию копией данных текущей строки
                   characteristic._mixin(row.characteristic._obj, null,
                     'ref,name,calc_order,product,leading_product,leading_elm,origin,note,partner'.split(','), true);
+
+                  // при необходимости, установим признак необходимости перезаполнить параметры изделия и фурнитуры
+                  if(calc_order.refill_props) {
+                    characteristic._data.refill_props = true;
+                  }
+
+                  // открываем рисовалку
                   handlers.handleNavigate(`/builder/${characteristic.ref}`);
                 });
             }

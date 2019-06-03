@@ -20,9 +20,12 @@ class DumbScreen extends Component {
 
   render() {
 
-    let {title, page, top, first_run} = this.props;
+    let {title, page, top, first_run, repl} = this.props;
     const over = page && page.limit * page.page > page.total_rows;
 
+    if(!title && repl && repl.root) {
+      title = repl.root.title;
+    }
     if(!title) {
       title = first_run ? 'Первый запуск требует дополнительного времени...' : 'Загрузка модулей...';
     }

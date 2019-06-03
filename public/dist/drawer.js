@@ -8548,7 +8548,7 @@ class Scheme extends paper.Project {
     }
 
     if(setted) {
-      _dp.sys.refill_prm(ox);
+      _dp.sys.refill_prm(ox, 0, true);
     }
 
     if(_dp.clr.empty()) {
@@ -8685,7 +8685,14 @@ class Scheme extends paper.Project {
               (!from_service || !_scheme.ox.specification.count()) && resolve();
             });
         });
-      });
+      })
+        .then(() => {
+          if(_scheme.ox._data.refill_props) {
+            _scheme._dp.sys.refill_prm(_scheme.ox, 0, true, _scheme);
+            _scheme._scope._acc && _scheme._scope._acc.props.reload();
+            delete _scheme.ox._data.refill_props;
+          }
+        });
     }
 
     _attr._loading = true;
@@ -14354,7 +14361,7 @@ $p.CatProduction_params.prototype.__define({
 	},
 
 	refill_prm: {
-		value(ox, cnstr = 0, force) {
+		value(ox, cnstr = 0, force, project) {
 
 			const prm_ts = !cnstr ? this.product_params : this.furn_params;
 			const adel = [];
@@ -14436,7 +14443,10 @@ $p.CatProduction_params.prototype.__define({
             }
 
             if(changed) {
-              const contour = paper.project && paper.project.getItem({cnstr: row.cnstr});
+              if(!project && paper) {
+                project = paper.project;
+              }
+              const contour = project && project.getItem({cnstr: row.cnstr});
               if(contour) {
                 row.furn.refill_prm(contour);
                 contour.notify(contour, 'furn_changed');
@@ -15746,7 +15756,7 @@ $p.DocCalc_orderProductionRow.pfields = 'price_internal,quantity,discount_percen
 
 
 $p.md.once('predefined_elmnts_inited', () => {
-  const {doc: {calc_order}, cat: {destinations}, cch: {properties}, enm: {obj_delivery_states}} = $p;
+  const {DocCalc_order, doc: {calc_order}, cat: {destinations}, cch: {properties}, enm: {obj_delivery_states}, job_prm} = $p;
   const dst = destinations.predefined('Документ_Расчет');
   const predefined = [
     {
@@ -15785,15 +15795,33 @@ $p.md.once('predefined_elmnts_inited', () => {
   ];
   properties.load_array(predefined);
 
-  properties.templates_props = predefined.map(({ref}) => properties.get(ref));
-  properties.refill_props = properties.templates_props[0];
-  properties.specify_sys = properties.templates_props[1];
-  properties.specify_furn = properties.templates_props[2];
+  const templates_props = predefined.map(({ref}) => properties.get(ref));
+
+  Object.defineProperties(DocCalc_order.prototype, {
+    refill_props: {
+      get() {
+        const row = this.extra_fields.find({property: templates_props[0]});
+        return row ? row.value : job_prm.builder.refill_props;
+      }
+    },
+    specify_sys: {
+      get() {
+        const row = this.extra_fields.find({property: templates_props[1]});
+        return row ? row.value : false;
+      }
+    },
+    specify_furn: {
+      get() {
+        const row = this.extra_fields.find({property: templates_props[2]});
+        return row ? row.value : false;
+      }
+    }
+  });
 
   const {extra_fields} = Object.getPrototypeOf(calc_order);
   calc_order.extra_fields = function (obj) {
     const res = extra_fields.call(calc_order, obj);
-    return obj.obj_delivery_state === obj_delivery_states.Шаблон ? res.concat(properties.templates_props) : res;
+    return obj.obj_delivery_state === obj_delivery_states.Шаблон ? res.concat(templates_props) : res;
   }
 });
 

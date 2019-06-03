@@ -7,7 +7,7 @@
  */
 
 $p.md.once('predefined_elmnts_inited', () => {
-  const {doc: {calc_order}, cat: {destinations}, cch: {properties}, enm: {obj_delivery_states}} = $p;
+  const {DocCalc_order, doc: {calc_order}, cat: {destinations}, cch: {properties}, enm: {obj_delivery_states}, job_prm} = $p;
   const dst = destinations.predefined('Документ_Расчет');
   const predefined = [
     {
@@ -46,15 +46,33 @@ $p.md.once('predefined_elmnts_inited', () => {
   ];
   properties.load_array(predefined);
 
-  properties.templates_props = predefined.map(({ref}) => properties.get(ref));
-  properties.refill_props = properties.templates_props[0];
-  properties.specify_sys = properties.templates_props[1];
-  properties.specify_furn = properties.templates_props[2];
+  const templates_props = predefined.map(({ref}) => properties.get(ref));
+
+  Object.defineProperties(DocCalc_order.prototype, {
+    refill_props: {
+      get() {
+        const row = this.extra_fields.find({property: templates_props[0]});
+        return row ? row.value : job_prm.builder.refill_props;
+      }
+    },
+    specify_sys: {
+      get() {
+        const row = this.extra_fields.find({property: templates_props[1]});
+        return row ? row.value : false;
+      }
+    },
+    specify_furn: {
+      get() {
+        const row = this.extra_fields.find({property: templates_props[2]});
+        return row ? row.value : false;
+      }
+    }
+  });
 
   const {extra_fields} = Object.getPrototypeOf(calc_order);
   calc_order.extra_fields = function (obj) {
     const res = extra_fields.call(calc_order, obj);
-    return obj.obj_delivery_state === obj_delivery_states.Шаблон ? res.concat(properties.templates_props) : res;
+    return obj.obj_delivery_state === obj_delivery_states.Шаблон ? res.concat(templates_props) : res;
   }
 });
 
