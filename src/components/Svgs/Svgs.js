@@ -65,4 +65,13 @@ class Svgs extends React.Component {
   }
 }
 
+Svgs.propTypes = {
+  classes: PropTypes.object,
+  height: PropTypes.number,
+  hidden: PropTypes.bool,
+  reverseHide: PropTypes.func,
+  handleNavigate: PropTypes.func,
+  imgs: PropTypes.array,
+};
+
 export default withStyles(styles, { withTheme: true })(Svgs);

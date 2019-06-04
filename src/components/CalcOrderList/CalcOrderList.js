@@ -91,7 +91,7 @@ class CalcOrderList extends Component {
   };
 
   handleOpenProd = (ref) => {
-
+    ref = null;
   };
 
   reverseHide = () => {

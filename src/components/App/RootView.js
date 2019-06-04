@@ -21,40 +21,14 @@ import theme from '../../styles/muiTheme';
 
 class RootView extends React.Component {
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      path_log_in: this.isPathLogIn(),
-      browser_compatible: browser_compatible()
-    };
-  }
-
-  shouldComponentUpdate(props, state) {
-    const {user, data_empty, couch_direct, offline, history} = props;
-    const {path_log_in} = state;
-    let res = true;
-
-    if (path_log_in != this.isPathLogIn()) {
-      this.setState({path_log_in: this.isPathLogIn()});
-      res = false;
-    }
-
-    // если это первый запуск или couch_direct и offline, переходим на страницу login
-    if(!path_log_in && ((data_empty === true && !user.try_log_in && !user.logged_in) || (couch_direct && offline))) {
-      history.push('/login');
-      res = false;
-    }
-
-    return res;
-  }
-
-  isPathLogIn() {
-    return !!location.pathname.match(/\/(login|about)$/);
+  constructor(props, context) {
+    super(props, context);
+    this.browser_compatible = browser_compatible();
   }
 
   render() {
 
-    const {props, state} = this;
+    const {props, browser_compatible} = this;
     const {meta_loaded, data_empty, data_loaded, history, repl, second_instance} = props;
     let show_dumb = !meta_loaded ||
       (data_empty === undefined) ||
@@ -77,7 +51,7 @@ class RootView extends React.Component {
         )
           :
         (
-            state.browser_compatible ?
+            browser_compatible ?
           (show_dumb ?
             <DumbScreen {...props} />
             :

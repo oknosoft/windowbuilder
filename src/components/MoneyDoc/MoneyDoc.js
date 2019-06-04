@@ -7,7 +7,6 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import FormGroup from '@material-ui/core/FormGroup';
 import DataField from 'metadata-react/DataField';
 import TabularSection from 'metadata-react/TabularSection';

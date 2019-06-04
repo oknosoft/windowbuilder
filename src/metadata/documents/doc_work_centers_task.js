@@ -208,7 +208,7 @@ export default function ({
      */
     optimize_fragment(cutting, rows, onStep) {
 
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
 
         const doc = this;
         const workpieces = [];

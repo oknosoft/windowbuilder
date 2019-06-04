@@ -49,7 +49,7 @@ function NomTable({_obj, classes}) {
   // бежим по свёрнутой табчасти раскроя
   const fragments = _obj.fragments();
   fragments.forEach((characteristics, nom) => {
-    for(const [characteristic, rows] of characteristics) {
+    for(const [characteristic] of characteristics) {
       const crows = _obj.cutting.find_rows({nom, characteristic});
       const cuts_in = _obj.cuts.find_rows({record_kind: debit_credit_kinds.credit, nom, characteristic});
       const cuts_out = _obj.cuts.find_rows({record_kind: debit_credit_kinds.debit, nom, characteristic});

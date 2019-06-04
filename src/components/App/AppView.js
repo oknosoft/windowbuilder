@@ -77,8 +77,11 @@ class AppRoot extends Component {
     const iprops = item_props();
 
     let need_auth = meta_loaded && iprops.need_user && ((!user.try_log_in && !user.logged_in) || (couch_direct && offline));
-    if(need_auth && !couch_direct && $p.current_user && $p.current_user.name == user.name) {
-      need_auth = false;
+    if(need_auth && !couch_direct && props.complete_loaded) {
+      const {current_user} = $p;
+      if(current_user && current_user.name == user.name) {
+        need_auth = false;
+      }
     }
 
     return [
