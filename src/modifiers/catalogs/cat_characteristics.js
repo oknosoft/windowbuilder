@@ -92,10 +92,12 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
     inset.used_params.forEach((param) => {
       if((!param.is_calculated || param.show_calculated) && params.indexOf(param) == -1) {
+        const value = inset.product_params.find({param});
         ts_params.add({
           cnstr: cnstr,
           inset: blank_inset || inset,
-          param: param
+          param: param,
+          value: (value && value.value) || ""
         });
         params.push(param);
       }
@@ -113,7 +115,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
   prod_name(short) {
     const {calc_order_row, calc_order, leading_product, sys, clr, origin} = this;
     let name = '';
-
     if(calc_order_row) {
 
       if(calc_order.number_internal) {
@@ -527,6 +528,10 @@ $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, 
 
       // устанавливаем значение новой вставки
       this._obj.inset = value;
+
+      // заполняем цвет вставки по умолчанию: белый
+      if (this.clr.empty()) 
+         this.clr = $p.cat.clrs.by_name("Белый");    
 
       // заполняем параметры по умолчанию
       _owner.add_inset_params(this.inset, cnstr);
