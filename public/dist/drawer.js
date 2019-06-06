@@ -11837,17 +11837,19 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     const ts_params = this.params;
     const params = [];
 
-    ts_params.find_rows({cnstr: cnstr, inset: blank_inset || inset}, (row) => {
-      params.indexOf(row.param) === -1 && params.push(row.param);
-      return row.param;
+    ts_params.find_rows({cnstr, inset: blank_inset || inset}, (row) => {
+      !params.includes(param) && params.push(row.param);
     });
 
+    const {product_params} = inset;
     inset.used_params.forEach((param) => {
-      if((!param.is_calculated || param.show_calculated) && params.indexOf(param) == -1) {
+      if((!param.is_calculated || param.show_calculated) && !params.includes(param)) {
+        const value = product_params.find({param});
         ts_params.add({
           cnstr: cnstr,
           inset: blank_inset || inset,
-          param: param
+          param: param,
+          value: (value && value.value) || "",
         });
         params.push(param);
       }
@@ -11862,7 +11864,6 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
   prod_name(short) {
     const {calc_order_row, calc_order, leading_product, sys, clr, origin} = this;
     let name = '';
-
     if(calc_order_row) {
 
       if(calc_order.number_internal) {

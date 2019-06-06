@@ -85,19 +85,19 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     const ts_params = this.params;
     const params = [];
 
-    ts_params.find_rows({cnstr: cnstr, inset: blank_inset || inset}, (row) => {
-      params.indexOf(row.param) === -1 && params.push(row.param);
-      return row.param;
+    ts_params.find_rows({cnstr, inset: blank_inset || inset}, (row) => {
+      !params.includes(param) && params.push(row.param);
     });
 
+    const {product_params} = inset;
     inset.used_params.forEach((param) => {
-      if((!param.is_calculated || param.show_calculated) && params.indexOf(param) == -1) {
-        const value = inset.product_params.find({param});
+      if((!param.is_calculated || param.show_calculated) && !params.includes(param)) {
+        const value = product_params.find({param});
         ts_params.add({
           cnstr: cnstr,
           inset: blank_inset || inset,
           param: param,
-          value: (value && value.value) || ""
+          value: (value && value.value) || "",
         });
         params.push(param);
       }
@@ -528,10 +528,6 @@ $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, 
 
       // устанавливаем значение новой вставки
       this._obj.inset = value;
-
-      // заполняем цвет вставки по умолчанию: белый
-      if (this.clr.empty()) 
-         this.clr = $p.cat.clrs.by_name("Белый");    
 
       // заполняем параметры по умолчанию
       _owner.add_inset_params(this.inset, cnstr);
