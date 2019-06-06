@@ -7,7 +7,7 @@
 
 import {connect} from 'react-redux';
 import withStyles from './styles';
-import compose from 'recompose/compose';
+import {compose} from 'redux';
 
 import AdditionsItem from './AdditionsItem';
 const {ItemData} = $p.cat.inserts;

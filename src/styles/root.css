@@ -4,21 +4,31 @@
   font-weight: normal;
   font-style: normal;
 }
-html, body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-html, body, input, textarea, select, button {
-  color: rgb(48, 57, 66);
-  font-family: Roboto, Arial, sans-serif;
-  font-size: 100%;
-  line-height: 21px;
+
+html {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+strong, b {
+  font-weight: 500;
+}
+body {
+  color: rgba(0, 0, 0, 0.87);
+  margin: 0;
+  font-size: 0.95rem;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-weight: 400;
+  line-height: 1.43;
+  letter-spacing: 0.01071em;
+}
+@media print {
+  body {
+    background-color: #fff;
+  }
+}
+
 .splash {
   width: 512px;
   height: 128px;
@@ -29,7 +39,7 @@ html, body, input, textarea, select, button {
 }
 .description {
   padding-left: 120px;
-  font-size: 67%;
+  font-size: 78%;
   line-height: 120%;
   color: #555;
 }

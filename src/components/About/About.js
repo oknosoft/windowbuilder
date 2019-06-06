@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import withStyles from '@material-ui/core/styles/withStyles';
+import {withStyles} from '@material-ui/styles';
 import Grid from '@material-ui/core/Grid';
 
 import {withIface} from 'metadata-redux';
@@ -48,7 +48,7 @@ class About extends Component {
 
     return (
       <div className={classes.root}>
-        <Grid container spacing={24}>
+        <Grid container spacing={2}>
           <Grid item md={1} lg={2} xl={3} />
           <Grid item xs={12} sm={12} md={11} lg={10} xl={8}>
 

@@ -11,11 +11,11 @@ import PropTypes from 'prop-types';
 import ListItemText from '@material-ui/core/ListItemText';
 import LinearProgress from '@material-ui/core/LinearProgress';
 
-import withStyles from '@material-ui/core/styles/withStyles';
+import {withStyles} from '@material-ui/styles';
 
 const styles = (theme) => ({
   bottom: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   noPadding: {
     padding: 0,

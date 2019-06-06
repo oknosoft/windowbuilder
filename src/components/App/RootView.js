@@ -16,7 +16,7 @@ import BrowserCompatibility, {browser_compatible} from 'metadata-react/App/Brows
 import SecondInstance from 'metadata-react/App/SecondInstance';
 
 // тема для material-ui
-import {MuiThemeProvider} from '@material-ui/core/styles';
+import {ThemeProvider} from '@material-ui/styles';
 import theme from '../../styles/muiTheme';
 
 class RootView extends React.Component {
@@ -43,7 +43,7 @@ class RootView extends React.Component {
       }
     }
 
-    return <MuiThemeProvider theme={theme}>
+    return <ThemeProvider theme={theme}>
       {
         second_instance ?
         (
@@ -62,7 +62,7 @@ class RootView extends React.Component {
           <BrowserCompatibility/>
         )
       }
-    </MuiThemeProvider>;
+    </ThemeProvider>;
   }
 }
 

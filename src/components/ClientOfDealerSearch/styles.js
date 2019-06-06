@@ -5,7 +5,7 @@
  * Created by Evgeniy Malyarov on 14.03.2018.
  */
 
-import withStyles from '@material-ui/core/styles/withStyles';
+import {withStyles} from '@material-ui/styles';
 
 const styles = theme => ({
   search: {
@@ -18,14 +18,14 @@ const styles = theme => ({
 
   },
   secondary: {
-    marginTop: -theme.spacing.unit * 1.5,
+    marginTop: -theme.spacing(1.5),
   },
   groupTitle: {
     fontWeight: 'bold',
   },
   listitem: {
-    paddingTop: theme.spacing.unit,
-    paddingBottom: theme.spacing.unit,
+    paddingTop: theme.spacing(),
+    paddingBottom: theme.spacing(),
   }
 });
 

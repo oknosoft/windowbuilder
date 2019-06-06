@@ -12,13 +12,13 @@ import PropTypes from 'prop-types';
 import FormGroup from '@material-ui/core/FormGroup';
 import DataField from 'metadata-react/DataField';
 import ChipList from 'metadata-react/DataField/ChipList';
-import withStyles from '@material-ui/core/styles/withStyles';
+import {withStyles} from '@material-ui/styles';
 import {apply_ref_filter} from './scheme_change';
 
 
 const styles = theme => ({
   group: {
-    marginLeft: theme.spacing.unit,
+    marginLeft: theme.spacing(),
   },
 });
 

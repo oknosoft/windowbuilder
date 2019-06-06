@@ -5,7 +5,7 @@
  * Created by Evgeniy Malyarov on 14.03.2018.
  */
 
-import withStyles from '@material-ui/core/styles/withStyles';
+import {withStyles} from '@material-ui/styles';
 
 const styles = theme => ({
   root: {
@@ -17,7 +17,7 @@ const styles = theme => ({
       backgroundColor: theme.palette.common.white
     },
     '& td': {
-      padding: theme.spacing.unit / 2,
+      padding: theme.spacing() / 2,
       border: '1px solid rgba(224, 224, 224, 1)'
     },
   },
@@ -25,10 +25,10 @@ const styles = theme => ({
     height: 'inherit',
   },
   nom: {
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
   },
   data: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   canvas: {
     width: "100%",

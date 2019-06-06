@@ -11,7 +11,7 @@ import PropTypes from 'prop-types';
 import Fab from '@material-ui/core/Fab';
 import UpIcon from '@material-ui/icons/KeyboardArrowUp';
 import DownIcon from '@material-ui/icons/KeyboardArrowDown';
-import withStyles from '@material-ui/core/styles/withStyles';
+import {withStyles} from '@material-ui/styles';
 import cn from 'classnames';
 
 const styles = theme => ({
@@ -24,8 +24,8 @@ const styles = theme => ({
   },
   fab: {
     position: 'absolute',
-    top: theme.spacing.unit,
-    right: theme.spacing.unit * 2,
+    top: theme.spacing(),
+    right: theme.spacing(2),
   },
 });
 
