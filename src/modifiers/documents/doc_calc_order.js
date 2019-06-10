@@ -207,7 +207,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     if(field === 'obj_delivery_state') {
       ads.push('extra_fields');
       if(value != 'Шаблон') {
-        this.extra_fields.clear({property: {in: $p.cch.properties.templates_props}});
+        this.clear_templates_props();
       }
     }
     this._manager.emit_add_fields(this, ads);

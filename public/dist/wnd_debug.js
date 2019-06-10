@@ -5255,7 +5255,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     if(field === 'obj_delivery_state') {
       ads.push('extra_fields');
       if(value != 'Шаблон') {
-        this.extra_fields.clear({property: {in: $p.cch.properties.templates_props}});
+        this.clear_templates_props();
       }
     }
     this._manager.emit_add_fields(this, ads);
@@ -7543,6 +7543,11 @@ $p.md.once('predefined_elmnts_inited', () => {
       get() {
         const row = this.extra_fields.find({property: templates_props[2]});
         return row ? row.value : false;
+      }
+    },
+    clear_templates_props: {
+      value() {
+        this.extra_fields.clear({property: {in: templates_props}});
       }
     }
   });

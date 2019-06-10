@@ -66,6 +66,11 @@ $p.md.once('predefined_elmnts_inited', () => {
         const row = this.extra_fields.find({property: templates_props[2]});
         return row ? row.value : false;
       }
+    },
+    clear_templates_props: {
+      value() {
+        this.extra_fields.clear({property: {in: templates_props}});
+      }
     }
   });
 
