@@ -13987,10 +13987,11 @@ $p.CatNom.prototype.__define({
 
 	_price: {
 		value(attr) {
+		  const {job_prm, utils, cat, pricing} = $p;
 
       let price = 0,
-        currency = $p.job_prm.pricing.main_currency,
-        start_date = $p.utils.blank.date;
+        currency = job_prm.pricing.main_currency,
+        start_date = utils.blank.date;
 
 			if(!attr){
         attr = {currency};
@@ -14000,18 +14001,18 @@ $p.CatNom.prototype.__define({
 
 			if(attr.price_type){
 
-        if($p.utils.is_data_obj(attr.price_type)){
+        if(utils.is_data_obj(attr.price_type)){
           attr.price_type = attr.price_type.ref;
         }
 
         if(!attr.characteristic){
-          attr.characteristic = $p.utils.blank.guid;
+          attr.characteristic = utils.blank.guid;
         }
-        else if($p.utils.is_data_obj(attr.characteristic)){
+        else if(utils.is_data_obj(attr.characteristic)){
           attr.characteristic = ref;
           if(!calc_order.empty()){
             const tmp = [];
-            const {by_ref} = $p.cat.characteristics;
+            const {by_ref} = cat.characteristics;
             for(let clrx in _price) {
               const cx = by_ref[clrx];
               if(cx && cx.clr == clr){
@@ -14052,7 +14053,7 @@ $p.CatNom.prototype.__define({
             }
           }
           else if(attr.clr){
-            const {by_ref} = $p.cat.characteristics;
+            const {by_ref} = cat.characteristics;
             for(let clrx in _price){
               const cx = by_ref[clrx];
               if(cx && cx.clr == attr.clr){
@@ -14075,9 +14076,9 @@ $p.CatNom.prototype.__define({
 
       if(attr.formula){
 
-        if(!price && _price && _price[$p.utils.blank.guid]){
-          if(_price[$p.utils.blank.guid][attr.price_type]){
-            _price[$p.utils.blank.guid][attr.price_type].forEach((row) => {
+        if(!price && _price && _price[utils.blank.guid]){
+          if(_price[utils.blank.guid][attr.price_type]){
+            _price[utils.blank.guid][attr.price_type].forEach((row) => {
               if(row.date > start_date && row.date <= attr.date){
                 price = row.price;
                 currency = row.currency;
@@ -14088,13 +14089,13 @@ $p.CatNom.prototype.__define({
         }
         price = attr.formula.execute({
           nom: this,
-          characteristic: $p.cat.characteristics.get(attr.characteristic, false),
+          characteristic: cat.characteristics.get(attr.characteristic, false),
           date: attr.date,
           price, currency, x, y, z, clr, calc_order,
         })
       }
 
-			return $p.pricing.from_currency_to_currency(price, attr.date, currency, attr.currency);
+			return pricing.from_currency_to_currency(price, attr.date, currency, attr.currency);
 
 		}
 	},
@@ -14135,9 +14136,10 @@ $p.CatNom.prototype.__define({
         return this;
       }
 
-      const clr_key = $p.job_prm.properties.clr_key && $p.job_prm.properties.clr_key.ref;
+      const {properties} = $p.job_prm;
+      const clr_key = properties.clr_key && properties.clr_key.ref;
       let clr_value;
-      this.extra_fields.find_rows({property: $p.job_prm.properties.clr_key}, (row) => clr_value = row.value);
+      this.extra_fields.find_rows({property: properties.clr_key}, (row) => clr_value = row.value);
       if(!clr_value){
         return this;
       }
@@ -15409,7 +15411,8 @@ $p.DocCalc_order.FakeElm = class FakeElm {
   }
 
   get clr() {
-    return this.row_spec.clr;
+    const {row_spec} = this;
+    return row_spec instanceof $p.DocCalc_orderProductionRow ? row_spec.characteristic.clr : row_spec.clr;
   }
 
   get len() {

@@ -1083,7 +1083,8 @@ $p.DocCalc_order.FakeElm = class FakeElm {
   }
 
   get clr() {
-    return this.row_spec.clr;
+    const {row_spec} = this;
+    return row_spec instanceof $p.DocCalc_orderProductionRow ? row_spec.characteristic.clr : row_spec.clr;
   }
 
   get len() {
