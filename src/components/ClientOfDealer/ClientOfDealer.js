@@ -112,13 +112,12 @@ class ClientOfDealer extends Component {
       {this.renderItems(meta.obj.items)}
       {msg && <Dialog
         open
-        title={msg.title || 'Ошибка при записи'}
+        title={msg.title}
         onClose={handleErrClose}
         actions={[
           <Button key="ok" onClick={handleErrClose} color="primary">Ок</Button>,
         ]}
       >
-        {msg.obj && <div>{msg.obj.name}</div>}
         {msg.text || msg}
       </Dialog>}
     </Dialog>;
