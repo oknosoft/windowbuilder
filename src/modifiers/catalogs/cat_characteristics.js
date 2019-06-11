@@ -85,8 +85,8 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
     const ts_params = this.params;
     const params = [];
 
-    ts_params.find_rows({cnstr, inset: blank_inset || inset}, (row) => {
-      !params.includes(param) && params.push(row.param);
+    ts_params.find_rows({cnstr, inset: blank_inset || inset}, ({param}) => {
+      !params.includes(param) && params.push(param);
     });
 
     const {product_params} = inset;
