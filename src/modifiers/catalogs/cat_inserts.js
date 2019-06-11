@@ -738,4 +738,26 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
     return res;
   }
 
+  /**
+   * Получает первый цвет из вставки, из поля доступность цветов
+   * @param num
+   * @return {object}
+   */
+  default_color(num) {
+    const color = this.clr_group.clr_conformity.get(num);
+    if (color) {
+      if (color.clr1.class_name == "cat.clrs")       
+        return color.clr1; 
+      else if (color.clr1.class_name == "cat.color_price_groups") {
+        const cnt = color.clr1.clr_conformity.count();
+        for(let i = 0; i < cnt; i++) {
+          let _clr = color.clr1.clr_conformity._obj[i];
+            if (_clr._row.clr1.class_name == "cat.clrs")
+              return _clr._row.clr1;  
+        }  
+        if (cnt == 0)                 
+          return this.default_color(++num);
+      }  
+    }  
+  } 
 }
