@@ -36,11 +36,11 @@ exports.CchPredefined_elmntsManager = class CchPredefined_elmntsManager extends 
     const {job_prm: {properties}} = this._owner.$p;
     if(properties) {
       const {calculated, width, length} = properties;
-      if(width && calculated.indexOf(width) == -1) {
+      if(width && width.calculated.empty() && calculated.indexOf(width) == -1) {
         calculated.push(width);
         width._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.width || 0};
       }
-      if(length && calculated.indexOf(length) == -1) {
+      if(length && length.calculated.empty() && calculated.indexOf(length) == -1) {
         calculated.push(length);
         length._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.len || 0};
       }
