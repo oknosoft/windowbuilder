@@ -32,15 +32,15 @@ exports.CchPredefined_elmntsManager = class CchPredefined_elmntsManager extends 
     // создаём константы из alatable
     this.forEach((row) => this.job_prm(row));
 
-    // дополним автовычисляемыми свойствами
+    // дополним автовычисляемыми свойствами, если им не назначены формулы
     const {job_prm: {properties}} = this._owner.$p;
     if(properties) {
       const {calculated, width, length} = properties;
-      if(width && width.calculated.empty() && calculated.indexOf(width) == -1) {
+      if(width && !width.is_calculated) {
         calculated.push(width);
         width._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.width || 0};
       }
-      if(length && length.calculated.empty() && calculated.indexOf(length) == -1) {
+      if(length && !length.is_calculated) {
         calculated.push(length);
         length._calculated_value = {execute: (obj) => obj && obj.calc_order_row && obj.calc_order_row.len || 0};
       }
