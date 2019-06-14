@@ -52,7 +52,10 @@ $p.wsql.init((prm) => {
 
 }, ($p) => {
 
-  const db = new MetaEngine.classes.PouchDB(config.couch_local + 'meta', {skip_setup: true});
+  const db = new MetaEngine.classes.PouchDB(config.couch_local + 'meta', {
+    skip_setup: true,
+    auth: config.user_node,
+  });
 
   let _m;
 
@@ -225,7 +228,10 @@ function obj_constructor_text(_m, category, name, categoties) {
         set type(v){this._obj.type = typeof v === 'object' ? v : {types: []}}\n`;
         }
         else {
-          text += `get ${f}(){return this._getter('${f}')}\nset ${f}(v){this._setter('${f}',v)}\n`;
+          text += `get ${f}(){return this._getter('${f}')}\n`;
+          if(!meta.read_only) {
+            text += `set ${f}(v){this._setter('${f}',v)}\n`;
+          }
         }
       }
     }

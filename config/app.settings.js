@@ -7,14 +7,13 @@
  */
 
 const env = (process && process.env) || {};
+const is_node = typeof process !== 'undefined' && process.versions && process.versions.node;
 
-module.exports = function settings(prm) {
-
-  if(!prm) {
-    prm = {};
-  };
+module.exports = function settings(prm = {}) {
 
   return Object.assign(prm, {
+
+    is_node,
 
     // разделитель для localStorage
     local_storage_prefix: 'wb_',
@@ -66,6 +65,12 @@ module.exports = function settings(prm) {
     // используем карты google
     use_google_geo: 'AIzaSyAO-Jca5NTE5bQ7IY7BxFCl0jgW9OsJvuM',
 
+  }, is_node && {
+    // авторизация couchdb
+    user_node: {
+      username: env.DBUSER || 'admin',
+      password: env.DBPWD || 'admin',
+    },
   });
 
 };
