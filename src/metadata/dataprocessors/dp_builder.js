@@ -12,26 +12,16 @@
 
 export default function ($p) {
 
-  // пересчет значения цвета при изменении вставки
-  function on_inset(obj) {
-    const mf = {choice_params: []};
-    $p.cat.clrs.selection_exclude_service(mf, obj.inset);
-    const res = mf.choice_params[1].path;
-    if(res.in && res.in.length && !obj.clr.empty() && !res.in.includes(obj.clr.ref)) {
-      obj.clr = res.in[0];
-    }
-  }
-
   $p.dp.builder_pen.on({
 
     value_change(attr, obj) {
       if(attr.field == 'elm_type') {
         obj.inset = paper.project.default_inset({elm_type: obj.elm_type});
         obj.rama_impost = paper.project._dp.sys.inserts([obj.elm_type]);
-        on_inset(obj);
+        obj.inset.clr_group.default_clr(obj);
       }
       if(attr.field == 'inset') {
-        on_inset(obj);
+        obj.inset.clr_group.default_clr(obj);
       }
     },
 

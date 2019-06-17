@@ -76,17 +76,10 @@ class AdditionsGroup extends React.Component {
 
   onRowUpdated = (updated, row) => {
     if(updated && updated.hasOwnProperty('inset')){
-      const {meta} = this.props;
-      $p.cat.clrs.selection_exclude_service(meta.fields.clr, row.inset);
-      if(!row.clr.empty()){
-        const filter = meta.fields.clr.choice_params.filter(({name}) =>  name === 'ref');
-        if(filter.length) {
-          if(filter[0].path.in && !filter[0].path.in.some(v => v == row.clr)){
-            row.clr = filter[0].path.in[0];
-            this.forceUpdate();
-          }
-        }
-      }
+      const {inset} = row;
+      $p.cat.clrs.selection_exclude_service(this.props.meta.fields.clr, inset);
+      // проверим доступность цветов, при необходимости обновим
+      inset.clr_group.default_clr(row);
     }
   }
 

@@ -4023,22 +4023,10 @@ class Filling extends AbstractFilling(BuilderElement) {
     const inset = $p.cat.inserts.get(v);
 
     if(!ignore_select){
-      const {project, elm, clr} = this;
+      const {project, elm} = this;
       const {glass_specification} = project.ox;
 
-      if(!inset.clr_group.empty() && inset.clr_group.clr_conformity.count() &&
-          !inset.clr_group.clr_conformity._obj.some((row) => row.clr1 == clr || row.clr1 == clr.parent)) {
-        const {clr1} = inset.clr_group.clr_conformity.get(0);
-        if(clr1.is_folder) {
-          $p.cat.clrs.find_rows({parent: clr1}, (v) => {
-            this.clr = v;
-            return false;
-          });
-        }
-        else {
-          this.clr = clr1;
-        }
-      }
+      inset.clr_group.default_clr(this);
 
       glass_specification.clear({elm});
 
@@ -4046,6 +4034,7 @@ class Filling extends AbstractFilling(BuilderElement) {
         if(selm !== this){
           selm.set_inset(inset, true);
           glass_specification.clear({elm: selm.elm});
+          selm.clr = this.clr;
         }
       });
     }
@@ -12230,6 +12219,8 @@ $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, 
       !this.inset.empty() && _owner.params.clear({inset: this.inset, cnstr});
 
       this._obj.inset = value;
+
+      this.inset.clr_group.default_clr(this);
 
       _owner.add_inset_params(this.inset, cnstr);
     }

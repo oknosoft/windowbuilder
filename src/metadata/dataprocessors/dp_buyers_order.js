@@ -124,6 +124,8 @@ export default function ($p) {
             }
             defaults.forEach((drow) => {
               if(pclrs.has(drow.param)) {
+                $p.record_log(`deprecated: Для установки цвета по умолчанию, используйте группу цветов вставки, а не предопределенный параметр
+Вставка: ${this.inset.name} (${this.inset.id})`);
                 this.clr = drow.value;
                 return false;
               }
@@ -155,6 +157,9 @@ export default function ($p) {
       break;
     case 'CalcOrderAdditions':
       imodule = import('../../components/CalcOrderAdditions');
+      break;
+    case 'AddrDadataGoogle':
+      imodule = import('../../components/AddrDadataGoogle');
       break;
     }
     imodule.then((module) => handlers.handleIfaceState({

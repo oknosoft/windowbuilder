@@ -1,7 +1,7 @@
 /**
  * ### Дополнительные методы справочника _Отделы абонентов_
  *
- * Created by Evgeniy Malyarov on 18.12.2017.
+ * Created 18.12.2017.
  */
 
 exports.CatBranchesManager = class CatBranchesManager extends Object {

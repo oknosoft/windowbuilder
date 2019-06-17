@@ -529,6 +529,9 @@ $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, 
       // устанавливаем значение новой вставки
       this._obj.inset = value;
 
+      // при необходимости, обновим цвет по данным доступных цветов вставки
+      this.inset.clr_group.default_clr(this);
+
       // заполняем параметры по умолчанию
       _owner.add_inset_params(this.inset, cnstr);
     }
