@@ -8490,7 +8490,6 @@ window.eXcell_client = eXcell_client;
 
 
 
-
 class WndAddressData {
 
   constructor(owner){
@@ -8532,8 +8531,346 @@ class WndAddressData {
     return coordinates ? JSON.parse(coordinates) : []
   }
 
-}
+  init_map(map, position) {
+    const {maps} = window.google || {};
+    if(maps) {
+      this.marker = new maps.Marker({
+        map,
+        draggable: true,
+        animation: maps.Animation.DROP,
+        position
+      });
+      this.poly_area = new maps.Polygon(
+        {
+          map,
+          strokeColor     : '#aaff80',
+          strokeOpacity   : 0.35,
+          strokeWeight    : 1,
+          fillColor       : "#ccffaa",
+          fillOpacity     : 0.2,
+          geodesic        : true
+        });
+      this.poly_direction = new maps.Polygon(
+        {
+          map,
+          strokeColor     : '#aa80ff',
+          strokeOpacity   : 0.4,
+          strokeWeight    : 1,
+          fillColor       : "#ccaaff",
+          fillOpacity     : 0.2,
+          geodesic        : true
+        });
+      this.refresh_coordinates();
+      this._marker_toggle_bounce = maps.event.addListener(this.marker, 'click', this.marker_toggle_bounce.bind(this));
+      this._marker_dragend = maps.event.addListener(this.marker, 'dragend', this.marker_dragend.bind(this));
+    }
+  }
 
+  ulisten() {
+    const {maps} = window.google || {};
+    if(maps) {
+      maps.event.removeListener(this._marker_toggle_bounce);
+      maps.event.removeListener(this._marker_dragend);
+    }
+  }
+
+  assemble_addr(with_flat){
+    const {country, region, city, street, postal_code, house, flat} = this;
+    return (street ? (street.replace(/,/g," ") + ", ") : "") +
+      (house ? (house + ", ") : "") +
+      (with_flat && flat ? (flat + ", ") : "") +
+      (city ? (city + ", ") : "") +
+      (region ? (region + ", ") : "") + country +
+      (postal_code ? (", " + postal_code) : "");
+  }
+
+  assemble_address_fields(without_flat){
+
+    const {fias} = WndAddressData;
+    const {obj} = this.owner;
+    const v = this;
+
+    obj.shipping_address = this.assemble_addr(!without_flat);
+
+    let fields = '<КонтактнаяИнформация  \
+				xmlns="http://www.v8.1c.ru/ssl/contactinfo" \
+				xmlns:xs="http://www.w3.org/2001/XMLSchema" \
+				xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"   \
+				Представление="%1">   \
+					<Комментарий/>  \
+					<Состав xsi:type="Адрес" Страна="РОССИЯ">   \
+						<Состав xsi:type="АдресРФ">'.replace('%1', obj.shipping_address);
+
+    if(v.region){
+      fields += '\n<СубъектРФ>' + v.region + '</СубъектРФ>';
+    }
+
+    if(v.city){
+      if(v.city.indexOf('г.') != -1 || v.city.indexOf('г ') != -1 || v.city.indexOf(' г') != -1)
+        fields += '\n<Город>' + v.city + '</Город>';
+      else
+        fields += '\n<НаселПункт>' + v.city + '</НаселПункт>';
+    }
+
+    if(v.street){
+      fields += '\n<Улица>' + (v.street.replace(/,/g," ")) + '</Улица>';
+    }
+
+    let suffix, index, house_type, flat_type;
+
+    let house = v.house;
+    if(house){
+      for(let i in fias){
+        if(fias[i].type == 1){
+          for(let syn of fias[i].syn){
+            if((index = house.indexOf(syn.trimLeft())) != -1){
+              house_type = i;
+              house = house.substr(index + syn.trimLeft().length).trim();
+              break;
+            }
+          }
+          if(house_type)
+            break;
+        }
+      }
+      if(!house_type){
+        house_type = "1010";
+        if((index = house.indexOf(" ")) != -1){
+          house = house.substr(index);
+        }
+      }
+      fields += '\n<ДопАдрЭл><Номер Тип="' + house_type +  '" Значение="' + house.trim() + '"/></ДопАдрЭл>';
+    }
+
+    let flat = v.flat;
+    if(flat){
+      for(let i in fias){
+        if(fias[i].type == 3){
+          for(let syn of fias[i].syn){
+            if((index = flat.indexOf(syn)) != -1){
+              flat_type = i;
+              flat = flat.substr(index + syn.length);
+              break;
+            }
+          }
+          if(flat_type)
+            break;
+        }
+      }
+      if(!flat_type){
+        flat_type = "2010";
+        if((index = flat.indexOf(" ")) != -1){
+          flat = flat.substr(index);
+        }
+      }
+      fields += '\n<ДопАдрЭл><Номер Тип="' + flat_type +  '" Значение="' + flat.trim() + '"/></ДопАдрЭл>';
+    }
+
+    if(v.postal_code)
+      fields += '<ДопАдрЭл ТипАдрЭл="10100000" Значение="' + v.postal_code + '"/>';
+
+    fields += '</Состав> \
+					</Состав></КонтактнаяИнформация>';
+
+    obj.address_fields = fields;
+  }
+
+  refresh_coordinates(latitude, longitude){
+    const v = this;
+    const {wnd} = this.owner;
+    if(latitude && longitude) {
+      v.latitude = latitude;
+      v.longitude = longitude;
+    }
+    if(wnd && wnd.elmnts && wnd.elmnts.map) {
+      v.latitude && wnd.elmnts.toolbar.setValue('coordinates', `${v.latitude.toFixed(8)} ${v.longitude.toFixed(8)}`);
+      const {delivery_area, poly_area, poly_direction} = v;
+      const {LatLng} = google.maps;
+      for(const poly of [poly_area, poly_direction]) {
+        poly.getPath().clear();
+      }
+      if(delivery_area.coordinates.count() > 2) {
+        poly_area.setPath(delivery_area.coordinates._obj.map((v) => new LatLng(v.latitude, v.longitude)));
+      }
+      $p.cat.delivery_directions.forEach(({composition, coordinates}) => {
+        if(composition.find({elm: delivery_area})) {
+          poly_direction.setPath(coordinates._obj.map((v) => new LatLng(v.latitude, v.longitude)));
+          return false;
+        }
+      });
+    }
+  }
+
+  process_address_fields(){
+
+    const v = this;
+    const {obj} = this.owner;
+    const {ipinfo, msg} = $p;
+    const {fias} = WndAddressData;
+
+
+    if(obj.address_fields){
+      v.xml = ( new DOMParser() ).parseFromString(obj.address_fields, "text/xml");
+      let tmp = {}, res = {}, tattr,
+        nss = "СубъектРФ,Округ,СвРайМО,СвРайМО,ВнутригРайон,НаселПункт,Улица,Город,ДопАдрЭл,Адрес_по_документу,Местоположение".split(",");
+
+      function get_aatributes(ca){
+        if(ca.attributes && ca.attributes.length == 2){
+          return {[ca.attributes[0].value]: ca.attributes[1].value};
+        }
+      }
+
+      for(let i in nss){
+        tmp[nss[i]] = v.xml.getElementsByTagName(nss[i]);
+      }
+      for(let i in tmp){
+        for(let j in tmp[i]){
+          if(j == "length" || !tmp[i].hasOwnProperty(j))
+            continue;
+          if(tattr = get_aatributes(tmp[i][j])){
+            if(!res[i])
+              res[i] = [];
+            res[i].push(tattr);
+          }
+          else if(tmp[i][j].childNodes.length){
+            for(let k in tmp[i][j].childNodes){
+              if(k == "length" || !tmp[i][j].childNodes.hasOwnProperty(k))
+                continue;
+              if(tattr = get_aatributes(tmp[i][j].childNodes[k])){
+                if(!res[i])
+                  res[i] = [];
+                res[i].push(tattr);
+              }else if(tmp[i][j].childNodes[k].nodeValue){
+                if(!res[i])
+                  res[i] = tmp[i][j].childNodes[k].nodeValue;
+                else
+                  res[i] += " " + tmp[i][j].childNodes[k].nodeValue;
+              }
+            }
+          }
+        }
+      }
+      for(let i in res["ДопАдрЭл"]){
+        for(let j in fias){
+          if(j.length != 4)
+            continue;
+          if(res["ДопАдрЭл"][i][j])
+            if(fias[j].type == 1){
+              v._house = fias[j].name + " " + res["ДопАдрЭл"][i][j];
+            }
+            else if(fias[j].type == 2){
+              v._housing = fias[j].name + " " + res["ДопАдрЭл"][i][j];
+            }
+            else if(fias[j].type == 3){
+              v.flat = fias[j].name + " " + res["ДопАдрЭл"][i][j];
+            }
+        }
+
+        if(res["ДопАдрЭл"][i]["10100000"])
+          v.postal_code = res["ДопАдрЭл"][i]["10100000"];
+      }
+
+      v.address_fields = res;
+
+      v.region = res["СубъектРФ"] || res["Округ"] || "";
+      v.city = res["Город"] || res["НаселПункт"] || "";
+      v.street = (res["Улица"] || "");
+    }
+
+    return ipinfo.google_ready()
+      .then(() => {
+
+        if(!v.latitude || !v.longitude){
+          if(obj.shipping_address){
+            ipinfo.ggeocoder.geocode({address: v.assemble_addr()}, (results, status) => {
+              if (status == google.maps.GeocoderStatus.OK) {
+                const {location} = results[0].geometry;
+                v.refresh_coordinates(location.lat(), location.lng());
+              }
+            });
+          }
+          else if(ipinfo.latitude && ipinfo.longitude ){
+            v.refresh_coordinates(ipinfo.latitude, ipinfo.longitude);
+          }
+          else{
+            v.latitude = 55.635924;
+            v.longitude = 37.6066379;
+            msg.show_msg(msg.empty_geocoding);
+          }
+        }
+      });
+  }
+
+  assemble_lat_lng(str) {
+    const simpleMatches = [];
+    simpleMatches[0] = /^\s*?(-?[0-9]+\.?[0-9]+?)\s*\,\s*(-?[0-9]+\.?[0-9]+?)\s*$/.exec(str);
+    simpleMatches[2] = /^\s*?(-?[0-9]+[,.]?[0-9]+?)\s*;?\s*(-?[0-9]+[,.]?[0-9]+?)\s*$/.exec(str);
+    const simpleMatch = simpleMatches.find(match => match && match.length === 3);
+    const otherMatches = [];
+    otherMatches[0] = /^\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[NS]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[WE]\s*$/.exec(str);
+    otherMatches[1] = /^\s*[NS]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[EW]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*$/.exec(str);
+    const otherMatch = otherMatches.find(match => match && match.length === 7);
+    if (simpleMatch) {
+      const lat = parseFloat(simpleMatch[1].replace(',', '.'));
+      const lng = parseFloat(simpleMatch[2].replace(',', '.'));
+
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+
+    } else if (otherMatch) {
+      const latDeg = parseFloat(otherMatch[1]);
+      const latMin = parseFloat(otherMatch[2]);
+      const latSec = parseFloat(otherMatch[3].replace(',', '.'));
+      const lngDeg = parseFloat(otherMatch[4]);
+      const lngMin = parseFloat(otherMatch[5]);
+      const lngSec = parseFloat(otherMatch[6].replace(',', '.'));
+
+      const lat = (latDeg + latMin / 60 + latSec / 3600) * (str.indexOf('S') !== -1 ? -1 : 1);
+      const lng = (lngDeg + lngMin / 60 + lngSec / 3600) * (str.indexOf('W') !== -1 ? -1 : 1);
+
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+    }
+
+  }
+
+  marker_toggle_bounce() {
+    if (this.marker.getAnimation() != null) {
+      this.marker.setAnimation(null);
+    }
+    else {
+      this.marker.setAnimation(google.maps.Animation.BOUNCE);
+      setTimeout(() => this.marker.setAnimation(null), 1500);
+    }
+  }
+
+  marker_dragend(e) {
+    $p.ipinfo.ggeocoder.geocode({'latLng': e.latLng}, (results, status) => {
+      if (status == google.maps.GeocoderStatus.OK) {
+        const v = this;
+        const {wnd} = this.owner;
+        if (results[0]) {
+          const addr = results[0];
+          wnd.setText(addr.formatted_address);
+          $p.ipinfo.components(v, addr.address_components);
+          v.refresh_coordinates(e.latLng.lat(), e.latLng.lng());
+
+          this.owner.refresh_grid && this.owner.refresh_grid();
+
+          const zoom = v.street ? 15 : 12;
+          if(wnd.elmnts.map.getZoom() != zoom){
+            wnd.elmnts.map.setZoom(zoom);
+            wnd.elmnts.map.setCenter(e.latLng);
+          }
+
+        }
+      }
+    });
+  }
+
+}
 
 class WndAddress {
 
@@ -8542,10 +8879,9 @@ class WndAddress {
     this.pwnd = source.pwnd;
     this.grid = source.grid;
     this.v = new WndAddressData(this);
-    this.process_address_fields()
+    this.v.process_address_fields()
       .then(() => this.frm_create());
   }
-
 
   frm_create() {
 
@@ -8678,13 +9014,13 @@ class WndAddress {
 
     elmnts.toolbar.attachEvent("onEnter", (id, value) => {
       if(id === 'coordinates') {
-        const coordinates = this.assemble_lat_lng(value);
+        const {v, wnd} = this;
+        const coordinates = v.assemble_lat_lng(value);
         if(coordinates) {
           const latLng = new google.maps.LatLng(coordinates.lat, coordinates.lng);
-          const {v, wnd} = this;
           wnd.elmnts.map.setCenter(latLng);
           v.marker.setPosition(latLng);
-          this.marker_dragend({latLng});
+          v.marker_dragend({latLng});
         }
       }
     });
@@ -8699,40 +9035,10 @@ class WndAddress {
       mapTypeId: maps.MapTypeId.ROADMAP
     };
     elmnts.map = elmnts.cell_map.attachMap(mapParams);
-
-    v.marker = new maps.Marker({
-      map: elmnts.map,
-      draggable: true,
-      animation: maps.Animation.DROP,
-      position: mapParams.center
-    });
-    v.poly_area = new maps.Polygon(
-      {
-        map: elmnts.map,
-        strokeColor     : '#aaff80',
-        strokeOpacity   : 0.35,
-        strokeWeight    : 1,
-        fillColor       : "#ccffaa",
-        fillOpacity     : 0.2,
-        geodesic        : true
-      });
-    v.poly_direction = new maps.Polygon(
-      {
-        map: elmnts.map,
-        strokeColor     : '#aa80ff',
-        strokeOpacity   : 0.4,
-        strokeWeight    : 1,
-        fillColor       : "#ccaaff",
-        fillOpacity     : 0.2,
-        geodesic        : true
-      });
-    this.refresh_coordinates();
-    this._marker_toggle_bounce = maps.event.addListener(v.marker, 'click', this.marker_toggle_bounce.bind(this));
-    this._marker_dragend = maps.event.addListener(v.marker, 'dragend', this.marker_dragend.bind(this));
+    v.init_map(elmnts.map, mapParams.center);
 
     this.refresh_grid();
   }
-
 
   pgrid_on_select(selv){
     if(selv===undefined){
@@ -8742,14 +9048,13 @@ class WndAddress {
     this.delivery_area_changed();
   }
 
-
   toolbar_click(btn_id){
     if(btn_id=="btn_select"){
       const {obj, v, wnd} = this;
       const {elmnts: {pgrid, pgrid2}} = wnd;
       pgrid && pgrid.editStop();
       pgrid2 && pgrid2.editStop();
-      this.assemble_address_fields();
+      v.assemble_address_fields();
       obj.coordinates = JSON.stringify([v.latitude, v.longitude]);
       wnd.close();
     }
@@ -8794,7 +9099,7 @@ class WndAddress {
       const LatLng = new google.maps.LatLng(delivery_area.latitude, delivery_area.longitude);
       wnd.elmnts.map.setCenter(LatLng);
       v.marker.setPosition(LatLng);
-      this.refresh_coordinates(delivery_area.latitude, delivery_area.longitude);
+      v.refresh_coordinates(delivery_area.latitude, delivery_area.longitude)
     }
 
     this.refresh_grid();
@@ -8809,31 +9114,6 @@ class WndAddress {
     pgrid2.cells("flat", 1).setValue(flat);
   }
 
-  refresh_coordinates(latitude, longitude){
-    const {v, wnd} = this;
-    if(latitude && longitude) {
-      v.latitude = latitude;
-      v.longitude = longitude;
-    }
-    if(wnd && wnd.elmnts) {
-      v.latitude && wnd.elmnts.toolbar.setValue('coordinates', `${v.latitude.toFixed(8)} ${v.longitude.toFixed(8)}`);
-      const {delivery_area, poly_area, poly_direction} = v;
-      const {LatLng} = google.maps;
-      for(const poly of [poly_area, poly_direction]) {
-        poly.getPath().clear();
-      }
-      if(delivery_area.coordinates.count() > 2) {
-        poly_area.setPath(delivery_area.coordinates._obj.map((v) => new LatLng(v.latitude, v.longitude)));
-      }
-      $p.cat.delivery_directions.forEach(({composition, coordinates}) => {
-        if(composition.find({elm: delivery_area})) {
-          poly_direction.setPath(coordinates._obj.map((v) => new LatLng(v.latitude, v.longitude)));
-          return false;
-        }
-      });
-    }
-  }
-
   addr_changed() {
     const {v, wnd} = this;
     const zoom = v.street ? 15 : 12;
@@ -8842,286 +9122,13 @@ class WndAddress {
       wnd.elmnts.map.setZoom(zoom);
     }
 
-    this.do_geocoding((results, status) => {
+    $p.ipinfo.ggeocoder.geocode({address: v.assemble_addr()}, (results, status) => {
       if (status == google.maps.GeocoderStatus.OK) {
         const loc = results[0].geometry.location;
         wnd.elmnts.map.setCenter(loc);
         v.marker.setPosition(loc);
         v.postal_code = $p.ipinfo.components({}, results[0].address_components).postal_code || "";
-        this.refresh_coordinates(loc.lat(), loc.lng());
-      }
-    });
-  }
-
-
-  assemble_addr(with_flat){
-    const {country, region, city, street, postal_code, house, flat} = this.v;
-    return (street ? (street.replace(/,/g," ") + ", ") : "") +
-      (house ? (house + ", ") : "") +
-      (with_flat && flat ? (flat + ", ") : "") +
-      (city ? (city + ", ") : "") +
-      (region ? (region + ", ") : "") + country +
-      (postal_code ? (", " + postal_code) : "");
-  }
-
-
-  assemble_lat_lng(str) {
-    const simpleMatches = [];
-    simpleMatches[0] = /^\s*?(-?[0-9]+\.?[0-9]+?)\s*\,\s*(-?[0-9]+\.?[0-9]+?)\s*$/.exec(str);
-    simpleMatches[2] = /^\s*?(-?[0-9]+[,.]?[0-9]+?)\s*;?\s*(-?[0-9]+[,.]?[0-9]+?)\s*$/.exec(str);
-    const simpleMatch = simpleMatches.find(match => match && match.length === 3);
-    const otherMatches = [];
-    otherMatches[0] = /^\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[NS]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[WE]\s*$/.exec(str);
-    otherMatches[1] = /^\s*[NS]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[EW]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*$/.exec(str);
-    const otherMatch = otherMatches.find(match => match && match.length === 7);
-    if (simpleMatch) {
-      const lat = parseFloat(simpleMatch[1].replace(',', '.'));
-      const lng = parseFloat(simpleMatch[2].replace(',', '.'));
-
-      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-        return { lat, lng };
-      }
-
-    } else if (otherMatch) {
-      const latDeg = parseFloat(otherMatch[1]);
-      const latMin = parseFloat(otherMatch[2]);
-      const latSec = parseFloat(otherMatch[3].replace(',', '.'));
-      const lngDeg = parseFloat(otherMatch[4]);
-      const lngMin = parseFloat(otherMatch[5]);
-      const lngSec = parseFloat(otherMatch[6].replace(',', '.'));
-
-      const lat = (latDeg + latMin / 60 + latSec / 3600) * (str.indexOf('S') !== -1 ? -1 : 1);
-      const lng = (lngDeg + lngMin / 60 + lngSec / 3600) * (str.indexOf('W') !== -1 ? -1 : 1);
-
-      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-        return { lat, lng };
-      }
-    }
-
-  }
-
-
-  assemble_address_fields(){
-
-    const {obj, v} = this;
-    const {fias} = WndAddress;
-
-    obj.shipping_address = this.assemble_addr(true);
-
-    let fields = '<КонтактнаяИнформация  \
-				xmlns="http://www.v8.1c.ru/ssl/contactinfo" \
-				xmlns:xs="http://www.w3.org/2001/XMLSchema" \
-				xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"   \
-				Представление="%1">   \
-					<Комментарий/>  \
-					<Состав xsi:type="Адрес" Страна="РОССИЯ">   \
-						<Состав xsi:type="АдресРФ">'.replace('%1', obj.shipping_address);
-
-    if(v.region){
-      fields += '\n<СубъектРФ>' + v.region + '</СубъектРФ>';
-    }
-
-    if(v.city){
-      if(v.city.indexOf('г.') != -1 || v.city.indexOf('г ') != -1 || v.city.indexOf(' г') != -1)
-        fields += '\n<Город>' + v.city + '</Город>';
-      else
-        fields += '\n<НаселПункт>' + v.city + '</НаселПункт>';
-    }
-
-    if(v.street){
-      fields += '\n<Улица>' + (v.street.replace(/,/g," ")) + '</Улица>';
-    }
-
-    let suffix, index, house_type, flat_type;
-
-    let house = v.house;
-    if(house){
-      for(let i in fias){
-        if(fias[i].type == 1){
-          for(let syn of fias[i].syn){
-            if((index = house.indexOf(syn.trimLeft())) != -1){
-              house_type = i;
-              house = house.substr(index + syn.trimLeft().length).trim();
-              break;
-            }
-          }
-          if(house_type)
-            break;
-        }
-      }
-      if(!house_type){
-        house_type = "1010";
-        if((index = house.indexOf(" ")) != -1){
-          house = house.substr(index);
-        }
-      }
-      fields += '\n<ДопАдрЭл><Номер Тип="' + house_type +  '" Значение="' + house.trim() + '"/></ДопАдрЭл>';
-    }
-
-    let flat = v.flat;
-    if(flat){
-      for(let i in fias){
-        if(fias[i].type == 3){
-          for(let syn of fias[i].syn){
-            if((index = flat.indexOf(syn)) != -1){
-              flat_type = i;
-              flat = flat.substr(index + syn.length);
-              break;
-            }
-          }
-          if(flat_type)
-            break;
-        }
-      }
-      if(!flat_type){
-        flat_type = "2010";
-        if((index = flat.indexOf(" ")) != -1){
-          flat = flat.substr(index);
-        }
-      }
-      fields += '\n<ДопАдрЭл><Номер Тип="' + flat_type +  '" Значение="' + flat.trim() + '"/></ДопАдрЭл>';
-    }
-
-    if(v.postal_code)
-      fields += '<ДопАдрЭл ТипАдрЭл="10100000" Значение="' + v.postal_code + '"/>';
-
-    fields += '</Состав> \
-					</Состав></КонтактнаяИнформация>';
-
-    obj.address_fields = fields;
-  }
-
-
-  process_address_fields(){
-
-    const {obj, v} = this;
-    const {fias} = WndAddress;
-
-    if(obj.address_fields){
-      v.xml = ( new DOMParser() ).parseFromString(obj.address_fields, "text/xml");
-      let tmp = {}, res = {}, tattr,
-        nss = "СубъектРФ,Округ,СвРайМО,СвРайМО,ВнутригРайон,НаселПункт,Улица,Город,ДопАдрЭл,Адрес_по_документу,Местоположение".split(",");
-
-      function get_aatributes(ca){
-        if(ca.attributes && ca.attributes.length == 2){
-          return {[ca.attributes[0].value]: ca.attributes[1].value};
-        }
-      }
-
-      for(let i in nss){
-        tmp[nss[i]] = v.xml.getElementsByTagName(nss[i]);
-      }
-      for(let i in tmp){
-        for(let j in tmp[i]){
-          if(j == "length" || !tmp[i].hasOwnProperty(j))
-            continue;
-          if(tattr = get_aatributes(tmp[i][j])){
-            if(!res[i])
-              res[i] = [];
-            res[i].push(tattr);
-          }
-          else if(tmp[i][j].childNodes.length){
-            for(let k in tmp[i][j].childNodes){
-              if(k == "length" || !tmp[i][j].childNodes.hasOwnProperty(k))
-                continue;
-              if(tattr = get_aatributes(tmp[i][j].childNodes[k])){
-                if(!res[i])
-                  res[i] = [];
-                res[i].push(tattr);
-              }else if(tmp[i][j].childNodes[k].nodeValue){
-                if(!res[i])
-                  res[i] = tmp[i][j].childNodes[k].nodeValue;
-                else
-                  res[i] += " " + tmp[i][j].childNodes[k].nodeValue;
-              }
-            }
-          }
-        }
-      }
-      for(let i in res["ДопАдрЭл"]){
-        for(let j in fias){
-          if(j.length != 4)
-            continue;
-          if(res["ДопАдрЭл"][i][j])
-            if(fias[j].type == 1){
-              v._house = fias[j].name + " " + res["ДопАдрЭл"][i][j];
-            }
-            else if(fias[j].type == 2){
-              v._housing = fias[j].name + " " + res["ДопАдрЭл"][i][j];
-            }
-            else if(fias[j].type == 3){
-              v.flat = fias[j].name + " " + res["ДопАдрЭл"][i][j];
-            }
-        }
-
-        if(res["ДопАдрЭл"][i]["10100000"])
-          v.postal_code = res["ДопАдрЭл"][i]["10100000"];
-      }
-
-      v.address_fields = res;
-
-      v.region = res["СубъектРФ"] || res["Округ"] || "";
-      v.city = res["Город"] || res["НаселПункт"] || "";
-      v.street = (res["Улица"] || "");
-    }
-
-    return $p.ipinfo.google_ready()
-      .then(() => {
-
-        if(!v.latitude || !v.longitude){
-          if(obj.shipping_address){
-            this.do_geocoding((results, status) => {
-              if (status == google.maps.GeocoderStatus.OK) {
-                this.refresh_coordinates(results[0].geometry.location.lat(), results[0].geometry.location.lng());
-              }
-            });
-          }
-          else if($p.ipinfo.latitude && $p.ipinfo.longitude ){
-            this.refresh_coordinates($p.ipinfo.latitude, $p.ipinfo.longitude);
-          }
-          else{
-            v.latitude = 55.635924;
-            v.longitude = 37.6066379;
-            $p.msg.show_msg($p.msg.empty_geocoding);
-          }
-        }
-      });
-  }
-
-  do_geocoding(call){
-    $p.ipinfo.ggeocoder.geocode({address: this.assemble_addr()}, call);
-  }
-
-  marker_toggle_bounce() {
-    const {v} = this;
-    if (v.marker.getAnimation() != null) {
-      v.marker.setAnimation(null);
-    }
-    else {
-      v.marker.setAnimation(google.maps.Animation.BOUNCE);
-      setTimeout(() => v.marker.setAnimation(null), 1500);
-    }
-  }
-
-  marker_dragend(e) {
-    $p.ipinfo.ggeocoder.geocode({'latLng': e.latLng}, (results, status) => {
-      if (status == google.maps.GeocoderStatus.OK) {
-        const {v, wnd} = this;
-        if (results[0]) {
-          const addr = results[0];
-          wnd.setText(addr.formatted_address);
-          $p.ipinfo.components(v, addr.address_components);
-
-          this.refresh_grid();
-
-          const zoom = v.street ? 15 : 12;
-          if(wnd.elmnts.map.getZoom() != zoom){
-            wnd.elmnts.map.setZoom(zoom);
-            wnd.elmnts.map.setCenter(e.latLng);
-          }
-
-          this.refresh_coordinates(e.latLng.lat(), e.latLng.lng());
-        }
+        v.refresh_coordinates(loc.lat(), loc.lng());
       }
     });
   }
@@ -9148,19 +9155,16 @@ class WndAddress {
   }
 
   frm_close(win){
-    const {grid, obj, listener} = this;
+    const {grid, obj, listener, v} = this;
     grid && grid.editStop();
     obj && obj._manager.off('update', listener);
-    const {event} = google.maps;
-    event.removeListener(this._marker_toggle_bounce);
-    event.removeListener(this._marker_dragend);
+    v.ulisten();
     return !win.error;
   }
 
 }
 
-
-WndAddress.fias = {
+WndAddressData.fias = {
   types: ["владение", "здание", "помещение"],
 
   "1010": {name: "дом",			type: 1, order: 1, fid: 2, syn: [" д.", " д ", " дом"]},
@@ -9189,6 +9193,7 @@ WndAddress.fias = {
 
 }
 
+$p.classes.WndAddressData = WndAddressData;
 
 class eXcell_addr extends eXcell {
 
@@ -9212,33 +9217,47 @@ class eXcell_addr extends eXcell {
   }
 
   ti_keydown(e) {
-    if(e.keyCode === 8 || e.keyCode === 46){          
+    const {code, ctrlKey} = e;
+    if(e.code === 'Backspace' || e.code === 'Delete'){          
       const {obj} = this.grid.get_cell_field();
       obj.shipping_address = '';
       obj.address_fields = '';
       this.grid.editStop();
       return $p.iface.cancel_bubble(e);
     }
+    else if(code === 'F4' || code === 'F2' || (ctrlKey && code === 'KeyF')) {
+      return this.open_selection(e);
+    }
+
     return eXcell_ocombo.prototype.input_keydown(e, this);
   }
 
   open_selection(e) {
-    const source = {grid: this.grid}._mixin(this.grid.get_cell_field());
-    new WndAddress(source);
-    return $p.iface.cancel_bubble(e);
-  }
+    const v = this.grid.get_cell_field();
+    const {iface, job_prm: {builder}, enm: {geo_map_kind}} = $p;
 
+    if(v && v.field) {
+      switch(builder.geo_map) {
+      case undefined:
+      case 'dhtmlx_google':
+        new WndAddress({grid: this.grid}._mixin(v));
+        break;
+      case 'react_google':
+        this.grid.xcell_action && this.grid.xcell_action('AddrDadataGoogle', v.field);
+      }
+    }
+
+    return iface.cancel_bubble(e);
+  }
 
 
   setValue(val) {
     this.setCValue(val);
   }
 
-
   getValue() {
     return this.grid.get_cell_value();
   }
-
 
   edit() {
 
@@ -9254,7 +9273,6 @@ class eXcell_addr extends eXcell {
     ti.onkeydown = this.ti_keydown.bind(this);
     td.childNodes[1].onclick = this.open_selection;
   };
-
 
   detach() {
     this.setValue(this.getValue());

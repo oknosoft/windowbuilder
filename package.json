@@ -35,7 +35,8 @@
     "metadata-pouchdb": "2.0.20-beta.3",
     "metadata-react": "2.0.20-beta.3",
     "metadata-redux": "2.0.20-beta.3",
-    "paper-jsdom-canvas": "^0.12.2"
+    "paper-jsdom-canvas": "^0.12.2",
+    "react-highlight-words": "^0.16.0"
   },
   "devDependencies": {
     "@babel/core": "7.4.3",
