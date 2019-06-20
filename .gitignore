@@ -7,10 +7,6 @@
 # Exclude compiled files
 build/
 data/
-dist/windowbuilder.css
-dist/windowbuilder.js
-dist/wnd_debug.js
-dist/worker.js
 doc/out/
 lib/
 public/dist/dhtmlx_debug.js
@@ -22,9 +18,9 @@ src/templates/printing_plates/20160408/
 src/templates/printing_plates/invoice_signature.png
 src/zarchive/socket_1c/
 zarchive/
+/scripts/stats.json
 
 # npm files
 node_modules
 package-lock.json
 *.log
-
