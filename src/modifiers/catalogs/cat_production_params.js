@@ -64,13 +64,13 @@ $p.CatProduction_params.prototype.__define({
    * @for Production_params
    */
   furns: {
-    value(ox){
+    value(ox, cnstr = 0){
       const {furn} = $p.job_prm.properties;
       const {furns} = $p.cat;
       const list = [];
       if(furn){
         const links = furn.params_links({
-          grid: {selection: {cnstr: 0}},
+          grid: {selection: {cnstr}},
           obj: {_owner: {_owner: ox}}
         });
         if(links.length){
@@ -201,13 +201,12 @@ $p.CatProduction_params.prototype.__define({
 				ox.owner = ox.prod_nom;
 
 				// если текущая фурнитура недоступна для данной системы - меняем
-        const furns = this.furns(ox);
-
 				// одновременно, перезаполним параметры фурнитуры
 				ox.constructions.forEach((row) => {
           if(!row.furn.empty()) {
-            let changed = force;
-            // если для системы через связи параметров ограничен список фурнитуры...
+						let changed = force;
+						// если для системы через связи параметров ограничен список фурнитуры...
+						const furns = this.furns(ox, row.cnstr);
             if(furns.length) {
               if(furns.some((frow) => {
                 if(frow.forcibly) {
