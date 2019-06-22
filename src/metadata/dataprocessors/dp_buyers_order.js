@@ -158,8 +158,8 @@ export default function ($p) {
     case 'CalcOrderAdditions':
       imodule = import('../../components/CalcOrderAdditions');
       break;
-    case 'AddrDadataGoogle':
-      imodule = import('../../components/AddrDadataGoogle');
+    case 'DeliveryAddr':
+      imodule = import('../../components/DeliveryAddr');
       break;
     }
     imodule.then((module) => handlers.handleIfaceState({

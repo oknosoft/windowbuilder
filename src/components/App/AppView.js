@@ -73,8 +73,9 @@ class AppRoot extends Component {
 
   render() {
     const {props} = this;
-    const {snack, alert, confirm, meta_loaded, doc_ram_loaded, nom_prices_step, page, user, couch_direct, offline, title} = props;
+    const {snack, alert, confirm, meta_loaded, doc_ram_loaded, nom_prices_step, page, user, couch_direct, offline, title, idle} = props;
     const iprops = item_props();
+
 
     let need_auth = meta_loaded && iprops.need_user && ((!user.try_log_in && !user.logged_in) || (couch_direct && offline));
     if(need_auth && !couch_direct && props.complete_loaded) {
@@ -89,13 +90,14 @@ class AppRoot extends Component {
       <Header key="header" items={items} {...props} />,
 
       // основной контент или заставка загрузки или приглашение к авторизации
-      need_auth ?
+      need_auth || idle ?
         <NeedAuth
           key="auth"
           handleNavigate={props.handleNavigate}
           handleIfaceState={props.handleIfaceState}
           title={title}
           offline={couch_direct && offline}
+          idle={idle}
         />
         :
         (

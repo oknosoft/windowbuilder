@@ -29,6 +29,11 @@ class GoogleMap extends React.Component {
           v.init_map(this.map, mapParams.center);
 
           mapRef(this.map);
+          this.map.reflectCenter = function ([lat, lng]) {
+            const latLng = new maps.LatLng(lat, lng);
+            this.setCenter(latLng);
+            v.marker.setPosition(latLng);
+          }
         }
         else if(this.map && !this.el) {
           this.map.destroy;
@@ -41,11 +46,10 @@ class GoogleMap extends React.Component {
   }
 
   render() {
+    const {larger} = this.props;
     return <div
-      style={{width: '100%', height: 'calc(100% - 116px)'}}
-      ref={(el) => {
-        this.el = el;
-      }}
+      style={{width: '100%', height: `calc(100% - ${larger ? 60 : 116}px)`}}
+      ref={(el) => this.el = el}
     />;
   }
 
@@ -54,6 +58,7 @@ class GoogleMap extends React.Component {
 GoogleMap.propTypes = {
   v: PropTypes.object,
   mapRef: PropTypes.func,
+  larger: PropTypes.bool,
 };
 
 export default GoogleMap;

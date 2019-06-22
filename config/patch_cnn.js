@@ -30,6 +30,11 @@ function reset_replace(prm) {
   });
 }
 
+const keys21 = {
+  google: 'AIzaSyALvOqKofcS3UhS-2O9IQl4GVvU13aGLcc',
+  yandex: '283f550e-8184-4c84-b0e3-bdc5c1dee693',
+}
+
 /**
  * предопределенные зоны
  */
@@ -42,19 +47,25 @@ export const predefined = {
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
     templates: true,
-    use_google_geo: 'AIzaSyCpDPeBnIbhNJuCiq_WG58lVUHF_5nDKSQ',
+    keys: keys21,
     crazy_ram: true,
   },
-  //'localhost': {zone: 21, splash: {img: '', text: ''}, splash: {css: 'splash21', title: false}, log_level: 'warn', templates: true, crazy_ram: true}, //
+  // 'localhost': {
+  //   zone: 21,
+  //   splash: {css: 'splash21', title: false},
+  //   log_level: 'warn',
+  //   templates: true,
+  //   crazy_ram: true
+  // },
   'rusokon.': {
     zone: 19,
     host: 'https://rusokon.oknosoft.ru/',
-    use_google_geo: 'AIzaSyCpDPeBnIbhNJuCiq_WG58lVUHF_5nDKSQ',
+    keys: keys21,
   },
   'kaleva.': {
     zone: 8,
     host: 'https://zakaz.kaleva.ru/',
-    use_google_geo: 'AIzaSyCpDPeBnIbhNJuCiq_WG58lVUHF_5nDKSQ',
+    keys: keys21,
   },
   'tmk.': {zone: 23, host: 'https://tmk-online.ru/'},
   'crystallit.': {zone: 25, host: 'https://crystallit.oknosoft.ru/'},
@@ -88,9 +99,14 @@ export function patch_cnn() {
     const prm = predefined[elm];
     if(location.host.match(elm)) {
       wsql.get_user_param('zone') != prm.zone && wsql.set_user_param('zone', prm.zone);
-      'log_level,splash,templates,use_google_geo,crazy_ram'.split(',').forEach((name) => {
+      'log_level,splash,templates,keys,crazy_ram'.split(',').forEach((name) => {
         if(prm.hasOwnProperty(name)) {
-          job_prm[name] = prm[name];
+          if(typeof job_prm[name] === 'object') {
+            Object.assign(job_prm[name], prm[name]);
+          }
+          else {
+            job_prm[name] = prm[name];
+          }
         }
       });
     }

@@ -1,5 +1,8 @@
 .react-dadata__container {
   position: relative;
+  flex: 1;
+  margin-right: 4px;
+  min-width: 300px;
 }
 
 .react-dadata__input {

@@ -6,7 +6,6 @@
  * @param prm {Object} - в свойствах этого объекта определяем параметры работы программы
  */
 
-const env = (process && process.env) || {};
 const is_node = typeof process !== 'undefined' && process.versions && process.versions.node;
 
 module.exports = function settings(prm = {}) {
@@ -25,15 +24,15 @@ module.exports = function settings(prm = {}) {
     }],
 
     // расположение couchdb для сайта
-    couch_path: env.COUCHPATH || "/couchdb/wb_",
+    couch_path: process.env.COUCHPATH || "/couchdb/wb_",
     //couch_path: "https://light.oknosoft.ru/couchdb/wb_",
     //couch_path: 'http://cou200:5984/wb_',
 
     // расположение couchdb для nodejs
-    couch_local: env.COUCHLOCAL || 'http://cou221:5984/wb_',
+    couch_local: process.env.COUCHLOCAL || 'http://cou221:5984/wb_',
 
     // расположение адаптера postgres
-    pg_path: env.PGPATH || "/r/postgres/wb_",
+    pg_path: process.env.PGPATH || "/r/postgres/wb_",
 
     // фильтр для репликации с CouchDB не используем
     pouch_filter: {
@@ -41,7 +40,7 @@ module.exports = function settings(prm = {}) {
     },
 
     // по умолчанию, обращаемся к зоне 1
-    zone: env.ZONE || 1,
+    zone: process.env.ZONE || 1,
 
     // объявляем номер демо-зоны
     zone_demo: 1,
@@ -66,9 +65,6 @@ module.exports = function settings(prm = {}) {
     get use_google_geo() {
       return this.keys.google;
     },
-    set use_google_geo(v) {
-      this.keys.google = v;
-    },
 
     //
     keys: {
@@ -81,8 +77,8 @@ module.exports = function settings(prm = {}) {
   }, is_node && {
     // авторизация couchdb
     user_node: {
-      username: env.DBUSER || 'admin',
-      password: env.DBPWD || 'admin',
+      username: process.env.DBUSER || 'admin',
+      password: process.env.DBPWD || 'admin',
     },
   });
 

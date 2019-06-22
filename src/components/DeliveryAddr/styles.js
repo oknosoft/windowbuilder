@@ -6,6 +6,7 @@
  */
 
 import {withStyles} from '@material-ui/styles';
+const {geo_map} = $p.job_prm.builder;
 
 const styles = theme => ({
   entered: {
@@ -15,8 +16,8 @@ const styles = theme => ({
     marginTop: -theme.spacing(1.5),
   },
   coordinates: {
-    marginTop: theme.spacing(),
-    width: 300,
+    marginTop: geo_map.includes('without_area') ? 5 : theme.spacing(),
+    width: 260,
   },
   groupTitle: {
     fontWeight: 'bold',

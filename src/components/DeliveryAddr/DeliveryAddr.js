@@ -16,6 +16,7 @@ import FormGroup from '@material-ui/core/FormGroup';
 import DataField from 'metadata-react/DataField';
 import TextField  from '@material-ui/core/TextField';
 import GoogleMap from './GoogleMap';
+import YaMap from './YaMap';
 import {ReactDadata} from './DadataTyped/index.tsx';
 
 class DeliveryAddr extends Component {
@@ -47,6 +48,7 @@ class DeliveryAddr extends Component {
     };
     t.v = new $p.classes.WndAddressData(t);
     _mgr.on('update', this.onDataChange);
+    t.geo_map = $p.job_prm.builder.geo_map;
   }
 
   componentWillUnmount() {
@@ -118,12 +120,9 @@ class DeliveryAddr extends Component {
     }
     if(data.data) {
       obj.coordinates = JSON.stringify([point.lat, point.lng]);
+      this.setState({cpresentation: this.cpresentation()});
       obj.shipping_address = data.value || data.unrestricted_value;
-      if(map) {
-        const latLng = new global.google.maps.LatLng(point.lat, point.lng);
-        map.setCenter(latLng);
-        v.marker.setPosition(latLng);
-      }
+      map && map.reflectCenter([point.lat, point.lng]);
     }
   }
 
@@ -140,14 +139,14 @@ class DeliveryAddr extends Component {
   coordinatesFin() {
     try{
       const {v, map, state: {cpresentation}} = this;
-      const coordinates = v.assemble_lat_lng(cpresentation);
-      if(coordinates) {
-        const latLng = new global.google.maps.LatLng(coordinates.lat, coordinates.lng);
-        map.setCenter(latLng);
-        v.marker.setPosition(latLng);
-        v.marker_dragend({latLng});
-        this.obj.coordinates = JSON.stringify(coordinates);
+      const co = v.assemble_lat_lng(cpresentation);
+      if(co) {
+        map && map.reflectCenter([co.lat, co.lng]);
+        this.obj.coordinates = JSON.stringify([co.lat, co.lng]);
         this.setState({cpresentation: this.cpresentation()});
+
+        const latLng = new global.google.maps.LatLng(co.lat, co.lng);
+        v.marker_dragend({latLng});
       }
     }
     catch (e) {}
@@ -159,9 +158,47 @@ class DeliveryAddr extends Component {
     }
   }
 
+  content() {
+    const {obj, state: {cpresentation}, props: {delivery, classes}, geo_map} = this;
+    const ComponentMap = geo_map.includes('google') ? GoogleMap : YaMap;
+    const addr = <ReactDadata
+      key="row_addr"
+      label="Населенный пункт, улица, дом, квартира"
+      ref={(el) => this.dadata = el}
+      token={delivery.dadata.token}
+      query={obj.shipping_address}
+      onChange={this.dadataChange}
+    />;
+    const coordin = <TextField
+      value={cpresentation}
+      label="Координаты"
+      classes={{root: classes.coordinates}}
+      onChange={this.coordinatesChange}
+      onBlur={this.coordinatesFin}
+      onKeyPress={this.coordinatesKeyPress}
+    />;
+    return [
+      !geo_map.includes('without_area') && <FormGroup key="row1" row>
+        <DataField _obj={obj} _fld="delivery_area"/>
+        {coordin}
+      </FormGroup>,
+      !geo_map.includes('without_area') && addr,
+      geo_map.includes('without_area') && <FormGroup key="row" row>
+        {addr}
+        {coordin}
+      </FormGroup>,
+      <ComponentMap
+        key="map"
+        mapRef={(map) => this.map = map}
+        v={this.v}
+        larger={geo_map.includes('without_area')}
+      />
+    ];
+  }
+
   render() {
 
-    const {handleCancel, handleErrClose, obj, state: {msg, cpresentation}, props: {delivery, classes}} = this;
+    const {handleCancel, handleErrClose, state: {msg}} = this;
 
 
     return <Dialog
@@ -171,28 +208,7 @@ class DeliveryAddr extends Component {
       title="Адрес доставки"
       onClose={handleCancel}
     >
-      <FormGroup row>
-        <DataField _obj={obj} _fld="delivery_area"/>
-        <TextField
-          value={cpresentation}
-          label="Координаты"
-          classes={{root: classes.coordinates}}
-          onChange={this.coordinatesChange}
-          onBlur={this.coordinatesFin}
-          onKeyPress={this.coordinatesKeyPress}
-        />
-      </FormGroup>
-      <ReactDadata
-        label="Населенный пункт, улица, дом, квартира"
-        ref={(el) => this.dadata = el}
-        token={delivery.dadata.token}
-        query={obj.shipping_address}
-        onChange={this.dadataChange}
-      />
-      <GoogleMap
-        mapRef={(map) => this.map = map}
-        v={this.v}
-      />
+      {this.content()}
       {msg && <Dialog
         open
         title={msg.title}

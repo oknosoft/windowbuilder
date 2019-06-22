@@ -831,7 +831,10 @@ class eXcell_addr extends eXcell {
         new WndAddress({grid: this.grid}._mixin(v));
         break;
       case 'react_google':
-        this.grid.xcell_action && this.grid.xcell_action('AddrDadataGoogle', v.field);
+      case 'react_google_without_area':
+      case 'react_yandex':
+      case 'react_yandex_without_area':
+        this.grid.xcell_action && this.grid.xcell_action('DeliveryAddr', v.field);
       }
     }
 
