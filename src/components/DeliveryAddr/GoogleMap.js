@@ -9,13 +9,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+/* global google */
+
 class GoogleMap extends React.Component {
 
   componentDidMount() {
     const {v, mapRef} = this.props;
     v.process_address_fields()
       .then(() => {
-        const {maps} = global.google;
+        const {maps} = google;
         if(this.el && maps && !this.map) {
 
           const mapParams = {
@@ -33,7 +35,10 @@ class GoogleMap extends React.Component {
             const latLng = new maps.LatLng(lat, lng);
             this.setCenter(latLng);
             v.marker.setPosition(latLng);
-          }
+          };
+          this.map.coordinatesFin = () => {
+            v.marker_dragend({latLng: v.marker.getPosition()});
+          };
         }
         else if(this.map && !this.el) {
           this.map.destroy;

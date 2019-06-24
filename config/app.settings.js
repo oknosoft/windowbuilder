@@ -10,6 +10,12 @@ const is_node = typeof process !== 'undefined' && process.versions && process.ve
 
 module.exports = function settings(prm = {}) {
 
+  Object.defineProperty(prm, 'use_google_geo', {
+    get() {
+      return this.keys.google;
+    }
+  });
+
   return Object.assign(prm, {
 
     is_node,
@@ -60,11 +66,6 @@ module.exports = function settings(prm = {}) {
 
     // используем геокодер
     use_ip_geo: true,
-
-    // используем карты google
-    get use_google_geo() {
-      return this.keys.google;
-    },
 
     //
     keys: {

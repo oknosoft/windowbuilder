@@ -8585,6 +8585,9 @@ class Scheme extends paper.Project {
 
     function load_object(o) {
 
+      if(!_scheme._scope) {
+        return Promise.resolve();
+      }
       _scheme.ox = o;
 
       _attr._opened = true;

@@ -55,16 +55,25 @@ class DeliveryAddr extends Component {
     this.props.dialog._mgr.off('update', this.onDataChange);
   }
 
-  refresh_grid() {
+  refresh_grid(co) {
     const {obj, v, dadata} = this;
+    if(co) {
+      v.latitude = co[0];
+      v.longitude = co[1];
+    }
     v.assemble_address_fields(true);
     dadata && dadata.onInputChange({
       target: {value: obj.shipping_address}
     });
+    const data = {area: true};
+    if(co) {
+      data.data = true;
+      data.value = obj.shipping_address;
+    }
     this.findArea({
       lat: v.latitude,
       lng: v.longitude,
-      data: {area: true},
+      data,
     });
   }
 
@@ -113,7 +122,7 @@ class DeliveryAddr extends Component {
   };
 
   findArea = ({lat, lng, data}) => {
-    const {obj, props: {delivery}, map, v} = this;
+    const {obj, props: {delivery}, map} = this;
     const [area, point] = delivery.nearest({lat, lng});
     if(data.data || data.area) {
       obj.delivery_area = area;
@@ -127,7 +136,7 @@ class DeliveryAddr extends Component {
   }
 
   coordinatesChange = ({target}) => {
-    this.setState({cpresentation: target.value});
+    this.setState({cpresentation: target ? target.value : this.cpresentation()});
   };
 
   coordinatesKeyPress = ({key}) => {
@@ -145,8 +154,7 @@ class DeliveryAddr extends Component {
         this.obj.coordinates = JSON.stringify([co.lat, co.lng]);
         this.setState({cpresentation: this.cpresentation()});
 
-        const latLng = new global.google.maps.LatLng(co.lat, co.lng);
-        v.marker_dragend({latLng});
+        map.coordinatesFin();
       }
     }
     catch (e) {}

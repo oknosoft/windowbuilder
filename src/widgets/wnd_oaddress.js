@@ -44,8 +44,9 @@ class WndAddressData {
   }
 
   get coordinates() {
-    const {coordinates} = this.owner.obj;
-    return coordinates ? JSON.parse(coordinates) : []
+    const {latitude, longitude, owner: {obj}} = this;
+    const {coordinates} = obj;
+    return coordinates ? JSON.parse(coordinates) : (latitude && longitude ? [latitude, longitude] : []);
   }
 
   init_map(map, position) {
@@ -97,12 +98,12 @@ class WndAddressData {
    */
   assemble_addr(with_flat){
     const {country, region, city, street, postal_code, house, flat} = this;
-    return (street ? (street.replace(/,/g," ") + ", ") : "") +
-      (house ? (house + ", ") : "") +
-      (with_flat && flat ? (flat + ", ") : "") +
-      (city ? (city + ", ") : "") +
-      (region ? (region + ", ") : "") + country +
-      (postal_code ? (", " + postal_code) : "");
+    const res = (region ? (region + ', ') : '') +
+      (city ? (city + ', ') : '') +
+      (street ? (street.replace(/,/g, ' ') + ', ') : '') +
+      (house ? (house + ', ') : '') +
+      (with_flat && flat ? (flat + ', ') : '');
+    return res.endsWith(', ') ? res.substr(0, res.length - 2) : res;
   }
 
   /**
@@ -322,7 +323,7 @@ class WndAddressData {
         // если есть координаты $p.ipinfo, используем их, иначе - Москва
         if(!v.latitude || !v.longitude){
           // если координаты есть в Расчете, используем их
-          if(obj.shipping_address){
+          if(obj.shipping_address && ipinfo.ggeocoder){
             // если есть строка адреса, пытаемся геокодировать
             ipinfo.ggeocoder.geocode({address: v.assemble_addr()}, (results, status) => {
               if (status == google.maps.GeocoderStatus.OK) {
@@ -397,14 +398,15 @@ class WndAddressData {
   }
 
   marker_dragend(e) {
-    $p.ipinfo.ggeocoder.geocode({'latLng': e.latLng}, (results, status) => {
+    const {ipinfo} = $p;
+    ipinfo.ggeocoder && ipinfo.ggeocoder.geocode({'latLng': e.latLng}, (results, status) => {
       if (status == google.maps.GeocoderStatus.OK) {
         const v = this;
         const {wnd} = this.owner;
         if (results[0]) {
           const addr = results[0];
           wnd.setText(addr.formatted_address);
-          $p.ipinfo.components(v, addr.address_components);
+          ipinfo.components(v, addr.address_components);
           v.refresh_coordinates(e.latLng.lat(), e.latLng.lng());
 
           this.owner.refresh_grid && this.owner.refresh_grid();
@@ -697,12 +699,13 @@ class WndAddress {
       wnd.elmnts.map.setZoom(zoom);
     }
 
-    $p.ipinfo.ggeocoder.geocode({address: v.assemble_addr()}, (results, status) => {
+    const {ipinfo} = $p;
+    ipinfo.ggeocoder && ipinfo.ggeocoder.geocode({address: v.assemble_addr()}, (results, status) => {
       if (status == google.maps.GeocoderStatus.OK) {
         const loc = results[0].geometry.location;
         wnd.elmnts.map.setCenter(loc);
         v.marker.setPosition(loc);
-        v.postal_code = $p.ipinfo.components({}, results[0].address_components).postal_code || "";
+        v.postal_code = ipinfo.components({}, results[0].address_components).postal_code || "";
         v.refresh_coordinates(loc.lat(), loc.lng());
       }
     });

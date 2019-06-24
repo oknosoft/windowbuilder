@@ -13,6 +13,7 @@ class DeliveryManager {
 
   constructor() {
     const {keys, rest_path} = $p.job_prm;
+
     this.geonames = {
       postalCodeLookup(postalcode) {
         return fetch(`http://api.geonames.org/postalCodeLookupJSON?postalcode=${postalcode}&country=RU&username=${keys.geonames}`)
@@ -43,6 +44,29 @@ class DeliveryManager {
           .then(res => res.json());
       },
 
+      geolocate([lat, lon]) {
+        return fetch(`https://suggestions.dadata.ru/suggestions/api/4_1/rs/geolocate/address`, {
+          method: 'post',
+          body: JSON.stringify({lat, lon, count: 1}),
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: `Token ${this.token}`
+          }
+        })
+          .then(res => res.json());
+      },
+
+      components(v, c) {
+        v.region = c.region_with_type;
+        v.locality = c.area_with_type;
+        v.city = c.city;
+        v.city_long = c.city_with_type || c.city;
+        v.house = c.house_type_full && c.house ? c.house_type_full + ' ' + c.house : '';
+        v.postal_code = c.postal_code || '';
+        v.street = c.street_with_type || c.street || '';
+      },
+
       address(raw) {
         return fetch(`${rest_path}proxy/dadata`, {
           method: 'post',
@@ -51,6 +75,57 @@ class DeliveryManager {
           .then(res => res.json());
       }
     };
+
+    this.yandex = {
+      geolocate([lat, lon]) {
+        return fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${keys.yandex}&geocode=${lon},${lat}&format=json`)
+          .then(res => res.json())
+          .then(({response}) => {
+            const {featureMember} = response.GeoObjectCollection;
+            if(featureMember && featureMember.length) {
+              const {Address, AddressDetails: {Country}} = featureMember[0].GeoObject.metaDataProperty.GeocoderMetaData;
+              const res = {
+                data: {
+                  postal_code: Address.postal_code || '',
+                  house_type_full: 'дом',
+                  region_with_type: '',
+                  area_with_type: '',
+                  city: '',
+                  house: '',
+                  street_with_type: '',
+                },
+                value: Address.formatted.replace(`${Country.CountryName}, `, ''),
+              };
+              for(const {kind, name} of Address.Components) {
+                switch (kind) {
+                case 'province':
+                  res.data.region_with_type = name;
+                  break;
+                case 'area':
+                  res.data.area_with_type = name;
+                  break;
+                case 'locality':
+                  res.data.city = name;
+                  break;
+                case 'street':
+                  res.data.street_with_type = name;
+                  break;
+                case 'house':
+                  res.data.house = name;
+                  break;
+                }
+              }
+
+              return {suggestions: [res]};
+            }
+            return {suggestions: []};
+          });
+
+        // return ymaps.geocode([lat, lon], {results: 1})
+        //   .then();
+      }
+    };
+
   }
 
   distance(p1, p2) {

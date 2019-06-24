@@ -1520,25 +1520,21 @@ class Editor extends EditorInvisible {
     }
   }
 
-  /**
-   * проверка, можно ли покидать страницу
-   * @param loc
-   * @return {*}
-   */
-  prompt(loc) {
-    const {ox} = this.project;
-    return (ox && ox._modified) ? `Изделие ${ox.prod_name(true)} изменено.\n\nЗакрыть без сохранения?` : true;
-  }
-
-  close() {
-    const {ox} = this.project;
-    const {calc_order} = ox;
+  close(ox, calc_order) {
+    if(!ox) {
+      ox = this.project.ox;
+    }
+    if(!calc_order) {
+      calc_order = ox.calc_order;
+    }
+    let path = '/';
     if(calc_order && !calc_order.empty()){
-      this.handlers.handleNavigate(`/${calc_order.class_name}/${calc_order.ref}/?ref=${ox.ref}`);
+      path += `${calc_order.class_name}/${calc_order.ref}`;
+      if(ox && !ox.empty()){
+        path += `/?ref=${ox.ref}`
+      }
     }
-    else{
-      this.handlers.handleNavigate(`/`);
-    }
+    this.handlers.handleNavigate(path);
   }
 
   /**
