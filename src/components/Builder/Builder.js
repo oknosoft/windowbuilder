@@ -15,8 +15,7 @@ class Builder extends DhtmlxCell {
   }
 
   componentWillUnmount() {
-    //$p.off('hash_route', this.hash_route);
-    const {cell, _editor, handlers} = this;
+    const {cell, _editor} = this;
     if(_editor){
       const {ox} = _editor.project;
       const {calc_order} = ox;
@@ -41,7 +40,7 @@ class Builder extends DhtmlxCell {
    * @param loc
    * @return {*}
    */
-  prompt = (loc) => {
+  prompt = () => {
     if(!this._editor || !this._editor.project) {
       return true;
     }

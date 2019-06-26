@@ -23,13 +23,14 @@ class DeliveryAddr extends Component {
 
   constructor(props, context) {
     super(props, context);
-    const {handleCancel, handleCalck, dialog: {ref, _mgr}} = props;
+    const {handleCancel, handleCalck, FakeAddrObj, dialog: {ref, _mgr}} = props;
     const t = this;
     t.handleCancel = handleCancel.bind(t);
     t.handleCalck = handleCalck.bind(t);
-    t.obj = _mgr.by_ref[ref];
+    t.obj = new FakeAddrObj(_mgr.by_ref[ref]);
     t.state = {
       msg: null,
+      queryClose: false,
       cpresentation: t.cpresentation(),
     };
     t.wnd = {
@@ -87,8 +88,32 @@ class DeliveryAddr extends Component {
     return res;
   }
 
+  handleOk = () => {
+    this.props.handleCalck.call(this)
+      .then(this.handleCancel)
+      .catch((err) => {
+        this.setState({msg: err.msg || err.message});
+      });
+  };
+
+  handleCalck = () => {
+    this.props.handleCalck.call(this)
+      .catch((err) => {
+        this.setState({msg: err.msg});
+      });
+  };
+
   handleErrClose = () => {
-    this.setState({msg: null});
+    this.setState({msg: null, queryClose: false});
+  };
+
+  queryClose = () => {
+    if(this.obj._data._modified) {
+      this.setState({queryClose: true});
+    }
+    else {
+      this.handleCancel();
+    }
   };
 
   dadataChange = (data) => {
@@ -206,18 +231,23 @@ class DeliveryAddr extends Component {
 
   render() {
 
-    const {handleCancel, handleErrClose, state: {msg}} = this;
+    const {handleCancel, handleErrClose, obj: {_data}, state: {msg, queryClose}} = this;
 
 
     return <Dialog
       open
       initFullScreen
       large
-      title="Адрес доставки"
-      onClose={handleCancel}
+      title={`Адрес доставки${_data._modified ? ' *' : ''}`}
+      onClose={this.queryClose}
+      actions={[
+        <Button key="ok" onClick={this.handleOk} color="primary">Ок</Button>,
+        <Button key="cancel" onClick={handleCancel} color="primary">Отмена</Button>
+      ]}
     >
       {this.content()}
-      {msg && <Dialog
+      {msg &&
+      <Dialog
         open
         title={msg.title}
         onClose={handleErrClose}
@@ -226,6 +256,18 @@ class DeliveryAddr extends Component {
         ]}
       >
         {msg.text || msg}
+      </Dialog>}
+      {queryClose &&
+      <Dialog
+        open
+        title="Закрыть форму ввода адреса?"
+        onClose={handleErrClose}
+        actions={[
+          <Button key="ok" onClick={handleCancel} color="primary">Ок</Button>,
+          <Button key="cancel" onClick={handleErrClose} color="primary">Отмена</Button>
+        ]}
+      >
+        Внесённые изменения будут потеряны
       </Dialog>}
     </Dialog>;
 

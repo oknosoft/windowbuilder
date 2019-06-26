@@ -98,7 +98,7 @@ class WndAddressData {
    */
   assemble_addr(with_flat){
     const {country, region, city, street, postal_code, house, flat} = this;
-    const res = (region ? (region + ', ') : '') +
+    const res = (region && region !== city ? (region + ', ') : '') +
       (city ? (city + ', ') : '') +
       (street ? (street.replace(/,/g, ' ') + ', ') : '') +
       (house ? (house + ', ') : '') +

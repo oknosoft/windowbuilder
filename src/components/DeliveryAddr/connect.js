@@ -154,12 +154,58 @@ class DeliveryManager {
 
 const delivery = new DeliveryManager();
 
+const {doc: {calc_order}, cat: {delivery_areas}, classes: {BaseDataObj}} = $p;
+
+class FakeAddrObj extends BaseDataObj{
+
+  constructor({_obj: {delivery_area, coordinates, shipping_address, address_fields}}) {
+    super({delivery_area, coordinates, shipping_address, address_fields}, calc_order, false, true);
+    this._data._is_new = false;
+  }
+
+
+  get delivery_area() {
+    return this._getter('delivery_area');
+  }
+  set delivery_area(v) {
+    this._setter('delivery_area', v);
+  }
+
+  get coordinates() {
+    return this._getter('coordinates');
+  }
+  set coordinates(v) {
+    this._setter('coordinates', v);
+  }
+
+  get shipping_address() {
+    return this._getter('shipping_address');
+  }
+  set shipping_address(v) {
+    this._setter('shipping_address', v);
+  }
+
+  get address_fields() {
+    return this._getter('shipping_address');
+  }
+  set address_fields(v) {
+    this._setter('address_fields', v);
+  }
+
+
+};
 
 function mapStateToProps(state, props) {
   return {
     handleCalck() {
-      //dp.calc_order.production.sync_grid(props.dialog.wnd.elmnts.grids.production);
-      return Promise.resolve();
+      const {props:{dialog: {ref, _mgr}}, obj} = this;
+      if(!obj.shipping_address) {
+        return Promise.reject({msg: {text: 'Уточните адрес доставки выбором из выпадающего списка', title: 'Пустой адрес'}});
+      }
+      if(!obj.coordinates) {
+        return Promise.reject({msg: {text: 'Укажите координаты адреса', title: 'Пустые координаты'}});
+      }
+      return Promise.resolve(Object.assign(_mgr.by_ref[ref], obj._obj));
     },
 
     handleCancel() {
@@ -171,6 +217,8 @@ function mapStateToProps(state, props) {
     },
 
     delivery,
+
+    FakeAddrObj,
   };
 }
 
