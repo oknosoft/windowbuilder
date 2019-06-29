@@ -16,11 +16,11 @@ class DeliveryManager {
 
     this.geonames = {
       postalCodeLookup(postalcode) {
-        return fetch(`http://api.geonames.org/postalCodeLookupJSON?postalcode=${postalcode}&country=RU&username=${keys.geonames}`)
+        return fetch(`https://light.oknosoft.ru/geonames/postalCodeLookupJSON?postalcode=${postalcode}&country=RU&username=${keys.geonames}`)
           .then(res => res.json());
       },
       geoLookup({lat, lng}) {
-        return fetch(`http://api.geonames.org/addressJSON?lat=${lat}&lng=${lng}&username=${keys.geonames}`)
+        return fetch(`https://light.oknosoft.ru/geonames/addressJSON?lat=${lat}&lng=${lng}&username=${keys.geonames}`)
           .then(res => res.json());
       }
     };
