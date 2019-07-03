@@ -25,8 +25,8 @@ module.exports = function settings(prm = {}) {
 
     // гостевые пользователи для демо-режима
     guests: [{
-      username: 'Дилер',
-      password: '1gNjzYQKBlcD',
+      username: 'Аксенов Сергей',
+      password: '14684321',
     }],
 
     // расположение couchdb для сайта

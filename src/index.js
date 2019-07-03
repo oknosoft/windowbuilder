@@ -46,3 +46,4 @@ RootProvider.childContextTypes = {
 };
 
 render(<RootProvider />, document.getElementById('root'));
+
