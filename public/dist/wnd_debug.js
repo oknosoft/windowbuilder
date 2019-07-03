@@ -7211,7 +7211,37 @@
         note: {
           synonym: 'Дополнительно',
           multiline_mode: true,
-          type: {types: ['string'], str_len: 0}
+          type: {types: ['string'], str_len: 50}
+        },
+        phone: {
+          synonym: "Телефон",
+          type: {
+            types: ["string"], str_len: 50
+          }
+        },
+        address: {
+          synonym: "Адрес регистрации",
+          type: {
+            types: ["string"], str_len: 50
+          }
+        },
+        passport_office: {
+          synonym: "Орган выдавший паспорт",
+          type: {
+            types: ["string"], str_len: 50
+          }
+        },
+        sex: {
+          synonym: "Пол",
+          type: {
+            types: ["boolean"]
+          }
+        },
+        email: {
+          synonym: "E-mail адрес",
+          type: {
+            types: ["string"], str_len: 50
+          }
         },
         full_name_org: {
           synonym: 'Полное наименование',
@@ -7347,7 +7377,7 @@
               items: [
                 {
                   element: 'FormGroup',
-                  items: [
+                  items: [ //колонка №1
                     {
                       element: 'DataField',
                       fld: 'surname',
@@ -7360,11 +7390,15 @@
                       element: 'DataField',
                       fld: 'patronymic',
                     },
+                    {
+                      element: 'DataField',
+                      fld: 'email',
+                    },
                   ]
                 },
                 {
                   element: 'FormGroup',
-                  items: [
+                  items: [  //колонка №2
                     {
                       element: 'DataField',
                       fld: 'passport_serial_number',
@@ -7377,6 +7411,24 @@
                       element: 'DataField',
                       fld: 'note',
                     },
+                  ]
+                },
+                {
+                  element: 'FormGroup',
+                  items: [ //колонка №3
+                    {
+                      element: "DataField",
+                      fld: "phone"
+                    }, {
+                      element: "DataField",
+                      fld: "address"
+                    }, {
+                      element: "DataField",
+                      fld: "passport_office"
+                    }, {
+                      element: "DataField",
+                      fld: "sex"
+                    }
                   ]
                 }
               ]
