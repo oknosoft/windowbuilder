@@ -7245,6 +7245,7 @@
         },
         full_name_org: {
           synonym: 'Полное наименование',
+          mandatory: true,
           type: {types: ['string'], str_len: 50}
         },
         scort_name_org: {
@@ -7301,6 +7302,7 @@
         },
         phone_org: {
           synonym: 'Телефон',
+          mandatory: true,
           type: {types: ['string'], str_len: 50}
         },
         bank_details: {
@@ -7425,10 +7427,10 @@
                     }, {
                       element: "DataField",
                       fld: "passport_office"
-                    }, {
+                    }/*, {
                       element: "DataField",
                       fld: "sex"
-                    }
+                    }*/
                   ]
                 }
               ]
