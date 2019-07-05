@@ -42,6 +42,10 @@ class BuilderElement extends paper.Group {
 
     this._attr = {};
 
+    if(!this._row.elm){
+      this._row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+    }
+
     if(attr.proto){
 
       if(attr.proto.inset){
@@ -68,10 +72,6 @@ class BuilderElement extends paper.Group {
 
     if(!this._row.cnstr && this.layer.cnstr){
       this._row.cnstr = this.layer.cnstr;
-    }
-
-    if(!this._row.elm){
-      this._row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
     }
 
     if(this._row.elm_type.empty() && !this.inset.empty()){
