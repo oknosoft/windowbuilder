@@ -192,7 +192,7 @@ $p.cat.clrs.__define({
               });
 
             Promise.all(clrs)
-              .then(objs => pwnd.on_select.call(pwnd, objs[0]))
+              .then((objs) => pwnd.on_select.call(pwnd, objs[0]))
               .catch((err) => $p.msg.show_msg({
                 type: 'alert-warning',
                 text: 'Недостаточно прав для добавления составного цвета',

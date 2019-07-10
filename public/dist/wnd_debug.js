@@ -861,27 +861,27 @@ $p.cat.clrs.__define({
             pwnd.on_select.call(pwnd, eclr.clr_in);
           }
           else {
-            const ares = $p.wsql.alasql("select top 1 ref from cat_clrs where clr_in = ? and clr_out = ? and (not ref = ?)",
-              [eclr.clr_in.ref, eclr.clr_out.ref, $p.utils.blank.guid]);
+            const clrs = [eclr, {clr_in: eclr.clr_out, clr_out: eclr.clr_in}]
+              .map(({clr_in, clr_out}) => {
+                const ares = $p.wsql.alasql("select top 1 ref from cat_clrs where clr_in = ? and clr_out = ? and (not ref = ?)",
+                  [clr_in.ref, clr_out.ref, $p.utils.blank.guid]);
 
-            if(ares.length){
-              pwnd.on_select.call(pwnd, $p.cat.clrs.get(ares[0]));
-            }
-            else{
-              $p.cat.clrs.create({
-                clr_in: eclr.clr_in,
-                clr_out: eclr.clr_out,
-                name: `${eclr.clr_in.name} \\ ${eclr.clr_out.name}`,
-                parent: $p.job_prm.builder.composite_clr_folder
-              })
-                .then((obj) => obj.register_on_server())
-                .then((obj) => pwnd.on_select.call(pwnd, obj))
-                .catch((err) => $p.msg.show_msg({
-                  type: 'alert-warning',
-                  text: 'Недостаточно прав для добавления составного цвета',
-                  title: 'Составной цвет'
-                }));
-            }
+                return ares.length ? Promise.resolve($p.cat.clrs.get(ares[0])) : $p.cat.clrs.create({
+                  clr_in,
+                  clr_out,
+                  name: `${clr_in.name} \\ ${clr_out.name}`,
+                  parent: $p.job_prm.builder.composite_clr_folder
+                })
+                  .then((obj) => obj.register_on_server());
+              });
+
+            Promise.all(clrs)
+              .then((objs) => pwnd.on_select.call(pwnd, objs[0]))
+              .catch((err) => $p.msg.show_msg({
+                type: 'alert-warning',
+                text: 'Недостаточно прав для добавления составного цвета',
+                title: 'Составной цвет'
+              }));
           }
 
           wnd.close();
