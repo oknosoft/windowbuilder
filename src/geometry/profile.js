@@ -717,6 +717,79 @@ class ProfileItem extends GeneratrixElement {
   }
 
   /**
+   * ### Создаёт-удаляет дополнительные свойства элемента в зависимости от их наличия в Системе
+   * @return {Array}
+   */
+  elm_props() {
+    const {_attr, _row, project} = this;
+    // получаем список свойств
+    const props = [];
+    project._dp.sys.product_params.find_rows({elm: true}, ({param}) => {
+      props.push(param);
+    });
+    // удаляем возможные паразитные свойства
+    _attr.props && _attr.props.forEach((prop) => {
+      if(!props.includes(prop)) {
+        delete this[prop.ref];
+      }
+    });
+    _attr.props = props;
+    // создаём свойства
+    props.forEach((prop) => {
+      if(!this.hasOwnProperty(prop.ref)) {
+        Object.defineProperty(this, prop.ref, {
+          get() {
+            let prow;
+            project.ox.params.find_rows({
+              param: prop,
+              cnstr: {in: [0, -_row.row]},
+              inset: $p.utils.blank.guid
+            }, (row) => {
+              if(!prow || row.cnstr) {
+                prow = row;
+              }
+            });
+            return prow && prow.value;
+          },
+          set(v) {
+            let prow, prow0;
+            project.ox.params.find_rows({
+              param: prop,
+              cnstr: {in: [0, -_row.row]},
+              inset: $p.utils.blank.guid
+            }, (row) => {
+              if(row.cnstr) {
+                prow = row;
+              }
+              else {
+                prow0 = row;
+              }
+            });
+            // если устанавливаемое значение совпадает со значением изделия - удаляем
+            if(prow0 && prow0.value == v) {
+              prow && prow._owner.del(prow);
+            }
+            else if(prow) {
+              prow.value = v;
+            }
+            else {
+              project.ox.params.add({
+                param: prop,
+                cnstr: -_row.row,
+                inset: $p.utils.blank.guid,
+                value: v,
+              });
+            }
+          },
+          configurable: true,
+        });
+      }
+    });
+
+    return props;
+  }
+
+  /**
    * Описание полей диалога свойств элемента
    */
   get oxml() {
@@ -731,7 +804,11 @@ class ProfileItem extends GeneratrixElement {
       'Конец': ['x2','y2','a2','cnn2']
     };
     if(this.selected_cnn_ii()) {
-      oxml['Примыкание'] = ['cnn3'];
+      oxml.Примыкание = ['cnn3'];
+    }
+    const props = this.elm_props();
+    if(props.length) {
+      oxml.Свойства = props.map(({ref}) => ref);
     }
     return oxml;
   }

@@ -315,25 +315,47 @@ class BuilderElement extends paper.Group {
     // дополняем свойства поля цвет отбором по служебным цветам
     $p.cat.clrs.selection_exclude_service(_xfields.clr, this);
 
+    const mfields = {
+      info: info,
+      inset: inset,
+      clr: _xfields.clr,
+      x1: _xfields.x1,
+      x2: _xfields.x2,
+      y1: _xfields.y1,
+      y2: _xfields.y2,
+      cnn1: cnn1,
+      cnn2: cnn2,
+      cnn3: cnn3,
+      arc_h: arc_h,
+      r: _xfields.r,
+      arc_ccw: _xfields.arc_ccw,
+      a1: Object.assign({}, _xfields.x1, {synonym: "Угол1"}),
+      a2: Object.assign({}, _xfields.x1, {synonym: "Угол2"}),
+      offset: Object.assign({}, _xfields.x1, {synonym: "Смещение"}),
+    };
+
     return {
-      fields: {
-        info: info,
-        inset: inset,
-        clr: _xfields.clr,
-        x1: _xfields.x1,
-        x2: _xfields.x2,
-        y1: _xfields.y1,
-        y2: _xfields.y2,
-        cnn1: cnn1,
-        cnn2: cnn2,
-        cnn3: cnn3,
-        arc_h: arc_h,
-        r: _xfields.r,
-        arc_ccw: _xfields.arc_ccw,
-        a1: Object.assign({}, _xfields.x1, {synonym: "Угол1"}),
-        a2: Object.assign({}, _xfields.x1, {synonym: "Угол2"}),
-        offset: Object.assign({}, _xfields.x1, {synonym: "Смещение"}),
-      }
+      fields: new Proxy(mfields, {
+        get(target, prop) {
+          if(target[prop]) {
+            return target[prop];
+          }
+          const param = $p.cch.properties.get(prop);
+          if(param) {
+            const mf = {
+              type: param.type,
+              synonym: param.name,
+            };
+            if(param.type.types.includes('cat.property_values')) {
+              mf.choice_params = [{
+                name: 'owner',
+                path: param.ref,
+              }];
+            }
+            return mf;
+          }
+        }
+      }),
     };
   }
 

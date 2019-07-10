@@ -3457,25 +3457,47 @@ class BuilderElement extends paper.Group {
 
     $p.cat.clrs.selection_exclude_service(_xfields.clr, this);
 
+    const mfields = {
+      info: info,
+      inset: inset,
+      clr: _xfields.clr,
+      x1: _xfields.x1,
+      x2: _xfields.x2,
+      y1: _xfields.y1,
+      y2: _xfields.y2,
+      cnn1: cnn1,
+      cnn2: cnn2,
+      cnn3: cnn3,
+      arc_h: arc_h,
+      r: _xfields.r,
+      arc_ccw: _xfields.arc_ccw,
+      a1: Object.assign({}, _xfields.x1, {synonym: "Угол1"}),
+      a2: Object.assign({}, _xfields.x1, {synonym: "Угол2"}),
+      offset: Object.assign({}, _xfields.x1, {synonym: "Смещение"}),
+    };
+
     return {
-      fields: {
-        info: info,
-        inset: inset,
-        clr: _xfields.clr,
-        x1: _xfields.x1,
-        x2: _xfields.x2,
-        y1: _xfields.y1,
-        y2: _xfields.y2,
-        cnn1: cnn1,
-        cnn2: cnn2,
-        cnn3: cnn3,
-        arc_h: arc_h,
-        r: _xfields.r,
-        arc_ccw: _xfields.arc_ccw,
-        a1: Object.assign({}, _xfields.x1, {synonym: "Угол1"}),
-        a2: Object.assign({}, _xfields.x1, {synonym: "Угол2"}),
-        offset: Object.assign({}, _xfields.x1, {synonym: "Смещение"}),
-      }
+      fields: new Proxy(mfields, {
+        get(target, prop) {
+          if(target[prop]) {
+            return target[prop];
+          }
+          const param = $p.cch.properties.get(prop);
+          if(param) {
+            const mf = {
+              type: param.type,
+              synonym: param.name,
+            };
+            if(param.type.types.includes('cat.property_values')) {
+              mf.choice_params = [{
+                name: 'owner',
+                path: param.ref,
+              }];
+            }
+            return mf;
+          }
+        }
+      }),
     };
   }
 
@@ -6184,6 +6206,71 @@ class ProfileItem extends GeneratrixElement {
     return this.children.filter((elm) => elm instanceof ProfileAddl);
   }
 
+  elm_props() {
+    const {_attr, _row, project} = this;
+    const props = [];
+    project._dp.sys.product_params.find_rows({elm: true}, ({param}) => {
+      props.push(param);
+    });
+    _attr.props && _attr.props.forEach((prop) => {
+      if(!props.includes(prop)) {
+        delete this[prop.ref];
+      }
+    });
+    _attr.props = props;
+    props.forEach((prop) => {
+      if(!this.hasOwnProperty(prop.ref)) {
+        Object.defineProperty(this, prop.ref, {
+          get() {
+            let prow;
+            project.ox.params.find_rows({
+              param: prop,
+              cnstr: {in: [0, -_row.row]},
+              inset: $p.utils.blank.guid
+            }, (row) => {
+              if(!prow || row.cnstr) {
+                prow = row;
+              }
+            });
+            return prow && prow.value;
+          },
+          set(v) {
+            let prow, prow0;
+            project.ox.params.find_rows({
+              param: prop,
+              cnstr: {in: [0, -_row.row]},
+              inset: $p.utils.blank.guid
+            }, (row) => {
+              if(row.cnstr) {
+                prow = row;
+              }
+              else {
+                prow0 = row;
+              }
+            });
+            if(prow0 && prow0.value == v) {
+              prow && prow._owner.del(prow);
+            }
+            else if(prow) {
+              prow.value = v;
+            }
+            else {
+              project.ox.params.add({
+                param: prop,
+                cnstr: -_row.row,
+                inset: $p.utils.blank.guid,
+                value: v,
+              });
+            }
+          },
+          configurable: true,
+        });
+      }
+    });
+
+    return props;
+  }
+
   get oxml() {
     const oxml = {
       ' ': [
@@ -6196,7 +6283,11 @@ class ProfileItem extends GeneratrixElement {
       'Конец': ['x2','y2','a2','cnn2']
     };
     if(this.selected_cnn_ii()) {
-      oxml['Примыкание'] = ['cnn3'];
+      oxml.Примыкание = ['cnn3'];
+    }
+    const props = this.elm_props();
+    if(props.length) {
+      oxml.Свойства = props.map(({ref}) => ref);
     }
     return oxml;
   }

@@ -6623,7 +6623,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             {id: 'department', path: 'o.department', synonym: 'Офис продаж', type: 'refc'},
             {id: 'warehouse', path: 'o.warehouse', synonym: 'Склад отгрузки', type: 'refc'},
           ],
-          'Итоги': [{id: 'doc_currency', path: 'o.doc_currency', synonym: 'Валюта документа', type: 'ro', txt: o['doc_currency'].presentation},
+          'Итоги': [{id: 'doc_currency', path: 'o.doc_currency', synonym: 'Валюта документа', type: 'ro', txt: o['doc_currency'].toString()},
             {id: 'doc_amount', path: 'o.doc_amount', synonym: 'Сумма', type: 'ron', txt: o['doc_amount']},
             {id: 'amount_internal', path: 'o.amount_internal', synonym: 'Сумма внутр', type: 'ron', txt: o['amount_internal']}]
         }
@@ -7424,25 +7424,30 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
       }
     });
 
-    const refs = [];
-    for (let o of base_block) {
-      refs.push(o.ref);
-      if(refs.length > 19) {
+    try {
+      const refs = [];
+      for (let o of base_block) {
+        refs.push(o.ref);
+        if(refs.length > 29) {
+          await _mgr.adapter.load_array(_mgr, refs, false, _mgr.adapter.local.templates);
+          refs.length = 0;
+        }
+      }
+      if(refs.length) {
         await _mgr.adapter.load_array(_mgr, refs, false, _mgr.adapter.local.templates);
-        refs.length = 0;
       }
-    }
-    if(refs.length) {
-      await _mgr.adapter.load_array(_mgr, refs, false, _mgr.adapter.local.templates);
-    }
 
-    refs.length = 0;
-    base_block.forEach(({production}) => {
-      if(production.count()) {
-        refs.push(production.get(0).characteristic.ref);
-      }
-    });
-    return _mgr.adapter.load_array($p.cat.characteristics, refs, false, _mgr.adapter.local.templates);
+      refs.length = 0;
+      base_block.forEach(({production}) => {
+        if(production.count()) {
+          refs.push(production.get(0).characteristic.ref);
+        }
+      });
+      return _mgr.adapter.load_array($p.cat.characteristics, refs, false, _mgr.adapter.local.templates);
+    }
+    catch (e) {
+
+    }
 
   };
 

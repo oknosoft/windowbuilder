@@ -140,15 +140,17 @@ exports.CchProperties = class CchProperties extends Object {
       }
       else {
         if(ox.params) {
+          let prow;
           ox.params.find_rows({
-            cnstr: cnstr || 0,
-            inset: (typeof origin !== 'number' && origin) || utils.blank.guid,
             param: this,
-            value: val
-          }, () => {
-            ok = true;
-            return false;
+            cnstr: cnstr || (elm._row ? {in: [0, -elm._row.row]} : 0),
+            inset: (typeof origin !== 'number' && origin) || utils.blank.guid,
+          }, (row) => {
+            if(!prow || row.cnstr) {
+              prow = row;
+            }
           });
+          ok = prow && prow.value == val;
         }
         else if(ox.product_params) {
           ox.product_params.find_rows({
@@ -170,15 +172,18 @@ exports.CchProperties = class CchProperties extends Object {
     // параметр явно указан в табчасти параметров изделия
     else {
       if(ox.params) {
+        let prow;
         ox.params.find_rows({
-          cnstr: cnstr || 0,
+          param: this,
+          cnstr: cnstr || (elm._row ? {in: [0, -elm._row.row]} : 0),
           inset: (typeof origin !== 'number' && origin) || utils.blank.guid,
-          param: this
-        }, ({value}) => {
-          // value - значение из строки параметра текущей продукции, val - знаяение из параметров отбора
-          ok = utils.check_compare(value, val, prm_row.comparison_type, comparison_types);
-          return false;
+        }, (row) => {
+          if(!prow || row.cnstr) {
+            prow = row;
+          }
         });
+        // value - значение из строки параметра текущей продукции, val - знаяение из параметров отбора
+        ok = prow && utils.check_compare(prow.value, val, prm_row.comparison_type, comparison_types);
       }
       else if(ox.product_params) {
         ox.product_params.find_rows({
