@@ -3194,6 +3194,8 @@ class DimensionRadius extends DimensionLineCustom {
 
 
 
+
+
 class BuilderElement extends paper.Group {
 
   constructor(attr) {
@@ -3207,6 +3209,10 @@ class BuilderElement extends paper.Group {
     this._row = attr.row;
 
     this._attr = {};
+
+    if(!this._row.elm){
+      this._row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
+    }
 
     if(attr.proto){
 
@@ -3236,10 +3242,6 @@ class BuilderElement extends paper.Group {
       this._row.cnstr = this.layer.cnstr;
     }
 
-    if(!this._row.elm){
-      this._row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
-    }
-
     if(this._row.elm_type.empty() && !this.inset.empty()){
       this._row.elm_type = this.nom.elm_type;
     }
@@ -3248,12 +3250,14 @@ class BuilderElement extends paper.Group {
 
   }
 
+
   get owner() {
     return this._attr.owner;
   }
   set owner(v) {
     this._attr.owner = v;
   }
+
 
   get generatrix() {
     return this._attr.generatrix;
@@ -3303,6 +3307,7 @@ class BuilderElement extends paper.Group {
       }
     }
   }
+
 
   get path() {
     return this._attr.path;
@@ -3505,6 +3510,7 @@ class BuilderElement extends paper.Group {
     return this.project._dp._manager;
   }
 
+
   get nom() {
     return this.inset.nom(this);
   }
@@ -3538,6 +3544,7 @@ class BuilderElement extends paper.Group {
     return this.nom.sizefurn || 20;
   }
 
+
   get cnn3(){
     const cnn_ii = this.selected_cnn_ii();
     return cnn_ii ? cnn_ii.row.cnn : $p.cat.cnns.get();
@@ -3570,6 +3577,7 @@ class BuilderElement extends paper.Group {
     this.set_clr(v);
   }
 
+
   set_inset(v, ignore_select) {
     const {_row, _attr, project} = this;
     if(_row.inset != v){
@@ -3581,6 +3589,7 @@ class BuilderElement extends paper.Group {
     }
   }
 
+
   set_clr(v, ignore_select) {
     if(this._row.clr != v) {
       this._row.clr = v;
@@ -3591,9 +3600,11 @@ class BuilderElement extends paper.Group {
     }
   }
 
+
   t_parent(be) {
     return this;
   }
+
 
   attache_wnd(cell) {
     if(!this._attr._grid || !this._attr._grid.cell){
@@ -3619,6 +3630,7 @@ class BuilderElement extends paper.Group {
     }
   }
 
+
   detache_wnd() {
     const {_grid} = this._attr;
     if(_grid && _grid.destructor && _grid._owner_cell){
@@ -3626,6 +3638,7 @@ class BuilderElement extends paper.Group {
       delete this._attr._grid;
     }
   }
+
 
   selected_cnn_ii() {
     const {project, elm} = this;
@@ -3661,6 +3674,7 @@ class BuilderElement extends paper.Group {
     }
   }
 
+
   remove() {
     this.detache_wnd();
     const {parent, project, observer, _row} = this;
@@ -3680,6 +3694,7 @@ class BuilderElement extends paper.Group {
 
     super.remove();
   }
+
 
   err_spec_row(nom, text) {
     if(!nom){
@@ -3824,7 +3839,20 @@ class Filling extends AbstractFilling(BuilderElement) {
       cnstr: this.layer.cnstr,
       parent: this.elm,
       elm_type: $p.enm.elm_types.Раскладка
-    }, (row) => new Onlay({row: row, parent: this}));
+    }, (row) => new Onlay({row, parent: this}));
+
+    if (attr.proto) {
+      const tmp = [];
+      project.ox.glass_specification.find_rows({elm: attr.proto.elm}, (row) => {
+        tmp.push({
+          clr: row.clr,
+          elm: this.elm,
+          gno: row.gno,
+          inset: row.inset
+        });
+      });
+      tmp.forEach((row) => project.ox.glass_specification.add(row));
+    }
 
   }
 
@@ -3833,7 +3861,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     const {_row, project, profiles, bounds, imposts, nom} = this;
     const h = project.bounds.height + project.bounds.y;
     const {cnns} = project;
-    const length = profiles.length;
+    const {length} = profiles;
 
     project.ox.glasses.add({
       elm: _row.elm,
@@ -3860,10 +3888,12 @@ class Filling extends AbstractFilling(BuilderElement) {
       curr = profiles[i];
 
       if(!curr.profile || !curr.profile._row || !curr.cnn){
-        if($p.job_prm.debug)
-          throw new ReferenceError("Не найдено ребро заполнения");
-        else
+        if($p.job_prm.debug) {
+          throw new ReferenceError('Не найдено ребро заполнения');
+        }
+        else {
           return;
+        }
       }
 
       curr.aperture_path = curr.profile.generatrix.get_subpath(curr.b, curr.e)._reversed ?
@@ -3879,18 +3909,20 @@ class Filling extends AbstractFilling(BuilderElement) {
       const pb = curr.aperture_path.intersect_point(prev.aperture_path, curr.b, true);
       const pe = curr.aperture_path.intersect_point(next.aperture_path, curr.e, true);
 
-      if(!pb || !pe){
-        if($p.job_prm.debug)
-          throw "Filling:path";
-        else
+      if(!pb || !pe) {
+        if($p.job_prm.debug) {
+          throw 'Filling:path';
+        }
+        else {
           return;
+        }
       }
 
       cnns.add({
         elm1: _row.elm,
         elm2: curr.profile._row.elm,
-        node1: "",
-        node2: "",
+        node1: '',
+        node2: '',
         cnn: curr.cnn.ref,
         aperture_len: curr.aperture_path.get_subpath(pb, pe).length.round(1)
       });

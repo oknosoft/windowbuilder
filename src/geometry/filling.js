@@ -102,7 +102,7 @@ class Filling extends AbstractFilling(BuilderElement) {
       cnstr: this.layer.cnstr,
       parent: this.elm,
       elm_type: $p.enm.elm_types.Раскладка
-    }, (row) => new Onlay({row: row, parent: this}));
+    }, (row) => new Onlay({row, parent: this}));
 
     // спецификация стеклопакета прототипа
     if (attr.proto) {
@@ -115,7 +115,7 @@ class Filling extends AbstractFilling(BuilderElement) {
           inset: row.inset
         });
       });
-      tmp.forEach(row => project.ox.glass_specification.add(row));
+      tmp.forEach((row) => project.ox.glass_specification.add(row));
     }
 
   }
@@ -130,7 +130,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     const {_row, project, profiles, bounds, imposts, nom} = this;
     const h = project.bounds.height + project.bounds.y;
     const {cnns} = project;
-    const length = profiles.length;
+    const {length} = profiles;
 
     // строка в таблице заполнений продукции
     project.ox.glasses.add({
@@ -160,10 +160,12 @@ class Filling extends AbstractFilling(BuilderElement) {
       curr = profiles[i];
 
       if(!curr.profile || !curr.profile._row || !curr.cnn){
-        if($p.job_prm.debug)
-          throw new ReferenceError("Не найдено ребро заполнения");
-        else
+        if($p.job_prm.debug) {
+          throw new ReferenceError('Не найдено ребро заполнения');
+        }
+        else {
           return;
+        }
       }
 
       curr.aperture_path = curr.profile.generatrix.get_subpath(curr.b, curr.e)._reversed ?
@@ -180,19 +182,21 @@ class Filling extends AbstractFilling(BuilderElement) {
       const pb = curr.aperture_path.intersect_point(prev.aperture_path, curr.b, true);
       const pe = curr.aperture_path.intersect_point(next.aperture_path, curr.e, true);
 
-      if(!pb || !pe){
-        if($p.job_prm.debug)
-          throw "Filling:path";
-        else
+      if(!pb || !pe) {
+        if($p.job_prm.debug) {
+          throw 'Filling:path';
+        }
+        else {
           return;
+        }
       }
 
       // соединения с профилями
       cnns.add({
         elm1: _row.elm,
         elm2: curr.profile._row.elm,
-        node1: "",
-        node2: "",
+        node1: '',
+        node2: '',
         cnn: curr.cnn.ref,
         aperture_len: curr.aperture_path.get_subpath(pb, pe).length.round(1)
       });
