@@ -14379,7 +14379,9 @@ $p.CatPartners.prototype.__define({
 });
 
 
+
 $p.cat.production_params.__define({
+
 
 	slist: function(prop, is_furn){
 		var res = [], rt, at, pmgr,
@@ -14409,6 +14411,7 @@ $p.cat.production_params.__define({
 
 $p.CatProduction_params.prototype.__define({
 
+
 	noms: {
 		get(){
 			const noms = [];
@@ -14417,14 +14420,15 @@ $p.CatProduction_params.prototype.__define({
 		}
 	},
 
+
   furns: {
-    value(ox){
+    value(ox, cnstr = 0){
       const {furn} = $p.job_prm.properties;
       const {furns} = $p.cat;
       const list = [];
       if(furn){
         const links = furn.params_links({
-          grid: {selection: {cnstr: 0}},
+          grid: {selection: {cnstr}},
           obj: {_owner: {_owner: ox}}
         });
         if(links.length){
@@ -14437,6 +14441,7 @@ $p.CatProduction_params.prototype.__define({
       return list;
     }
   },
+
 
 	inserts: {
 		value(elm_types, by_default){
@@ -14482,6 +14487,7 @@ $p.CatProduction_params.prototype.__define({
 			return __noms.map((e) => e.nom);
 		}
 	},
+
 
 	refill_prm: {
 		value(ox, cnstr = 0, force, project) {
@@ -14534,11 +14540,10 @@ $p.CatProduction_params.prototype.__define({
 				ox.sys = this;
 				ox.owner = ox.prod_nom;
 
-        const furns = this.furns(ox);
-
 				ox.constructions.forEach((row) => {
           if(!row.furn.empty()) {
-            let changed = force;
+						let changed = force;
+						const furns = this.furns(ox, row.cnstr);
             if(furns.length) {
               if(furns.some((frow) => {
                 if(frow.forcibly) {
