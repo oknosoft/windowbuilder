@@ -7427,10 +7427,10 @@
                     }, {
                       element: "DataField",
                       fld: "passport_office"
-                    }/*, {
+                    }, {
                       element: "DataField",
                       fld: "sex"
-                    }*/
+                    }
                   ]
                 }
               ]
