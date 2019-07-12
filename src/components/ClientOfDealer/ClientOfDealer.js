@@ -1,3 +1,5 @@
+
+
 /**
  * ### Карточка покупателя
  * каркас компонента - визуальная глупая часть
@@ -83,7 +85,7 @@ class ClientOfDealer extends Component {
 
   handleOk = () => {
     const {data, obj, meta, fake_obj, props: {dialog}} = this;
-    if (this.mandatoryFld(meta.obj2[this.state.valTab].items)) {
+    if (this.mandatoryFld(meta.obj.items[0].items[this.state.valTab].items)) {
       return;
     }
     obj[dialog.cmd] = this.state.valTab + "'" + data.join('\u00A0');
@@ -158,8 +160,8 @@ class ClientOfDealer extends Component {
         <Button key="cancel" onClick={handleCancel} color="primary">Закрыть</Button>
       ]}
     >
-      {this.renderUi(meta.ui.items)}
-      {this.renderIt(meta.obj2[this.state.valTab].items)}
+      {this.renderUi(meta.obj.items)}
+      {this.renderIt(meta.obj.items[0].items[this.state.valTab].items)}
       {msg && <Dialog
         open
         title={msg.title}
