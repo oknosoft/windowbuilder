@@ -7329,232 +7329,182 @@
       obj: {
         items: [
           {
-            element: 'FormGroup',
-            row: true,
-            items: [
-              {
-                element: 'FormGroup',
-                items: [
-                  {
-                    element: 'DataField',
-                    fld: 'surname',
-                  },
-                  {
-                    element: 'DataField',
-                    fld: 'name',
-                  },
-                  {
-                    element: 'DataField',
-                    fld: 'patronymic',
-                  },
-                ]
-              },
-              {
-                element: 'FormGroup',
-                items: [
-                  {
-                    element: 'DataField',
-                    fld: 'passport_serial_number',
-                  },
-                  {
-                    element: 'DataField',
-                    fld: 'passport_date',
-                  },
-                  {
-                    element: 'DataField',
-                    fld: 'note',
-                  },
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      obj2: [
-        {
-          items: [ //вкладка №1
-            {
-              element: 'FormGroup',
-              row: true,
-              items: [
-                {
-                  element: 'FormGroup',
-                  items: [ //колонка №1
-                    {
-                      element: 'DataField',
-                      fld: 'surname',
-                    },
-                    {
-                      element: 'DataField',
-                      fld: 'name',
-                    },
-                    {
-                      element: 'DataField',
-                      fld: 'patronymic',
-                    },
-                    {
-                      element: 'DataField',
-                      fld: 'email',
-                    },
-                  ]
-                },
-                {
-                  element: 'FormGroup',
-                  items: [  //колонка №2
-                    {
-                      element: 'DataField',
-                      fld: 'passport_serial_number',
-                    },
-                    {
-                      element: 'DataField',
-                      fld: 'passport_date',
-                    },
-                    {
-                      element: 'DataField',
-                      fld: 'note',
-                    },
-                  ]
-                },
-                {
-                  element: 'FormGroup',
-                  items: [ //колонка №3
-                    {
-                      element: "DataField",
-                      fld: "phone"
-                    }, {
-                      element: "DataField",
-                      fld: "address"
-                    }, {
-                      element: "DataField",
-                      fld: "passport_office"
-                    }, {
-                      element: "DataField",
-                      fld: "sex"
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          items: [ //вкладка №2
-            {
-              element: 'FormGroup',
-              row: true,
-              items: [
-                {
-                  element: 'FormGroup',
-                  items: [
-                    {
-                      element: 'DataField',
-                      fld: 'full_name_org', //Полное наименование
-                    },
-                    {
-                      element: 'DataField',
-                      fld: 'scort_name_org' //Сокращенное наименование
-                    },
-                    {
-                      element: 'DataField',//Юридический адрес
-                      fld: 'yur_address',
-                    },
-                    {
-                      element: 'DataField',//Почтовый адрес
-                      fld: 'mailing_address',
-                    },
-                    {
-                      element: 'DataField',//ИНН
-                      fld: 'inn',
-                    },
-                    {
-                      element: 'DataField',//КПП
-                      fld: 'kpp',
-                    },
-                    {
-                      element: 'DataField',//ОГРН
-                      fld: 'ogrn',
-                    },
-                  ]
-                },
-                {
-                  element: 'FormGroup',
-                  items: [
-                    {
-                      element: 'DataField',//ОКПО
-                      fld: 'okpo',
-                    },
-                    {
-                      element: 'DataField',//ОКАТО
-                      fld: 'okato',
-                    },
-                    {
-                      element: 'DataField',//ОКОГУ
-                      fld: 'okogy',
-                    },
-                    {
-                      element: 'DataField',//ОКФС
-                      fld: 'okfs',
-                    },
-                    {
-                      element: 'DataField',//ОКОПФ
-                      fld: 'okopf',
-                    },
-                    {
-                      element: 'DataField',//Генеральный директор
-                      fld: 'gen_director',
-                    },
-                    {
-                      element: 'DataField',//Главный бухгалтер
-                      fld: 'glav_byx',
-                    },
-                  ]
-                },
-                {
-                  element: 'FormGroup',
-                  items: [
-                    {
-                      element: 'DataField',//Телефон
-                      fld: 'phone_org',
-                    },
-                    {
-                      element: 'DataField',//Банковские реквизиты
-                      fld: 'bank_details',
-                    },
-                    {
-                      element: 'DataField',//Расчетный счет
-                      fld: 'checking_account',
-                    },
-                    {
-                      element: 'DataField',//Банк
-                      fld: 'bank',
-                    },
-                    {
-                      element: 'DataField',//БИК
-                      fld: 'bik',
-                    },
-                    {
-                      element: 'DataField',//Корреспондентский счет
-                      fld: 'corresp_account',
-                    },
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-      ],
-      ui: {
-        items: [
-          {
             element: 'BtnGroup',
             items: [
               {
                 element: 'DataBtn',
-                label: 'Физ. лицо'
+                label: 'Физ. лицо',
+                items: [ //вкладка №1
+                  {
+                    element: 'FormGroup',
+                    row: true,
+                    items: [
+                      {
+                        element: 'FormGroup',
+                        items: [ //колонка №1
+                          {
+                            element: 'DataField',
+                            fld: 'surname',
+                          },
+                          {
+                            element: 'DataField',
+                            fld: 'name',
+                          },
+                          {
+                            element: 'DataField',
+                            fld: 'patronymic',
+                          },
+                          {
+                            element: 'DataField',
+                            fld: 'email',
+                          },
+                        ]
+                      },
+                      {
+                        element: 'FormGroup',
+                        items: [  //колонка №2
+                          {
+                            element: 'DataField',
+                            fld: 'passport_serial_number',
+                          },
+                          {
+                            element: 'DataField',
+                            fld: 'passport_date',
+                          },
+                          {
+                            element: 'DataField',
+                            fld: 'note',
+                          },
+                        ]
+                      },
+                      {
+                        element: 'FormGroup',
+                        items: [ //колонка №3
+                          {
+                            element: "DataField",
+                            fld: "phone"
+                          }, {
+                            element: "DataField",
+                            fld: "address"
+                          }, {
+                            element: "DataField",
+                            fld: "passport_office"
+                          }, {
+                            element: "DataField",
+                            fld: "sex"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               },
               {
                 element: 'DataBtn',
-                label: 'Юр.  лицо'
+                label: 'Юр.  лицо',
+                items: [ //вкладка №2
+                  {
+                    element: 'FormGroup',
+                    row: true,
+                    items: [
+                      {
+                        element: 'FormGroup',
+                        items: [
+                          {
+                            element: 'DataField',
+                            fld: 'full_name_org', //Полное наименование
+                          },
+                          {
+                            element: 'DataField',
+                            fld: 'scort_name_org' //Сокращенное наименование
+                          },
+                          {
+                            element: 'DataField',//Юридический адрес
+                            fld: 'yur_address',
+                          },
+                          {
+                            element: 'DataField',//Почтовый адрес
+                            fld: 'mailing_address',
+                          },
+                          {
+                            element: 'DataField',//ИНН
+                            fld: 'inn',
+                          },
+                          {
+                            element: 'DataField',//КПП
+                            fld: 'kpp',
+                          },
+                          {
+                            element: 'DataField',//ОГРН
+                            fld: 'ogrn',
+                          },
+                        ]
+                      },
+                      {
+                        element: 'FormGroup',
+                        items: [
+                          {
+                            element: 'DataField',//ОКПО
+                            fld: 'okpo',
+                          },
+                          {
+                            element: 'DataField',//ОКАТО
+                            fld: 'okato',
+                          },
+                          {
+                            element: 'DataField',//ОКОГУ
+                            fld: 'okogy',
+                          },
+                          {
+                            element: 'DataField',//ОКФС
+                            fld: 'okfs',
+                          },
+                          {
+                            element: 'DataField',//ОКОПФ
+                            fld: 'okopf',
+                          },
+                          {
+                            element: 'DataField',//Генеральный директор
+                            fld: 'gen_director',
+                          },
+                          {
+                            element: 'DataField',//Главный бухгалтер
+                            fld: 'glav_byx',
+                          },
+                        ]
+                      },
+                      {
+                        element: 'FormGroup',
+                        items: [
+                          {
+                            element: 'DataField',//Телефон
+                            fld: 'phone_org',
+                          },
+                          {
+                            element: 'DataField',//Банковские реквизиты
+                            fld: 'bank_details',
+                          },
+                          {
+                            element: 'DataField',//Расчетный счет
+                            fld: 'checking_account',
+                          },
+                          {
+                            element: 'DataField',//Банк
+                            fld: 'bank',
+                          },
+                          {
+                            element: 'DataField',//БИК
+                            fld: 'bik',
+                          },
+                          {
+                            element: 'DataField',//Корреспондентский счет
+                            fld: 'corresp_account',
+                          },
+                        ]
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           }
