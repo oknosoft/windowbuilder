@@ -170,7 +170,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
     // тихий режим для спецификации
     const res = $p.dp.buyers_order.create({specification: []}, true).specification;
     const {ox} = contour.project;
-    const {НаПримыкающий} = $p.enm.transfer_operations_options;
+    const {НаПримыкающий, ЧерезПримыкающий} = $p.enm.transfer_operations_options;
 
     // бежим по всем строкам набора
     this.specification.find_rows({dop: 0}, (row_furn) => {
@@ -251,8 +251,19 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
             procedure_row.origin = this;
             procedure_row.specify = row_furn.nom;
             procedure_row.handle_height_max = contour.cnstr;
-            if(dop_row.transfer_option == НаПримыкающий){
-              const nearest = elm.nearest();
+            if([НаПримыкающий, ЧерезПримыкающий].includes(dop_row.transfer_option)){
+              let nearest = elm.nearest();
+              if(dop_row.transfer_option == ЧерезПримыкающий){
+                const joined = nearest.joined_nearests().reduce((acc, cur) => {
+                  if(cur !== elm){
+                    acc.push(cur);
+                  }
+                  return acc;
+                }, []);
+                if(joined.length){
+                  nearest = joined[0];
+                }
+              }
               const {outer} = elm.rays;
               const nouter = nearest.rays.outer;
               const point = outer.getPointAt(outer.getOffsetOf(outer.getNearestPoint(elm.corns(1))) + coordin);
