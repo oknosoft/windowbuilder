@@ -9,10 +9,8 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Dialog from 'metadata-react/App/Dialog';
+import {renderItems} from 'metadata-react/FrmObj/DataObj';
 import connect from './connect';
-
-import FormGroup from '@material-ui/core/FormGroup';
-import DataField from 'metadata-react/DataField';
 
 class ClientOfDealer extends Component {
 
@@ -21,7 +19,6 @@ class ClientOfDealer extends Component {
     const {handleCancel, handleCalck, dialog: {ref, cmd, _mgr}} = props;
     this.handleCancel = handleCancel.bind(this);
     this.handleCalck = handleCalck.bind(this);
-    this.state = {msg: null};
 
     this.obj = _mgr.by_ref[ref];
     const meta = this.meta = _mgr.metadata().form[cmd];
@@ -39,24 +36,54 @@ class ClientOfDealer extends Component {
       },
 
     };
+    const {utils} = $p;
     for (const fld of fields) {
       this.fake_obj.__define(fld, {
         get() {
-          return $p.utils.fetch_type(data[fields.indexOf(fld)], meta.fields[fld]);
+          return utils.fetch_type(data[fields.indexOf(fld)], meta.fields[fld]);
         },
         set(v) {
           data[fields.indexOf(fld)] = v;
         }
       });
     }
+
+    this.state = {
+      _obj: this.fake_obj,
+      _meta: meta,
+      msg: null
+    };
+
   }
 
   handleOk = () => {
     const {data, obj, meta, fake_obj, props: {dialog}} = this;
 
     // если не указаны обязательные реквизиты
+    const struct = {
+      items: meta.obj.items.find((v) => v.cond_value === fake_obj.individual_legal),
+      has(fld, items) {
+        if(!items) {
+          items = this.items;
+        }
+        if(!items) {
+          return true;
+        }
+        if(items.items) {
+          items = items.items;
+        }
+        return items.some((v) => {
+          if(v.fld === fld) {
+            return true;
+          }
+          if(v.items) {
+            return this.has(fld, v.items);
+          }
+        });
+      }
+    };
     for (var mf in meta.fields){
-      if (meta.fields[mf].mandatory && !fake_obj[mf]) {
+      if (meta.fields[mf].mandatory && !fake_obj[mf] && struct.has(mf)) {
         this.setState({msg: {
           title: $p.msg.mandatory_title,
           text: $p.msg.mandatory_field.replace("%1", meta.fields[mf].synonym)
@@ -73,25 +100,13 @@ class ClientOfDealer extends Component {
     this.setState({msg: null});
   };
 
-  renderItems(items) {
-    const {fake_obj, meta} = this;
-
-    return items.map((item, index) => {
-
-      if(Array.isArray(item)) {
-        return this.renderItems(item);
-      }
-
-      if(item.element === 'DataField') {
-        return <DataField key={index} _obj={fake_obj} _fld={item.fld} _meta={meta.fields[item.fld]}/>;
-      }
-
-      if(item.element === 'FormGroup') {
-        return <FormGroup key={index} row={item.row}>{this.renderItems(item.items)}</FormGroup>;
-      }
-
-      return <div key={index}>Не реализовано в текущей версии</div>;
-    });
+  handleValueChange(_fld) {
+    return (event, value) => {
+      const {state: {_obj}, props: {handlers}} = this;
+      const old_value = _obj[_fld];
+      _obj[_fld] = (value || (event && event.target ? event.target.value : ''));
+      this.forceUpdate();
+    };
   }
 
   render() {
@@ -109,7 +124,7 @@ class ClientOfDealer extends Component {
         <Button key="cancel" onClick={handleCancel} color="primary">Закрыть</Button>
       ]}
     >
-      {this.renderItems(meta.obj.items)}
+      {renderItems.call(this, meta.obj.items)}
       {msg && <Dialog
         open
         title={msg.title}

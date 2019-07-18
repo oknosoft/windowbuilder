@@ -9,6 +9,8 @@ import {connect} from 'react-redux';
 import withStyles from './styles';
 import {compose} from 'redux';
 
+const {doc: {calc_order}, cat: {delivery_areas}, classes: {BaseDataObj}} = $p;
+
 class DeliveryManager {
 
   constructor() {
@@ -137,7 +139,7 @@ class DeliveryManager {
   // ищет ближайший по координатам
   nearest(point) {
     let tmp, distance = Infinity;
-    $p.cat.delivery_areas.forEach((doc) => {
+    delivery_areas.forEach((doc) => {
       const td = this.distance(point, {lat: doc.latitude, lng: doc.longitude});
       if(!tmp || td < distance) {
         distance = td;
@@ -153,8 +155,6 @@ class DeliveryManager {
 }
 
 const delivery = new DeliveryManager();
-
-const {doc: {calc_order}, cat: {delivery_areas}, classes: {BaseDataObj}} = $p;
 
 class FakeAddrObj extends BaseDataObj{
 
@@ -192,8 +192,7 @@ class FakeAddrObj extends BaseDataObj{
     this._setter('address_fields', v);
   }
 
-
-};
+}
 
 function mapStateToProps(state, props) {
   return {
