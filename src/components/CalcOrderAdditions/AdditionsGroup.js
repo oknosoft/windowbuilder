@@ -17,6 +17,7 @@ import Divider from '@material-ui/core/Divider';
 import Collapse from '@material-ui/core/Collapse';
 import {find_inset} from './connect';
 import withStyles from './styles';
+import {handleAdd, handleRemove} from './connect';
 
 
 class AdditionsGroup extends React.Component {
@@ -24,55 +25,11 @@ class AdditionsGroup extends React.Component {
   constructor(props) {
     super(props);
     this.selectedRow = null;
+    this.handleAdd = handleAdd.bind(this);
+    this.handleRemove = handleRemove.bind(this);
     this.state = {count: props.count};
   }
 
-  handleAdd = () => {
-    const {tabular, props} = this;
-    const inset = find_inset.call(this, props.group);
-    if(inset && tabular) {
-      const {_data} = tabular.state._tabular._owner;
-      _data._loading = true;
-      const row = tabular.state._tabular.add({inset, quantity: 1}, false, props.ProductionRow);
-      _data._loading = false;
-      row.value_change('inset', 'force', row.inset);
-      this.setState({
-        count: this.state.count + 1,
-      });
-    }
-    else {
-      $p.msg.show_msg({
-        type: 'alert-info',
-        text: `Нет вставки подходящего типа (${props.group})`,
-        title: 'Новая строка'
-      });
-    }
-  };
-
-  handleRemove = () => {
-    const {props, tabular, state, selectedRow} = this;
-    if(tabular && selectedRow){
-      const {calc_order_row} = selectedRow.characteristic;
-      selectedRow._owner.del(selectedRow);
-      this.selectedRow = null;
-      tabular.forceUpdate();
-      if(state.count) {
-        this.setState({
-          count: state.count - 1,
-        });
-      }
-      if(calc_order_row){
-        calc_order_row._owner.del(calc_order_row);
-      }
-    }
-    else{
-      $p.msg.show_msg({
-        type: 'alert-info',
-        text: `Укажите строку для удаления (${props.group})`,
-        title: 'Удаление строки'
-      });
-    }
-  };
 
   onRowUpdated = (updated, row) => {
     if(updated && updated.hasOwnProperty('inset')){

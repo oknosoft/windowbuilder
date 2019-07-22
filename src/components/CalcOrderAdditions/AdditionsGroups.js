@@ -12,7 +12,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import AdditionsGroup from './AdditionsGroup';
-import {alasql_schemas, fill_data, find_inset} from './connect';
+import {alasql_schemas, fill_data, fill_schemas, find_inset} from './connect';
 
 
 export default class AdditionsGroups extends React.Component {
@@ -24,24 +24,9 @@ export default class AdditionsGroups extends React.Component {
     this.groups = new Map();
   }
 
-  // заполняет соответствие схем и типов вставок в state компонента
-  fill_schemas(docs = []) {
-    const schemas = new Map();
-    const {scheme_settings} = $p.cat;
-    for (const doc of docs) {
-      for (const item of this.items) {
-        if(item && doc.name == item.name) {
-          schemas.set(item, scheme_settings.get(doc));
-          break;
-        }
-      }
-    }
-    this.setState({schemas});
-  }
-
   componentDidMount() {
     fill_data.call(this, this.props.dialog.ref);
-    this.fill_schemas(alasql_schemas());
+    fill_schemas.call(this, alasql_schemas());
     $p.dp.buyers_order.on('update', this.inset_change);
   }
 

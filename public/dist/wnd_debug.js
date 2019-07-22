@@ -6803,7 +6803,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         break;
 
       case 'btn_add_product':
-        $p.dp.buyers_order.open_product_list(wnd, o);
+        $p.dp.buyers_order.open_component(wnd, o, handlers, 'CalcOrderAdditionsExt');
         break;
 
       case 'btn_additions':

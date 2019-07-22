@@ -158,6 +158,9 @@ export default function ($p) {
     case 'CalcOrderAdditions':
       imodule = import('../../components/CalcOrderAdditions');
       break;
+    case 'CalcOrderAdditionsExt':
+      imodule = import('../../components/CalcOrderAdditionsExt');
+      break;
     case 'DeliveryAddr':
       imodule = import('../../components/DeliveryAddr');
       break;
@@ -168,7 +171,7 @@ export default function ($p) {
         value: {
           ref: o.ref,
           cmd: o.cmd,
-          _mgr: o._mgr,
+          _mgr: o._mgr || o._manager,
           wnd: wnd,
           Component: module.default
         },

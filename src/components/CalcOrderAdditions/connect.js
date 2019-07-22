@@ -17,9 +17,11 @@ export const alasql_schemas = $p.wsql.alasql.compile('select * from cat_scheme_s
 
 
 // заполняет компонент данными
-export function fill_data(ref) {
+export function fill_data(ref, items) {
 
-  const items = this.items = $p.enm.inserts_types.additions_groups;
+  if(!items) {
+    items = this.items = $p.enm.inserts_types.additions_groups;
+  }
   const dp = this.dp = $p.dp.buyers_order.create();
   dp.calc_order = $p.doc.calc_order.by_ref[ref];
   const components = this.components = new Map();
@@ -56,6 +58,69 @@ export function fill_data(ref) {
   });
   dp._data._loading = false;
 }
+
+// заполняет соответствие схем и типов вставок в state компонента
+export function fill_schemas(docs = []) {
+  const schemas = new Map();
+  const {scheme_settings} = $p.cat;
+  for (const doc of docs) {
+    for (const item of this.items) {
+      if(item && doc.name == item.name) {
+        schemas.set(item, scheme_settings.get(doc));
+        break;
+      }
+    }
+  }
+  this.setState({schemas});
+}
+
+export function handleAdd() {
+  const {tabular, props} = this;
+  const inset = find_inset.call(this, props.group);
+  if(inset && tabular) {
+    const {_data} = tabular.state._tabular._owner;
+    _data._loading = true;
+    const row = tabular.state._tabular.add({inset, quantity: 1}, false, props.ProductionRow);
+    _data._loading = false;
+    row.value_change('inset', 'force', row.inset);
+    this.setState({
+      count: this.state.count + 1,
+    });
+  }
+  else {
+    $p.msg.show_msg({
+      type: 'alert-info',
+      text: `Нет вставки подходящего типа (${props.group})`,
+      title: 'Новая строка'
+    });
+  }
+}
+
+export function handleRemove() {
+  const {props, tabular, state, selectedRow} = this;
+  if(tabular && selectedRow){
+    const {calc_order_row} = selectedRow.characteristic;
+    selectedRow._owner.del(selectedRow);
+    this.selectedRow = null;
+    tabular.forceUpdate();
+    if(state.count) {
+      this.setState({
+        count: state.count - 1,
+      });
+    }
+    if(calc_order_row){
+      calc_order_row._owner.del(calc_order_row);
+    }
+  }
+  else{
+    $p.msg.show_msg({
+      type: 'alert-info',
+      text: `Укажите строку для удаления (${props.group})`,
+      title: 'Удаление строки'
+    });
+  }
+}
+
 
 // ищет первую, наиболее приоритетную вставку данного типа
 export function find_inset(insert_type) {
