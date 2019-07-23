@@ -16,6 +16,7 @@ import {customPouchMiddleware} from '../redux/reducers/pouchdb';
 // читаем скрипт инициализации метаданных, полученный в результате выполнения meta:prebuild
 import meta_init from './init';
 import modifiers from './modifiers';
+import proxy_login from 'metadata-superlogin/proxy';
 
 // загружаем metadata.transition и экспортируем $p глобально
 import $p from 'metadata-dhtmlx';
@@ -59,7 +60,8 @@ export function init(store) {
     addMiddleware(customPouchMiddleware($p));
 
     // сообщяем адаптерам пути, суффиксы и префиксы
-    const {wsql, job_prm, adapters: {pouch}} = $p;
+    const {wsql, job_prm, classes, adapters: {pouch}} = $p;
+    classes.PouchDB.plugin(proxy_login());
     pouch.init(wsql, job_prm);
     reset_cache(pouch);
 

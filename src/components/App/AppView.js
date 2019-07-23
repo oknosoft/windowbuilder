@@ -5,7 +5,7 @@ import {Switch, Route} from 'react-router';
 import Snack from 'metadata-react/App/Snack';       // сообщения в верхней части страницы (например, обновить после первого запуска)
 import Alert from 'metadata-react/App/Alert';       // диалог сообщения пользователю
 import Confirm from 'metadata-react/App/Confirm';   // диалог вопросов пользователю (да, нет)
-import FrmLogin from 'metadata-react/FrmLogin';     // логин и свойства подключения
+import Login, {FrmLogin} from 'metadata-react/FrmLogin/Proxy';  // логин и свойства подключения
 import NeedAuth from 'metadata-react/App/NeedAuth'; // страница "необхлдима авторизация"
 import Header from 'metadata-react/Header';         // навигация
 import DumbScreen from '../DumbScreen';             // заставка "загрузка занных"
@@ -20,7 +20,7 @@ import Builder from '../Builder';
 
 let CalcOrderList = DumbScreen;
 
-import items, {item_props} from './menu_items';                   // массив элементов меню
+import items, {item_props} from './menu_items';     // массив элементов меню
 
 class AppRoot extends Component {
 
@@ -85,6 +85,16 @@ class AppRoot extends Component {
       }
     }
 
+    const auth_props = {
+      key: 'auth',
+      handleNavigate: props.handleNavigate,
+      handleIfaceState: props.handleIfaceState,
+      offline: couch_direct && offline,
+      user,
+      title,
+      idle,
+    };
+
     return [
 
       <Header key="header" items={items} {...props} />,
@@ -92,12 +102,8 @@ class AppRoot extends Component {
       // основной контент или заставка загрузки или приглашение к авторизации
       need_auth || idle ?
         <NeedAuth
-          key="auth"
-          handleNavigate={props.handleNavigate}
-          handleIfaceState={props.handleIfaceState}
-          title={title}
-          offline={couch_direct && offline}
-          idle={idle}
+          {...auth_props}
+          ComponentLogin={FrmLogin}
         />
         :
         (
@@ -115,7 +121,7 @@ class AppRoot extends Component {
               <Route path="/:area(doc|cat|ireg|cch|rep).:name" component={DataRoute} />
               <Route path="/about" component={AboutPage} />
               <Route path="/meta" component={MetaTreePage} />
-              <Route path="/login" component={FrmLogin} />
+              <Route path="/login" component={(tprops) => <Login {...tprops} {...auth_props} />} />
               <Route path="/settings" component={Settings} />
               <Route path="/waiting" component={(tprops) => <DumbScreen {...tprops} repl={props.repl} />} />
               <Route component={NotFoundPage} />
