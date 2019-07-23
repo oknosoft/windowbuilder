@@ -7,6 +7,7 @@
  */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import TabularSection from 'metadata-react/TabularSection';
 import IconButton from '@material-ui/core/IconButton';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
@@ -25,7 +26,7 @@ class Production extends React.Component {
 
   render() {
     const {props, state: {count}} = this;
-    const {dp, classes, scheme, meta} = props;
+    const {dp, scheme, meta} = props;
     const style = {flex: 'initial'};
     if(count) {
       style.minHeight = 80 + (33 * (count - 1));
@@ -50,5 +51,11 @@ class Production extends React.Component {
     </div>;
   }
 }
+
+Production.propTypes = {
+  dp: PropTypes.object.isRequired,
+  scheme: PropTypes.object.isRequired,
+  meta: PropTypes.object.isRequired,
+};
 
 export default Production;

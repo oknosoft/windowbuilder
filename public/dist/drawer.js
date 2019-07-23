@@ -10476,6 +10476,9 @@ class Pricing {
     if(price_cost){
       calc_order_row.price = price_cost.round(2);
     }
+    else if(marginality_in_spec) {
+      calc_order_row.price = this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
+    }
     else{
       calc_order_row.price = marginality_in_spec ? 0 : (calc_order_row.first_cost * price_type.marginality).round(2);
     }
@@ -13565,14 +13568,10 @@ $p.cat.inserts.__define({
           });
         }
 
+        const {current_user, adapters: {pouch}} = $p;
         for(const scheme of changed) {
-          const {doc} = $p.adapters.pouch.local;
-          if(doc.adapter === 'http' && !scheme.user) {
-            doc.getSession().then(({userCtx}) => {
-              if(userCtx.roles.indexOf('doc_full') !== -1) {
-                scheme.save();
-              }
-            })
+          if(pouch.local.doc.adapter === 'http' && !scheme.user) {
+            current_user && current_user.roles.includes('doc_full') && scheme.save();
           }
           else {
             scheme.save();
@@ -15826,15 +15825,16 @@ $p.DocCalc_orderProductionRow.pfields = 'price_internal,quantity,discount_percen
 
   function patch_cachable() {
     const names = [
-      "cat.parameters_keys",
-      "cat.stores",
-      "cat.delivery_directions",
-      "cat.cash_flow_articles",
-      "cat.nonstandard_attributes",
-      "cat.projects",
-      "cat.choice_params",
-      "cat.nom_prices_types",
-      "doc.nom_prices_setup"
+      'cat.parameters_keys',
+      'cat.stores',
+      'cat.delivery_directions',
+      'cat.cash_flow_articles',
+      'cat.nonstandard_attributes',
+      'cat.projects',
+      'cat.choice_params',
+      'cat.nom_prices_types',
+      'cat.scheme_settings',
+      'doc.nom_prices_setup',
     ];
     for(const name of names) {
       const meta = md.get(name);

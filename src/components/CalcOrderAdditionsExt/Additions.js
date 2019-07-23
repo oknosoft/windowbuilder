@@ -4,7 +4,7 @@ import Production from './Production';
 import Params from './Params';
 import {alasql_schemas, fill_data, fill_schemas} from '../CalcOrderAdditions/connect';
 
-export default class Additions extends React.Component {
+class Additions extends React.Component {
 
   constructor(props, context) {
     super(props, context);
@@ -28,7 +28,7 @@ export default class Additions extends React.Component {
   }
 
   setProduct = (product) => {
-    this.setState({Product});
+    this.setState({product});
   }
 
   render() {
@@ -52,3 +52,9 @@ export default class Additions extends React.Component {
       <div>Чтение настроек компоновки...</div>;
   }
 }
+
+Additions.propTypes = {
+  dialog: PropTypes.object.isRequired,
+};
+
+export default Additions;

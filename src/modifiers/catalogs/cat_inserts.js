@@ -169,14 +169,10 @@ $p.cat.inserts.__define({
           });
         }
 
+        const {current_user, adapters: {pouch}} = $p;
         for(const scheme of changed) {
-          const {doc} = $p.adapters.pouch.local;
-          if(doc.adapter === 'http' && !scheme.user) {
-            doc.getSession().then(({userCtx}) => {
-              if(userCtx.roles.indexOf('doc_full') !== -1) {
-                scheme.save();
-              }
-            })
+          if(pouch.local.doc.adapter === 'http' && !scheme.user) {
+            current_user && current_user.roles.includes('doc_full') && scheme.save();
           }
           else {
             scheme.save();

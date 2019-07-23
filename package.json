@@ -1,6 +1,6 @@
 {
   "name": "windowbuilder",
-  "version": "2.1.246",
+  "version": "2.1.247",
   "description": "Order dealer for windows and stained glass",
   "repository": {
     "type": "git",
@@ -24,7 +24,7 @@
     "url": "https://github.com/oknosoft/windowbuilder/issues"
   },
   "homepage": "https://light.oknosoft.ru/",
-  "proxy": "http://192.168.9.111:3000/",
+  "proxy": "http://localhost:3016/",
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
     "dxf-writer": "^1.2.0",
@@ -35,6 +35,7 @@
     "metadata-pouchdb": "2.0.20-beta.5",
     "metadata-react": "2.0.20-beta.5",
     "metadata-redux": "2.0.20-beta.5",
+    "metadata-superlogin": "2.0.20-beta.5",
     "paper-jsdom-canvas": "^0.12.3",
     "react-highlight-words": "^0.16.0"
   },
@@ -89,7 +90,7 @@
     "postcss-normalize": "7.0.1",
     "postcss-preset-env": "6.6.0",
     "postcss-safe-parser": "4.0.1",
-    "raw-loader": "^3.0.0",
+    "raw-loader": "^3.1.0",
     "react": "^16.8.6",
     "react-app-polyfill": "^1.0.1",
     "react-dev-utils": "^9.0.1",

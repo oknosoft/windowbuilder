@@ -177,7 +177,7 @@ class Settings extends Component {
             <FormControlLabel
               control={<Switch
                 onChange={(event, checked) => this.setState({couch_direct: checked})}
-                checked={couch_direct}/>}
+                checked={Boolean(couch_direct)}/>}
               label="Прямое подключение без кеширования"
             />
             <FormHelperText style={{marginTop: -4}}>Отключает режим оффлайн</FormHelperText>
@@ -187,7 +187,7 @@ class Settings extends Component {
             <FormControlLabel
               control={<Switch
                 onChange={(event, checked) => this.setState({enable_save_pwd: checked})}
-                checked={enable_save_pwd}/>}
+                checked={Boolean(enable_save_pwd)}/>}
               label="Разрешить сохранение пароля"
             />
             <FormHelperText style={{marginTop: -4}}>Не требовать повторного ввода пароля</FormHelperText>
@@ -197,7 +197,7 @@ class Settings extends Component {
             <FormControlLabel
               control={<Switch
                 onChange={(event, checked) => this.setState({ram_indexer: checked})}
-                checked={ram_indexer}/>}
+                checked={Boolean(ram_indexer)}/>}
               label="Использовать RamIndexer"
             />
             <FormHelperText style={{marginTop: -4}}>Новый источник данных для динсписков</FormHelperText>

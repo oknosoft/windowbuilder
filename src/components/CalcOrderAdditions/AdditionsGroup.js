@@ -15,7 +15,6 @@ import AddIcon from '@material-ui/icons/AddCircleOutline';
 import RemoveIcon from '@material-ui/icons/Delete';
 import Divider from '@material-ui/core/Divider';
 import Collapse from '@material-ui/core/Collapse';
-import {find_inset} from './connect';
 import withStyles from './styles';
 import {handleAdd, handleRemove} from './connect';
 
