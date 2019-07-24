@@ -503,8 +503,11 @@ class Pricing {
     if(price_cost){
       calc_order_row.price = price_cost.round(2);
     }
+    else if(marginality_in_spec) {
+      calc_order_row.price = this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
+    }
     else{
-      calc_order_row.price = marginality_in_spec ? 0 : (calc_order_row.first_cost * price_type.marginality).round(2);
+      calc_order_row.price = (calc_order_row.first_cost * price_type.marginality).round(2);
     }
 
     // КМарж в строке расчета
