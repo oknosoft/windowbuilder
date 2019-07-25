@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Production from './Production';
 import Params from './Params';
+import FormGroup from '@material-ui/core/FormGroup';
 import {alasql_schemas, fill_data, fill_schemas} from '../CalcOrderAdditions/connect';
 
 class Additions extends React.Component {
@@ -10,7 +11,7 @@ class Additions extends React.Component {
     super(props, context);
     this.group = $p.enm.inserts_types.Параметрик;
     this.items = [this.group];
-    this.state = {product: null};
+    this.state = {row: null};
   }
 
   componentDidMount() {
@@ -27,27 +28,29 @@ class Additions extends React.Component {
     const {groups, dp} = this;
   }
 
-  setProduct = (product) => {
-    this.setState({product});
+  setProduct = (row) => {
+    this.setState({row});
   }
 
   render() {
     const {state, props, dp, components, group} = this;
+    const ext = state.schemas && components.get(group);
     return state.schemas ?
-      <div>
+      <FormGroup>
         <Production
           dp={dp}
           group={group}
-          {...components.get(group)}
+          {...ext}
           scheme={state.schemas.get(group)}
           onSelect={this.setProduct}
         />
         <Params
           dp={dp}
-          product={state.product}
+          row={state.row}
+          {...ext}
           {...props}
         />
-      </div>
+      </FormGroup>
       :
       <div>Чтение настроек компоновки...</div>;
   }

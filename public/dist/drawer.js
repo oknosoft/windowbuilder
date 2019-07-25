@@ -10480,7 +10480,7 @@ class Pricing {
       calc_order_row.price = this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
     }
     else{
-      calc_order_row.price = marginality_in_spec ? 0 : (calc_order_row.first_cost * price_type.marginality).round(2);
+      calc_order_row.price = (calc_order_row.first_cost * price_type.marginality).round(2);
     }
 
     calc_order_row.marginality = calc_order_row.first_cost ?
@@ -13522,7 +13522,8 @@ $p.cat.inserts.__define({
 
         this.ProductionRow = ItemRow;
 
-        const meta = $p.dp.buyers_order.metadata('production');
+        const {current_user, dp, cat, enm, adapters: {pouch}} = $p;
+        const meta = dp.buyers_order.metadata('production');
         this.meta = meta._clone();
 
         this.meta.fields.inset.choice_params[0].path = item;
@@ -13530,21 +13531,23 @@ $p.cat.inserts.__define({
 
         const changed = new Set();
 
-        for (const param of $p.cat.inserts._prms_by_type(item)) {
+        for (const param of cat.inserts._prms_by_type(item)) {
 
-          $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
-            if(!scheme.fields.find({field: param.ref})) {
-              const row = scheme.fields.add({
-                field: param.ref,
-                caption: param.caption,
-                use: true,
-              });
-              const note = scheme.fields.find({field: 'note'});
-              note && scheme.fields.swap(row, note);
+          if(item !== enm.inserts_types.Параметрик) {
+            cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
+              if(!scheme.fields.find({field: param.ref})) {
+                const row = scheme.fields.add({
+                  field: param.ref,
+                  caption: param.caption,
+                  use: true,
+                });
+                const note = scheme.fields.find({field: 'note'});
+                note && scheme.fields.swap(row, note);
 
-              changed.add(scheme);
-            }
-          });
+                changed.add(scheme);
+              }
+            });
+          }
 
           const mf = this.meta.fields[param.ref] = {
             synonym: param.caption,
@@ -13568,7 +13571,6 @@ $p.cat.inserts.__define({
           });
         }
 
-        const {current_user, adapters: {pouch}} = $p;
         for(const scheme of changed) {
           if(pouch.local.doc.adapter === 'http' && !scheme.user) {
             current_user && current_user.roles.includes('doc_full') && scheme.save();

@@ -117,7 +117,8 @@ $p.cat.inserts.__define({
         this.ProductionRow = ItemRow;
 
         // индивидуальные метаданные строк
-        const meta = $p.dp.buyers_order.metadata('production');
+        const {current_user, dp, cat, enm, adapters: {pouch}} = $p;
+        const meta = dp.buyers_order.metadata('production');
         this.meta = meta._clone();
 
         // отбор по типу вставки
@@ -127,23 +128,25 @@ $p.cat.inserts.__define({
         const changed = new Set();
 
         // получаем возможные параметры вставок данного типа
-        for (const param of $p.cat.inserts._prms_by_type(item)) {
+        for (const param of cat.inserts._prms_by_type(item)) {
 
           // корректируем схему
-          $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
-            if(!scheme.fields.find({field: param.ref})) {
-              // добавляем строку с новым полем
-              const row = scheme.fields.add({
-                field: param.ref,
-                caption: param.caption,
-                use: true,
-              });
-              const note = scheme.fields.find({field: 'note'});
-              note && scheme.fields.swap(row, note);
+          if(item !== enm.inserts_types.Параметрик) {
+            cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
+              if(!scheme.fields.find({field: param.ref})) {
+                // добавляем строку с новым полем
+                const row = scheme.fields.add({
+                  field: param.ref,
+                  caption: param.caption,
+                  use: true,
+                });
+                const note = scheme.fields.find({field: 'note'});
+                note && scheme.fields.swap(row, note);
 
-              changed.add(scheme);
-            }
-          });
+                changed.add(scheme);
+              }
+            });
+          }
 
           // корректируем метаданные
           const mf = this.meta.fields[param.ref] = {
@@ -169,7 +172,6 @@ $p.cat.inserts.__define({
           });
         }
 
-        const {current_user, adapters: {pouch}} = $p;
         for(const scheme of changed) {
           if(pouch.local.doc.adapter === 'http' && !scheme.user) {
             current_user && current_user.roles.includes('doc_full') && scheme.save();

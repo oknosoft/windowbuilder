@@ -86,6 +86,14 @@ export function handleAdd() {
     this.setState({
       count: this.state.count + 1,
     });
+
+    //selectRow
+    for(let i = 0; i < row.row; i++) {
+      if(tabular.rowGetter(i) === row) {
+        setTimeout(() => tabular._grid.selectCell({rowIdx: i, idx: 0}, true));
+        break;
+      }
+    }
   }
   else {
     $p.msg.show_msg({
@@ -111,6 +119,7 @@ export function handleRemove() {
     if(calc_order_row){
       calc_order_row._owner.del(calc_order_row);
     }
+    props.onSelect && props.onSelect(null);
   }
   else{
     $p.msg.show_msg({

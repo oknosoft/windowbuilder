@@ -9,6 +9,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import TabularSection from 'metadata-react/TabularSection';
+import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import RemoveIcon from '@material-ui/icons/Delete';
@@ -24,29 +25,48 @@ class Production extends React.Component {
     this.state = {count: props.dp.production.count()};
   }
 
+  cellSelect = ({idx, rowIdx}) => {
+    const {tabular, props, selectedRow} = this;
+    const row = tabular && tabular.rowGetter(rowIdx);
+    if(row !== selectedRow) {
+      this.selectedRow = row;
+      props.onSelect(row);
+    }
+  };
+
+  cellDeSelect = () => {
+    if(this.selectedRow) {
+      this.selectedRow = null;
+      this.props.onSelect(null);
+    }
+  };
+
   render() {
     const {props, state: {count}} = this;
     const {dp, scheme, meta} = props;
-    const style = {flex: 'initial'};
+    let minHeight = 120;
     if(count) {
-      style.minHeight = 80 + (33 * (count - 1));
-      //style.maxHeight = 320;
+      minHeight += (33 * ((count < 8 ? count : 8) - 1));
     }
 
-    return <div style={{height: (style.minHeight || 0) + 35}}>
-      <IconButton title="Добавить строку" onClick={this.handleAdd}><AddIcon/></IconButton>
-      <IconButton title="Удалить строку" disabled={!count} onClick={this.handleRemove}><RemoveIcon/></IconButton>
+    const CustomToolbar = () => {
+      return <Toolbar disableGutters>
+        <IconButton title="Добавить строку" onClick={this.handleAdd}><AddIcon/></IconButton>
+        <IconButton title="Удалить строку" disabled={!count} onClick={this.handleRemove}><RemoveIcon/></IconButton>
+      </Toolbar>;
+    }
+
+    return <div style={{height: minHeight + 35}}>
       <TabularSection
         ref={(el) => this.tabular = el}
         _obj={dp}
         _meta={meta}
         _tabular="production"
         scheme={scheme}
-        onRowUpdated={this.onRowUpdated}
-        onCellSelected={this.onCellSelected}
-        onCellDeSelected={() => this.selectedRow = null}
-        minHeight={style.minHeight}
-        hideToolbar
+        onCellSelected={this.cellSelect}
+        onCellDeSelected={this.cellDeSelect}
+        minHeight={minHeight}
+        Toolbar={CustomToolbar}
       />
     </div>;
   }
