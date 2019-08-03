@@ -54,12 +54,15 @@ class GlassInserts {
   onclose() {
     const {grids} = this.wnd.elmnts;
     const {elm, glasses} = this;
+    const {glass_specification} = elm.project.ox;
     grids.inserts && grids.inserts.editStop();
+
+    // очищаем незаполненные строки табличной части
+    glass_specification.clear({elm: elm.elm, inset: $p.utils.blank.guid});
 
     // распространим изменения на все выделенные заполнения
     for(let i = 1; i < glasses.length; i++) {
       const selm = glasses[i];
-      const {glass_specification} = elm.project.ox;
       glass_specification.clear({elm: selm.elm});
       glass_specification.find_rows({elm: elm.elm}, (row) => {
         glass_specification.add({
