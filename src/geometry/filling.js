@@ -433,6 +433,9 @@ class Filling extends AbstractFilling(BuilderElement) {
   formula(by_art) {
     let res;
     this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
+      if(row.inset.empty()){
+        return;
+      }
       let {name, article} = row.inset;
       const aname = row.inset.name.split(' ');
       if(by_art && article){
