@@ -465,7 +465,9 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
 
       const glass_rows = [];
       ox.glass_specification.find_rows({elm: elm.elm}, (row) => {
-        glass_rows.push(row);
+        if(!row.inset.empty()){
+          glass_rows.push(row);
+        }
       });
 
       // если спецификация верхнего уровня задана в изделии, используем её, параллельно формируем формулу
