@@ -2389,11 +2389,13 @@ class GlassInserts {
   onclose() {
     const {grids} = this.wnd.elmnts;
     const {elm, glasses} = this;
+    const {glass_specification} = elm.project.ox;
     grids.inserts && grids.inserts.editStop();
+
+    glass_specification.clear({elm: elm.elm, inset: $p.utils.blank.guid});
 
     for(let i = 1; i < glasses.length; i++) {
       const selm = glasses[i];
-      const {glass_specification} = elm.project.ox;
       glass_specification.clear({elm: selm.elm});
       glass_specification.find_rows({elm: elm.elm}, (row) => {
         glass_specification.add({
@@ -6596,9 +6598,9 @@ class Filling extends AbstractFilling(BuilderElement) {
 
   formula(by_art) {
     let res;
-    this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
-      let {name, article} = row.inset;
-      const aname = row.inset.name.split(' ');
+    this.project.ox.glass_specification.find_rows({elm: this.elm, inset: {not: $p.utils.blank.guid}}, ({inset}) => {
+      let {name, article} = inset;
+      const aname = name.split(' ');
       if(by_art && article){
         name = article;
       }

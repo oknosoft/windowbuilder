@@ -301,10 +301,10 @@ class Filling extends AbstractFilling(BuilderElement) {
     const maxTextWidth = 600;
     path.visible = true;
     imposts.forEach((elm) => elm.redraw());
-    
+
     // прочистим пути
     this.purge_paths();
-    
+
     // если текст не создан - добавляем
     if(!_attr._text){
       _attr._text = new paper.PointText({
@@ -450,12 +450,9 @@ class Filling extends AbstractFilling(BuilderElement) {
    */
   formula(by_art) {
     let res;
-    this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
-      if(row.inset.empty()){
-        return;
-      }
-      let {name, article} = row.inset;
-      const aname = row.inset.name.split(' ');
+    this.project.ox.glass_specification.find_rows({elm: this.elm, inset: {not: $p.utils.blank.guid}}, ({inset}) => {
+      let {name, article} = inset;
+      const aname = name.split(' ');
       if(by_art && article){
         name = article;
       }

@@ -464,10 +464,8 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
     if(is_high_level_call && (insert_type == Заполнение)){
 
       const glass_rows = [];
-      ox.glass_specification.find_rows({elm: elm.elm}, (row) => {
-        if(!row.inset.empty()){
-          glass_rows.push(row);
-        }
+      ox.glass_specification.find_rows({elm: elm.elm, inset: {not: $p.utils.blank.guid}}, (row) => {
+        glass_rows.push(row);
       });
 
       // если спецификация верхнего уровня задана в изделии, используем её, параллельно формируем формулу

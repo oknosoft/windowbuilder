@@ -4124,9 +4124,9 @@ class Filling extends AbstractFilling(BuilderElement) {
 
   formula(by_art) {
     let res;
-    this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
-      let {name, article} = row.inset;
-      const aname = row.inset.name.split(' ');
+    this.project.ox.glass_specification.find_rows({elm: this.elm, inset: {not: $p.utils.blank.guid}}, ({inset}) => {
+      let {name, article} = inset;
+      const aname = name.split(' ');
       if(by_art && article){
         name = article;
       }
@@ -13828,7 +13828,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
     if(is_high_level_call && (insert_type == Заполнение)){
 
       const glass_rows = [];
-      ox.glass_specification.find_rows({elm: elm.elm}, (row) => {
+      ox.glass_specification.find_rows({elm: elm.elm, inset: {not: $p.utils.blank.guid}}, (row) => {
         glass_rows.push(row);
       });
 
