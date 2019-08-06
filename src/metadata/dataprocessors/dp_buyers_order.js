@@ -92,14 +92,14 @@ export default function ($p) {
     // при изменении вставки перезаполним параметры
     value_change(field, type, value) {
 
-      if(field == 'len' || field == 'height') {
+      if(field === 'len' || field === 'height') {
         this[field] = value;
         if(this.len != 0 && this.height != 0) {
           this.s = (this.height * this.len / 1000000).round(3);
         }
       }
 
-      if(field == 'inset') {
+      if(field === 'inset') {
         const {_owner, row} = this;
         if(this.inset != value || type === 'force') {
           this.inset = value;

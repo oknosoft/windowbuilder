@@ -88,10 +88,12 @@ export function handleAdd() {
     });
 
     //selectRow
-    for(let i = 0; i < row.row; i++) {
-      if(tabular.rowGetter(i) === row) {
-        setTimeout(() => tabular._grid.selectCell({rowIdx: i, idx: 0}, true));
-        break;
+    if(inset.insert_type == $p.enm.inserts_types.Параметрик) {
+      for(let i = 0; i < row.row; i++) {
+        if(tabular.rowGetter(i) === row) {
+          setTimeout(() => tabular._grid.selectCell({rowIdx: i, idx: 0}, true));
+          break;
+        }
       }
     }
   }

@@ -11,11 +11,11 @@ import FormGroup from '@material-ui/core/FormGroup';
 import Typography from '@material-ui/core/Typography';
 import DataField from 'metadata-react/DataField';
 
-export default function Params({row, meta, props}) {
+export default function Params({row, inset, meta, props}) {
   if(!row) {
     return <Typography variant="subtitle1" color="secondary">Нет параметров, либо не выбрана строка продукции</Typography>;
   }
-  const {product_params, presentation} = row.inset;
+  const {product_params, presentation} = inset;
   const res = [<Typography key="title" variant="subtitle1" color="primary">{`Параметры ${presentation}`}</Typography>];
   const struct = new Map();
   const {elm_positions} = $p.enm;

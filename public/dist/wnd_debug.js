@@ -1837,10 +1837,12 @@ $p.cat.inserts.__define({
 
   ItemData: {
     value: class ItemData {
+
       constructor(item, Renderer) {
 
         this.Renderer = Renderer;
         this.count = 0;
+        const idata = this;
 
         class ItemRow extends $p.DpBuyers_orderProductionRow {
 
@@ -1893,6 +1895,19 @@ $p.cat.inserts.__define({
                   path: filter.ref,
                 });
               }
+
+            }
+          }
+
+          get_row(param) {
+            const {product_params} = this._owner._owner;
+            return product_params.find({elm: this.row, param}) || product_params.add({elm: this.row, param});
+          }
+
+          value_change(field, type, value) {
+            super.value_change(field, type, value);
+            if(field === 'inset' && this.inset.insert_type == $p.enm.inserts_types.Параметрик) {
+              idata.tune_meta(this.inset);
             }
           }
         }
@@ -1906,11 +1921,40 @@ $p.cat.inserts.__define({
         this.meta.fields.inset.choice_params[0].path = item;
         this.meta.fields.inset.disable_clear = true;
 
+        if(item !== enm.inserts_types.Параметрик) {
+          const changed = this.tune_meta(item);
+
+          for(const scheme of changed) {
+            if(pouch.local.doc.adapter === 'http' && !scheme.user) {
+              current_user && current_user.roles.includes('doc_full') && scheme.save();
+            }
+            else {
+              scheme.save();
+            }
+          }
+        }
+
+      }
+
+      tune_meta(item) {
+        const {cat, utils, classes} = $p;
         const changed = new Set();
+        let params, with_scheme, product_params;
+        if(item instanceof $p.classes.EnumObj) {
+          params = cat.inserts._prms_by_type(item);
+          with_scheme = true;
+        }
+        else {
+          params = new Set();
+          product_params = item.product_params;
+          product_params.forEach(({param}) => params.add(param));
+        }
 
-        for (const param of cat.inserts._prms_by_type(item)) {
+        const {prototype} = this.ProductionRow;
 
-          if(item !== enm.inserts_types.Параметрик) {
+        for (const param of params) {
+
+          if(with_scheme) {
             cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', name: item.name}, (scheme) => {
               if(!scheme.fields.find({field: param.ref})) {
                 const row = scheme.fields.add({
@@ -1926,37 +1970,53 @@ $p.cat.inserts.__define({
             });
           }
 
-          const mf = this.meta.fields[param.ref] = {
-            synonym: param.caption,
-            type: param.type,
-          };
+          else {
+            for(const fld in prototype) {
+              if(utils.is_guid(fld) && !Array.from(params).some(({ref}) => ref === fld)) {
+                delete prototype[fld];
+                delete this.meta.fields[fld];
+              }
+            }
+          }
+
+          if(!this.meta.fields[param.ref]) {
+            this.meta.fields[param.ref] = {
+              synonym: param.caption,
+              type: param.type,
+            };
+          }
+          const mf = this.meta.fields[param.ref];
+
           if(param.type.types.some(type => type === 'cat.property_values')) {
             mf.choice_params = [{name: 'owner', path: param}];
           }
 
-          Object.defineProperty(ItemRow.prototype, param.ref, {
+          const drow = product_params && product_params.find({param});
+          if(drow && drow.list) {
+            try{
+              mf.list = JSON.parse(drow.list);
+            }
+            catch (e) {
+              delete mf.list;
+            }
+          }
+          else {
+            delete mf.list;
+          }
+
+          Object.defineProperty(prototype, param.ref, {
             get() {
-              const {product_params} = this._owner._owner;
-              const row = product_params.find({elm: this.row, param}) || product_params.add({elm: this.row, param});
-              return row.value;
+              return this.get_row(param).value;
             },
             set(v) {
-              const {product_params} = this._owner._owner;
-              const row = product_params.find({elm: this.row, param}) || product_params.add({elm: this.row, param});
-              row.value = v;
-            }
+              this.get_row(param).value = v;
+            },
+            configurable: true,
+            enumerable: true,
           });
         }
 
-        for(const scheme of changed) {
-          if(pouch.local.doc.adapter === 'http' && !scheme.user) {
-            current_user && current_user.roles.includes('doc_full') && scheme.save();
-          }
-          else {
-            scheme.save();
-          }
-        }
-
+        return changed;
       }
 
     }

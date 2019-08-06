@@ -524,7 +524,7 @@ class Filling extends AbstractFilling(BuilderElement) {
 
   /**
    * ### Точка внутри пути
-   * Возвращает точку, расположенную гарантированно внутри pfgjk
+   * Возвращает точку, расположенную гарантированно внутри заполнения
    *
    * @property interiorPoint
    * @type paper.Point

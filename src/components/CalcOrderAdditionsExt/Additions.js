@@ -11,7 +11,7 @@ class Additions extends React.Component {
     super(props, context);
     this.group = $p.enm.inserts_types.Параметрик;
     this.items = [this.group];
-    this.state = {row: null};
+    this.state = {row: null, inset: null};
   }
 
   componentDidMount() {
@@ -25,11 +25,13 @@ class Additions extends React.Component {
   }
 
   inset_change = (obj, fields) => {
-    const {groups, dp} = this;
+    if(fields.hasOwnProperty('inset')) {
+      this.setState({inset: obj.inset});
+    }
   }
 
   setProduct = (row) => {
-    this.setState({row});
+    this.setState({row, inset: row && row.inset});
   }
 
   render() {
@@ -47,6 +49,7 @@ class Additions extends React.Component {
         <Params
           dp={dp}
           row={state.row}
+          inset={state.inset}
           {...ext}
           {...props}
         />
