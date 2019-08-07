@@ -13947,8 +13947,9 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
   calculate_spec({elm, len_angl, ox, spec, clr}) {
 
     const {_row} = elm;
-    const {ПоПериметру, ПоШагам, ПоФормуле, ДляЭлемента, ПоПлощади} = $p.enm.count_calculating_ways;
-    const {profile_items} = $p.enm.elm_types;
+    const {enm, utils} = $p;
+    const {ПоПериметру, ПоШагам, ПоФормуле, ДляЭлемента, ПоПлощади, ДлинаПоПарам, ГабаритыПоПарам} = enm.count_calculating_ways;
+    const {profile_items} = enm.elm_types;
     const {new_spec_row, calc_qty_len, calc_count_area_mass} = ProductsBuilding;
 
     if(!spec){
@@ -13975,7 +13976,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
 
         if(row_ins_spec.count_calc_method == ПоПлощади){
           row_spec.qty = row_ins_spec.quantity;
-          if(this.insert_type == $p.enm.inserts_types.МоскитнаяСетка){
+          if(this.insert_type == enm.inserts_types.МоскитнаяСетка){
             const bounds = elm.layer.bounds_inner(row_ins_spec.sz);
             row_spec.len = bounds.height * (row_ins_spec.coefficient || 0.001);
             row_spec.width = bounds.width * (row_ins_spec.coefficient || 0.001);
@@ -13990,7 +13991,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
         else if(row_ins_spec.count_calc_method == ПоПериметру){
           const row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
           const perimeter = elm.perimeter ? elm.perimeter : (
-            this.insert_type == $p.enm.inserts_types.МоскитнаяСетка ? elm.layer.perimeter_inner(row_ins_spec.sz) : elm.layer.perimeter
+            this.insert_type == enm.inserts_types.МоскитнаяСетка ? elm.layer.perimeter_inner(row_ins_spec.sz) : elm.layer.perimeter
           )
           perimeter.forEach((rib) => {
             row_prm._row._mixin(rib);
@@ -14001,7 +14002,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
                 ox: ox,
                 elm: rib.profile || rib,
                 cnstr: len_angl && len_angl.cnstr || 0,
-                inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
+                inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : utils.blank.guid,
                 row_ins: row_ins_spec,
                 row_spec: row_spec,
                 clr,
@@ -14023,7 +14024,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
         }
         else if(row_ins_spec.count_calc_method == ПоШагам){
 
-          const bounds = this.insert_type == $p.enm.inserts_types.МоскитнаяСетка ?
+          const bounds = this.insert_type == enm.inserts_types.МоскитнаяСетка ?
             elm.layer.bounds_inner(row_ins_spec.sz) : {height: _row.y2 - _row.y1, width: _row.x2 - _row.x1};
 
           const h = (!row_ins_spec.step_angle || row_ins_spec.step_angle == 180 ? bounds.height : bounds.width);
@@ -14065,6 +14066,44 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
             row_spec = null;
           }
         }
+        else if(row_ins_spec.count_calc_method == ДлинаПоПарам){
+          let len = 0;
+          this.selection_params.find_rows({elm: row_ins_spec.elm}, ({param}) => {
+            if(param.type.digits) {
+              ox.params.find_rows({cnstr: 0, param}, ({value}) => {
+                len = value;
+                return false;
+              });
+            };
+            if(len) return false;
+          });
+
+          row_spec.qty = row_ins_spec.quantity;
+          row_spec.len = (len - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+          row_spec.width = 0;
+          row_spec.s = 0;
+        }
+        else if(row_ins_spec.count_calc_method == ГабаритыПоПарам){
+          let len = 0, width = 0;
+          this.selection_params.find_rows({elm: row_ins_spec.elm}, ({param}) => {
+            if(param.type.digits) {
+              ox.params.find_rows({cnstr: 0, param}, ({value}) => {
+                if(!len) {
+                  len = value;
+                }
+                else if(!width) {
+                  width = value;
+                }
+                return false;
+              });
+            };
+            if(len && width) return false;
+          });
+          row_spec.qty = row_ins_spec.quantity;
+          row_spec.len = (len - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+          row_spec.width = (width - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+          row_spec.s = (row_spec.len * row_spec.width).round(3);
+        }
         else{
           throw new Error("count_calc_method: " + row_ins_spec.count_calc_method);
         }
@@ -14076,7 +14115,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
             ox: ox,
             elm: elm,
             cnstr: len_angl && len_angl.cnstr || 0,
-            inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : $p.utils.blank.guid,
+            inset: (len_angl && len_angl.hasOwnProperty('cnstr')) ? len_angl.origin : utils.blank.guid,
             row_ins: row_ins_spec,
             row_spec: row_spec,
             clr,
