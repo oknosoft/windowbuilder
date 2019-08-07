@@ -56,7 +56,7 @@ class DimensionLine extends paper.Group {
 
     if(!_attr.pos && (!_attr.elm1 || !_attr.elm2)){
       this.remove();
-      return null;
+      return;
     }
 
     // создаём детей

@@ -4946,7 +4946,7 @@ class DimensionLine extends paper.Group {
 
     if(!_attr.pos && (!_attr.elm1 || !_attr.elm2)){
       this.remove();
-      return null;
+      return;
     }
 
     new paper.Path({parent: this, name: 'callout1', strokeColor: 'black', guide: true});
