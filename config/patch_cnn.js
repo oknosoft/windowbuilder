@@ -31,7 +31,7 @@ function reset_replace(prm) {
 }
 
 const keys21 = {
-  google: 'AIzaSyALvOqKofcS3UhS-2O9IQl4GVvU13aGLcc',
+  google: '',
   yandex: '283f550e-8184-4c84-b0e3-bdc5c1dee693',
 }
 
@@ -55,7 +55,8 @@ export const predefined = {
   //   splash: {css: 'splash21', title: false},
   //   log_level: 'warn',
   //   templates: true,
-  //   crazy_ram: true
+  //   keys: {google: ''},
+  //   crazy_ram: false,
   // },
   'rusokon.': {
     zone: 19,
