@@ -30,7 +30,7 @@ class Production extends React.Component {
     const row = tabular && tabular.rowGetter(rowIdx);
     if(row !== selectedRow) {
       this.selectedRow = row;
-      props.onSelect(row);
+      props.onSelect(row, idx);
     }
   };
 
@@ -54,7 +54,7 @@ class Production extends React.Component {
         <IconButton title="Добавить строку" onClick={this.handleAdd}><AddIcon/></IconButton>
         <IconButton title="Удалить строку" disabled={!count} onClick={this.handleRemove}><RemoveIcon/></IconButton>
       </Toolbar>;
-    }
+    };
 
     return <div style={{height: minHeight + 35}}>
       <TabularSection
@@ -76,6 +76,7 @@ Production.propTypes = {
   dp: PropTypes.object.isRequired,
   scheme: PropTypes.object.isRequired,
   meta: PropTypes.object.isRequired,
+  onSelect: PropTypes.func.isRequired,
 };
 
 export default Production;

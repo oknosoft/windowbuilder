@@ -31,7 +31,11 @@ class Additions extends React.Component {
   }
 
   setProduct = (row) => {
-    this.setState({row, inset: row && row.inset});
+    const {inset} = row || {};
+    if(this.state.inset != inset) {
+      row.value_change('inset', '', inset);
+    }
+    this.setState({row, inset});
   }
 
   render() {

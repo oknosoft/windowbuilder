@@ -12,4 +12,4 @@ import Additions from './Additions';
 
 export default function Parametric(props) {
   return <Frame Content={Additions} title="Параметрические изделия" {...props} />;
-};
+}

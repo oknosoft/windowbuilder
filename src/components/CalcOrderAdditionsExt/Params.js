@@ -11,7 +11,7 @@ import FormGroup from '@material-ui/core/FormGroup';
 import Typography from '@material-ui/core/Typography';
 import DataField from 'metadata-react/DataField';
 
-export default function Params({row, inset, meta, props}) {
+export default function Params({row, inset, meta}) {
   if(!row) {
     return <Typography variant="subtitle1" color="secondary">Нет параметров, либо не выбрана строка продукции</Typography>;
   }
@@ -30,7 +30,7 @@ export default function Params({row, inset, meta, props}) {
   const fld_props = {
     _obj: row,
     isTabular: false,
-  }
+  };
 
   let frame = struct.get(elm_positions.top);
   if(frame) {

@@ -111,7 +111,15 @@ export default function ($p) {
 
             // подстановка умолчаний для параметра
             defaults.find_rows({param}, (drow) => {
-              prow.value = drow.value;
+              if(drow.value && (drow.value != $p.utils.blank.guid)) {
+                prow.value = drow.value;
+              }
+              else if(drow.list) {
+                try {
+                  prow.value = JSON.parse(drow.list)[0];
+                }
+                catch (e) {}
+              }
             });
 
             // подстановка умолчаний для цвета
