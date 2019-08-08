@@ -281,6 +281,7 @@ DeliveryAddr.propTypes = {
   handlers: PropTypes.object.isRequired,
   handleCalck: PropTypes.func.isRequired,
   handleCancel: PropTypes.func.isRequired,
+  FakeAddrObj: PropTypes.func.isRequired,
 };
 
 export default connect(DeliveryAddr);
