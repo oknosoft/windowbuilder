@@ -7298,14 +7298,33 @@ class GeneratrixElement extends BuilderElement {
         else{
           segm.point = free_point;
           if(cnn_point && !paper.Key.isDown('control')){
-            if(cnn_point.profile && cnn_point.profile_point && !cnn_point.profile[cnn_point.profile_point].is_nearest(free_point)){
+            const {profile, profile_point} = cnn_point;
+            if(profile && profile_point && !profile[profile_point].is_nearest(free_point)){
               if(this instanceof Onlay){
                 this.move_nodes(noti_points.old, free_point);
               }
               else{
-                other.push(cnn_point.profile_point == "b" ? cnn_point.profile._attr.generatrix.firstSegment : cnn_point.profile._attr.generatrix.lastSegment );
-                cnn_point.profile[cnn_point.profile_point] = free_point;
-                noti.profiles.push(cnn_point.profile);
+                other.push(profile_point == 'b' ? profile.generatrix.firstSegment : profile.generatrix.lastSegment);
+                noti.profiles.push(profile);
+                if(cnn_point.is_cut) {
+                  this.layer.profiles.some((p) => {
+                    if(p !== profile && p !== this) {
+                      if(profile[profile_point].is_nearest(p.b)) {
+                        p.b = free_point;
+                        other.push(p.generatrix.firstSegment);
+                        noti.profiles.push(p);
+                        return true;
+                      }
+                      else if(profile[profile_point].is_nearest(p.e)) {
+                        p.e = free_point;
+                        other.push(p.generatrix.lastSegment);
+                        noti.profiles.push(p);
+                        return true;
+                      }
+                    }
+                  });
+                }
+                profile[profile_point] = free_point;
               }
             }
           }
