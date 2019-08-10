@@ -123,7 +123,7 @@ class DeliveryAddr extends Component {
       nearest = Promise.resolve();
     }
     else if(data.value) {
-      nearest = delivery.dadata.suggestions(data.value)
+      nearest = delivery.dadata.specify(data.value)
         .then(({suggestions}) => {
           if(suggestions && suggestions[0].data.geo_lat && suggestions[0].data.geo_lon) {
             data.data.geo_lat = suggestions[0].data.geo_lat;

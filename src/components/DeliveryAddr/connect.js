@@ -33,6 +33,15 @@ class DeliveryManager {
         return keys.dadata;
       },
 
+      specify(address) {
+        if(keys.yandex) {
+          return yandex.geocode(address);
+        }
+        else {
+          return this.suggestions(address);
+        }
+      },
+
       suggestions(query, kind = 'address') {
         return fetch(`https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/${kind}?5`, {
           method: 'post',
@@ -78,53 +87,75 @@ class DeliveryManager {
       }
     };
 
-    this.yandex = {
+    const yandex = this.yandex = {
+
+      format_suggestions(response) {
+        const {featureMember} = response.GeoObjectCollection;
+        if(featureMember && featureMember.length) {
+          const {Address, AddressDetails: {Country}} = featureMember[0].GeoObject.metaDataProperty.GeocoderMetaData;
+          const p1 = featureMember[0].GeoObject.Point;
+          let pos = p1 && p1.pos.split(' ').map(v => parseFloat(v));
+          if(featureMember.length > 3) {
+            const p2 = featureMember[1] && featureMember[1].GeoObject.Point;
+            let pos2 = p2 && p2.pos.split(' ').map(v => parseFloat(v));
+            pos[0] = (pos[0] + pos2[0]) / 2;
+            pos[1] = (pos[1] + pos2[1]) / 2;
+          }
+
+          const res = {
+            data: {
+              postal_code: Address.postal_code || '',
+              house_type_full: 'дом',
+              region_with_type: '',
+              area_with_type: '',
+              city: '',
+              house: '',
+              street_with_type: '',
+            },
+            value: Address.formatted.replace(`${Country.CountryName}, `, ''),
+          };
+          if(pos && pos.length > 1) {
+            res.data.geo_lat = pos[1];
+            res.data.geo_lon = pos[0];
+          }
+          for(const {kind, name} of Address.Components) {
+            switch (kind) {
+            case 'province':
+              res.data.region_with_type = name;
+              break;
+            case 'area':
+              res.data.area_with_type = name;
+              break;
+            case 'locality':
+              res.data.city = name;
+              break;
+            case 'street':
+              res.data.street_with_type = name;
+              break;
+            case 'house':
+              res.data.house = name;
+              break;
+            }
+          }
+
+          return {suggestions: [res]};
+        }
+        return {suggestions: []};
+      },
+
       geolocate([lat, lon]) {
         return fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${keys.yandex}&geocode=${lon},${lat}&format=json`)
           .then(res => res.json())
-          .then(({response}) => {
-            const {featureMember} = response.GeoObjectCollection;
-            if(featureMember && featureMember.length) {
-              const {Address, AddressDetails: {Country}} = featureMember[0].GeoObject.metaDataProperty.GeocoderMetaData;
-              const res = {
-                data: {
-                  postal_code: Address.postal_code || '',
-                  house_type_full: 'дом',
-                  region_with_type: '',
-                  area_with_type: '',
-                  city: '',
-                  house: '',
-                  street_with_type: '',
-                },
-                value: Address.formatted.replace(`${Country.CountryName}, `, ''),
-              };
-              for(const {kind, name} of Address.Components) {
-                switch (kind) {
-                case 'province':
-                  res.data.region_with_type = name;
-                  break;
-                case 'area':
-                  res.data.area_with_type = name;
-                  break;
-                case 'locality':
-                  res.data.city = name;
-                  break;
-                case 'street':
-                  res.data.street_with_type = name;
-                  break;
-                case 'house':
-                  res.data.house = name;
-                  break;
-                }
-              }
-
-              return {suggestions: [res]};
-            }
-            return {suggestions: []};
-          });
+          .then(({response}) => this.format_suggestions(response));
 
         // return ymaps.geocode([lat, lon], {results: 1})
         //   .then();
+      },
+
+      geocode(address) {
+        return fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${keys.yandex}&geocode=${address}&format=json`)
+          .then(res => res.json())
+          .then(({response}) => this.format_suggestions(response));
       }
     };
 
