@@ -170,7 +170,8 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
     // тихий режим для спецификации
     const res = $p.dp.buyers_order.create({specification: []}, true).specification;
     const {ox} = contour.project;
-    const {НаПримыкающий, ЧерезПримыкающий} = $p.enm.transfer_operations_options;
+    const {transfer_operations_options: {НаПримыкающий: nea, ЧерезПримыкающий: through, НаПримыкающийОтКонца: inverse},
+      open_directions, offset_options} = $p.enm;
 
     // бежим по всем строкам набора
     this.specification.find_rows({dop: 0}, (row_furn) => {
@@ -192,7 +193,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
           if(dop_row.is_procedure_row){
 
             // для правого открывания, инвертируем координату
-            const invert = contour.direction == $p.enm.open_directions.Правое;
+            const invert = contour.direction == open_directions.Правое;
             // получаем элемент через сторону фурнитуры
             const elm = contour.profile_by_furn_side(dop_row.side, cache);
             // profile._len - то, что получится после обработки
@@ -208,15 +209,15 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
             let invert_nearest = false, coordin = 0;
 
-            if(dop_row.offset_option == $p.enm.offset_options.Формула){
+            if(dop_row.offset_option == offset_options.Формула){
               if(!dop_row.formula.empty()){
                 coordin = dop_row.formula.execute({ox, elm, contour, len, sizefurn, dx1, faltz, invert, dop_row});
               }
             }
-            else if(dop_row.offset_option == $p.enm.offset_options.РазмерПоФальцу){
+            else if(dop_row.offset_option == offset_options.РазмерПоФальцу){
               coordin = faltz + dop_row.contraction;
             }
-            else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
+            else if(dop_row.offset_option == offset_options.ОтРучки){
               // строим горизонтальную линию от нижней границы контура, находим пересечение и offset
               const {generatrix} = elm;
               const hor = contour.handle_line(elm);
@@ -224,13 +225,13 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
                 generatrix.getOffsetOf(generatrix.getNearestPoint(elm.corns(1))) +
                 (invert ? dop_row.contraction : -dop_row.contraction);
             }
-            else if(dop_row.offset_option == $p.enm.offset_options.ОтСередины){
+            else if(dop_row.offset_option == offset_options.ОтСередины){
               // не мудрствуя, присваиваем половину длины
               coordin = len / 2 + (invert ? dop_row.contraction : -dop_row.contraction);
             }
             else{
               if(invert){
-                if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
+                if(dop_row.offset_option == offset_options.ОтКонцаСтороны){
                   coordin = dop_row.contraction;
                 }
                 else{
@@ -238,7 +239,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
                 }
               }
               else{
-                if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
+                if(dop_row.offset_option == offset_options.ОтКонцаСтороны){
                   coordin = len - dop_row.contraction;
                 }
                 else{
@@ -247,13 +248,13 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
               }
             }
 
-            const procedure_row = res.add(dop_row);
-            procedure_row.origin = this;
-            procedure_row.specify = row_furn.nom;
-            procedure_row.handle_height_max = contour.cnstr;
-            if([НаПримыкающий, ЧерезПримыкающий].includes(dop_row.transfer_option)){
+            const proc_row = res.add(dop_row);
+            proc_row.origin = this;
+            proc_row.specify = row_furn.nom;
+            proc_row.handle_height_max = contour.cnstr;
+            if([nea, through, inverse].includes(dop_row.transfer_option)){
               let nearest = elm.nearest();
-              if(dop_row.transfer_option == ЧерезПримыкающий){
+              if(dop_row.transfer_option == through){
                 const joined = nearest.joined_nearests().reduce((acc, cur) => {
                   if(cur !== elm){
                     acc.push(cur);
@@ -267,19 +268,22 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
               const {outer} = elm.rays;
               const nouter = nearest.rays.outer;
               const point = outer.getPointAt(outer.getOffsetOf(outer.getNearestPoint(elm.corns(1))) + coordin);
-              procedure_row.handle_height_min = nearest.elm;
-              procedure_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
+              proc_row.handle_height_min = nearest.elm;
+              proc_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
+              if(dop_row.transfer_option == inverse){
+                proc_row.coefficient = nouter.length - proc_row.coefficient;
+              }
               // если сказано учесть припуск - добавляем dx0
               if(dop_row.overmeasure){
-                procedure_row.coefficient +=  nearest.dx0;
+                proc_row.coefficient +=  nearest.dx0;
               }
             }
             else{
-              procedure_row.handle_height_min = elm.elm;
-              procedure_row.coefficient = coordin;
+              proc_row.handle_height_min = elm.elm;
+              proc_row.coefficient = coordin;
               // если сказано учесть припуск - добавляем dx0
               if(dop_row.overmeasure){
-                procedure_row.coefficient +=  elm.dx0;
+                proc_row.coefficient +=  elm.dx0;
               }
             }
 

@@ -122,10 +122,14 @@ $p.cat.inserts.__define({
           }
 
           value_change(field, type, value) {
-            super.value_change(field, type, value);
-            if(field === 'inset' && this.inset.insert_type == $p.enm.inserts_types.Параметрик) {
-              idata.tune_meta(this.inset);
+            if(field === 'inset') {
+              const {enm, cat} = $p;
+              value = cat.inserts.get(value);
+              if(value.insert_type == enm.inserts_types.Параметрик) {
+                idata.tune_meta(value, this);
+              }
             }
+            super.value_change(field, type, value);
           }
         }
 
@@ -133,10 +137,9 @@ $p.cat.inserts.__define({
 
         // индивидуальные метаданные строк
         const {current_user, dp, cat, enm, adapters: {pouch}} = $p;
-        const meta = dp.buyers_order.metadata('production');
-        this.meta = meta._clone();
 
         // отбор по типу вставки
+        this.meta = dp.buyers_order.metadata('production')._clone();
         this.meta.fields.inset.choice_params[0].path = item;
         this.meta.fields.inset.disable_clear = true;
 
@@ -156,21 +159,41 @@ $p.cat.inserts.__define({
 
       }
 
-      tune_meta(item) {
-        const {cat, utils, classes} = $p;
+      tune_meta(item, prototype) {
+        const {cat, utils} = $p;
         const changed = new Set();
-        let params, with_scheme, product_params;
-        if(item instanceof $p.classes.EnumObj) {
+        let params, with_scheme, meta;
+
+        if(!prototype) {
+          prototype = this.ProductionRow.prototype;
           params = cat.inserts._prms_by_type(item);
           with_scheme = true;
+          meta = this.meta;
         }
         else {
           params = new Set();
-          product_params = item.product_params;
-          product_params.forEach(({param}) => params.add(param));
+          item.product_params.forEach(({param}) => params.add(param));
+          if(!prototype._meta) {
+            Object.defineProperty(prototype, '_meta', {value: this.meta._clone()});
+          }
+          meta = prototype._meta;
         }
 
-        const {prototype} = this.ProductionRow;
+        // прибиваем лишние параметры прежней вставки
+        if(!with_scheme) {
+          for(const fld in prototype) {
+            if(utils.is_guid(fld) && !Array.from(params).some(({ref}) => ref === fld)) {
+              delete prototype[fld];
+              delete meta.fields[fld];
+              if(prototype._owner && prototype._owner._owner) {
+                const {product_params} = prototype._owner._owner;
+                for(const rm of product_params.find_rows({elm: prototype.row, fld})) {
+                  product_params.del(rm);
+                }
+              }
+            }
+          }
+        }
 
         for (const param of params) {
 
@@ -192,24 +215,14 @@ $p.cat.inserts.__define({
             });
           }
 
-          // прибиваем параметры прежней вставки
-          else {
-            for(const fld in prototype) {
-              if(utils.is_guid(fld) && !Array.from(params).some(({ref}) => ref === fld)) {
-                delete prototype[fld];
-                delete this.meta.fields[fld];
-              }
-            }
-          }
-
           // корректируем метаданные
-          if(!this.meta.fields[param.ref]) {
-            this.meta.fields[param.ref] = {
+          if(!meta.fields[param.ref]) {
+            meta.fields[param.ref] = {
               synonym: param.caption,
               type: param.type,
             };
           }
-          const mf = this.meta.fields[param.ref];
+          const mf = meta.fields[param.ref];
 
           // отбор по владельцу
           if(param.type.types.some(type => type === 'cat.property_values')) {
@@ -217,7 +230,7 @@ $p.cat.inserts.__define({
           }
 
           // учтём дискретный ряд
-          const drow = product_params && product_params.find({param});
+          const drow = item.product_params && item.product_params.find({param});
           if(drow && drow.list) {
             try{
               mf.list = JSON.parse(drow.list);
@@ -231,16 +244,18 @@ $p.cat.inserts.__define({
           }
 
           // корректируем класс строки
-          Object.defineProperty(prototype, param.ref, {
-            get() {
-              return this.get_row(param).value;
-            },
-            set(v) {
-              this.get_row(param).value = v;
-            },
-            configurable: true,
-            enumerable: true,
-          });
+          if(!prototype.hasOwnProperty(param.ref)){
+            Object.defineProperty(prototype, param.ref, {
+              get() {
+                return this.get_row(param).value;
+              },
+              set(v) {
+                this.get_row(param).value = v;
+              },
+              configurable: true,
+              enumerable: true,
+            });
+          }
         }
 
         return changed;

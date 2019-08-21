@@ -776,7 +776,7 @@ $p.cat.clrs.__define({
       }
       const ares = $p.wsql.alasql("select top 1 ref from ? where clr_in = ? and clr_out = ? and (not ref = ?)",
         [this.alatable, clr.clr_out.ref, clr.clr_in.ref, $p.utils.blank.guid]);
-      return ares.length ? this.get(ares[0]) : clr
+      return ares.length ? this.get(ares[0]) : clr;
     }
   },
 
@@ -800,20 +800,20 @@ $p.cat.clrs.__define({
 					name: "ref",
 					get path(){
             const res = [];
-						let clr_group, elm;
+						let clr_group;
 
 						function add_by_clr(clr) {
               if(clr instanceof $p.CatClrs){
                 const {ref} = clr;
                 if(clr.is_folder){
-                  $p.cat.clrs.alatable.forEach((row) => row.parent == ref && res.push(row.ref))
+                  $p.cat.clrs.alatable.forEach((row) => row.parent == ref && res.push(row.ref));
                 }
                 else{
-                  res.push(ref)
+                  res.push(ref);
                 }
               }
               else if(clr instanceof $p.CatColor_price_groups){
-                clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1))
+                clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1));
               }
             }
 
@@ -861,16 +861,37 @@ $p.cat.clrs.__define({
             pwnd.on_select.call(pwnd, eclr.clr_in);
           }
           else {
+            const {wsql, job_prm, utils, cat, adapters: {pouch}} = $p;
+            const {remote: {ram}, props} = pouch;
             const clrs = [eclr, {clr_in: eclr.clr_out, clr_out: eclr.clr_in}]
-              .map(({clr_in, clr_out}) => {
-                const ares = $p.wsql.alasql("select top 1 ref from cat_clrs where clr_in = ? and clr_out = ? and (not ref = ?)",
-                  [clr_in.ref, clr_out.ref, $p.utils.blank.guid]);
+              .map(({clr_in, clr_out}, index) => {
+                const ares = wsql.alasql("select top 1 ref from cat_clrs where clr_in = ? and clr_out = ? and (not ref = ?)",
+                  [clr_in.ref, clr_out.ref, utils.blank.guid]);
 
-                return ares.length ? Promise.resolve($p.cat.clrs.get(ares[0])) : $p.cat.clrs.create({
+                if(ares.length) {
+                  return Promise.resolve(cat.clrs.get(ares[0]));
+                }
+                else if(cat.clrs.metadata().common) {
+                  if(index > 0) {
+                    return Promise.resolve();
+                  }
+                  const authHeader = ram.getBasicAuthHeaders({prefix: pouch.auth_prefix(), ...ram.__opts.auth});
+                  return fetch(props.path.replace(job_prm.local_storage_prefix, 'common/cat.clrs/composite'), {
+                    method: 'POST',
+                    headers: Object.assign({'Content-Type': 'application/json'}, authHeader),
+                    body: JSON.stringify({clr_in: clr_in.ref, clr_out: clr_out.ref}),
+                  })
+                    .then((res) => res.json())
+                    .then((res) => {
+                      cat.clrs.load_array([res.clr, res.inverted]);
+                      return cat.clrs.get(res.clr);
+                    });
+                }
+                return cat.clrs.create({
                   clr_in,
                   clr_out,
                   name: `${clr_in.name} \\ ${clr_out.name}`,
-                  parent: $p.job_prm.builder.composite_clr_folder
+                  parent: job_prm.builder.composite_clr_folder
                 })
                   .then((obj) => obj.register_on_server());
               });
@@ -879,7 +900,7 @@ $p.cat.clrs.__define({
               .then((objs) => pwnd.on_select.call(pwnd, objs[0]))
               .catch((err) => $p.msg.show_msg({
                 type: 'alert-warning',
-                text: 'Недостаточно прав для добавления составного цвета',
+                text: err && err.message || 'Недостаточно прав для добавления составного цвета',
                 title: 'Составной цвет'
               }));
           }
@@ -887,7 +908,7 @@ $p.cat.clrs.__define({
           wnd.close();
           return false;
         }
-      }
+      };
 
       const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
 
@@ -898,7 +919,7 @@ $p.cat.clrs.__define({
 
         if(attr.selection) {
           attr.selection.some((sel) => {
-            for (var key in sel) {
+            for (const key in sel) {
               if(key == 'ref') {
                 selection.ref = sel.ref;
                 return true;
@@ -986,7 +1007,7 @@ $p.cat.clrs.__define({
 
 					return wnd;
 
-				})
+				});
     },
     configurable: true,
     writable: true,
@@ -1424,8 +1445,6 @@ $p.CatElm_visualization.prototype.__define({
 });
 
 
-
-
 Object.defineProperties($p.cat.furns, {
 
   sql_selection_list_flds: {
@@ -1481,9 +1500,7 @@ Object.defineProperties($p.cat.furns, {
 
 });
 
-
 $p.CatFurns = class CatFurns extends $p.CatFurns {
-
 
   refill_prm({project, furn, cnstr}) {
 
@@ -1544,7 +1561,6 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
   }
 
-
   add_furn_prm(aprm = [], afurn_set = []) {
 
     if(afurn_set.indexOf(this.ref)!=-1){
@@ -1561,12 +1577,12 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
   }
 
-
   get_spec(contour, cache, exclude_dop) {
 
     const res = $p.dp.buyers_order.create({specification: []}, true).specification;
     const {ox} = contour.project;
-    const {НаПримыкающий, ЧерезПримыкающий} = $p.enm.transfer_operations_options;
+    const {transfer_operations_options: {НаПримыкающий: nea, ЧерезПримыкающий: through, НаПримыкающийОтКонца: inverse},
+      open_directions, offset_options} = $p.enm;
 
     this.specification.find_rows({dop: 0}, (row_furn) => {
 
@@ -1583,7 +1599,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
           if(dop_row.is_procedure_row){
 
-            const invert = contour.direction == $p.enm.open_directions.Правое;
+            const invert = contour.direction == open_directions.Правое;
             const elm = contour.profile_by_furn_side(dop_row.side, cache);
             const {len} = elm._row;
             const {sizefurn} = elm.nom;
@@ -1592,27 +1608,27 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
             let invert_nearest = false, coordin = 0;
 
-            if(dop_row.offset_option == $p.enm.offset_options.Формула){
+            if(dop_row.offset_option == offset_options.Формула){
               if(!dop_row.formula.empty()){
                 coordin = dop_row.formula.execute({ox, elm, contour, len, sizefurn, dx1, faltz, invert, dop_row});
               }
             }
-            else if(dop_row.offset_option == $p.enm.offset_options.РазмерПоФальцу){
+            else if(dop_row.offset_option == offset_options.РазмерПоФальцу){
               coordin = faltz + dop_row.contraction;
             }
-            else if(dop_row.offset_option == $p.enm.offset_options.ОтРучки){
+            else if(dop_row.offset_option == offset_options.ОтРучки){
               const {generatrix} = elm;
               const hor = contour.handle_line(elm);
               coordin = generatrix.getOffsetOf(generatrix.intersect_point(hor)) -
                 generatrix.getOffsetOf(generatrix.getNearestPoint(elm.corns(1))) +
                 (invert ? dop_row.contraction : -dop_row.contraction);
             }
-            else if(dop_row.offset_option == $p.enm.offset_options.ОтСередины){
+            else if(dop_row.offset_option == offset_options.ОтСередины){
               coordin = len / 2 + (invert ? dop_row.contraction : -dop_row.contraction);
             }
             else{
               if(invert){
-                if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
+                if(dop_row.offset_option == offset_options.ОтКонцаСтороны){
                   coordin = dop_row.contraction;
                 }
                 else{
@@ -1620,7 +1636,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
                 }
               }
               else{
-                if(dop_row.offset_option == $p.enm.offset_options.ОтКонцаСтороны){
+                if(dop_row.offset_option == offset_options.ОтКонцаСтороны){
                   coordin = len - dop_row.contraction;
                 }
                 else{
@@ -1633,9 +1649,9 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
             procedure_row.origin = this;
             procedure_row.specify = row_furn.nom;
             procedure_row.handle_height_max = contour.cnstr;
-            if([НаПримыкающий, ЧерезПримыкающий].includes(dop_row.transfer_option)){
+            if([nea, through, inverse].includes(dop_row.transfer_option)){
               let nearest = elm.nearest();
-              if(dop_row.transfer_option == ЧерезПримыкающий){
+              if(dop_row.transfer_option == through){
                 const joined = nearest.joined_nearests().reduce((acc, cur) => {
                   if(cur !== elm){
                     acc.push(cur);
@@ -1651,6 +1667,9 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
               const point = outer.getPointAt(outer.getOffsetOf(outer.getNearestPoint(elm.corns(1))) + coordin);
               procedure_row.handle_height_min = nearest.elm;
               procedure_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
+              if(dop_row.transfer_option == inverse){
+                procedure_row.coefficient = nouter.length - procedure_row.coefficient;
+              }
               if(dop_row.overmeasure){
                 procedure_row.coefficient +=  nearest.dx0;
               }
@@ -1716,9 +1735,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 
 };
 
-
 $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurnsSpecificationRow {
-
 
   check_restrictions(contour, cache) {
     const {elm, dop, handle_height_min, handle_height_max, formula} = this;
@@ -1905,19 +1922,22 @@ $p.cat.inserts.__define({
           }
 
           value_change(field, type, value) {
-            super.value_change(field, type, value);
-            if(field === 'inset' && this.inset.insert_type == $p.enm.inserts_types.Параметрик) {
-              idata.tune_meta(this.inset);
+            if(field === 'inset') {
+              const {enm, cat} = $p;
+              value = cat.inserts.get(value);
+              if(value.insert_type == enm.inserts_types.Параметрик) {
+                idata.tune_meta(value, this);
+              }
             }
+            super.value_change(field, type, value);
           }
         }
 
         this.ProductionRow = ItemRow;
 
         const {current_user, dp, cat, enm, adapters: {pouch}} = $p;
-        const meta = dp.buyers_order.metadata('production');
-        this.meta = meta._clone();
 
+        this.meta = dp.buyers_order.metadata('production')._clone();
         this.meta.fields.inset.choice_params[0].path = item;
         this.meta.fields.inset.disable_clear = true;
 
@@ -1936,21 +1956,40 @@ $p.cat.inserts.__define({
 
       }
 
-      tune_meta(item) {
-        const {cat, utils, classes} = $p;
+      tune_meta(item, prototype) {
+        const {cat, utils} = $p;
         const changed = new Set();
-        let params, with_scheme, product_params;
-        if(item instanceof $p.classes.EnumObj) {
+        let params, with_scheme, meta;
+
+        if(!prototype) {
+          prototype = this.ProductionRow.prototype;
           params = cat.inserts._prms_by_type(item);
           with_scheme = true;
+          meta = this.meta;
         }
         else {
           params = new Set();
-          product_params = item.product_params;
-          product_params.forEach(({param}) => params.add(param));
+          item.product_params.forEach(({param}) => params.add(param));
+          if(!prototype._meta) {
+            Object.defineProperty(prototype, '_meta', {value: this.meta._clone()});
+          }
+          meta = prototype._meta;
         }
 
-        const {prototype} = this.ProductionRow;
+        if(!with_scheme) {
+          for(const fld in prototype) {
+            if(utils.is_guid(fld) && !Array.from(params).some(({ref}) => ref === fld)) {
+              delete prototype[fld];
+              delete meta.fields[fld];
+              if(prototype._owner && prototype._owner._owner) {
+                const {product_params} = prototype._owner._owner;
+                for(const rm of product_params.find_rows({elm: prototype.row, fld})) {
+                  product_params.del(rm);
+                }
+              }
+            }
+          }
+        }
 
         for (const param of params) {
 
@@ -1970,28 +2009,19 @@ $p.cat.inserts.__define({
             });
           }
 
-          else {
-            for(const fld in prototype) {
-              if(utils.is_guid(fld) && !Array.from(params).some(({ref}) => ref === fld)) {
-                delete prototype[fld];
-                delete this.meta.fields[fld];
-              }
-            }
-          }
-
-          if(!this.meta.fields[param.ref]) {
-            this.meta.fields[param.ref] = {
+          if(!meta.fields[param.ref]) {
+            meta.fields[param.ref] = {
               synonym: param.caption,
               type: param.type,
             };
           }
-          const mf = this.meta.fields[param.ref];
+          const mf = meta.fields[param.ref];
 
           if(param.type.types.some(type => type === 'cat.property_values')) {
             mf.choice_params = [{name: 'owner', path: param}];
           }
 
-          const drow = product_params && product_params.find({param});
+          const drow = item.product_params && item.product_params.find({param});
           if(drow && drow.list) {
             try{
               mf.list = JSON.parse(drow.list);
@@ -2004,16 +2034,18 @@ $p.cat.inserts.__define({
             delete mf.list;
           }
 
-          Object.defineProperty(prototype, param.ref, {
-            get() {
-              return this.get_row(param).value;
-            },
-            set(v) {
-              this.get_row(param).value = v;
-            },
-            configurable: true,
-            enumerable: true,
-          });
+          if(!prototype.hasOwnProperty(param.ref)){
+            Object.defineProperty(prototype, param.ref, {
+              get() {
+                return this.get_row(param).value;
+              },
+              set(v) {
+                this.get_row(param).value = v;
+              },
+              configurable: true,
+              enumerable: true,
+            });
+          }
         }
 
         return changed;
