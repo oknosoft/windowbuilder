@@ -1645,10 +1645,10 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
               }
             }
 
-            const procedure_row = res.add(dop_row);
-            procedure_row.origin = this;
-            procedure_row.specify = row_furn.nom;
-            procedure_row.handle_height_max = contour.cnstr;
+            const proc_row = res.add(dop_row);
+            proc_row.origin = this;
+            proc_row.specify = row_furn.nom;
+            proc_row.handle_height_max = contour.cnstr;
             if([nea, through, inverse].includes(dop_row.transfer_option)){
               let nearest = elm.nearest();
               if(dop_row.transfer_option == through){
@@ -1665,20 +1665,20 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
               const {outer} = elm.rays;
               const nouter = nearest.rays.outer;
               const point = outer.getPointAt(outer.getOffsetOf(outer.getNearestPoint(elm.corns(1))) + coordin);
-              procedure_row.handle_height_min = nearest.elm;
-              procedure_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
+              proc_row.handle_height_min = nearest.elm;
+              proc_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
               if(dop_row.transfer_option == inverse){
-                procedure_row.coefficient = nouter.length - procedure_row.coefficient;
+                proc_row.coefficient = nouter.length - proc_row.coefficient;
               }
               if(dop_row.overmeasure){
-                procedure_row.coefficient +=  nearest.dx0;
+                proc_row.coefficient +=  nearest.dx0;
               }
             }
             else{
-              procedure_row.handle_height_min = elm.elm;
-              procedure_row.coefficient = coordin;
+              proc_row.handle_height_min = elm.elm;
+              proc_row.coefficient = coordin;
               if(dop_row.overmeasure){
-                procedure_row.coefficient +=  elm.dx0;
+                proc_row.coefficient +=  elm.dx0;
               }
             }
 
