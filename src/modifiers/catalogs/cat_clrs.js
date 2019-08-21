@@ -78,7 +78,7 @@ $p.cat.clrs.__define({
       // ищем в справочнике цветов
       const ares = $p.wsql.alasql("select top 1 ref from ? where clr_in = ? and clr_out = ? and (not ref = ?)",
         [this.alatable, clr.clr_out.ref, clr.clr_in.ref, $p.utils.blank.guid]);
-      return ares.length ? this.get(ares[0]) : clr
+      return ares.length ? this.get(ares[0]) : clr;
     }
   },
 
@@ -106,20 +106,20 @@ $p.cat.clrs.__define({
 					name: "ref",
 					get path(){
             const res = [];
-						let clr_group, elm;
+						let clr_group;
 
 						function add_by_clr(clr) {
               if(clr instanceof $p.CatClrs){
                 const {ref} = clr;
                 if(clr.is_folder){
-                  $p.cat.clrs.alatable.forEach((row) => row.parent == ref && res.push(row.ref))
+                  $p.cat.clrs.alatable.forEach((row) => row.parent == ref && res.push(row.ref));
                 }
                 else{
-                  res.push(ref)
+                  res.push(ref);
                 }
               }
               else if(clr instanceof $p.CatColor_price_groups){
-                clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1))
+                clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1));
               }
             }
 
@@ -174,18 +174,41 @@ $p.cat.clrs.__define({
           }
           else {
             // дополнительно проверяем обратный цвет
+            const {wsql, job_prm, utils, cat, adapters: {pouch}} = $p;
+            const {remote: {ram}, props} = pouch;
             const clrs = [eclr, {clr_in: eclr.clr_out, clr_out: eclr.clr_in}]
-              .map(({clr_in, clr_out}) => {
+              .map(({clr_in, clr_out}, index) => {
                 // ищем в справочнике цветов
-                const ares = $p.wsql.alasql("select top 1 ref from cat_clrs where clr_in = ? and clr_out = ? and (not ref = ?)",
-                  [clr_in.ref, clr_out.ref, $p.utils.blank.guid]);
-                
-                // если не нашли - создаём
-                return ares.length ? Promise.resolve($p.cat.clrs.get(ares[0])) : $p.cat.clrs.create({
+                const ares = wsql.alasql("select top 1 ref from cat_clrs where clr_in = ? and clr_out = ? and (not ref = ?)",
+                  [clr_in.ref, clr_out.ref, utils.blank.guid]);
+
+                // если цвет найден - возвращаем
+                if(ares.length) {
+                  return Promise.resolve(cat.clrs.get(ares[0]));
+                }
+                // если включены общие данные - отдельный алгоритм
+                else if(cat.clrs.metadata().common) {
+                  if(index > 0) {
+                    return Promise.resolve();
+                  }
+                  const authHeader = ram.getBasicAuthHeaders({prefix: pouch.auth_prefix(), ...ram.__opts.auth});
+                  return fetch(props.path.replace(job_prm.local_storage_prefix, 'common/cat.clrs/composite'), {
+                    method: 'POST',
+                    headers: Object.assign({'Content-Type': 'application/json'}, authHeader),
+                    body: JSON.stringify({clr_in: clr_in.ref, clr_out: clr_out.ref}),
+                  })
+                    .then((res) => res.json())
+                    .then((res) => {
+                      cat.clrs.load_array([res.clr, res.inverted]);
+                      return cat.clrs.get(res.clr);
+                    });
+                }
+                // если не нашли и нет общих данных - создаём по старинке
+                return cat.clrs.create({
                   clr_in,
                   clr_out,
                   name: `${clr_in.name} \\ ${clr_out.name}`,
-                  parent: $p.job_prm.builder.composite_clr_folder
+                  parent: job_prm.builder.composite_clr_folder
                 })
                   // регистрируем цвет в couchdb
                   .then((obj) => obj.register_on_server());
@@ -195,7 +218,7 @@ $p.cat.clrs.__define({
               .then((objs) => pwnd.on_select.call(pwnd, objs[0]))
               .catch((err) => $p.msg.show_msg({
                 type: 'alert-warning',
-                text: 'Недостаточно прав для добавления составного цвета',
+                text: err && err.message || 'Недостаточно прав для добавления составного цвета',
                 title: 'Составной цвет'
               }));
           }
@@ -203,7 +226,7 @@ $p.cat.clrs.__define({
           wnd.close();
           return false;
         }
-      }
+      };
 
       const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
 
@@ -214,7 +237,7 @@ $p.cat.clrs.__define({
 
         if(attr.selection) {
           attr.selection.some((sel) => {
-            for (var key in sel) {
+            for (const key in sel) {
               if(key == 'ref') {
                 selection.ref = sel.ref;
                 return true;
@@ -304,7 +327,7 @@ $p.cat.clrs.__define({
 
 					return wnd;
 
-				})
+				});
     },
     configurable: true,
     writable: true,
