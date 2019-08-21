@@ -32,28 +32,28 @@ class Additions extends React.Component {
 
   setProduct = (row) => {
     const {inset} = row || {};
-    if(this.state.inset != inset) {
+    if(row && this.state.inset != inset) {
       row.value_change('inset', '', inset);
     }
     this.setState({row, inset});
   }
 
   render() {
-    const {state, props, dp, components, group} = this;
-    const ext = state.schemas && components.get(group);
-    return state.schemas ?
+    const {state: {schemas, row, inset}, props, dp, components, group} = this;
+    const ext = schemas && Object.assign({}, components.get(group), row && row._meta && {meta: row._meta});
+    return schemas ?
       <FormGroup>
         <Production
           dp={dp}
           group={group}
           {...ext}
-          scheme={state.schemas.get(group)}
+          scheme={schemas.get(group)}
           onSelect={this.setProduct}
         />
         <Params
           dp={dp}
-          row={state.row}
-          inset={state.inset}
+          row={row}
+          inset={inset}
           {...ext}
           {...props}
         />

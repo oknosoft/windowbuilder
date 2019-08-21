@@ -32,13 +32,21 @@ export default function Params({row, inset, meta}) {
     isTabular: false,
   };
 
+  const fprops = (v) => {
+    const _fld = v.param.valueOf();
+    return Object.assign({
+      _fld,
+      _meta: meta.fields[_fld],
+      key: `f_${_fld}`,
+    }, fld_props);
+  }
+
   let frame = struct.get(elm_positions.top);
   if(frame) {
     res.push(<FormGroup key="top" row>
       {
-        frame.map((v, index) => {
-          const fld = v.param.valueOf();
-          return <DataField key={`fld_${index}`} {...fld_props} _fld={fld} _meta={meta.fields[fld]} />;
+        frame.map((v) => {
+          return <DataField {...fprops(v)} />;
         })
       }
     </FormGroup>);
@@ -51,9 +59,8 @@ export default function Params({row, inset, meta}) {
         if(!column) return null;
         return <FormGroup key={`column${v}`}>
           {
-            column.map((v, index) => {
-              const fld = v.param.valueOf();
-              return <DataField key={`fld_${index}`} {...fld_props} _fld={fld} _meta={meta.fields[fld]} />;
+            column.map((v) => {
+              return <DataField {...fprops(v)} />;
             })
           }
         </FormGroup>;
@@ -66,8 +73,7 @@ export default function Params({row, inset, meta}) {
     res.push(<FormGroup key="bottom" row>
       {
         frame.map((v, index) => {
-          const fld = v.param.valueOf();
-          return <DataField key={`fld_${index}`} {...fld_props} _fld={fld} _meta={meta.fields[fld]} />;
+          return <DataField {...fprops(v)} />;
         })
       }
     </FormGroup>);

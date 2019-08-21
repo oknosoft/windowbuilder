@@ -93,6 +93,7 @@ class AppRoot extends Component {
       user,
       title,
       idle,
+      disable: ['google'],
     };
 
     return [
