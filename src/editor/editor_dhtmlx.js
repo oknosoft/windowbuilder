@@ -415,7 +415,7 @@ class Editor extends EditorInvisible {
       });
 
       // проверяем ортогональность
-      if(this.project.getItems({class: Profile}).some((p) => {
+      if(project.getItems({class: Profile}).some((p) => {
         return (p.angle_hor % 90) > 0.02;
       })){
         this._ortpos.style.display = '';
@@ -423,6 +423,17 @@ class Editor extends EditorInvisible {
       else {
         this._ortpos.style.display = 'none';
       };
+
+      // проверяем ошибки в спецификации
+      const {ОшибкаКритическая, ОшибкаИнфо} = $p.enm.elm_types;
+      let has_errors;
+      project.ox.specification.forEach(({nom}) => {
+        if([ОшибкаКритическая, ОшибкаИнфо].includes(nom.elm_type)) {
+          has_errors = true;
+          return false;
+        }
+      });
+      this._errpos.style.display = has_errors ? '' : 'none';
     }
   }
 
@@ -440,6 +451,46 @@ class Editor extends EditorInvisible {
     if(!hide) {
       setTimeout(() => this.show_ortpos(true), 1300);
     }
+  }
+
+  show_errpos() {
+    const wnd = $p.iface.dat_blank(this._dxw, {
+      caption: 'Ошибки',
+      height: 300,
+      width: 420,
+      allow_close: true,
+    });
+    const grid = wnd.attachGrid({
+      columns: [{
+        label: 'Элемент',
+        width: 80,
+        type: 'ro',
+        sort: 'int',
+        align: 'right'
+      }, {
+        label: 'Ошибка',
+        width: 250,
+        type: 'ro',
+        sort: 'str',
+        align: 'left'
+      }]
+    });
+
+    grid.setHeader('Элемент,Ошибка');
+    grid.setColTypes('ro,ro');
+    grid.setColSorting('int,str');
+    grid.setInitWidths('80,340');
+    grid.setColAlign('right,left');
+    grid.enableAutoWidth(true);
+    //grid.attachEvent("onRowDblClicked", do_select);
+    grid.init();
+
+    const {ОшибкаКритическая, ОшибкаИнфо} = $p.enm.elm_types;
+    this.project.ox.specification.forEach(({elm, nom}) => {
+      if([ОшибкаКритическая, ОшибкаИнфо].includes(nom.elm_type)) {
+        grid.addRow(1, [elm, nom.name]);
+      }
+    });
   }
 
   /**
@@ -502,13 +553,25 @@ class Editor extends EditorInvisible {
     /**
      * Подписываемся на событие окончания расчета, чтобы нарисовать индикатор трапеции
      */
+    const _toppos = document.createElement('div');
+    _editor._wrapper.appendChild(_toppos);
+    _toppos.className = 'toppos';
+
     this._ortpos = document.createElement('div');
-    _editor._wrapper.appendChild(this._ortpos);
+    _toppos.appendChild(this._ortpos);
     this._ortpos.className = 'ortpos';
-    this._ortpos.innerHTML = '<i class="fa fa-crosshairs" aria-hidden="true"></i>';
+    this._ortpos.innerHTML = '<i class="fa fa-crosshairs"></i>';
     this._ortpos.setAttribute('title', 'Есть наклонные элементы');
     this._ortpos.style.display = 'none';
     this._ortpos.onclick = () => this.show_ortpos();
+
+    this._errpos = document.createElement('div');
+    _toppos.appendChild(this._errpos);
+    this._errpos.className = 'errpos';
+    this._errpos.innerHTML = '<i class="fa fa-ban"></i>';
+    this._errpos.setAttribute('title', 'Есть ошибки');
+    this._errpos.style.display = 'none';
+    this._errpos.onclick = () => this.show_errpos();
 
     /**
      * Объект для реализации функций масштабирования
@@ -1406,13 +1469,13 @@ class Editor extends EditorInvisible {
             });
           }
         }
-        
+
         // двигаем начальную точку
         let delta = get_delta(pos, impost.b);
         impost.select_node("b");
         impost.move_points(new Point(orientation === $p.enm.orientations.vert ? [delta, 0] : [0, delta]));
         glass.deselect_onlay_points();
-        
+
         // двигаем конечную точку
         delta = get_delta(pos, impost.e);
         impost.select_node("e");

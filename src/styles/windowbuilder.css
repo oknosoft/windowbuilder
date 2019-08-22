@@ -82,15 +82,22 @@
 	padding: 0px 4px;
 }
 
-.ortpos {
+.toppos {
   position: absolute;
   right: 4px;
   top: 4px;
   background: rgba(255,255,255,.8);
-  transform: rotate(15deg);
   padding: 0px 4px;
   font-size: larger;
   cursor: help;
+}
+
+.ortpos {
+  transform: rotate(15deg);
+}
+
+.errpos {
+  color: #d9534f;
 }
 
 .pen_cont {
