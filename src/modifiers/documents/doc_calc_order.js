@@ -56,10 +56,11 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   // перед записью надо присвоить номер для нового и рассчитать итоги
   before_save() {
 
-    const {
+    const {msg, pricing, utils: {blank}, cat, enm: {
       obj_delivery_states: {Отклонен, Отозван, Шаблон, Подтвержден, Отправлен},
       elm_types: {ОшибкаКритическая, ОшибкаИнфо},
-    } = $p.enm;
+    }} = $p;
+
     //Для шаблонов, отклоненных и отозванных проверки выполнять не будем, чтобы возвращалось всегда true
     //при этом, просто сразу вернуть true не можем, т.к. надо часть кода выполнить - например, сумму документа пересчитать
     const must_be_saved = [Подтвержден, Отправлен].indexOf(this.obj_delivery_state) == -1;
@@ -67,7 +68,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     // если установлен признак проведения, проверим состояние транспорта
     if(this.posted) {
       if(this.obj_delivery_state == Отклонен || this.obj_delivery_state == Отозван || this.obj_delivery_state == Шаблон) {
-        $p.msg.show_msg && $p.msg.show_msg({
+        msg.show_msg && msg.show_msg({
           type: 'alert-warning',
           text: 'Нельзя провести заказ со статусом<br/>"Отклонён", "Отозван" или "Шаблон"',
           title: this.presentation
@@ -84,12 +85,12 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     // проверим заполненность подразделения
     if(this.obj_delivery_state == Шаблон) {
-      this.department = $p.utils.blank.guid;
-      this.partner = $p.utils.blank.guid;
+      this.department = blank.guid;
+      this.partner = blank.guid;
     }
     else {
       if(this.department.empty()) {
-        $p.msg.show_msg && $p.msg.show_msg({
+        msg.show_msg && msg.show_msg({
           type: 'alert-warning',
           text: 'Не заполнен реквизит "офис продаж" (подразделение)',
           title: this.presentation
@@ -97,7 +98,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         return false || must_be_saved;
       }
       if(this.partner.empty()) {
-        $p.msg.show_msg && $p.msg.show_msg({
+        msg.show_msg && msg.show_msg({
           type: 'alert-warning',
           text: 'Не указан контрагент (дилер)',
           title: this.presentation
@@ -112,26 +113,58 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     this.production.forEach(({amount, amount_internal, characteristic}) => {
       doc_amount += amount;
       internal += amount_internal;
-      characteristic.specification.forEach(({nom}) => {
-        if([ОшибкаКритическая, ОшибкаИнфо].indexOf(nom.elm_type) !== -1) {
+      characteristic.specification.forEach(({nom, elm}) => {
+        if([ОшибкаКритическая, ОшибкаИнфо].includes(nom.elm_type)) {
           if(!errors.has(characteristic)){
-            errors.set(characteristic, new Set());
+            errors.set(characteristic, new Map());
           }
           if(!errors.has(nom.elm_type)){
             errors.set(nom.elm_type, new Set());
           }
           // накапливаем ошибки в разрезе критичности и в разрезе продукций - отдельные массивы
-          errors.get(characteristic).add(nom);
+          if(!errors.get(characteristic).has(nom)){
+            errors.get(characteristic).set(nom, new Set());
+          }
+          errors.get(characteristic).get(nom).add(elm);
           errors.get(nom.elm_type).add(nom);
         }
       });
     });
     const {rounding} = this;
+    const {_obj, obj_delivery_state, category} = this;
     this.doc_amount = doc_amount.round(rounding);
     this.amount_internal = internal.round(rounding);
-    this.amount_operation = $p.pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(rounding);
+    this.amount_operation = pricing.from_currency_to_currency(doc_amount, this.date, this.doc_currency).round(rounding);
 
-    const {_obj, obj_delivery_state, category} = this;
+    if (errors.size) {
+      let critical, text = '';
+      errors.forEach((errors, characteristic) => {
+        if (characteristic instanceof $p.CatCharacteristics) {
+          text += `<b>${characteristic.name}:</b><br/>`;
+          errors.forEach((elms, nom) => {
+            text += `${nom.name} - элементы:${Array.from(elms)}<br/>`;
+            if(nom.elm_type = ОшибкаКритическая) {
+              critical = true;
+            }
+          });
+        }
+      });
+
+      msg.show_msg && msg.show_msg({
+        type: 'alert-warning',
+        title: 'Ошибки в заказе',
+        text,
+      });
+
+      console.error(text);
+
+      if (critical && !must_be_saved) {
+        if(obj_delivery_state == 'Отправлен') {
+          this.obj_delivery_state = 'Черновик';
+        }
+        return false;
+      }
+    }
 
     // фильтр по статусу
     if(obj_delivery_state == 'Шаблон') {
@@ -176,7 +209,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
               }
               deleted ++;
               res = res
-                .then(() => $p.cat.characteristics.get(ref, 'promise'))
+                .then(() => cat.characteristics.get(ref, 'promise'))
                 .then((ox) => !ox.is_new() && !ox._deleted && ox.mark_deleted(true));
             }
             return res.then(() => deleted);
