@@ -244,8 +244,9 @@ class ProductsBuilding {
 
       // получаем спецификацию фурнитуры и переносим её в спецификацию изделия
       const blank_clr = $p.cat.clrs.get();
+      const {cnstr} = contour;
       furn.furn_set.get_spec(contour, furn_cache).forEach((row) => {
-        const elm = {elm: -contour.cnstr, clr: blank_clr};
+        const elm = {elm: -cnstr, clr: blank_clr};
         const row_spec = new_spec_row({elm, row_base: row, origin: row.origin, specify: row.specify, spec, ox});
 
         if(row.is_procedure_row) {
@@ -260,6 +261,33 @@ class ProductsBuilding {
           calc_count_area_mass(row_spec, spec);
         }
       });
+
+      // если задано ограничение по массе - проверяем
+      if(furn.furn_set.flap_weight_max) {
+        const map = new Map();
+        let weight = 0;
+        spec.forEach((row) => {
+          // отбрасываем лишние строки
+          if(row.elm > 0) {
+            if(!map.get(row.elm)) {
+              const crow = ox.coordinates.find({elm: row.elm});
+              map.set(row.elm, crow ? crow.cnstr : Infinity);
+            }
+            if(map.get(row.elm) !== cnstr) return;
+          }
+          else if(row.elm !== -cnstr) {
+            return;
+          }
+          weight += row.nom.density * row.totqty;
+        });
+        if(weight > furn.furn_set.flap_weight_max) {
+          // Визуализируем все стороны
+          const row_base = {clr: blank_clr, nom: $p.job_prm.nom.flap_weight_max};
+          contour.profiles.forEach(elm => {
+            new_spec_row({elm, row_base, origin: furn, spec, ox});
+          });
+        }
+      }
     }
 
     /**
