@@ -456,7 +456,8 @@ class ProductsBuilding {
         alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90,
         len: row_spec ? row_spec.len * 1000 : _row.len,
         art1: false,
-        art2: true
+        art2: true,
+        node: 'e'
       };
       if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0, b.point)) {
 
@@ -478,6 +479,7 @@ class ProductsBuilding {
         len_angl.angle = len_angl.alp1;
         len_angl.art2 = false;
         len_angl.art1 = true;
+        len_angl.node = 'b';
         cnn_add_spec(b.cnn, elm, len_angl, e.cnn);
       }
 
