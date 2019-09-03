@@ -1445,19 +1445,27 @@ class Contour extends AbstractFilling(paper.Layer) {
     // получаем строки спецификации с визуализацией
     for(const row of rows){
       if(!profiles.some((elm) => {
-          if (row.elm == elm.elm) {
+          if(row.elm == elm.elm){
             // есть визуализация для текущего профиля
             row.nom.visualization.draw(elm, l_visualization, row.len * 1000);
             return true;
           }
         })){
-        glasses.some((elm) => {
-          if (row.elm == elm.elm) {
-            // есть визуализация для текущего заполнения
-            row.nom.visualization.draw(elm, l_visualization, row.len * 1000, row.width * 1000);
-            return true;
-          }
-        })
+          glasses.some((elm) => {
+            if(row.elm == elm.elm){
+              // есть визуализация для текущего заполнения
+              row.nom.visualization.draw(elm, l_visualization, row.len * 1000, row.width * 1000);
+              return true;
+            }
+
+            return elm.imposts.some((impost) => {
+              if(impost instanceof Onlay && row.elm == impost.elm){
+                // есть визуализация для текущей раскладки
+                row.nom.visualization.draw(impost, l_visualization, row.len * 1000);
+                return true;
+              }
+            });
+          });
       }
     }
 
