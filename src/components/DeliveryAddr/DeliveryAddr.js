@@ -119,7 +119,7 @@ class DeliveryAddr extends Component {
   dadataChange = (data) => {
     const {props: {delivery}} = this;
     let nearest;
-    if(data.data && data.data.geo_lat && data.data.geo_lon) {
+    if(data.data && (data.data.qc_geo == 0 || data.data.qc_geo == 1)) {
       nearest = Promise.resolve();
     }
     else if(data.value) {
