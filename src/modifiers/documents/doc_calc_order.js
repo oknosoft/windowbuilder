@@ -1019,10 +1019,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
               const elm = new $p.DocCalc_order.FakeElm(row);
               characteristic.origin.calculate_spec({elm, len_angl, ox: characteristic});
               tmp = tmp.then(() => {
-                return characteristic.save().then(() => {
-                  // выполняем пересчет
-                  row.value_change('quantity', '', row.quantity);
-                });
+                // выполняем пересчет
+                row.value_change('quantity', '', row.quantity);
+                return characteristic.save();
               });
             }
             else {
