@@ -81,7 +81,7 @@ class ProductsBuilding {
       if(!cnn) {
         return;
       }
-      const sign = cnn.cnn_type == $p.enm.cnn_types.Наложение ? -1 : 1;
+      const sign = cnn.cnn_type == $p.enm.cnn_types.ii ? -1 : 1;
       const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
 
       cnn_filter_spec(cnn, elm, len_angl).forEach((row_cnn_spec) => {
@@ -437,15 +437,15 @@ class ProductsBuilding {
         // РассчитатьКоличествоПлощадьМассу
         const angle_calc_method_prev = row_cnn_prev ? row_cnn_prev.angle_calc_method : null;
         const angle_calc_method_next = row_cnn_next ? row_cnn_next.angle_calc_method : null;
-        const {СоединениеПополам, Соединение} = $p.enm.angle_calculating_ways;
+        const {СоединениеПополам: s2, Соединение: s1} = $p.enm.angle_calculating_ways;
         calc_count_area_mass(
           row_spec,
           spec,
           _row,
           angle_calc_method_prev,
           angle_calc_method_next,
-          angle_calc_method_prev == СоединениеПополам || angle_calc_method_prev == Соединение ? prev.generatrix.angle_to(elm.generatrix, b.point) : 0,
-          angle_calc_method_next == СоединениеПополам || angle_calc_method_next == Соединение ? elm.generatrix.angle_to(next.generatrix, e.point) : 0
+          angle_calc_method_prev == s2 || angle_calc_method_prev == s1 ? prev.generatrix.angle_to(elm.generatrix, b.point) : 0,
+          angle_calc_method_next == s2 || angle_calc_method_next == s1 ? elm.generatrix.angle_to(next.generatrix, e.point) : 0
         );
       }
 
@@ -456,7 +456,8 @@ class ProductsBuilding {
         alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90,
         len: row_spec ? row_spec.len * 1000 : _row.len,
         art1: false,
-        art2: true
+        art2: true,
+        node: 'e',
       };
       if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0, b.point)) {
 
@@ -478,6 +479,7 @@ class ProductsBuilding {
         len_angl.angle = len_angl.alp1;
         len_angl.art2 = false;
         len_angl.art1 = true;
+        len_angl.node = 'b';
         cnn_add_spec(b.cnn, elm, len_angl, e.cnn);
       }
 

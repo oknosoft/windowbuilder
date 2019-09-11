@@ -1442,21 +1442,25 @@ class Contour extends AbstractFilling(paper.Layer) {
       this.project.ox.specification.find_rows({dop: -1}, (row) => rows.push(row));
     }
 
-    // получаем строки спецификации с визуализацией
+    function draw (elm) {
+      if (this.elm === elm.elm) {
+        this.nom.visualization.draw(elm, l_visualization, this.len * 1000);
+        return true;
+      }
+    };
+
+    // бежим по строкам спецификации с визуализацией
     for(const row of rows){
-      if(!profiles.some((elm) => {
-          if (row.elm == elm.elm) {
-            // есть визуализация для текущего профиля
-            row.nom.visualization.draw(elm, l_visualization, row.len * 1000);
-            return true;
-          }
-        })){
+      // визуализация для текущего профиля
+      if(!profiles.some(draw.bind(row))){
+        // визуализация для текущего заполнения
         glasses.some((elm) => {
-          if (row.elm == elm.elm) {
-            // есть визуализация для текущего заполнения
+          if (row.elm === elm.elm) {
             row.nom.visualization.draw(elm, l_visualization, row.len * 1000, row.width * 1000);
             return true;
           }
+          // визуализация для текущей раскладки
+          return elm.imposts.some(draw.bind(row));
         })
       }
     }
