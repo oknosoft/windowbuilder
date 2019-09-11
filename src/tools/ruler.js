@@ -173,14 +173,16 @@ class RulerWnd {
         return [offsetLeft + 7, offsetTop + 9];
       },
     };
-    this.input.firstChild.onfocus = function () {
-      wnd.elmnts.calck = new eXcell_calck(this);
-      wnd.elmnts.calck.edit();
+    this.input.firstChild.onclick = function () {
+      if(!wnd.elmnts.calck) {
+        wnd.elmnts.calck = new eXcell_calck(this);
+      }
+      setTimeout(() => {
+        wnd.elmnts.calck.edit();
+      }, 100);
     };
 
-    setTimeout(() => {
-      this.input && this.input.firstChild.focus();
-    }, 100);
+    this.input.firstChild.click();
 
   }
 
