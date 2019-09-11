@@ -63,7 +63,7 @@ class YaMap extends React.Component {
             });
           point.events.add(['dragend'], this.dragend);
 
-          // Размещение геообъекта на карте.
+          // Размещение метки на карте.
           this.map.geoObjects.add(point);
           mapRef(this.map);
           this.map.reflectCenter = function ([lat, lng]) {
@@ -73,6 +73,43 @@ class YaMap extends React.Component {
           this.map.coordinatesFin = () => {
             this.dragend({originalEvent: {target: point}});
           };
+
+          // добавляем полигоны периметров района и направления доставки
+          v.poly_area = new ymaps.Polygon([
+            // Координаты внешнего контура.
+            [],
+            ], {
+            hintContent: "Район доставки"
+          }, {
+            cursor: 'auto',
+            interactivityModel: 'default#transparent',
+            fillColor: '#c0d0e0',
+            strokeColor: '#709070',
+            strokeOpacity: 0.4,
+            strokeWidth: 3,
+            opacity: 0.3
+          });
+          this.map.geoObjects.add(v.poly_area);
+          this.map.reflectArea = () => {
+            const {coordinates: {_obj}, name}  = v.delivery_area;
+            v.poly_area.geometry.setCoordinates([_obj.map((row) => [row.latitude, row.longitude])]);
+            v.poly_area.properties.set('hintContent', name);
+          };
+          this.map.reflectArea();
+
+          v.poly_direction = new ymaps.Polygon([[]], {
+            hintContent: "Направление доставки"
+          }, {
+            visible: false,
+            cursor: 'auto',
+            interactivityModel: 'default#transparent',
+            fillColor: '#ccaaff',
+            strokeColor: '#aa80ff',
+            strokeOpacity: 0.4,
+            strokeWidth: 2,
+            opacity: 0.2
+          });
+          this.map.geoObjects.add(v.poly_direction);
         });
     }
     else if(this.map && !this.el) {
