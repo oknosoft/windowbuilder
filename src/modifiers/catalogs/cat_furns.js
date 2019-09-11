@@ -269,9 +269,11 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
               const nouter = nearest.rays.outer;
               const point = outer.getPointAt(outer.getOffsetOf(outer.getNearestPoint(elm.corns(1))) + coordin);
               proc_row.handle_height_min = nearest.elm;
-              proc_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
               if(dop_row.transfer_option == inverse){
-                proc_row.coefficient = nouter.length - proc_row.coefficient;
+                proc_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(2))) - nouter.getOffsetOf(nouter.getNearestPoint(point));
+              }
+              else {
+                proc_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
               }
               // если сказано учесть припуск - добавляем dx0
               if(dop_row.overmeasure){
