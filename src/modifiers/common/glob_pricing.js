@@ -361,7 +361,7 @@ class Pricing {
           }
           // заглушка для совместимости с УПзП
           else if(property.empty()){
-            const vpartner = cat.partners.get(row_prm._obj.value, false, true);
+            const vpartner = cat.partners.get(row_prm._obj.value);
             if(vpartner && !vpartner.empty()){
               ok = vpartner == partner;
             }
