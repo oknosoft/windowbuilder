@@ -492,12 +492,20 @@ class ProductsBuilding {
       // если у профиля есть доборы, добавляем их спецификации
       elm.addls.forEach(base_spec_profile);
 
+      // во время расчетов возможна подмена объекта спецификации
+      const spec_tmp = spec;
+
       // спецификация вложенных в элемент вставок
       ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
 
         // если во вставке указано создавать продукцию, создаём
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
-          $p.record_log('inset_elm_spec: specification_order_row_types.Продукция');
+          const cx = Object.assign(ox.find_create_cx(elm.elm, inset.ref), inset.contour_attrs(elm.layer));
+          ox._order_rows.push(cx);
+          spec = cx.specification.clear();
+        }
+        else {
+          spec = spec_tmp;
         }
 
         len_angl.origin = inset;
@@ -505,10 +513,10 @@ class ProductsBuilding {
         len_angl.cnstr = elm.layer.cnstr;
         delete len_angl.art1;
         delete len_angl.art2;
-        inset.calculate_spec({elm, len_angl, ox});
+        inset.calculate_spec({elm, len_angl, ox, spec});
 
       });
-
+      spec = spec_tmp;
     }
 
     /**
@@ -523,21 +531,23 @@ class ProductsBuilding {
         return;
       }
 
-      // во время расчетов возможна подмена объекта спецификации
-      const spec_tmp = spec;
-
       // спецификация вставки
       inset.calculate_spec({elm, ox});
+
+      // во время расчетов возможна подмена объекта спецификации
+      const spec_tmp = spec;
 
       // спецификация вложенных в элемент вставок
       ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
 
         // если во вставке указано создавать продукцию, создаём
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
-          // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём и дозаполняем реквизиты характеристики
           const cx = Object.assign(ox.find_create_cx(elm.elm, inset.ref), inset.contour_attrs(layer));
           ox._order_rows.push(cx);
           spec = cx.specification.clear();
+        }
+        else {
+          spec = spec_tmp;
         }
 
         // рассчитаем спецификацию вставки
@@ -604,14 +614,33 @@ class ProductsBuilding {
       // для всех раскладок заполнения
       imposts.forEach(base_spec_profile);
 
+      // во время расчетов возможна подмена объекта спецификации
+      const spec_tmp = spec;
+
       // спецификация вложенных в элемент вставок
       ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
         // если во вставке указано создавать продукцию, создаём
+        let len_angl;
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
-          $p.record_log('inset_elm_spec: specification_order_row_types.Продукция');
+          const cx = Object.assign(ox.find_create_cx(elm.elm, inset.ref), inset.contour_attrs(elm.layer));
+          ox._order_rows.push(cx);
+          spec = cx.specification.clear();
+          len_angl = {
+            angle: 0,
+            alp1: 0,
+            alp2: 0,
+            len: 0,
+            origin: inset,
+            cnstr: elm.layer.cnstr
+          };
         }
-        inset.calculate_spec({elm, ox, clr});
+        else {
+          spec = spec_tmp;
+        }
+
+        inset.calculate_spec({elm, len_angl, ox, spec});
       });
+      spec = spec_tmp;
     }
 
 
@@ -628,10 +657,12 @@ class ProductsBuilding {
 
         // если во вставке указано создавать продукцию, создаём
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
-          // характеристику ищем в озу, в indexeddb не лезем, если нет в озу - создаём и дозаполняем реквизиты характеристики
           const cx = Object.assign(ox.find_create_cx(-contour.cnstr, inset.ref), inset.contour_attrs(contour));
           ox._order_rows.push(cx);
           spec = cx.specification.clear();
+        }
+        else {
+          spec = spec_tmp;
         }
 
         // рассчитаем спецификацию вставки

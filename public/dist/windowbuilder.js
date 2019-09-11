@@ -724,31 +724,31 @@ class AdditionalInserts {
   }
 
   create_wnd(cnstr, project, cell) {
-    this._fields = $p.cat.characteristics.metadata("inserts").fields._clone();
+    this._fields = $p.cat.characteristics.metadata('inserts').fields._clone();
     this._caption = $p.msg.additional_inserts;
 
-    if(!cnstr){
+    if(!cnstr) {
       cnstr = 0;
-      this._caption+= ' в изделие';
-      this._fields.inset.choice_params[0].path = ["Изделие"];
+      this._caption += ' в изделие';
+      this._fields.inset.choice_params[0].path = ['Изделие'];
     }
     else if(cnstr == 'elm'){
       cnstr = project.selected_elm;
-      if(cnstr){
+      if(cnstr) {
         project.ox.add_inset_params(cnstr.inset, -cnstr.elm, $p.utils.blank.guid);
-        this._caption+= ' элем. №' + cnstr.elm;
+        this._caption += ' элем. №' + cnstr.elm;
         cnstr = -cnstr.elm;
-        this._fields.inset.choice_params[0].path = ["Элемент"];
+        this._fields.inset.choice_params[0].path = ['Элемент', 'Жалюзи'];
       }
-      else{
+      else {
         return;
       }
     }
-    else if(cnstr == 'contour'){
+    else if(cnstr == 'contour') {
       const {activeLayer} = project;
       cnstr = activeLayer.cnstr;
-      this._caption+= ` в ${activeLayer.layer ? 'створку' : 'раму'} №${cnstr}`;
-      this._fields.inset.choice_params[0].path = ["МоскитнаяСетка", "Подоконник", "Откос", "Контур"];
+      this._caption += ` в ${activeLayer.layer ? 'створку' : 'раму'} №${cnstr}`;
+      this._fields.inset.choice_params[0].path = ['МоскитнаяСетка', 'Жалюзи', 'Подоконник', 'Откос', 'Контур'];
     }
     this.cnstr = cnstr;
 
@@ -780,56 +780,56 @@ class AdditionalInserts {
     const {elmnts} = this.wnd;
 
     elmnts.layout = this.wnd.attachLayout({
-      pattern: "2E",
+      pattern: '2E',
       cells: [{
-        id: "a",
-        text: "Вставки",
+        id: 'a',
+        text: 'Вставки',
         header: false,
         height: 160
       }, {
-        id: "b",
-        text: "Параметры",
+        id: 'b',
+        text: 'Параметры',
         header: false
       }],
       offsets: {top: 0, right: 0, bottom: 0, left: 0}
     });
-    elmnts.layout.cells("a").setMinHeight(140);
-    elmnts.layout.cells("a").setHeight(160);
+    elmnts.layout.cells('a').setMinHeight(140);
+    elmnts.layout.cells('a').setHeight(160);
 
-    elmnts.grids.inserts = elmnts.layout.cells("a").attachTabular({
+    elmnts.grids.inserts = elmnts.layout.cells('a').attachTabular({
       obj: project.ox,
-      ts: "inserts",
+      ts: 'inserts',
       selection: {cnstr: cnstr},
-      toolbar_struct: $p.injected_data["toolbar_add_del_compact.xml"],
+      toolbar_struct: $p.injected_data['toolbar_add_del_compact.xml'],
       metadata: this._fields,
       ts_captions: {
-        fields: ["inset", "clr"],
-        headers: "Вставка,Цвет",
-        widths: "*,*",
-        min_widths: "100,100",
-        aligns: "",
-        sortings: "na,na",
-        types: "ref,ref"
+        fields: ['inset', 'clr'],
+        headers: 'Вставка,Цвет',
+        widths: '*,*',
+        min_widths: '100,100',
+        aligns: '',
+        sortings: 'na,na',
+        types: 'ref,ref'
       }
     });
 
-    elmnts.grids.params = elmnts.layout.cells("b").attachHeadFields({
+    elmnts.grids.params = elmnts.layout.cells('b').attachHeadFields({
       obj: project.ox,
-      ts: "params",
+      ts: 'params',
       selection: this.get_selection(),
       oxml: {
-        "Параметры": []
+        'Параметры': []
       },
-      ts_title: "Параметры"
+      ts_title: 'Параметры'
     });
 
-    if(cell){
-      elmnts.layout.cells("a").getAttachedToolbar().addText($p.utils.generate_guid(), 3, options.wnd.caption);
+    if(cell) {
+      elmnts.layout.cells('a').getAttachedToolbar().addText($p.utils.generate_guid(), 3, options.wnd.caption);
     }
 
     this.refill_prms = this.refill_prms.bind(this);
-    elmnts.grids.inserts.attachEvent("onRowSelect", this.refill_prms);
-    elmnts.grids.inserts.attachEvent("onEditCell", (stage, rId, cInd) => {
+    elmnts.grids.inserts.attachEvent('onRowSelect', this.refill_prms);
+    elmnts.grids.inserts.attachEvent('onEditCell', (stage, rId, cInd) => {
       !cInd && setTimeout(this.refill_prms);
       project.register_change();
     });

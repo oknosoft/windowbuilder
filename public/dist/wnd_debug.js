@@ -4193,10 +4193,17 @@ class ProductsBuilding {
 
       elm.addls.forEach(base_spec_profile);
 
+      const spec_tmp = spec;
+
       ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
 
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
-          $p.record_log('inset_elm_spec: specification_order_row_types.Продукция');
+          const cx = Object.assign(ox.find_create_cx(elm.elm, inset.ref), inset.contour_attrs(elm.layer));
+          ox._order_rows.push(cx);
+          spec = cx.specification.clear();
+        }
+        else {
+          spec = spec_tmp;
         }
 
         len_angl.origin = inset;
@@ -4204,10 +4211,10 @@ class ProductsBuilding {
         len_angl.cnstr = elm.layer.cnstr;
         delete len_angl.art1;
         delete len_angl.art2;
-        inset.calculate_spec({elm, len_angl, ox});
+        inset.calculate_spec({elm, len_angl, ox, spec});
 
       });
-
+      spec = spec_tmp;
     }
 
     function base_spec_sectional(elm) {
@@ -4218,9 +4225,9 @@ class ProductsBuilding {
         return;
       }
 
-      const spec_tmp = spec;
-
       inset.calculate_spec({elm, ox});
+
+      const spec_tmp = spec;
 
       ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
 
@@ -4228,6 +4235,9 @@ class ProductsBuilding {
           const cx = Object.assign(ox.find_create_cx(elm.elm, inset.ref), inset.contour_attrs(layer));
           ox._order_rows.push(cx);
           spec = cx.specification.clear();
+        }
+        else {
+          spec = spec_tmp;
         }
 
         const len_angl = {
@@ -4284,12 +4294,30 @@ class ProductsBuilding {
 
       imposts.forEach(base_spec_profile);
 
+      const spec_tmp = spec;
+
       ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
+        let len_angl;
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
-          $p.record_log('inset_elm_spec: specification_order_row_types.Продукция');
+          const cx = Object.assign(ox.find_create_cx(elm.elm, inset.ref), inset.contour_attrs(elm.layer));
+          ox._order_rows.push(cx);
+          spec = cx.specification.clear();
+          len_angl = {
+            angle: 0,
+            alp1: 0,
+            alp2: 0,
+            len: 0,
+            origin: inset,
+            cnstr: elm.layer.cnstr
+          };
         }
-        inset.calculate_spec({elm, ox, clr});
+        else {
+          spec = spec_tmp;
+        }
+
+        inset.calculate_spec({elm, len_angl, ox, spec});
       });
+      spec = spec_tmp;
     }
 
 
@@ -4303,6 +4331,9 @@ class ProductsBuilding {
           const cx = Object.assign(ox.find_create_cx(-contour.cnstr, inset.ref), inset.contour_attrs(contour));
           ox._order_rows.push(cx);
           spec = cx.specification.clear();
+        }
+        else {
+          spec = spec_tmp;
         }
 
         const elm = {
@@ -7821,7 +7852,7 @@ $p.on('tabular_paste', (clip) => {
 
 (function(_mgr){
 
-  _mgr.additions_groups = [_mgr.Подоконник, _mgr.Водоотлив, _mgr.МоскитнаяСетка, _mgr.Откос, _mgr.Профиль, _mgr.Монтаж, _mgr.Доставка, _mgr.Набор];
+  _mgr.additions_groups = [_mgr.Подоконник, _mgr.Водоотлив, _mgr.МоскитнаяСетка, _mgr.Жалюзи, _mgr.Откос, _mgr.Профиль, _mgr.Монтаж, _mgr.Доставка, _mgr.Набор];
 
 
 })($p.enm.inserts_types);
