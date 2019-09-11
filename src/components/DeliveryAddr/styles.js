@@ -17,7 +17,7 @@ const styles = theme => ({
   },
   coordinates: {
     marginTop: geo_map.includes('without_area') ? 5 : theme.spacing(),
-    width: 260,
+    width: 230,
   },
   groupTitle: {
     fontWeight: 'bold',

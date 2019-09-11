@@ -132,6 +132,11 @@ class DeliveryManager {
             case 'street':
               res.data.street_with_type = name;
               break;
+            case 'district':
+              if(!res.data.street_with_type) {
+                res.data.street_with_type = name;
+              }
+              break;
             case 'house':
               res.data.house = name;
               break;
@@ -217,7 +222,7 @@ class FakeAddrObj extends BaseDataObj{
   }
 
   get address_fields() {
-    return this._getter('shipping_address');
+    return this._getter('address_fields');
   }
   set address_fields(v) {
     this._setter('address_fields', v);

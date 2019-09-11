@@ -15,9 +15,22 @@ import connect from './connect';
 import FormGroup from '@material-ui/core/FormGroup';
 import DataField from 'metadata-react/DataField';
 import TextField  from '@material-ui/core/TextField';
+import IconButton  from '@material-ui/core/IconButton';
+import LiveHelp from '@material-ui/icons/LiveHelp';
 import GoogleMap from './GoogleMap';
 import YaMap from './YaMap';
+import YaSuggest from './YaSuggest';
 import {ReactDadata} from './DadataTyped/index.tsx';
+
+function Toolbtn({suggest_type, handleSuggestType}) {
+  const lbl = suggest_type[0].toUpperCase() + ' ';
+  return <IconButton
+    title={`Источник подсказок: ${suggest_type}`}
+    onClick={handleSuggestType}>
+    <span style={{color: lbl.startsWith('D') ? 'blue' : 'red'}}>{lbl}</span>
+    <LiveHelp/>
+  </IconButton>
+}
 
 class DeliveryAddr extends Component {
 
@@ -32,6 +45,7 @@ class DeliveryAddr extends Component {
       msg: null,
       queryClose: false,
       cpresentation: t.cpresentation(),
+      suggest_type: $p.wsql.get_user_param('suggest_type') || 'dadata',
     };
     t.wnd = {
       setText() {},
@@ -64,6 +78,7 @@ class DeliveryAddr extends Component {
     }
     v.assemble_address_fields(true);
     dadata && dadata.onInputChange({
+      fake: true,
       target: {value: obj.shipping_address}
     });
     const data = {area: true};
@@ -96,6 +111,18 @@ class DeliveryAddr extends Component {
       });
   };
 
+  handleSuggestType = () => {
+    let {suggest_type} = this.state;
+    if(suggest_type === 'dadata') {
+      suggest_type = 'yandex';
+    }
+    else {
+      suggest_type = 'dadata';
+    }
+    $p.wsql.set_user_param('suggest_type', suggest_type);
+    this.setState({suggest_type});
+  };
+
   handleCalck = () => {
     this.props.handleCalck.call(this)
       .catch((err) => {
@@ -117,7 +144,7 @@ class DeliveryAddr extends Component {
   };
 
   dadataChange = (data) => {
-    const {props: {delivery}} = this;
+    const {props: {delivery}, v} = this;
     let nearest;
     if(data.data && (data.data.qc_geo == 0 || data.data.qc_geo == 1)) {
       nearest = Promise.resolve();
@@ -126,8 +153,16 @@ class DeliveryAddr extends Component {
       nearest = delivery.dadata.specify(data.value)
         .then(({suggestions}) => {
           if(suggestions && suggestions[0].data.geo_lat && suggestions[0].data.geo_lon) {
-            data.data.geo_lat = suggestions[0].data.geo_lat;
-            data.data.geo_lon = suggestions[0].data.geo_lon;
+            if(!Object.keys(data.data).length) {
+              Object.assign(data.data, suggestions[0].data);
+              delivery.dadata.components(v, data.data);
+              v.assemble_address_fields(true);
+              //v.owner.refresh_grid(co);
+            }
+            else {
+              data.data.geo_lat = suggestions[0].data.geo_lat;
+              data.data.geo_lon = suggestions[0].data.geo_lon;
+            }
             return;
           }
           else if(data.data && data.data.postal_code) {
@@ -146,6 +181,17 @@ class DeliveryAddr extends Component {
     }));
   };
 
+  flatChange = ({target}) => {
+    const {v} = this;
+    v.flat = target.value.trim();
+    if(v.flat) {
+      if(/^\d+$/.test(v.flat)) {
+        v.flat = 'кв ' + v.flat;
+      }
+    }
+    v.assemble_address_fields(false);
+  };
+
   findArea = ({lat, lng, data}) => {
     const {obj, props: {delivery}, map} = this;
     const [area, point] = delivery.nearest({lat, lng});
@@ -158,7 +204,7 @@ class DeliveryAddr extends Component {
       obj.shipping_address = data.value || data.unrestricted_value;
       map && map.reflectCenter([point.lat, point.lng]);
     }
-  }
+  };
 
   coordinatesChange = ({target}) => {
     this.setState({cpresentation: target ? target.value : this.cpresentation()});
@@ -167,6 +213,19 @@ class DeliveryAddr extends Component {
   coordinatesKeyPress = ({key}) => {
     if(key === 'Enter') {
       this.coordinatesFin();
+    }
+  };
+
+  onDataChange = (obj, fields) => {
+    if(obj === this.obj && ('delivery_area' in fields || 'coordinates' in fields)) {
+      this.forceUpdate();
+    }
+  };
+
+  mapRef = (map) => {
+    this.map = map;
+    if(this.state.suggest_type === 'yandex') {
+      this.dadata.init(true);
     }
   };
 
@@ -185,22 +244,26 @@ class DeliveryAddr extends Component {
     catch (e) {}
   }
 
-  onDataChange = (obj, fields) => {
-    if(obj === this.obj && ('delivery_area' in fields || 'coordinates' in fields)) {
-      this.forceUpdate();
-    }
-  }
-
   content() {
-    const {obj, state: {cpresentation}, props: {delivery, classes}, geo_map} = this;
+    const {obj, state: {cpresentation, suggest_type}, props: {delivery, classes}, geo_map} = this;
     const ComponentMap = geo_map.includes('google') ? GoogleMap : YaMap;
-    const addr = <ReactDadata
+    const addr = suggest_type === 'dadata' ?
+      <ReactDadata
+        key="row_addr"
+        label="Населенный пункт, улица, дом, квартира"
+        ref={(el) => this.dadata = el}
+        token={delivery.dadata.token}
+        query={obj.shipping_address}
+        onChange={this.dadataChange}
+      />
+      :
+    <YaSuggest
       key="row_addr"
-      label="Населенный пункт, улица, дом, квартира"
       ref={(el) => this.dadata = el}
-      token={delivery.dadata.token}
       query={obj.shipping_address}
+      v={this.v}
       onChange={this.dadataChange}
+      flatChange={this.flatChange}
     />;
     const coordin = <TextField
       value={cpresentation}
@@ -222,7 +285,7 @@ class DeliveryAddr extends Component {
       </FormGroup>,
       <ComponentMap
         key="map"
-        mapRef={(map) => this.map = map}
+        mapRef={this.mapRef}
         v={this.v}
         larger={geo_map.includes('without_area')}
       />
@@ -231,7 +294,7 @@ class DeliveryAddr extends Component {
 
   render() {
 
-    const {handleCancel, handleErrClose, obj: {_data}, state: {msg, queryClose}} = this;
+    const {handleCancel, handleErrClose, obj: {_data}, state: {msg, queryClose, suggest_type}} = this;
 
 
     return <Dialog
@@ -244,6 +307,7 @@ class DeliveryAddr extends Component {
         <Button key="ok" onClick={this.handleOk} color="primary">Ок</Button>,
         <Button key="cancel" onClick={handleCancel} color="primary">Отмена</Button>
       ]}
+      toolbtns={<Toolbtn suggest_type={suggest_type} handleSuggestType={this.handleSuggestType}/>}
     >
       {this.content()}
       {msg &&
