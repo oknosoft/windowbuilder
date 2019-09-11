@@ -34,7 +34,7 @@ class YaSuggest extends React.Component {
     this.state = {
       query: props.query || '',
       flat: '',
-    }
+    };
   }
 
   init(fake) {
@@ -131,5 +131,13 @@ class YaSuggest extends React.Component {
     );
   }
 }
+
+YaSuggest.propTypes = {
+  classes: PropTypes.object,
+  v: PropTypes.object,
+  flatChange: PropTypes.func,
+  onChange: PropTypes.func,
+  query: PropTypes.string,
+};
 
 export default withStyles(styles)(YaSuggest);

@@ -29,7 +29,7 @@ function Toolbtn({suggest_type, handleSuggestType}) {
     onClick={handleSuggestType}>
     <span style={{color: lbl.startsWith('D') ? 'blue' : 'red'}}>{lbl}</span>
     <LiveHelp/>
-  </IconButton>
+  </IconButton>;
 }
 
 class DeliveryAddr extends Component {
@@ -217,8 +217,13 @@ class DeliveryAddr extends Component {
   };
 
   onDataChange = (obj, fields) => {
-    if(obj === this.obj && ('delivery_area' in fields || 'coordinates' in fields)) {
-      this.forceUpdate();
+    if(obj === this.obj) {
+      if('delivery_area' in fields || 'coordinates' in fields) {
+        this.forceUpdate();
+      }
+      if('delivery_area' in fields && this.map) {
+        this.map.reflectArea();
+      }
     }
   };
 

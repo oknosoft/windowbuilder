@@ -8813,11 +8813,11 @@ class WndAddressData {
       this.poly_area = new maps.Polygon(
         {
           map,
-          strokeColor     : '#aaff80',
-          strokeOpacity   : 0.35,
-          strokeWeight    : 1,
-          fillColor       : "#ccffaa",
-          fillOpacity     : 0.2,
+          strokeColor     : '#80aa80',
+          strokeOpacity   : 0.4,
+          strokeWeight    : 2,
+          fillColor       : "#c0d0e0",
+          fillOpacity     : 0.3,
           geodesic        : true
         });
       this.poly_direction = new maps.Polygon(

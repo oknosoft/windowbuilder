@@ -27,6 +27,7 @@
   "proxy": "http://localhost:3016/",
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
+    "@turf/points-within-polygon": "^5.1.5",
     "dxf-writer": "^1.2.1",
     "genetic-cutting": "github:oknosoft/genetic-cutting",
     "metadata-abstract-ui": "2.0.20-beta.7",
