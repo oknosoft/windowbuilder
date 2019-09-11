@@ -1328,16 +1328,16 @@ class Scheme extends paper.Project {
     //const {allow_open_cnn} = this._dp.sys;
     const {acn} = $p.enm.cnn_types;
 
-    let distance, gp, cnns, addls,
+    let distance, cnns, addls,
       bind_node = typeof check_only == 'string' && check_only.indexOf('node') != -1,
       bind_generatrix = typeof check_only == 'string' ? check_only.indexOf('generatrix') != -1 : check_only,
       node_distance;
 
     // Проверяет дистанцию в окрестности начала или конца соседнего элемента
     function check_node_distance(node) {
-
+      distance = element[node].getDistance(point)
       // allow_open_cnn ? parseFloat(consts.sticking_l) : consts.sticking)
-      if((distance = element[node].getDistance(point)) < parseFloat(consts.sticking_l)) {
+      if(distance < parseFloat(consts.sticking_l)) {
 
         if(typeof res.distance == 'number' && res.distance < distance) {
           res.profile = element;
@@ -1349,13 +1349,8 @@ class Scheme extends paper.Project {
 
           // а есть ли подходящее?
           cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
-          if(!cnns.length) {
-            if(!element.is_collinear(profile)) {
-              cnns = $p.cat.cnns.nom_cnn(profile, element, acn.t);
-            }
-            if(!cnns.length) {
-              return 1;
-            }
+          if(!cnns || !cnns.length) {
+            return 1;
           }
 
           // если в точке сходятся 2 профиля текущего контура - ок
@@ -1363,24 +1358,29 @@ class Scheme extends paper.Project {
           // если сходятся > 2 и разрешены разрывы TODO: учесть не только параллельные
 
         }
-        else if(res.cnn && acn.a.indexOf(res.cnn.cnn_type) == -1) {
+        else if(res.cnn && acn.t.includes(res.cnn.cnn_type)) {
           return 1;
         }
 
         res.point = bind_node ? element[node] : point;
         res.distance = distance;
         res.profile = element;
-        if(cnns && cnns.length && acn.t.indexOf(cnns[0].cnn_type) != -1) {
-          res.profile_point = '';
-          res.cnn_types = acn.t;
-          if(!res.cnn) {
-            res.cnn = cnns[0];
-          }
+        res.profile_point = node;
+        res.cnn_types = acn.a;
+        if(cnns && cnns.length && !res.cnn) {
+          res.cnn = cnns[0];
         }
-        else {
-          res.profile_point = node;
-          res.cnn_types = acn.a;
-        }
+        // if(cnns && cnns.length && acn.t.includes(cnns[0].cnn_type)) {
+        //   res.profile_point = '';
+        //   res.cnn_types = acn.t;
+        //   if(!res.cnn) {
+        //     res.cnn = cnns[0];
+        //   }
+        // }
+        // else {
+        //   res.profile_point = node;
+        //   res.cnn_types = acn.a;
+        // }
 
         return 2;
       }
@@ -1430,7 +1430,7 @@ class Scheme extends paper.Project {
     // }
 
     // если к доборам не привязались - проверяем профиль
-    gp = element.generatrix.getNearestPoint(point);
+    const gp = element.generatrix.getNearestPoint(point);
     distance = gp.getDistance(point);
 
     if(distance < ((res.is_t || !res.is_l) ? consts.sticking : consts.sticking_l)) {

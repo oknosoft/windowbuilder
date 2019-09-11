@@ -198,13 +198,15 @@ class GeneratrixElement extends BuilderElement {
           }
         }
 
+        let {profile, profile_point} = cnn_point;
+
         if(cnn_point && cnn_point.cnn_types == $p.enm.cnn_types.acn.t && (segm.point == this.b || segm.point == this.e)){
           if(cnn_point.point.is_nearest(free_point, 0)){
             segm.point = cnn_point.point;
           }
           else{
             // при сдвигах примыканий к наклонным элементам, ищем точку на луче
-            const ppath = (cnn_point.profile.nearest(true) ? cnn_point.profile.rays.outer : cnn_point.profile.generatrix).clone({insert: false});
+            const ppath = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).clone({insert: false});
             const {bounds} = ppath;
             if(Math.abs(delta.y) < consts.epsilon){
               // режем вертикальным лучом
@@ -231,7 +233,7 @@ class GeneratrixElement extends BuilderElement {
           segm.point = free_point;
           // если соединение угловое, тянем тянем соседние узлы сразу
           if(cnn_point && !paper.Key.isDown('control')){
-            const {profile, profile_point} = cnn_point;
+
             if(profile && profile_point && !profile[profile_point].is_nearest(free_point)){
               if(this instanceof Onlay){
                 this.move_nodes(noti_points.old, free_point);

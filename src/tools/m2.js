@@ -82,7 +82,7 @@ class ToolM2 extends paper.Tool {
       if(elm !== impost && elm.point !== 't') {
         profile = elm.profile;
         point = profile.nearest(true) ? (profile.corns(elm.point === 'b' ? 1 : 2)) : profile[elm.point];
-        const cnns = $p.cat.cnns.nom_cnn(impost.profile, profile, [$p.enm.cnn_types.КрестВСтык]);
+        const cnns = $p.cat.cnns.nom_cnn(impost.profile, profile, [$p.enm.cnn_types.xx]);
         if(cnns.length) {
           cnn = cnns[0];
           return true;
@@ -138,7 +138,7 @@ class ToolM2 extends paper.Tool {
         else {
           point = profile[elm.point];
         }
-        const cnns = $p.cat.cnns.nom_cnn(impost.profile, profile, [$p.enm.cnn_types.ТОбразное]);
+        const cnns = $p.cat.cnns.nom_cnn(impost.profile, profile, [$p.enm.cnn_types.t]);
         if(cnns.length) {
           cnn = cnns[0];
           return true;

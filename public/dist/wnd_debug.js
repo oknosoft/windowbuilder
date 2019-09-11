@@ -1074,14 +1074,52 @@ $p.cat.cnns.__define({
     }
   },
 
+  sort_cnns: {
+    value(a, b) {
+      const {t, xx} = $p.enm.cnn_types;
+      const sides = [$p.enm.cnn_sides.Изнутри, $p.enm.cnn_sides.Снаружи];
+      if(sides.indexOf(a.sd1) != -1 && sides.indexOf(b.sd1) == -1){
+        return 1;
+      }
+      if(sides.indexOf(b.sd1) != -1 && sides.indexOf(a.sd1) == -1){
+        return -1;
+      }
+      if (a.priority > b.priority) {
+        return -1;
+      }
+      if (a.priority < b.priority) {
+        return 1;
+      }
+      if(a.cnn_type === xx && b.cnn_type !== xx){
+        return 1;
+      }
+      if(b.cnn_type === xx && a.cnn_type !== xx){
+        return -1;
+      }
+      if(a.cnn_type === t && b.cnn_type !== t){
+        return 1;
+      }
+      if(b.cnn_type === t && a.cnn_type !== t){
+        return -1;
+      }
+      if (a.name > b.name) {
+        return -1;
+      }
+      if (a.name < b.name) {
+        return 1;
+      }
+      return 0;
+    }
+  },
+
   nom_cnn: {
     value(nom1, nom2, cnn_types, ign_side, is_outer){
 
       const {ProfileItem, BuilderElement, Filling} = $p.Editor;
-      const {Вертикальная} = $p.enm.orientations
+      const {orientations: {Вертикальная}, cnn_types: {acn}} = $p.enm;
 
       if(nom1 instanceof ProfileItem && nom2 instanceof ProfileItem &&
-        cnn_types && cnn_types.indexOf($p.enm.cnn_types.УгловоеДиагональное) != -1 &&
+        cnn_types && cnn_types.indexOf($p.enm.cnn_types.ad) != -1 &&
         nom1.orientation != Вертикальная && nom2.orientation == Вертикальная ){
         return this.nom_cnn(nom2, nom1, cnn_types);
       }
@@ -1128,7 +1166,7 @@ $p.cat.cnns.__define({
       if(!a1[ref2]){
         a2 = (a1[ref2] = []);
         this.forEach((cnn) => {
-          let is_nom1 = art1glass ? (cnn.art1glass && thickness1 >= cnn.tmin && thickness1 <= cnn.tmax && cnn.cnn_type == $p.enm.cnn_types.Наложение) : false,
+          let is_nom1 = art1glass ? (cnn.art1glass && thickness1 >= cnn.tmin && thickness1 <= cnn.tmax && cnn.cnn_type == $p.enm.cnn_types.ii) : false,
             is_nom2 = art2glass ? (cnn.art2glass && thickness2 >= cnn.tmin && thickness2 <= cnn.tmax) : false;
 
           cnn.cnn_elmnts.forEach((row) => {
@@ -1145,25 +1183,25 @@ $p.cat.cnns.__define({
       }
 
       if(cnn_types){
-        const types = Array.isArray(cnn_types) ? cnn_types : (
-            $p.enm.cnn_types.acn.a.indexOf(cnn_types) != -1 ? $p.enm.cnn_types.acn.a : [cnn_types]
-          );
-        return a1[ref2].filter((cnn) => {
-          if(types.indexOf(cnn.cnn_type) != -1){
-            if(!side){
-              return true
+        const types = Array.isArray(cnn_types) ? cnn_types : (acn.a.indexOf(cnn_types) != -1 ? acn.a : [cnn_types]);
+        return a1[ref2]
+          .filter((cnn) => {
+            if(types.indexOf(cnn.cnn_type) != -1){
+              if(!side){
+                return true
+              }
+              if(cnn.sd1 == $p.enm.cnn_sides.Изнутри){
+                return side == $p.enm.cnn_sides.Изнутри;
+              }
+              else if(cnn.sd1 == $p.enm.cnn_sides.Снаружи){
+                return side == $p.enm.cnn_sides.Снаружи;
+              }
+              else{
+                return true;
+              }
             }
-            if(cnn.sd1 == $p.enm.cnn_sides.Изнутри){
-              return side == $p.enm.cnn_sides.Изнутри;
-            }
-            else if(cnn.sd1 == $p.enm.cnn_sides.Снаружи){
-              return side == $p.enm.cnn_sides.Снаружи;
-            }
-            else{
-              return true;
-            }
-          }
-        });
+          })
+          .sort(this.sort_cnns);
       }
 
       return a1[ref2];
@@ -1200,30 +1238,6 @@ $p.cat.cnns.__define({
       const cnns = this.nom_cnn(elm1, elm2, cnn_types, ign_side, is_outer);
 
       if(cnns.length){
-        const sides = [$p.enm.cnn_sides.Изнутри, $p.enm.cnn_sides.Снаружи];
-        if(cnns.length > 1){
-          cnns.sort((a, b) => {
-            if(sides.indexOf(a.sd1) != -1 && sides.indexOf(b.sd1) == -1){
-              return 1;
-            }
-            if(sides.indexOf(b.sd1) != -1 && sides.indexOf(a.sd1) == -1){
-              return -1;
-            }
-            if (a.priority > b.priority) {
-              return -1;
-            }
-            if (a.priority < b.priority) {
-              return 1;
-            }
-            if (a.name > b.name) {
-              return -1;
-            }
-            if (a.name < b.name) {
-              return 1;
-            }
-            return 0;
-          });
-        }
         return cnns[0];
       }
       else{
@@ -1666,9 +1680,11 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
               const nouter = nearest.rays.outer;
               const point = outer.getPointAt(outer.getOffsetOf(outer.getNearestPoint(elm.corns(1))) + coordin);
               proc_row.handle_height_min = nearest.elm;
-              proc_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
               if(dop_row.transfer_option == inverse){
-                proc_row.coefficient = nouter.length - proc_row.coefficient;
+                proc_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(2))) - nouter.getOffsetOf(nouter.getNearestPoint(point));
+              }
+              else {
+                proc_row.coefficient = nouter.getOffsetOf(nouter.getNearestPoint(point)) - nouter.getOffsetOf(nouter.getNearestPoint(nearest.corns(1)));
               }
               if(dop_row.overmeasure){
                 proc_row.coefficient +=  nearest.dx0;
@@ -3443,7 +3459,7 @@ class Pricing {
             ok = utils.check_compare(property.calculated_value({calc_order_row}), property.extract_value(row_prm), row_prm.comparison_type, enm.comparison_types);
           }
           else if(property.empty()){
-            const vpartner = cat.partners.get(row_prm._obj.value, false, true);
+            const vpartner = cat.partners.get(row_prm._obj.value);
             if(vpartner && !vpartner.empty()){
               ok = vpartner == partner;
             }
@@ -3825,7 +3841,7 @@ class ProductsBuilding {
       if(!cnn) {
         return;
       }
-      const sign = cnn.cnn_type == $p.enm.cnn_types.Наложение ? -1 : 1;
+      const sign = cnn.cnn_type == $p.enm.cnn_types.ii ? -1 : 1;
       const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
 
       cnn_filter_spec(cnn, elm, len_angl).forEach((row_cnn_spec) => {
@@ -4129,15 +4145,15 @@ class ProductsBuilding {
 
         const angle_calc_method_prev = row_cnn_prev ? row_cnn_prev.angle_calc_method : null;
         const angle_calc_method_next = row_cnn_next ? row_cnn_next.angle_calc_method : null;
-        const {СоединениеПополам, Соединение} = $p.enm.angle_calculating_ways;
+        const {СоединениеПополам: s2, Соединение: s1} = $p.enm.angle_calculating_ways;
         calc_count_area_mass(
           row_spec,
           spec,
           _row,
           angle_calc_method_prev,
           angle_calc_method_next,
-          angle_calc_method_prev == СоединениеПополам || angle_calc_method_prev == Соединение ? prev.generatrix.angle_to(elm.generatrix, b.point) : 0,
-          angle_calc_method_next == СоединениеПополам || angle_calc_method_next == Соединение ? elm.generatrix.angle_to(next.generatrix, e.point) : 0
+          angle_calc_method_prev == s2 || angle_calc_method_prev == s1 ? prev.generatrix.angle_to(elm.generatrix, b.point) : 0,
+          angle_calc_method_next == s2 || angle_calc_method_next == s1 ? elm.generatrix.angle_to(next.generatrix, e.point) : 0
         );
       }
 
@@ -4147,7 +4163,8 @@ class ProductsBuilding {
         alp2: next ? elm.generatrix.angle_to(next.generatrix, elm.e, true) : 90,
         len: row_spec ? row_spec.len * 1000 : _row.len,
         art1: false,
-        art2: true
+        art2: true,
+        node: 'e',
       };
       if(cnn_need_add_spec(b.cnn, _row.elm, prev ? prev.elm : 0, b.point)) {
 
@@ -4166,6 +4183,7 @@ class ProductsBuilding {
         len_angl.angle = len_angl.alp1;
         len_angl.art2 = false;
         len_angl.art1 = true;
+        len_angl.node = 'b';
         cnn_add_spec(b.cnn, elm, len_angl, e.cnn);
       }
 
@@ -7672,17 +7690,6 @@ $p.on('tabular_paste', (clip) => {
 
 (function(_mgr){
 
-	const acn = {
-    ii: [_mgr.Наложение],
-    i: [_mgr.НезамкнутыйКонтур],
-    a: [
-      _mgr.УгловоеДиагональное,
-      _mgr.УгловоеКВертикальной,
-      _mgr.УгловоеКГоризонтальной,
-      _mgr.КрестВСтык],
-    t: [_mgr.ТОбразное, _mgr.КрестВСтык],
-	};
-
 
 	Object.defineProperties(_mgr, {
 	  ad: {
@@ -7727,7 +7734,18 @@ $p.on('tabular_paste', (clip) => {
     },
 
     acn: {
-      value: acn
+      value: {
+        ii: [_mgr.Наложение],
+        i: [_mgr.НезамкнутыйКонтур],
+        a: [
+          _mgr.УгловоеДиагональное,
+          _mgr.УгловоеКВертикальной,
+          _mgr.УгловоеКГоризонтальной,
+          _mgr.ТОбразное,
+          _mgr.КрестВСтык,
+        ],
+        t: [_mgr.ТОбразное, _mgr.КрестВСтык],
+      }
     },
 
   });

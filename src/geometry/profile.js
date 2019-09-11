@@ -27,23 +27,29 @@ class CnnPoint {
    * L для примыкающих рассматривается, как Т
    */
   get is_t() {
-    const {cnn} = this;
+    const {cnn, parent, profile, profile_point} = this;
+    const {cnn_types, orientations} = $p.enm;
+
+    // если примыкание не в углу, это точно Т
+    if(profile && !profile_point) {
+      return true;
+    }
+
     // если это угол, то точно не T
-    if(!cnn || cnn.cnn_type == $p.enm.cnn_types.УгловоеДиагональное) {
+    if(!cnn || cnn.cnn_type == cnn_types.ad) {
       return false;
     }
 
     // если это Ʇ, или † то без вариантов T
-    if(cnn.cnn_type == $p.enm.cnn_types.ТОбразное) {
+    if(cnn.cnn_type == cnn_types.t) {
       return true;
     }
 
     // если это Ꞁ или └─, то может быть T в разрыв - проверяем
-    if(cnn.cnn_type == $p.enm.cnn_types.УгловоеКВертикальной && this.parent.orientation != $p.enm.orientations.vert) {
+    if(cnn.cnn_type == cnn_types.av && parent.orientation != orientations.vert) {
       return true;
     }
-
-    if(cnn.cnn_type == $p.enm.cnn_types.УгловоеКГоризонтальной && this.parent.orientation != $p.enm.orientations.hor) {
+    if(cnn.cnn_type == cnn_types.ah && parent.orientation != orientations.hor) {
       return true;
     }
 
@@ -64,8 +70,8 @@ class CnnPoint {
    */
   get is_l() {
     const {cnn} = this;
-    const {УгловоеКВертикальной, УгловоеКГоризонтальной} = $p.enm.cnn_types;
-    return this.is_t || !!(cnn && (cnn.cnn_type === УгловоеКВертикальной || cnn.cnn_type === УгловоеКГоризонтальной));
+    const {cnn_types} = $p.enm;
+    return this.is_t || !!(cnn && (cnn.cnn_type === cnn_types.av || cnn.cnn_type === cnn_types.ah));
   }
 
   /**
@@ -80,7 +86,7 @@ class CnnPoint {
    */
   get is_x() {
     const {cnn} = this;
-    return cnn && cnn.cnn_type === $p.enm.cnn_types.КрестВСтык;
+    return cnn && cnn.cnn_type === $p.enm.cnn_types.xx;
   }
 
   /**
@@ -1134,7 +1140,7 @@ class ProfileItem extends GeneratrixElement {
     const {profiles} = an;
     if(profiles) {
       let binded;
-      if(profiles.indexOf(this) == -1) {
+      if(!profiles.includes(this)) {
         // если среди профилей есть такой, к которму примыкает текущий, пробуем привязку
         for(const profile of profiles) {
           if(profile instanceof Onlay && !(this instanceof Onlay)) {
@@ -1156,6 +1162,7 @@ class ProfileItem extends GeneratrixElement {
    */
   do_bind(profile, bcnn, ecnn, moved) {
 
+    const {acn, ad} = $p.enm.cnn_types;
     let moved_fact;
 
     if(profile instanceof ProfileConnective) {
@@ -1168,15 +1175,16 @@ class ProfileItem extends GeneratrixElement {
     else {
       if(bcnn.cnn && bcnn.profile == profile) {
         // обрабатываем угол
-        if($p.enm.cnn_types.acn.a.indexOf(bcnn.cnn.cnn_type) != -1) {
-          if(!this.b.is_nearest(profile.e, 0)) {
-            if(bcnn.is_t || bcnn.cnn.cnn_type == $p.enm.cnn_types.ad) {
+        if(bcnn.profile_point) {
+          const pp = profile[bcnn.profile_point];
+          if(!this.b.is_nearest(pp, 0)) {
+            if(bcnn.is_t || bcnn.cnn.cnn_type == ad) {
               if(paper.Key.isDown('control')) {
                 console.log('control');
               }
               else {
-                if(this.b.getDistance(profile.e, true) < consts.sticking2) {
-                  this.b = profile.e;
+                if(this.b.getDistance(pp, true) < consts.sticking2) {
+                  this.b = pp;
                 }
                 moved_fact = true;
               }
@@ -1189,22 +1197,23 @@ class ProfileItem extends GeneratrixElement {
           }
         }
         // обрабатываем T
-        else if($p.enm.cnn_types.acn.t.indexOf(bcnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'b')) {
+        else if(acn.t.indexOf(bcnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'b')) {
           moved_fact = true;
         }
       }
 
       if(ecnn.cnn && ecnn.profile == profile) {
         // обрабатываем угол
-        if($p.enm.cnn_types.acn.a.indexOf(ecnn.cnn.cnn_type) != -1) {
-          if(!this.e.is_nearest(profile.b, 0)) {
-            if(ecnn.is_t || ecnn.cnn.cnn_type == $p.enm.cnn_types.ad) {
+        if(ecnn.profile_point) {
+          const pp = profile[ecnn.profile_point];
+          if(!this.e.is_nearest(pp, 0)) {
+            if(ecnn.is_t || ecnn.cnn.cnn_type == ad) {
               if(paper.Key.isDown('control')) {
                 console.log('control');
               }
               else {
-                if(this.e.getDistance(profile.b, true) < consts.sticking2) {
-                  this.e = profile.b;
+                if(this.e.getDistance(pp, true) < consts.sticking2) {
+                  this.e = pp;
                 }
                 moved_fact = true;
               }
@@ -1217,7 +1226,7 @@ class ProfileItem extends GeneratrixElement {
           }
         }
         // обрабатываем T
-        else if($p.enm.cnn_types.acn.t.indexOf(ecnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'e')) {
+        else if(acn.t.indexOf(ecnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'e')) {
           moved_fact = true;
         }
       }
@@ -2324,18 +2333,17 @@ class Profile extends ProfileItem {
 
     if(layer.profiles.some((curr) => {
         if(curr != this) {
-          for(const pn of ['b', 'e']) {
-            const p = curr.cnn_point(pn);
-            if(p.profile == this && p.cnn) {
-
-              if(p.cnn.cnn_type == $p.enm.cnn_types.t) {
+          for(const pname of ['b', 'e']) {
+            const cpoint = curr.cnn_point(pname);
+            if(cpoint.profile == this && cpoint.cnn) {
+              if(!cpoint.profile_point) {
                 if(check_only) {
                   return true;
                 }
-                add_impost(curr.corns(1), curr, p.point);
+                add_impost(curr.corns(1), curr, cpoint.point);
               }
               else {
-                candidates[pn].push(curr.corns(1));
+                candidates[pname].push(curr.corns(1));
               }
             }
           }
