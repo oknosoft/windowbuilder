@@ -4804,6 +4804,10 @@ class DimensionDrawer extends paper.Group {
     const offset = (pos == 'right' || pos == 'bottom') ? -130 : 90;
     for (let i = 0; i < arr.length - 1; i++) {
       if(!collection[i]) {
+        let shift = Math.abs(arr[i].point - arr[i + 1].point) < 60 ? 70 : 0;
+        if(shift && collection[i - 1] && collection[i - 1].offset !== offset) {
+          shift += 70;
+        }
         collection[i] = new DimensionLine({
           pos: pos,
           elm1: arr[i].elm instanceof GlassSegment ? arr[i].elm._sub : arr[i].elm,
@@ -4811,7 +4815,7 @@ class DimensionDrawer extends paper.Group {
           elm2: arr[i + 1].elm instanceof GlassSegment ? arr[i + 1].elm._sub : arr[i + 1].elm,
           p2: arr[i + 1].p,
           parent: this,
-          offset: offset,
+          offset: offset - shift,
           impost: true
         });
       }
@@ -4936,13 +4940,13 @@ class DimensionDrawer extends paper.Group {
       {
         point: bounds.bottom.round(),
         elm: by_side.bottom,
-        p: by_side.bottom.b.y < by_side.bottom.e.y ? 'b' : 'e'
+        p: by_side.bottom.b.y > by_side.bottom.e.y ? 'b' : 'e'
       }];
     const ivert = [
       {
         point: bounds.left.round(),
         elm: by_side.left,
-        p: by_side.left.b.x > by_side.left.e.x ? 'b' : 'e'
+        p: by_side.left.b.x < by_side.left.e.x ? 'b' : 'e'
       },
       {
         point: bounds.right.round(),
