@@ -8,6 +8,94 @@
  * @module doc_calc_order
  */
 
+class FakeLenAngl {
+
+  constructor({len, inset}) {
+    this.len = len;
+    this.origin = inset;
+  }
+
+  get angle() {
+    return 0;
+  }
+
+  get alp1() {
+    return 0;
+  }
+
+  get alp2() {
+    return 0;
+  }
+
+  get cnstr() {
+    return 0;
+  }
+
+}
+
+class FakeElm {
+
+  constructor(row_spec) {
+    this.row_spec = row_spec;
+  }
+
+  get elm() {
+    return 0;
+  }
+
+  get angle_hor() {
+    return 0;
+  }
+
+  get _row() {
+    return this;
+  }
+
+  get clr() {
+    const {row_spec} = this;
+    return row_spec instanceof $p.DocCalc_orderProductionRow ? row_spec.characteristic.clr : row_spec.clr;
+  }
+
+  get len() {
+    return this.row_spec.len;
+  }
+
+  get height() {
+    const {height, width} = this.row_spec;
+    return height === undefined ? width : height;
+  }
+
+  get depth() {
+    return this.row_spec.depth || 0;
+  }
+
+  get s() {
+    return this.row_spec.s;
+  }
+
+  get perimeter() {
+    const {len, height, width} = this.row_spec;
+    return [{len, angle: 0}, {len: height === undefined ? width : height, angle: 90}];
+  }
+
+  get x1() {
+    return 0;
+  }
+
+  get y1() {
+    return 0;
+  }
+
+  get x2() {
+    return this.height;
+  }
+
+  get y2() {
+    return this.len;
+  }
+
+}
+
 // свойства и методы объекта
 $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
@@ -943,8 +1031,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       }
       else {
         // рассчитываем спецификацию по текущей вставке
-        const len_angl = new $p.DocCalc_order.FakeLenAngl(row_dp);
-        const elm = new $p.DocCalc_order.FakeElm(row_dp);
+        const len_angl = new FakeLenAngl(row_dp);
+        const elm = new FakeElm(row_dp);
         // создаём или получаем строку заказа с уникальной харктеристикой
         res = res
           .then(() => this.create_product_row({row_spec: row_dp, elm, len_angl, params: dp.product_params, create: true}))
@@ -994,36 +1082,35 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       .then((prod) => {
         // бежим по табчасти, если продукция, пересчитываем в рисовалке, если материал или paramrtric - пересчитываем строку
         this.production.forEach((row) => {
-          const {characteristic} = row;
-          if(characteristic.empty() || characteristic.calc_order !== this) {
+          const {characteristic: cx} = row;
+          if(cx.empty() || cx.calc_order !== this) {
             // это материал
             row.value_change('quantity', '', row.quantity);
           }
-          else if(characteristic.coordinates.count()) {
+          else if(cx.coordinates.count()) {
             // это изделие рисовалки
             tmp = tmp.then(() => {
-              return project.load(characteristic, true).then(() => {
+              return project.load(cx, true).then(() => {
                 // выполняем пересчет
-                project.save_coordinates({save: true, svg: false});
+                project.save_coordinates({svg: false});
+                this.characteristic_saved(project);
               });
             });
           }
-          else if(characteristic.leading_product.calc_order === this) {
+          else if(cx.leading_product.calc_order === this) {
             return;
           }
           else {
-            if(!characteristic.origin.empty() && !characteristic.origin.slave) {
+            if(!cx.origin.empty() && !cx.origin.slave) {
               // это paramrtric
-              characteristic.specification.clear();
-              const len_angl = new $p.DocCalc_order.FakeLenAngl({len: row.len, inset: characteristic.origin});
-              const elm = new $p.DocCalc_order.FakeElm(row);
-              characteristic.origin.calculate_spec({elm, len_angl, ox: characteristic});
-              tmp = tmp.then(() => {
-                return characteristic.save().then(() => {
-                  // выполняем пересчет
-                  row.value_change('quantity', '', row.quantity);
-                });
+              cx.specification.clear();
+              // выполняем пересчет
+              cx.origin.calculate_spec({
+                elm: new FakeElm(row),
+                len_angl: new FakeLenAngl({len: row.len, inset: cx.origin}),
+                ox: cx
               });
+              row.value_change('quantity', '', row.quantity);
             }
             else {
               row.value_change('quantity', '', row.quantity);
@@ -1040,7 +1127,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         else {
           project.remove();
         }
-        return this;
+        return attr.save ? this.save() : this;
       });
 
   }
@@ -1097,93 +1184,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
 };
 
-$p.DocCalc_order.FakeElm = class FakeElm {
+$p.DocCalc_order.FakeElm = FakeElm;
 
-  constructor(row_spec) {
-    this.row_spec = row_spec;
-  }
-
-  get elm() {
-    return 0;
-  }
-
-  get angle_hor() {
-    return 0;
-  }
-
-  get _row() {
-    return this;
-  }
-
-  get clr() {
-    const {row_spec} = this;
-    return row_spec instanceof $p.DocCalc_orderProductionRow ? row_spec.characteristic.clr : row_spec.clr;
-  }
-
-  get len() {
-    return this.row_spec.len;
-  }
-
-  get height() {
-    const {height, width} = this.row_spec;
-    return height === undefined ? width : height;
-  }
-
-  get depth() {
-    return this.row_spec.depth || 0;
-  }
-
-  get s() {
-    return this.row_spec.s;
-  }
-
-  get perimeter() {
-    const {len, height, width} = this.row_spec;
-    return [{len, angle: 0}, {len: height === undefined ? width : height, angle: 90}];
-  }
-
-  get x1() {
-    return 0;
-  }
-
-  get y1() {
-    return 0;
-  }
-
-  get x2() {
-    return this.height;
-  }
-
-  get y2() {
-    return this.len;
-  }
-
-}
-
-$p.DocCalc_order.FakeLenAngl = class FakeLenAngl {
-
-  constructor({len, inset}) {
-    this.len = len;
-    this.origin = inset;
-  }
-
-  get angle() {
-    return 0;
-  }
-
-  get alp1() {
-    return 0;
-  }
-
-  get alp2() {
-    return 0;
-  }
-
-  get cnstr() {
-    return 0;
-  }
-
-}
+$p.DocCalc_order.FakeLenAngl = FakeLenAngl;
 
 // свойства и методы табчасти продукции
 $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocCalc_orderProductionRow {
@@ -1225,8 +1228,8 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         characteristic.x = this.len;
         characteristic.y = this.width;
         characteristic.s = this.s || this.len * this.width / 1000000;
-        const len_angl = new $p.DocCalc_order.FakeLenAngl({len: this.len, inset: characteristic.origin});
-        const elm = new $p.DocCalc_order.FakeElm(this);
+        const len_angl = new FakeLenAngl({len: this.len, inset: characteristic.origin});
+        const elm = new FakeElm(this);
         characteristic.origin.calculate_spec({elm, len_angl, ox: characteristic});
         recalc = true;
       }

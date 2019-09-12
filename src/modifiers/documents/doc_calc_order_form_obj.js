@@ -584,6 +584,8 @@
 
     function save(action) {
 
+      const {msg, enm} = $p;
+
       function do_save(post) {
 
         if(!wnd.elmnts.ro) {
@@ -614,7 +616,7 @@
               });
             }
             else {
-              $p.msg.show_msg({
+              msg.show_msg({
                 type: 'alert-warning',
                 text: err.message || err,
                 title: o.presentation
@@ -627,13 +629,13 @@
       case 'sent':
         // показать диалог и обработать возврат
         dhtmlx.confirm({
-          title: $p.msg.order_sent_title,
-          text: $p.msg.order_sent_message,
-          cancel: $p.msg.cancel,
+          title: msg.order_sent_title,
+          text: msg.order_sent_message,
+          cancel: msg.cancel,
           callback: function (btn) {
             if(btn) {
               // установить транспорт в "отправлено" и записать
-              o.obj_delivery_state = $p.enm.obj_delivery_states.Отправлен;
+              o.obj_delivery_state = enm.obj_delivery_states.Отправлен;
               do_save();
             }
           }
@@ -642,7 +644,7 @@
 
       case 'retrieve':
         // установить транспорт в "отозвано" и записать
-        o.obj_delivery_state = $p.enm.obj_delivery_states.Отозван;
+        o.obj_delivery_state = enm.obj_delivery_states.Отозван;
         do_save();
         break;
 
@@ -795,7 +797,7 @@
       }
       else {
         wnd.progressOn();
-        o.recalc()
+        o.recalc({save: true})
           .catch((err) => {
             $p.msg.show_msg({
               title: $p.msg.bld_title,
@@ -803,7 +805,10 @@
               text: err.stack || err.message
             });
           })
-          .then(() => wnd.progressOff());
+          .then(() => {
+            wnd.progressOff();
+            wnd.set_text();
+          });
       }
     }
 

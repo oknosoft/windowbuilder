@@ -4824,6 +4824,94 @@ $p.spec_building = new SpecBuilding($p);
 })($p);
 
 
+class FakeLenAngl {
+
+  constructor({len, inset}) {
+    this.len = len;
+    this.origin = inset;
+  }
+
+  get angle() {
+    return 0;
+  }
+
+  get alp1() {
+    return 0;
+  }
+
+  get alp2() {
+    return 0;
+  }
+
+  get cnstr() {
+    return 0;
+  }
+
+}
+
+class FakeElm {
+
+  constructor(row_spec) {
+    this.row_spec = row_spec;
+  }
+
+  get elm() {
+    return 0;
+  }
+
+  get angle_hor() {
+    return 0;
+  }
+
+  get _row() {
+    return this;
+  }
+
+  get clr() {
+    const {row_spec} = this;
+    return row_spec instanceof $p.DocCalc_orderProductionRow ? row_spec.characteristic.clr : row_spec.clr;
+  }
+
+  get len() {
+    return this.row_spec.len;
+  }
+
+  get height() {
+    const {height, width} = this.row_spec;
+    return height === undefined ? width : height;
+  }
+
+  get depth() {
+    return this.row_spec.depth || 0;
+  }
+
+  get s() {
+    return this.row_spec.s;
+  }
+
+  get perimeter() {
+    const {len, height, width} = this.row_spec;
+    return [{len, angle: 0}, {len: height === undefined ? width : height, angle: 90}];
+  }
+
+  get x1() {
+    return 0;
+  }
+
+  get y1() {
+    return 0;
+  }
+
+  get x2() {
+    return this.height;
+  }
+
+  get y2() {
+    return this.len;
+  }
+
+}
+
 $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
 
@@ -5653,8 +5741,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         res = res.then(() => row_prod);
       }
       else {
-        const len_angl = new $p.DocCalc_order.FakeLenAngl(row_dp);
-        const elm = new $p.DocCalc_order.FakeElm(row_dp);
+        const len_angl = new FakeLenAngl(row_dp);
+        const elm = new FakeElm(row_dp);
         res = res
           .then(() => this.create_product_row({row_spec: row_dp, elm, len_angl, params: dp.product_params, create: true}))
           .then((row_prod) => {
@@ -5690,31 +5778,32 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     return this.load_production()
       .then((prod) => {
         this.production.forEach((row) => {
-          const {characteristic} = row;
-          if(characteristic.empty() || characteristic.calc_order !== this) {
+          const {characteristic: cx} = row;
+          if(cx.empty() || cx.calc_order !== this) {
             row.value_change('quantity', '', row.quantity);
           }
-          else if(characteristic.coordinates.count()) {
+          else if(cx.coordinates.count()) {
             tmp = tmp.then(() => {
-              return project.load(characteristic, true).then(() => {
-                project.save_coordinates({save: true, svg: false});
+              return project.load(cx, true).then(() => {
+                project.save_coordinates({
+                  svg: false
+                });
+                this.characteristic_saved(project);
               });
             });
           }
-          else if(characteristic.leading_product.calc_order === this) {
+          else if(cx.leading_product.calc_order === this) {
             return;
           }
           else {
-            if(!characteristic.origin.empty() && !characteristic.origin.slave) {
-              characteristic.specification.clear();
-              const len_angl = new $p.DocCalc_order.FakeLenAngl({len: row.len, inset: characteristic.origin});
-              const elm = new $p.DocCalc_order.FakeElm(row);
-              characteristic.origin.calculate_spec({elm, len_angl, ox: characteristic});
-              tmp = tmp.then(() => {
-                return characteristic.save().then(() => {
-                  row.value_change('quantity', '', row.quantity);
-                });
+            if(!cx.origin.empty() && !cx.origin.slave) {
+              cx.specification.clear();
+              cx.origin.calculate_spec({
+                elm: new FakeElm(row),
+                len_angl: new FakeLenAngl({len: row.len, inset: cx.origin}),
+                ox: cx
               });
+              row.value_change('quantity', '', row.quantity);
             }
             else {
               row.value_change('quantity', '', row.quantity);
@@ -5731,7 +5820,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         else {
           project.remove();
         }
-        return this;
+        return attr.save ? this.save() : this;
       });
 
   }
@@ -5778,93 +5867,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
 };
 
-$p.DocCalc_order.FakeElm = class FakeElm {
+$p.DocCalc_order.FakeElm = FakeElm;
 
-  constructor(row_spec) {
-    this.row_spec = row_spec;
-  }
-
-  get elm() {
-    return 0;
-  }
-
-  get angle_hor() {
-    return 0;
-  }
-
-  get _row() {
-    return this;
-  }
-
-  get clr() {
-    const {row_spec} = this;
-    return row_spec instanceof $p.DocCalc_orderProductionRow ? row_spec.characteristic.clr : row_spec.clr;
-  }
-
-  get len() {
-    return this.row_spec.len;
-  }
-
-  get height() {
-    const {height, width} = this.row_spec;
-    return height === undefined ? width : height;
-  }
-
-  get depth() {
-    return this.row_spec.depth || 0;
-  }
-
-  get s() {
-    return this.row_spec.s;
-  }
-
-  get perimeter() {
-    const {len, height, width} = this.row_spec;
-    return [{len, angle: 0}, {len: height === undefined ? width : height, angle: 90}];
-  }
-
-  get x1() {
-    return 0;
-  }
-
-  get y1() {
-    return 0;
-  }
-
-  get x2() {
-    return this.height;
-  }
-
-  get y2() {
-    return this.len;
-  }
-
-}
-
-$p.DocCalc_order.FakeLenAngl = class FakeLenAngl {
-
-  constructor({len, inset}) {
-    this.len = len;
-    this.origin = inset;
-  }
-
-  get angle() {
-    return 0;
-  }
-
-  get alp1() {
-    return 0;
-  }
-
-  get alp2() {
-    return 0;
-  }
-
-  get cnstr() {
-    return 0;
-  }
-
-}
+$p.DocCalc_order.FakeLenAngl = FakeLenAngl;
 
 $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocCalc_orderProductionRow {
 
@@ -5901,8 +5906,8 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
         characteristic.x = this.len;
         characteristic.y = this.width;
         characteristic.s = this.s || this.len * this.width / 1000000;
-        const len_angl = new $p.DocCalc_order.FakeLenAngl({len: this.len, inset: characteristic.origin});
-        const elm = new $p.DocCalc_order.FakeElm(this);
+        const len_angl = new FakeLenAngl({len: this.len, inset: characteristic.origin});
+        const elm = new FakeElm(this);
         characteristic.origin.calculate_spec({elm, len_angl, ox: characteristic});
         recalc = true;
       }
@@ -6741,6 +6746,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
     function save(action) {
 
+      const {msg, enm} = $p;
+
       function do_save(post) {
 
         if(!wnd.elmnts.ro) {
@@ -6770,7 +6777,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               });
             }
             else {
-              $p.msg.show_msg({
+              msg.show_msg({
                 type: 'alert-warning',
                 text: err.message || err,
                 title: o.presentation
@@ -6782,12 +6789,12 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       switch (action) {
       case 'sent':
         dhtmlx.confirm({
-          title: $p.msg.order_sent_title,
-          text: $p.msg.order_sent_message,
-          cancel: $p.msg.cancel,
+          title: msg.order_sent_title,
+          text: msg.order_sent_message,
+          cancel: msg.cancel,
           callback: function (btn) {
             if(btn) {
-              o.obj_delivery_state = $p.enm.obj_delivery_states.Отправлен;
+              o.obj_delivery_state = enm.obj_delivery_states.Отправлен;
               do_save();
             }
           }
@@ -6795,7 +6802,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         break;
 
       case 'retrieve':
-        o.obj_delivery_state = $p.enm.obj_delivery_states.Отозван;
+        o.obj_delivery_state = enm.obj_delivery_states.Отозван;
         do_save();
         break;
 
@@ -6930,7 +6937,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       }
       else {
         wnd.progressOn();
-        o.recalc()
+        o.recalc({save: true})
           .catch((err) => {
             $p.msg.show_msg({
               title: $p.msg.bld_title,
@@ -6938,7 +6945,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               text: err.stack || err.message
             });
           })
-          .then(() => wnd.progressOff());
+          .then(() => {
+            wnd.progressOff();
+            wnd.set_text();
+          });
       }
     }
 
