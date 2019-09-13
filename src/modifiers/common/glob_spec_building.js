@@ -33,6 +33,7 @@ class SpecBuilding {
    */
   specification_adjustment (attr, with_price) {
 
+    const {cat, pricing} = $p;
     const {scheme, calc_order_row, spec, save} = attr;
     const calc_order = calc_order_row._owner._owner;
     const order_rows = new Map();
@@ -41,7 +42,7 @@ class SpecBuilding {
     const nom = ox.empty() ? calc_order_row.nom : (calc_order_row.nom = ox.owner);
 
     // типы цен получаем заранее, т.к. они могут пригодиться при расчете корректировки спецификации
-    $p.pricing.price_type(attr);
+    pricing.price_type(attr);
 
     // удаляем из спецификации строки, добавленные предыдущими корректировками
     spec.find_rows({ch: {in: [-1, -2]}}, (row) => adel.push(row));
@@ -49,7 +50,7 @@ class SpecBuilding {
 
     // находим привязанные к продукции вставки и выполняем
     // здесь может быть как расчет допспецификации, так и доппроверки корректности параметров и геометрии
-    $p.cat.insert_bind.insets(ox).forEach(({inset, elm_type}) => {
+    cat.insert_bind.insets(ox).forEach(({inset, elm_type}) => {
 
       const elm = {
         _row: {},
@@ -110,10 +111,10 @@ class SpecBuilding {
 
     if(with_price){
       // рассчитываем плановую себестоимость
-      $p.pricing.calc_first_cost(attr);
+      pricing.calc_first_cost(attr);
 
       // рассчитываем стоимость продажи
-      $p.pricing.calc_amount(attr);
+      pricing.calc_amount(attr);
     }
 
     if(save && !attr.scheme && (ox.is_new() || ox._modified)){

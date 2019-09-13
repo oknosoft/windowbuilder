@@ -2384,46 +2384,62 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
     this.filtered_spec({elm, is_high_level_call: true, len_angl, ox, clr}).forEach((row_ins_spec) => {
 
       const origin = row_ins_spec._origin || this;
+      let {count_calc_method, sz, offsets, coefficient, formula} = row_ins_spec;
+      if(!coefficient) {
+        coefficient = 0.001;
+      }
 
       let row_spec;
 
-      if((row_ins_spec.count_calc_method != ПоПериметру && row_ins_spec.count_calc_method != ПоШагам) || profile_items.indexOf(_row.elm_type) != -1){
+      if((count_calc_method != ПоПериметру && count_calc_method != ПоШагам) || profile_items.indexOf(_row.elm_type) != -1){
         row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
       }
 
-      if(row_ins_spec.count_calc_method == ПоФормуле && !row_ins_spec.formula.empty()){
+      if(count_calc_method == ПоФормуле && !formula.empty()){
         row_spec = new_spec_row({row_spec, elm, row_base: row_ins_spec, origin, spec, ox});
       }
-      else if(profile_items.indexOf(_row.elm_type) != -1 || row_ins_spec.count_calc_method == ДляЭлемента){
+      else if(profile_items.indexOf(_row.elm_type) != -1 || count_calc_method == ДляЭлемента){
         calc_qty_len(row_spec, row_ins_spec, len_angl ? len_angl.len : _row.len);
       }
       else{
 
-        if(row_ins_spec.count_calc_method == ПоПлощади){
+        if(count_calc_method == ПоПлощади){
           row_spec.qty = row_ins_spec.quantity;
           if(this.insert_type == enm.inserts_types.МоскитнаяСетка){
-            const bounds = elm.layer.bounds_inner(row_ins_spec.sz);
-            row_spec.len = bounds.height * (row_ins_spec.coefficient || 0.001);
-            row_spec.width = bounds.width * (row_ins_spec.coefficient || 0.001);
+            const bounds = elm.layer.bounds_inner(sz);
+            row_spec.len = bounds.height * coefficient;
+            row_spec.width = bounds.width * coefficient;
+            row_spec.s = (row_spec.len * row_spec.width).round(3);
+          }
+          else if(this.insert_type == enm.inserts_types.Жалюзи) {
+            if(elm.bounds_light) {
+              const bounds = elm.bounds_light();
+              row_spec.len = (bounds.height + offsets) * coefficient;
+              row_spec.width = (bounds.width + sz) * coefficient;
+            }
+            else {
+              row_spec.len = elm.len * coefficient;
+              row_spec.width = elm.height * coefficient;
+            }
             row_spec.s = (row_spec.len * row_spec.width).round(3);
           }
           else{
-            row_spec.len = (_row.y2 - _row.y1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
-            row_spec.width = (_row.x2 - _row.x1 - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+            row_spec.len = (_row.y2 - _row.y1 - sz) * coefficient;
+            row_spec.width = (_row.x2 - _row.x1 - sz) * coefficient;
             row_spec.s = _row.s;
           }
         }
-        else if(row_ins_spec.count_calc_method == ПоПериметру){
+        else if(count_calc_method == ПоПериметру){
           const row_prm = {_row: {len: 0, angle_hor: 0, s: _row.s}};
           const perimeter = elm.perimeter ? elm.perimeter : (
-            this.insert_type == enm.inserts_types.МоскитнаяСетка ? elm.layer.perimeter_inner(row_ins_spec.sz) : elm.layer.perimeter
+            this.insert_type == enm.inserts_types.МоскитнаяСетка ? elm.layer.perimeter_inner(sz) : elm.layer.perimeter
           )
           perimeter.forEach((rib) => {
             row_prm._row._mixin(rib);
             row_prm.is_linear = () => rib.profile ? rib.profile.is_linear() : true;
             if(this.check_restrictions(row_ins_spec, row_prm, true)){
               row_spec = new_spec_row({elm, row_base: row_ins_spec, origin, spec, ox});
-              const qty = !row_ins_spec.formula.empty() && row_ins_spec.formula.execute({
+              const qty = !formula.empty() && formula.execute({
                 ox: ox,
                 elm: rib.profile || rib,
                 cnstr: len_angl && len_angl.cnstr || 0,
@@ -2447,10 +2463,10 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
           });
 
         }
-        else if(row_ins_spec.count_calc_method == ПоШагам){
+        else if(count_calc_method == ПоШагам){
 
           const bounds = this.insert_type == enm.inserts_types.МоскитнаяСетка ?
-            elm.layer.bounds_inner(row_ins_spec.sz) : {height: _row.y2 - _row.y1, width: _row.x2 - _row.x1};
+            elm.layer.bounds_inner(sz) : {height: _row.y2 - _row.y1, width: _row.x2 - _row.x1};
 
           const h = (!row_ins_spec.step_angle || row_ins_spec.step_angle == 180 ? bounds.height : bounds.width);
           const w = !row_ins_spec.step_angle || row_ins_spec.step_angle == 180 ? bounds.width : bounds.height;
@@ -2459,16 +2475,16 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
             let pos;
             if(row_ins_spec.do_center && h >= row_ins_spec.step ){
               pos = h / 2;
-              if(pos >= row_ins_spec.offsets &&  pos <= h - row_ins_spec.offsets){
+              if(pos >= offsets &&  pos <= h - offsets){
                 qty++;
               }
               for(let i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
                 pos = h / 2 + i * row_ins_spec.step;
-                if(pos >= row_ins_spec.offsets &&  pos <= h - row_ins_spec.offsets){
+                if(pos >= offsets &&  pos <= h - offsets){
                   qty++;
                 }
                 pos = h / 2 - i * row_ins_spec.step;
-                if(pos >= row_ins_spec.offsets &&  pos <= h - row_ins_spec.offsets){
+                if(pos >= offsets &&  pos <= h - offsets){
                   qty++;
                 }
               }
@@ -2476,7 +2492,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
             else{
               for(let i = 1; i <= Math.ceil(h / row_ins_spec.step); i++){
                 pos = i * row_ins_spec.step;
-                if(pos >= row_ins_spec.offsets &&  pos <= h - row_ins_spec.offsets){
+                if(pos >= offsets &&  pos <= h - offsets){
                   qty++;
                 }
               }
@@ -2491,7 +2507,7 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
             row_spec = null;
           }
         }
-        else if(row_ins_spec.count_calc_method == ДлинаПоПарам){
+        else if(count_calc_method == ДлинаПоПарам){
           let len = 0;
           this.selection_params.find_rows({elm: row_ins_spec.elm}, ({param}) => {
             if(param.type.digits) {
@@ -2504,11 +2520,11 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
           });
 
           row_spec.qty = row_ins_spec.quantity;
-          row_spec.len = (len - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+          row_spec.len = (len - sz) * coefficient;
           row_spec.width = 0;
           row_spec.s = 0;
         }
-        else if(row_ins_spec.count_calc_method == ГабаритыПоПарам){
+        else if(count_calc_method == ГабаритыПоПарам){
           let len = 0, width = 0;
           this.selection_params.find_rows({elm: row_ins_spec.elm}, ({param}) => {
             if(param.type.digits) {
@@ -2525,8 +2541,8 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
             if(len && width) return false;
           });
           row_spec.qty = row_ins_spec.quantity;
-          row_spec.len = (len - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
-          row_spec.width = (width - row_ins_spec.sz) * (row_ins_spec.coefficient || 0.001);
+          row_spec.len = (len - sz) * coefficient;
+          row_spec.width = (width - sz) * coefficient;
           row_spec.s = (row_spec.len * row_spec.width).round(3);
         }
         else{
@@ -2535,8 +2551,8 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
       }
 
       if(row_spec){
-        if(!row_ins_spec.formula.empty()){
-          const qty = row_ins_spec.formula.execute({
+        if(!formula.empty()){
+          const qty = formula.execute({
             ox: ox,
             elm: elm,
             cnstr: len_angl && len_angl.cnstr || 0,
@@ -2546,16 +2562,34 @@ $p.CatInserts = class CatInserts extends $p.CatInserts {
             clr,
             len: len_angl ? len_angl.len : _row.len
           });
-          if(row_ins_spec.count_calc_method == ПоФормуле){
+          if(count_calc_method == ПоФормуле){
             row_spec.qty = qty;
           }
-          else if(row_ins_spec.formula.condition_formula && !qty){
+          else if(formula.condition_formula && !qty){
             row_spec.qty = 0;
           }
         }
         calc_count_area_mass(row_spec, spec, _row, row_ins_spec.angle_calc_method);
       }
-    })
+    });
+
+    if(spec !== ox.specification && this.insert_type == enm.inserts_types.Жалюзи) {
+      const bounds = {x: 0, y: 0};
+      spec.forEach(({len, width}) => {
+        if(len && width) {
+          if(bounds.x < len) {
+            bounds.x = len;
+          }
+          if(bounds.y < width) {
+            bounds.y = width;
+          }
+        }
+      });
+      const {_owner} = spec;
+      _owner.x = bounds.y * 1000;
+      _owner.y = bounds.x * 1000;
+      _owner.s = (bounds.x * bounds.y).round(3);
+    }
   }
 
   get thickness() {
@@ -4208,7 +4242,7 @@ class ProductsBuilding {
 
         len_angl.origin = inset;
         len_angl.angle = elm.angle_hor;
-        len_angl.cnstr = elm.layer.cnstr;
+        len_angl.cnstr = -elm.elm;
         delete len_angl.art1;
         delete len_angl.art2;
         inset.calculate_spec({elm, len_angl, ox, spec});
@@ -4246,7 +4280,7 @@ class ProductsBuilding {
           alp2: 0,
           len: 0,
           origin: inset,
-          cnstr: layer.cnstr
+          cnstr: -elm.elm
         };
         inset.calculate_spec({elm, len_angl, ox, spec});
 
@@ -4283,7 +4317,6 @@ class ProductsBuilding {
           alp2: curr.profile.generatrix.angle_to(next.generatrix, curr.e, true),
           len: row_cnn.length ? row_cnn[0].aperture_len : 0,
           origin: cnn_row(_row.elm, curr.profile.elm)
-
         };
 
         (len_angl.len > 3) && cnn_add_spec(curr.cnn, curr.profile, len_angl);
@@ -4308,7 +4341,7 @@ class ProductsBuilding {
             alp2: 0,
             len: 0,
             origin: inset,
-            cnstr: elm.layer.cnstr
+            cnstr: -elm.elm
           };
         }
         else {
@@ -4667,6 +4700,7 @@ class SpecBuilding {
 
   specification_adjustment (attr, with_price) {
 
+    const {cat, pricing} = $p;
     const {scheme, calc_order_row, spec, save} = attr;
     const calc_order = calc_order_row._owner._owner;
     const order_rows = new Map();
@@ -4674,12 +4708,12 @@ class SpecBuilding {
     const ox = calc_order_row.characteristic;
     const nom = ox.empty() ? calc_order_row.nom : (calc_order_row.nom = ox.owner);
 
-    $p.pricing.price_type(attr);
+    pricing.price_type(attr);
 
     spec.find_rows({ch: {in: [-1, -2]}}, (row) => adel.push(row));
     adel.forEach((row) => spec.del(row, true));
 
-    $p.cat.insert_bind.insets(ox).forEach(({inset, elm_type}) => {
+    cat.insert_bind.insets(ox).forEach(({inset, elm_type}) => {
 
       const elm = {
         _row: {},
@@ -4736,9 +4770,9 @@ class SpecBuilding {
     }
 
     if(with_price){
-      $p.pricing.calc_first_cost(attr);
+      pricing.calc_first_cost(attr);
 
-      $p.pricing.calc_amount(attr);
+      pricing.calc_amount(attr);
     }
 
     if(save && !attr.scheme && (ox.is_new() || ox._modified)){
@@ -5785,9 +5819,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           else if(cx.coordinates.count()) {
             tmp = tmp.then(() => {
               return project.load(cx, true).then(() => {
-                project.save_coordinates({
-                  svg: false
-                });
+                project.save_coordinates({svg: false});
                 this.characteristic_saved(project);
               });
             });

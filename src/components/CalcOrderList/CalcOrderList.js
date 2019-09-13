@@ -90,10 +90,6 @@ class CalcOrderList extends Component {
     }, 300);
   };
 
-  handleOpenProd = (ref) => {
-    ref = null;
-  };
-
   reverseHide = () => {
     const hidden = !this.state.hidden;
     $p.wsql.set_user_param('svgs_area_hidden', hidden);

@@ -31,7 +31,7 @@ class AdditionalInserts {
       const {activeLayer} = project;
       cnstr = activeLayer.cnstr;
       this._caption += ` в ${activeLayer.layer ? 'створку' : 'раму'} №${cnstr}`;
-      this._fields.inset.choice_params[0].path = ['МоскитнаяСетка', 'Жалюзи', 'Подоконник', 'Откос', 'Контур'];
+      this._fields.inset.choice_params[0].path = ['МоскитнаяСетка', 'Подоконник', 'Откос', 'Контур'];
     }
     this.cnstr = cnstr;
 

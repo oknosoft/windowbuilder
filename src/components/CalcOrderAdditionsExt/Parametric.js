@@ -6,8 +6,6 @@
 
 import React from 'react';
 import Frame from '../CalcOrderAdditions/Frame';
-import Production from './Production';
-import Params from './Params';
 import Additions from './Additions';
 
 export default function Parametric(props) {

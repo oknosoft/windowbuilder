@@ -193,6 +193,7 @@ export default function ({
 
           let queue = Promise.resolve();
           fragments.forEach((characteristics) => {
+            /* eslint-disable no-unused-vars */
             for(const [characteristic, rows] of characteristics) {
               queue = queue.then(() => this.optimize_fragment(new Cutting('1D'), rows, opts.onStep));
             }

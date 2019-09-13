@@ -510,7 +510,7 @@ class ProductsBuilding {
 
         len_angl.origin = inset;
         len_angl.angle = elm.angle_hor;
-        len_angl.cnstr = elm.layer.cnstr;
+        len_angl.cnstr = -elm.elm;
         delete len_angl.art1;
         delete len_angl.art2;
         inset.calculate_spec({elm, len_angl, ox, spec});
@@ -557,7 +557,7 @@ class ProductsBuilding {
           alp2: 0,
           len: 0,
           origin: inset,
-          cnstr: layer.cnstr
+          cnstr: -elm.elm
         };
         inset.calculate_spec({elm, len_angl, ox, spec});
 
@@ -600,7 +600,6 @@ class ProductsBuilding {
           alp2: curr.profile.generatrix.angle_to(next.generatrix, curr.e, true),
           len: row_cnn.length ? row_cnn[0].aperture_len : 0,
           origin: cnn_row(_row.elm, curr.profile.elm)
-
         };
 
         // добавляем спецификацию соединения рёбер заполнения с профилем
@@ -631,7 +630,7 @@ class ProductsBuilding {
             alp2: 0,
             len: 0,
             origin: inset,
-            cnstr: elm.layer.cnstr
+            cnstr: -elm.elm
           };
         }
         else {

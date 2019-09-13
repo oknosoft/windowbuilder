@@ -39,13 +39,14 @@ export default function Params({row, inset, meta}) {
       _meta: meta.fields[_fld],
       key: `f_${_fld}`,
     }, fld_props);
-  }
+  };
 
   let frame = struct.get(elm_positions.top);
   if(frame) {
     res.push(<FormGroup key="top" row>
       {
         frame.map((v) => {
+          /* eslint-disable react/jsx-key */
           return <DataField {...fprops(v)} />;
         })
       }
@@ -60,6 +61,7 @@ export default function Params({row, inset, meta}) {
         return <FormGroup key={`column${v}`}>
           {
             column.map((v) => {
+              /* eslint-disable react/jsx-key */
               return <DataField {...fprops(v)} />;
             })
           }
@@ -72,7 +74,7 @@ export default function Params({row, inset, meta}) {
   if(frame) {
     res.push(<FormGroup key="bottom" row>
       {
-        frame.map((v, index) => {
+        frame.map((v) => {
           return <DataField {...fprops(v)} />;
         })
       }

@@ -102,8 +102,8 @@ class ClientOfDealer extends Component {
 
   handleValueChange(_fld) {
     return (event, value) => {
-      const {state: {_obj}, props: {handlers}} = this;
-      const old_value = _obj[_fld];
+      const {state: {_obj}} = this;
+      //const old_value = _obj[_fld];
       _obj[_fld] = (value || (event && event.target ? event.target.value : ''));
       this.forceUpdate();
     };
