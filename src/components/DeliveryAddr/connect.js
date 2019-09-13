@@ -197,8 +197,8 @@ class DeliveryManager {
             return true;
           }
         }
-        catch (e) {
-          $p.record_log(e);
+        catch (err) {
+          $p.record_log({err, doc});
         }
       }
 
