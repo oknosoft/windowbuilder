@@ -178,35 +178,38 @@ class DeliveryManager {
   // ищет ближайший по координатам
   nearest(point) {
     let tmp, distance = Infinity;
-    // сначала, анализируем периметры
     const pts  = points([[point.lat, point.lng]]);
+
     delivery_areas.forEach((doc) => {
+
+      // сначала, анализируем периметр
       const {_obj} = doc.coordinates;
-      if(_obj.length) {
-        const ppts = _obj.map((row) => [row.latitude, row.longitude]);
-        const l = ppts.length - 1;
-        if(ppts[l][0] !== ppts[0][0] || ppts[l][1] !== ppts[0][1]) {
-          ppts.push(ppts[0]);
+      if(_obj.length > 2) {
+        try{
+          const ppts = _obj.map((row) => [row.latitude, row.longitude]);
+          const l = ppts.length - 1;
+          if(ppts[l][0] !== ppts[0][0] || ppts[l][1] !== ppts[0][1]) {
+            ppts.push(ppts[0]);
+          }
+          const poly = polygon([ppts]);
+          if(pointsWithinPolygon(pts, poly).features.length) {
+            tmp = doc;
+            return true;
+          }
         }
-        const poly = polygon([ppts]);
-        if(pointsWithinPolygon(pts, poly).features.length) {
-          tmp = doc;
-          return true;
+        catch (e) {
+          $p.record_log(e);
         }
       }
-    });
-    if(tmp) {
-      return [tmp, point];
-    }
 
-    // если не вошло ни в один пеример, ищем ближайший центр
-    delivery_areas.forEach((doc) => {
+      // если не вошло и в пеример, ищем ближайший центр
       const td = this.distance(point, {lat: doc.latitude, lng: doc.longitude});
       if(!tmp || td < distance) {
         distance = td;
         tmp = doc;
       }
     });
+
     return [tmp, point];
   }
 

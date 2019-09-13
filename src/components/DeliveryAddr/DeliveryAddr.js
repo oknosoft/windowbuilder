@@ -32,6 +32,11 @@ function Toolbtn({suggest_type, handleSuggestType}) {
   </IconButton>;
 }
 
+Toolbtn.propTypes = {
+  suggest_type: PropTypes.string.isRequired,
+  handleSuggestType: PropTypes.func.isRequired,
+};
+
 class DeliveryAddr extends Component {
 
   constructor(props, context) {

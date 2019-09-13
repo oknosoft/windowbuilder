@@ -53,10 +53,10 @@ class YaSuggest extends React.Component {
 
   handleSelect = ({originalEvent}) => {
     if(originalEvent && originalEvent.item) {
-      const {value} = originalEvent.item;
+      const {value, displayName} = originalEvent.item;
       this.setState({query: value});
       if (this.props.onChange) {
-        this.props.onChange({value, data: {}});
+        this.props.onChange({value, displayName, data: {}});
       }
     }
   };
