@@ -495,16 +495,14 @@ class Pricing {
 
     const {calc_order_row, price_type} = prm;
     const {marginality_in_spec} = $p.job_prm.pricing;
-    const price_cost = marginality_in_spec && prm.spec.count() ?
-      prm.spec.aggregate([], ["amount_marged"]) :
-      this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
+    const price_cost = this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
 
     // цена продажи
     if(price_cost){
       calc_order_row.price = price_cost.round(2);
     }
-    else if(marginality_in_spec) {
-      calc_order_row.price = this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
+    else if(marginality_in_spec && prm.spec.count()){
+      calc_order_row.price = prm.spec.aggregate([], ["amount_marged"]);
     }
     else{
       calc_order_row.price = (calc_order_row.first_cost * price_type.marginality).round(2);
