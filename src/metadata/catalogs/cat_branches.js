@@ -26,17 +26,17 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
               if(acl_obj.applying == ПараметрВыбора) {
                 acl_obj.params.forEach(({property, value}) => {
                   if(property === furn) {
-                    branch_filter.furn.push(value);
+                    !branch_filter.furn.includes(value) && branch_filter.furn.push(value);
                   }
                   else if(property === sys) {
-                    branch_filter.sys.push(value);
+                    !branch_filter.sys.includes(value) && branch_filter.sys.push(value);
                   }
                 });
               }
             };
             keys.forEach(add);
-            divisions.forEach(({keys}) => {
-              keys.forEach(add);
+            divisions.forEach(({acl_obj}) => {
+              acl_obj.keys.forEach(add);
             });
             return branch_filter;
           })
