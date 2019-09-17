@@ -498,6 +498,7 @@ $p.CatCharacteristics.builder_props_defaults = {
   txts: true,
   rounding: 0,
   mosquito: true,
+  jalousie: true,
 };
 
 // при изменении реквизита табчасти вставок

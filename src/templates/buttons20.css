@@ -40,19 +40,21 @@
 .tb_jalousie_control-move-rotate { background-image: url(/imgs/jalousie/control-move-rotate.png);}
 .tb_jalousie_control-move-vertical { background-image: url(/imgs/jalousie/control-move-vertical.png);}
 .tb_jalousie_control-remote { background-image: url(/imgs/jalousie/control-remote.png);}
-.tb_jalousie_control-side-left { background-image: url(/imgs/jalousie/control-side-left.png);}
-.tb_jalousie_control-side-right { background-image: url(/imgs/jalousie/control-side-left.png); transform: scale(-1, 1);}
+.tb_jalousie_control-side-left, .tb_jalousie_control-side-right { background-image: url(/imgs/jalousie/control-side-left.png);}
+.tb_jalousie_control-side-right {transform: scale(-1, 1);}
 .tb_jalousie_horizontal { background-image: url(/imgs/jalousie/horizontal.png);}
+.tb_jalousie_vertical { background-image: url(/imgs/jalousie/vertical.png);}
+.tb_jalousie_roller { background-image: url(/imgs/jalousie/roller.png);}
 .tb_jalousie_install-type-a { background-image: url(/imgs/jalousie/install-type-a.png);}
 .tb_jalousie_install-type-b { background-image: url(/imgs/jalousie/install-type-b.png);}
 .tb_jalousie_install-type-c { background-image: url(/imgs/jalousie/install-type-c.png);}
 .tb_jalousie_install-type-d { background-image: url(/imgs/jalousie/install-type-d.png);}
 .tb_jalousie_install-type-d { background-image: url(/imgs/jalousie/install-type-d.png);}
-.tb_jalousie_open-left-from-center { background-image: url(/imgs/jalousie/open-left-from-center.png);}
-.tb_jalousie_open-right-from-center { background-image: url(/imgs/jalousie/open-left-from-center.png); transform: scale(-1, 1);}
-.tb_jalousie_open-left-from-center { background-image: url(/imgs/jalousie/open-left-from-control.png);}
-.tb_jalousie_open-right-from-center { background-image: url(/imgs/jalousie/open-left-from-control.png); transform: scale(-1, 1);}
-.tb_jalousie_open-left-to-center { background-image: url(/imgs/jalousie/open-left-to-center.png);}
-.tb_jalousie_open-right-to-center { background-image: url(/imgs/jalousie/open-left-to-center.png); transform: scale(-1, 1);}
-.tb_jalousie_open-left-to-control { background-image: url(/imgs/jalousie/open-left-to-center.png);}
-.tb_jalousie_open-right-to-control { background-image: url(/imgs/jalousie/open-left-to-center.png); transform: scale(-1, 1);}
+.tb_jalousie_open-left-from-center, .tb_jalousie_open-right-from-center { background-image: url(/imgs/jalousie/open-left-from-center.png);}
+.tb_jalousie_open-right-from-center {transform: scale(-1, 1);}
+.tb_jalousie_open-left-from-center, .tb_jalousie_open-right-from-center { background-image: url(/imgs/jalousie/open-left-from-control.png);}
+.tb_jalousie_open-right-from-center { transform: scale(-1, 1);}
+.tb_jalousie_open-left-to-center, .tb_jalousie_open-right-to-center { background-image: url(/imgs/jalousie/open-left-to-center.png);}
+.tb_jalousie_open-right-to-center {transform: scale(-1, 1);}
+.tb_jalousie_open-left-to-control, .tb_jalousie_open-right-to-control { background-image: url(/imgs/jalousie/open-left-to-center.png);}
+.tb_jalousie_open-right-to-control {transform: scale(-1, 1);}

@@ -903,7 +903,6 @@ class Contour extends AbstractFilling(paper.Layer) {
     return nodes;
   }
 
-
   notify(obj, type = 'update') {
     if (obj.type) {
       type = obj.type;
@@ -1276,6 +1275,132 @@ class Contour extends AbstractFilling(paper.Layer) {
     });
   }
 
+  draw_jalousie(glass) {
+    const {l_visualization, project} = this;
+    if(project.builder_props.jalousie === false) {
+      return;
+    }
+    project.ox.inserts.find_rows({cnstr: -glass.elm}, ({inset, clr}) => {
+      if(inset.insert_type == $p.enm.inserts_types.Жалюзи) {
+
+        let control, type, shift, step, steps, pos;
+        project.ox.params.find_rows({inset, cnstr: -glass.elm}, ({param, value}) => {
+          if(value.css && ['tb_jalousie_horizontal', 'tb_jalousie_vertical', 'tb_jalousie_roller'].includes(value.css)) {
+            type = value.css.replace('tb_jalousie_', '');
+          }
+          if(value.css && ['tb_jalousie_control-side-left', 'tb_jalousie_control-side-right'].includes(value.css)) {
+            control = value.css.replace('tb_jalousie_control-side-', '');
+          }
+        });
+        if(!type) {
+          type = 'horizontal';
+        }
+        if(!control) {
+          control = 'left';
+        }
+
+        const props = {
+          parent: new paper.Group({parent: l_visualization._by_insets}),
+          fillColor: BuilderElement.clr_by_clr(clr),
+          shadowColor: 'lightgray',
+          shadowBlur: 20,
+          shadowOffset: [13, 13],
+          opacity: 0.3,
+          strokeScaling: false,
+          closed: true,
+          guide: true,
+        };
+        const bounds = glass.bounds_light();
+        inset.specification.forEach(({count_calc_method, sz, offsets}) => {
+          if (count_calc_method == $p.enm.count_calculating_ways.ПоПлощади && sz && offsets) {
+            bounds.height += offsets;
+            bounds.width += sz;
+            bounds.left -= sz * 0.6;
+            bounds.top -= offsets * 0.6;
+            return false;
+          }
+        });
+
+        switch (type) {
+        case 'roller':
+          new paper.Path(Object.assign({
+            segments: [bounds.topLeft, bounds.topRight, bounds.bottomRight, bounds.bottomLeft],
+          }, props));
+          break;
+
+        case 'horizontal':
+          steps = Math.floor(bounds.height / 60);
+          step = bounds.height / steps - 0.01;
+          pos = bounds.top;
+          while (pos < bounds.bottom - step) {
+            new paper.Path(Object.assign({
+              segments: [[bounds.left, pos], [bounds.right, pos], [bounds.right, pos + step - 20], [bounds.left, pos + step - 20]],
+            }, props));
+            pos += step;
+          }
+          break;
+
+        case 'vertical':
+          steps = Math.floor(bounds.width / 60);
+          step = bounds.width / steps - 0.01;
+          pos = bounds.left;
+          while (pos < bounds.right - step) {
+            new paper.Path(Object.assign({
+              segments: [[pos, bounds.top], [pos + step - 20, bounds.top], [pos + step - 20, bounds.bottom], [pos, bounds.bottom]],
+            }, props));
+            pos += step;
+          }
+          break;
+        }
+
+        pos = control === 'left' ? bounds.left - 10 : bounds.right + 10;
+        new paper.Path(Object.assign({
+          segments: [
+            [pos, bounds.top],
+            [pos + 10, bounds.top],
+            [pos + 10, bounds.bottom - 80],
+            [pos + 20, bounds.bottom - 40],
+            [pos - 10, bounds.bottom - 40],
+            [pos, bounds.bottom - 80],
+          ],
+        }, props, {
+          strokeColor: 'lightgray',
+          strokeOpacity: 0.5,
+          strokeWidth: 1,
+          fillColor: 'gray',
+          opacity: 0.6,
+        }));
+        new paper.Path(Object.assign({
+          segments: [
+            bounds.topLeft.add([0, -10]),
+            bounds.topRight.add([0, -10]),
+            bounds.topRight.add([0, 20]),
+            bounds.topLeft.add([0, 20]),
+          ],
+        }, props, {
+          strokeColor: 'lightgray',
+          strokeOpacity: 0.5,
+          strokeWidth: 1,
+          fillColor: 'lightgray',
+          opacity: 0.6,
+        }));
+
+        const {elm_font_size} = consts;
+        new paper.PointText({
+          parent: props.parent,
+          fillColor: 'black',
+          fontFamily: consts.font_family,
+          fontSize: consts.elm_font_size,
+          guide: true,
+          content: inset.presentation,
+          point: bounds.topLeft.add([elm_font_size/3, 0]),
+        });
+
+        return false;
+      }
+    });
+  }
+
   draw_sill() {
     const {l_visualization, project, cnstr} = this;
     const {ox} = project;
@@ -1420,6 +1545,12 @@ class Contour extends AbstractFilling(paper.Layer) {
         return true;
       }
     };
+
+    this.draw_mosquito();
+
+    this.draw_sill();
+
+    glasses.forEach(this.draw_jalousie.bind(this));
 
     for(const row of rows){
       if(!profiles.some(draw.bind(row))){
@@ -1730,10 +1861,6 @@ class Contour extends AbstractFilling(paper.Layer) {
     this.contours.forEach((elm) => elm.redraw());
 
     this.draw_cnn_errors();
-
-    this.draw_mosquito();
-
-    this.draw_sill();
 
     this.sectionals.forEach((elm) => elm.redraw());
 
@@ -4802,7 +4929,7 @@ class GeneratrixElement extends BuilderElement {
           }
         }
 
-        let {profile, profile_point} = cnn_point;
+        let {profile, profile_point} = cnn_point || {};
 
         if(cnn_point && cnn_point.cnn_types == $p.enm.cnn_types.acn.t && (segm.point == this.b || segm.point == this.e)){
           if(cnn_point.point.is_nearest(free_point, 0)){
@@ -12405,6 +12532,7 @@ $p.CatCharacteristics.builder_props_defaults = {
   txts: true,
   rounding: 0,
   mosquito: true,
+  jalousie: true,
 };
 
 $p.CatCharacteristicsInsertsRow.prototype.value_change = function (field, type, value) {
