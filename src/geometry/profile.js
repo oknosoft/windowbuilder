@@ -507,8 +507,8 @@ class ProfileItem extends GeneratrixElement {
     else if(Math.abs(offset2 - g2.length) < 10){
       offset2 = g2.length - 10;
     }
-    const t1 = g1.getTangentAt(offset1);
-    const t2 = g2.getTangentAt(offset2);
+    const t1 = g1.getTangentAt(offset1) || new paper.Point();
+    const t2 = g2.getTangentAt(offset2) || new paper.Point();
     const a = t2.negate().getDirectedAngle(t1).round(1);
     return a > 180 ? a - 180 : (a < 0 ? -a : a);
   }
