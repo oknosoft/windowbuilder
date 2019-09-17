@@ -198,7 +198,7 @@ class GeneratrixElement extends BuilderElement {
           }
         }
 
-        let {profile, profile_point} = cnn_point;
+        let {profile, profile_point} = cnn_point || {};
 
         if(cnn_point && cnn_point.cnn_types == $p.enm.cnn_types.acn.t && (segm.point == this.b || segm.point == this.e)){
           if(cnn_point.point.is_nearest(free_point, 0)){
