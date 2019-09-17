@@ -9,18 +9,20 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
   constructor (owner, class_name) {
     super(owner, class_name);
 
-    // после загрузки данных, надо настроить отборы в метаданных полей рисовалки
-    $p.adapters.pouch.once("pouch_complete_loaded", () => {
-      if($p.job_prm.properties && $p.current_user && !$p.current_user.branch.empty() && $p.job_prm.builder) {
+    const {adapters: {pouch}, job_prm, enm, cat, dp} = $p;
 
-        const {ПараметрВыбора} = $p.enm.parameters_keys_applying;
-        const {furn, sys} = $p.job_prm.properties;
+    // после загрузки данных, надо настроить отборы в метаданных полей рисовалки
+    pouch.once('pouch_complete_loaded', () => {
+      if(job_prm.properties && $p.current_user && !$p.current_user.branch.empty() && job_prm.builder) {
+
+        const {ПараметрВыбора} = enm.parameters_keys_applying;
+        const {furn, sys} = job_prm.properties;
 
         // накапливаем
         $p.current_user.branch.load()
-          .then(({keys}) => {
-            const branch_filter = $p.job_prm.builder.branch_filter = {furn: [], sys: []};
-            keys.forEach(({acl_obj}) => {
+          .then(({keys, divisions}) => {
+            const branch_filter = job_prm.builder.branch_filter = {furn: [], sys: []};
+            const add = ({acl_obj}) => {
               if(acl_obj.applying == ПараметрВыбора) {
                 acl_obj.params.forEach(({property, value}) => {
                   if(property === furn) {
@@ -31,6 +33,10 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
                   }
                 });
               }
+            };
+            keys.forEach(add);
+            divisions.forEach({keys} => {
+              keys.forEach(add);
             });
             return branch_filter;
           })
@@ -38,16 +44,16 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
 
             // применяем
             if(branch_filter.furn.length) {
-              const mf = $p.cat.characteristics.metadata('constructions').fields.furn;
+              const mf = cat.characteristics.metadata('constructions').fields.furn;
               mf.choice_params.push({
-                name: "ref",
+                name: 'ref',
                 path: {inh: branch_filter.furn}
               });
             }
             if(branch_filter.sys.length) {
-              const mf = $p.dp.buyers_order.metadata().fields.sys;
+              const mf = dp.buyers_order.metadata().fields.sys;
               mf.choice_params = [{
-                name: "ref",
+                name: 'ref',
                 path: {inh: branch_filter.sys}
               }];
             }
