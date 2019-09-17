@@ -35,7 +35,7 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
               }
             };
             keys.forEach(add);
-            divisions.forEach({keys} => {
+            divisions.forEach(({keys}) => {
               keys.forEach(add);
             });
             return branch_filter;
