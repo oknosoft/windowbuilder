@@ -1249,7 +1249,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
       }
     }
 
-    if($p.DocCalc_orderProductionRow.pfields.indexOf(field) != -1 || recalc) {
+    if($p.DocCalc_orderProductionRow.pfields.includes(field) || recalc) {
 
       if(!recalc) {
         _obj[field] = parseFloat(value);
@@ -1273,7 +1273,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
           extra_charge = prm.price_type.extra_charge_external;
         }
 
-        if(field != 'price_internal' && extra_charge && _obj.price) {
+        if(field != 'price_internal' && _obj.price) {
           _obj.price_internal = (_obj.price * (100 - _obj.discount_percent) / 100 * (100 + extra_charge) / 100).round(rounding);
         }
       }
@@ -1349,4 +1349,4 @@ $p.DocCalc_orderProductionRow.rfields = {
   s: 'n',
 };
 
-$p.DocCalc_orderProductionRow.pfields = 'price_internal,quantity,discount_percent_internal';
+$p.DocCalc_orderProductionRow.pfields = 'price,price_internal,quantity,discount_percent_internal';

@@ -10579,12 +10579,14 @@ class Pricing {
 
     const {marginality_in_spec} = $p.job_prm.pricing;
     const fake_row = {};
+    const {calc_order_row, spec} = prm;
 
-    if(!prm.spec)
+    if(!spec) {
       return;
+    }
 
-    if(prm.spec.count()){
-      prm.spec.forEach((row) => {
+    if(spec.count()){
+      spec.forEach((row) => {
 
         const {_obj, nom, characteristic} = row;
 
@@ -10598,12 +10600,12 @@ class Pricing {
         }
 
       });
-      prm.calc_order_row.first_cost = prm.spec.aggregate([], ["amount"]).round(2);
+      calc_order_row.first_cost = spec.aggregate([], ["amount"]).round(2);
     }
     else{
-      fake_row.nom = prm.calc_order_row.nom;
-      fake_row.characteristic = prm.calc_order_row.characteristic;
-      prm.calc_order_row.first_cost = this.nom_price(fake_row.nom, fake_row.characteristic, prm.price_type.price_type_first_cost, prm, fake_row);
+      fake_row.nom = calc_order_row.nom;
+      fake_row.characteristic = calc_order_row.characteristic;
+      calc_order_row.first_cost = this.nom_price(fake_row.nom, fake_row.characteristic, prm.price_type.price_type_first_cost, prm, fake_row);
     }
 
     prm.order_rows && prm.order_rows.forEach((value) => {
@@ -10619,19 +10621,26 @@ class Pricing {
   calc_amount (prm) {
 
     const {calc_order_row, price_type} = prm;
-    const {marginality_in_spec} = $p.job_prm.pricing;
-    const price_cost = marginality_in_spec && prm.spec.count() ?
-      prm.spec.aggregate([], ["amount_marged"]) :
-      this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
+    const {marginality_in_spec, not_update} = $p.job_prm.pricing;
+    const {rounding} = calc_order_row._owner._owner;
 
-    if(price_cost){
-      calc_order_row.price = price_cost.round(2);
+    if(calc_order_row.price && not_update && (not_update.includes(calc_order_row.nom) || not_update.includes(calc_order_row.nom.parent))) {
+      ;
     }
-    else if(marginality_in_spec) {
-      calc_order_row.price = this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
-    }
-    else{
-      calc_order_row.price = (calc_order_row.first_cost * price_type.marginality).round(2);
+    else {
+      const price_cost = marginality_in_spec && prm.spec.count() ?
+        prm.spec.aggregate([], ["amount_marged"]) :
+        this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
+
+      if(price_cost){
+        calc_order_row.price = price_cost.round(rounding);
+      }
+      else if(marginality_in_spec) {
+        calc_order_row.price = this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
+      }
+      else{
+        calc_order_row.price = (calc_order_row.first_cost * price_type.marginality).round(rounding);
+      }
     }
 
     calc_order_row.marginality = calc_order_row.first_cost ?
@@ -10643,8 +10652,7 @@ class Pricing {
       extra_charge = price_type.extra_charge_external || 0;
     }
 
-    calc_order_row.price_internal = (calc_order_row.price *
-      (100 - calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
+    calc_order_row.price_internal = (calc_order_row.price * (100 - calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(rounding);
 
     !prm.hand_start && calc_order_row.value_change("price", {}, calc_order_row.price, true);
 
@@ -16104,7 +16112,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
       }
     }
 
-    if($p.DocCalc_orderProductionRow.pfields.indexOf(field) != -1 || recalc) {
+    if($p.DocCalc_orderProductionRow.pfields.includes(field) || recalc) {
 
       if(!recalc) {
         _obj[field] = parseFloat(value);
@@ -16126,7 +16134,7 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
           extra_charge = prm.price_type.extra_charge_external;
         }
 
-        if(field != 'price_internal' && extra_charge && _obj.price) {
+        if(field != 'price_internal' && _obj.price) {
           _obj.price_internal = (_obj.price * (100 - _obj.discount_percent) / 100 * (100 + extra_charge) / 100).round(rounding);
         }
       }
@@ -16199,7 +16207,7 @@ $p.DocCalc_orderProductionRow.rfields = {
   s: 'n',
 };
 
-$p.DocCalc_orderProductionRow.pfields = 'price_internal,quantity,discount_percent_internal';
+$p.DocCalc_orderProductionRow.pfields = 'price,price_internal,quantity,discount_percent_internal';
 
 
 (({adapters: {pouch}, classes, cat, doc, job_prm, md, pricing, utils}) => {

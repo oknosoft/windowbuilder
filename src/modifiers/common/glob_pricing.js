@@ -444,13 +444,15 @@ class Pricing {
 
     const {marginality_in_spec} = $p.job_prm.pricing;
     const fake_row = {};
+    const {calc_order_row, spec} = prm;
 
-    if(!prm.spec)
+    if(!spec) {
       return;
+    }
 
     // пытаемся рассчитать по спецификации
-    if(prm.spec.count()){
-      prm.spec.forEach((row) => {
+    if(spec.count()){
+      spec.forEach((row) => {
 
         const {_obj, nom, characteristic} = row;
 
@@ -464,13 +466,13 @@ class Pricing {
         }
 
       });
-      prm.calc_order_row.first_cost = prm.spec.aggregate([], ["amount"]).round(2);
+      calc_order_row.first_cost = spec.aggregate([], ["amount"]).round(2);
     }
     else{
       // расчет себестомиости по номенклатуре строки расчета
-      fake_row.nom = prm.calc_order_row.nom;
-      fake_row.characteristic = prm.calc_order_row.characteristic;
-      prm.calc_order_row.first_cost = this.nom_price(fake_row.nom, fake_row.characteristic, prm.price_type.price_type_first_cost, prm, fake_row);
+      fake_row.nom = calc_order_row.nom;
+      fake_row.characteristic = calc_order_row.characteristic;
+      calc_order_row.first_cost = this.nom_price(fake_row.nom, fake_row.characteristic, prm.price_type.price_type_first_cost, prm, fake_row);
     }
 
     // себестоимость вытянутых строк спецификации в заказ
@@ -494,20 +496,28 @@ class Pricing {
   calc_amount (prm) {
 
     const {calc_order_row, price_type} = prm;
-    const {marginality_in_spec} = $p.job_prm.pricing;
-    const price_cost = marginality_in_spec && prm.spec.count() ?
-      prm.spec.aggregate([], ["amount_marged"]) :
-      this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
+    const {marginality_in_spec, not_update} = $p.job_prm.pricing;
+    const {rounding} = calc_order_row._owner._owner;
 
-    // цена продажи
-    if(price_cost){
-      calc_order_row.price = price_cost.round(2);
+    // если цена уже задана и номенклатура в группе "не обновлять цены" - не обновляем
+    if(calc_order_row.price && not_update && (not_update.includes(calc_order_row.nom) || not_update.includes(calc_order_row.nom.parent))) {
+      ;
     }
-    else if(marginality_in_spec) {
-      calc_order_row.price = this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
-    }
-    else{
-      calc_order_row.price = (calc_order_row.first_cost * price_type.marginality).round(2);
+    else {
+      const price_cost = marginality_in_spec && prm.spec.count() ?
+        prm.spec.aggregate([], ["amount_marged"]) :
+        this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
+
+      // цена продажи
+      if(price_cost){
+        calc_order_row.price = price_cost.round(rounding);
+      }
+      else if(marginality_in_spec) {
+        calc_order_row.price = this.nom_price(calc_order_row.nom, calc_order_row.characteristic, price_type.price_type_sale, prm, {});
+      }
+      else{
+        calc_order_row.price = (calc_order_row.first_cost * price_type.marginality).round(rounding);
+      }
     }
 
     // КМарж в строке расчета
@@ -523,8 +533,7 @@ class Pricing {
     }
 
     // TODO: учесть формулу
-    calc_order_row.price_internal = (calc_order_row.price *
-      (100 - calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(2);
+    calc_order_row.price_internal = (calc_order_row.price * (100 - calc_order_row.discount_percent)/100 * (100 + extra_charge)/100).round(rounding);
 
     // Эмулируем событие окончания редактирования, чтобы единообразно пересчитать строку табчасти
     !prm.hand_start && calc_order_row.value_change("price", {}, calc_order_row.price, true);
