@@ -173,7 +173,7 @@ class ProductsBuilding {
       const {check_params} = ProductsBuilding;
 
       const {cnn_type, specification, selection_params} = cnn;
-      const {ii, xx, acn} = $p.enm.cnn_types;
+      const {ii, xx, acn, t} = $p.enm.cnn_types;
 
       specification.forEach((row) => {
         const {nom} = row;
@@ -204,7 +204,7 @@ class ProductsBuilding {
           return;
         }
         // для угловых, разрешаем art2 только явно для art2
-        if(len_angl.art2 && acn.a.indexOf(cnn_type) != -1 && row.set_specification != САртикулом2 && cnn_type != xx) {
+        if(len_angl.art2 && acn.a.indexOf(cnn_type) != -1 && row.set_specification != САртикулом2 && cnn_type != xx && cnn_type != t) {
           return;
         }
 
