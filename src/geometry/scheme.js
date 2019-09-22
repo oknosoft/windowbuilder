@@ -1345,6 +1345,15 @@ class Scheme extends paper.Project {
           return 1;
         }
 
+        if(check_only === true && res.profile === element && res.cnn && acn.a.includes(res.cnn.cnn_type)) {
+          if(res.distance > distance) {
+            res.distance = distance;
+          }
+          res.profile_point = node;
+          res.point = point;
+          return 2;
+        }
+
         if(profile && (!res.cnn || res.cnn.empty())) {
 
           // а есть ли подходящее?
@@ -1396,7 +1405,6 @@ class Scheme extends paper.Project {
       }
       else {
         // проверяем другой узел, затем - Т
-
       }
       return;
     }

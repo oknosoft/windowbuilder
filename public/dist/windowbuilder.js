@@ -12154,6 +12154,15 @@ class Scheme extends paper.Project {
           return 1;
         }
 
+        if(check_only === true && res.profile === element && res.cnn && acn.a.includes(res.cnn.cnn_type)) {
+          if(res.distance > distance) {
+            res.distance = distance;
+          }
+          res.profile_point = node;
+          res.point = point;
+          return 2;
+        }
+
         if(profile && (!res.cnn || res.cnn.empty())) {
 
           cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
@@ -12190,7 +12199,6 @@ class Scheme extends paper.Project {
         return;
       }
       else {
-
       }
       return;
     }
