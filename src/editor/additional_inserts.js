@@ -6,8 +6,9 @@ class AdditionalInserts {
   }
 
   create_wnd(cnstr, project, cell) {
-    this._fields = $p.cat.characteristics.metadata('inserts').fields._clone();
-    this._caption = $p.msg.additional_inserts;
+    const {utils, cat, msg, iface} = $p;
+    this._fields = utils._clone(cat.characteristics.metadata('inserts').fields);
+    this._caption = msg.additional_inserts;
 
     if(!cnstr) {
       cnstr = 0;
@@ -18,7 +19,7 @@ class AdditionalInserts {
       cnstr = project.selected_elm;
       if(cnstr) {
         // добавляем параметры вставки
-        project.ox.add_inset_params(cnstr.inset, -cnstr.elm, $p.utils.blank.guid);
+        project.ox.add_inset_params(cnstr.inset, -cnstr.elm, utils.blank.guid);
         this._caption += ' элем. №' + cnstr.elm;
         cnstr = -cnstr.elm;
         this._fields.inset.choice_params[0].path = ['Элемент', 'Жалюзи'];
@@ -59,7 +60,7 @@ class AdditionalInserts {
       cell.detachObject(true);
     }
 
-    this.wnd = cell || $p.iface.dat_blank(null, options.wnd);
+    this.wnd = cell || iface.dat_blank(null, options.wnd);
     const {elmnts} = this.wnd;
 
     elmnts.layout = this.wnd.attachLayout({
@@ -107,7 +108,7 @@ class AdditionalInserts {
     });
 
     if(cell) {
-      elmnts.layout.cells('a').getAttachedToolbar().addText($p.utils.generate_guid(), 3, options.wnd.caption);
+      elmnts.layout.cells('a').getAttachedToolbar().addText(utils.generate_guid(), 3, options.wnd.caption);
     }
 
     // фильтруем параметры при выборе вставки

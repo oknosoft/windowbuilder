@@ -136,10 +136,10 @@ $p.cat.inserts.__define({
         this.ProductionRow = ItemRow;
 
         // индивидуальные метаданные строк
-        const {current_user, dp, cat, enm, adapters: {pouch}} = $p;
+        const {current_user, dp, cat, enm, utils, adapters: {pouch}} = $p;
 
         // отбор по типу вставки
-        this.meta = dp.buyers_order.metadata('production')._clone();
+        this.meta = utils._clone(dp.buyers_order.metadata('production'));
         this.meta.fields.inset.choice_params[0].path = item;
         this.meta.fields.inset.disable_clear = true;
 
@@ -174,7 +174,7 @@ $p.cat.inserts.__define({
           params = new Set();
           item.product_params.forEach(({param}) => params.add(param));
           if(!prototype._meta) {
-            Object.defineProperty(prototype, '_meta', {value: this.meta._clone()});
+            Object.defineProperty(prototype, '_meta', {value: utils._clone(this.meta)});
           }
           meta = prototype._meta;
         }

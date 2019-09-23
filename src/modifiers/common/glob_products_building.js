@@ -81,7 +81,8 @@ class ProductsBuilding {
       if(!cnn) {
         return;
       }
-      const sign = cnn.cnn_type == $p.enm.cnn_types.ii ? -1 : 1;
+      const {enm, CatInserts, utils} = $p;
+      const sign = cnn.cnn_type == enm.cnn_types.ii ? -1 : 1;
       const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
 
       cnn_filter_spec(cnn, elm, len_angl).forEach((row_cnn_spec) => {
@@ -89,9 +90,9 @@ class ProductsBuilding {
         const {nom} = row_cnn_spec;
 
         // TODO: nom может быть вставкой - в этом случае надо разузловать
-        if(nom instanceof $p.CatInserts) {
+        if(nom instanceof CatInserts) {
           if(len_angl && (row_cnn_spec.sz || row_cnn_spec.coefficient)) {
-            const tmp_len_angl = len_angl._clone();
+            const tmp_len_angl = utils._clone(len_angl);
             tmp_len_angl.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
             nom.calculate_spec({elm, len_angl: tmp_len_angl, ox});
           }
@@ -143,7 +144,7 @@ class ProductsBuilding {
               elm,
               len_angl,
               cnstr: 0,
-              inset: $p.utils.blank.guid,
+              inset: utils.blank.guid,
               row_cnn: row_cnn_spec,
               row_spec: row_spec
             });
@@ -168,12 +169,12 @@ class ProductsBuilding {
 
       const res = [];
       const {angle_hor} = elm;
-      const {art1, art2} = $p.job_prm.nom;
-      const {САртикулом1, САртикулом2} = $p.enm.specification_installation_methods;
+      const {job_prm: {nom: {art1, art2}}, enm} = $p;
+      const {САртикулом1, САртикулом2} = enm.specification_installation_methods;
       const {check_params} = ProductsBuilding;
 
       const {cnn_type, specification, selection_params} = cnn;
-      const {ii, xx, acn, t} = $p.enm.cnn_types;
+      const {ii, xx, acn, t} = enm.cnn_types;
 
       specification.forEach((row) => {
         const {nom} = row;

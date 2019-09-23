@@ -10354,6 +10354,7 @@ class Pricing {
   }
 
   sync_local(pouch, step = 0) {
+    const {utils} = $p;
     return pouch.remote.templates.get(`_local/price_${step}`)
       .then((remote) => {
 
@@ -10374,7 +10375,7 @@ class Pricing {
               else {
                 remote._rev = local._rev;
               }
-              pouch.local.templates.put(remote._clone());
+              pouch.local.templates.put(utils._clone(remote));
             }
 
             this.build_cache_local(remote);
@@ -10927,16 +10928,17 @@ class ProductsBuilding {
       if(!cnn) {
         return;
       }
-      const sign = cnn.cnn_type == $p.enm.cnn_types.ii ? -1 : 1;
+      const {enm, CatInserts, utils} = $p;
+      const sign = cnn.cnn_type == enm.cnn_types.ii ? -1 : 1;
       const {new_spec_row, calc_count_area_mass} = ProductsBuilding;
 
       cnn_filter_spec(cnn, elm, len_angl).forEach((row_cnn_spec) => {
 
         const {nom} = row_cnn_spec;
 
-        if(nom instanceof $p.CatInserts) {
+        if(nom instanceof CatInserts) {
           if(len_angl && (row_cnn_spec.sz || row_cnn_spec.coefficient)) {
-            const tmp_len_angl = len_angl._clone();
+            const tmp_len_angl = utils._clone(len_angl);
             tmp_len_angl.len = (len_angl.len - sign * 2 * row_cnn_spec.sz) * (row_cnn_spec.coefficient || 0.001);
             nom.calculate_spec({elm, len_angl: tmp_len_angl, ox});
           }
@@ -10985,7 +10987,7 @@ class ProductsBuilding {
               elm,
               len_angl,
               cnstr: 0,
-              inset: $p.utils.blank.guid,
+              inset: utils.blank.guid,
               row_cnn: row_cnn_spec,
               row_spec: row_spec
             });
@@ -11003,12 +11005,12 @@ class ProductsBuilding {
 
       const res = [];
       const {angle_hor} = elm;
-      const {art1, art2} = $p.job_prm.nom;
-      const {САртикулом1, САртикулом2} = $p.enm.specification_installation_methods;
+      const {job_prm: {nom: {art1, art2}}, enm} = $p;
+      const {САртикулом1, САртикулом2} = enm.specification_installation_methods;
       const {check_params} = ProductsBuilding;
 
       const {cnn_type, specification, selection_params} = cnn;
-      const {ii, xx, acn, t} = $p.enm.cnn_types;
+      const {ii, xx, acn, t} = enm.cnn_types;
 
       specification.forEach((row) => {
         const {nom} = row;
@@ -13822,9 +13824,9 @@ $p.cat.inserts.__define({
 
         this.ProductionRow = ItemRow;
 
-        const {current_user, dp, cat, enm, adapters: {pouch}} = $p;
+        const {current_user, dp, cat, enm, utils, adapters: {pouch}} = $p;
 
-        this.meta = dp.buyers_order.metadata('production')._clone();
+        this.meta = utils._clone(dp.buyers_order.metadata('production'));
         this.meta.fields.inset.choice_params[0].path = item;
         this.meta.fields.inset.disable_clear = true;
 
@@ -13858,7 +13860,7 @@ $p.cat.inserts.__define({
           params = new Set();
           item.product_params.forEach(({param}) => params.add(param));
           if(!prototype._meta) {
-            Object.defineProperty(prototype, '_meta', {value: this.meta._clone()});
+            Object.defineProperty(prototype, '_meta', {value: utils._clone(this.meta)});
           }
           meta = prototype._meta;
         }
@@ -15728,16 +15730,16 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     this.planning.clear();
 
-    const {wsql, aes, current_user: {suffix}, msg} = $p;
+    const {wsql, aes, current_user: {suffix}, msg, utils} = $p;
     const url = (wsql.get_user_param('windowbuilder_planning', 'string') || '/plan/') + `doc.calc_order/${this.ref}`;
 
-    const post_data = this._obj._clone();
+    const post_data = utils._clone(this._obj);
     post_data.characteristics = {};
 
     this.load_production()
       .then((prod) => {
         for (const cx of prod) {
-          post_data.characteristics[cx.ref] = cx._obj._clone();
+          post_data.characteristics[cx.ref] = utils._clone(cx._obj);
         }
       })
       .then(() => {

@@ -755,18 +755,18 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     this.planning.clear();
 
     // получаем url сервиса
-    const {wsql, aes, current_user: {suffix}, msg} = $p;
+    const {wsql, aes, current_user: {suffix}, msg, utils} = $p;
     const url = (wsql.get_user_param('windowbuilder_planning', 'string') || '/plan/') + `doc.calc_order/${this.ref}`;
 
     // сериализуем документ и характеристики
-    const post_data = this._obj._clone();
+    const post_data = utils._clone(this._obj);
     post_data.characteristics = {};
 
     // получаем объекты характеристик и подклеиваем их сериализацию к post_data
     this.load_production()
       .then((prod) => {
         for (const cx of prod) {
-          post_data.characteristics[cx.ref] = cx._obj._clone();
+          post_data.characteristics[cx.ref] = utils._clone(cx._obj);
         }
       })
       // выполняем запрос к сервису

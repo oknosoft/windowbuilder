@@ -21,7 +21,7 @@
         calc_order: wsql.get_user_param('template_block_calc_order')
       }
 
-      this._meta = Object.assign(characteristics.metadata()._clone(), {
+      this._meta = Object.assign(utils._clone(characteristics.metadata()), {
         form: {
           selection: {
             fields: ['presentation', 'svg'],

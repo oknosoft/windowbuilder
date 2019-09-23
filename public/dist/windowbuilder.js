@@ -724,8 +724,9 @@ class AdditionalInserts {
   }
 
   create_wnd(cnstr, project, cell) {
-    this._fields = $p.cat.characteristics.metadata('inserts').fields._clone();
-    this._caption = $p.msg.additional_inserts;
+    const {utils, cat, msg, iface} = $p;
+    this._fields = utils._clone(cat.characteristics.metadata('inserts').fields);
+    this._caption = msg.additional_inserts;
 
     if(!cnstr) {
       cnstr = 0;
@@ -735,7 +736,7 @@ class AdditionalInserts {
     else if(cnstr == 'elm'){
       cnstr = project.selected_elm;
       if(cnstr) {
-        project.ox.add_inset_params(cnstr.inset, -cnstr.elm, $p.utils.blank.guid);
+        project.ox.add_inset_params(cnstr.inset, -cnstr.elm, utils.blank.guid);
         this._caption += ' элем. №' + cnstr.elm;
         cnstr = -cnstr.elm;
         this._fields.inset.choice_params[0].path = ['Элемент', 'Жалюзи'];
@@ -776,7 +777,7 @@ class AdditionalInserts {
       cell.detachObject(true);
     }
 
-    this.wnd = cell || $p.iface.dat_blank(null, options.wnd);
+    this.wnd = cell || iface.dat_blank(null, options.wnd);
     const {elmnts} = this.wnd;
 
     elmnts.layout = this.wnd.attachLayout({
@@ -824,7 +825,7 @@ class AdditionalInserts {
     });
 
     if(cell) {
-      elmnts.layout.cells('a').getAttachedToolbar().addText($p.utils.generate_guid(), 3, options.wnd.caption);
+      elmnts.layout.cells('a').getAttachedToolbar().addText(utils.generate_guid(), 3, options.wnd.caption);
     }
 
     this.refill_prms = this.refill_prms.bind(this);
@@ -2551,7 +2552,7 @@ class UndoRedo {
 
   calculate(pos) {
     const {_diff} = this;
-    const curr = _diff[0]._clone();
+    const curr = $p.utils._clone(_diff[0]);
     for (let i = 1; i < _diff.length && i <= pos; i++) {
       _diff[i].forEach((change) => {
         DeepDiff.applyChange(curr, true, change);
@@ -2562,7 +2563,8 @@ class UndoRedo {
 
 
   save_snapshot(scheme) {
-    const curr = scheme.ox._obj._clone(['_row', 'extra_fields', 'glasses', 'specification', 'predefined_name']);
+    const {utils} = $p;
+    const curr = utils._clone(utils._mixin({}, scheme.ox._obj, null, ['_row', 'extra_fields', 'glasses', 'specification', 'predefined_name']));
     const {_diff, _pos} = this;
     if (!_diff.length) {
       _diff.push(curr);

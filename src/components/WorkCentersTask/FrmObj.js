@@ -112,7 +112,7 @@ class FrmObj extends DataObj {
   // вызывается из раскроя
   handleOnStep = (status) => {
     const {nom, characteristic} = status.cut_row;
-    const statuses = this.state.statuses._clone();
+    const statuses = $p.utils._clone(this.state.statuses);
     let row;
     if(!statuses.some((elm) => {
       if(elm.nom === nom && elm.characteristic === characteristic) {

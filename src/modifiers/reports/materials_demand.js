@@ -291,11 +291,13 @@
     // рисует тулбар и закладки
     draw_tabs(wnd) {
 
+      const {current_user, msg, iface, utils} = $p;
+
       const items = [
         {id: "info", type: "text", text: "Вариант настроек:"},
         {id: "scheme", type: "text", text: "<div style='width: 300px; margin-top: -2px;' name='scheme'></div>"}
       ];
-      if($p.current_user.role_available("ИзменениеТехнологическойНСИ")){
+      if(current_user.role_available("ИзменениеТехнологическойНСИ")){
         items.push(
           {id: "save", type: "button", text: "<i class='fa fa-floppy-o fa-fw'></i>", title: 'Сохранить вариант'},
           {id: "sep", type: "separator"},
@@ -309,10 +311,10 @@
         items: items,
         onClick: (name) => {
           if(this.scheme.empty()){
-            return $p.msg.show_msg({
+            return msg.show_msg({
               type: "alert-warning",
               text: "Не выбран вариант настроек",
-              title: $p.msg.main_title
+              title: msg.main_title
             });
           }
           if(name == 'print'){
@@ -322,9 +324,9 @@
             this.scheme.save().then((scheme) => scheme.set_default());
           }
           else if(name == 'saveas'){
-            $p.iface.query_value(this.scheme.name.replace(/[0-9]/g, '') + Math.floor(10 + Math.random() * 21), 'Укажите название варианта')
+            iface.query_value(this.scheme.name.replace(/[0-9]/g, '') + Math.floor(10 + Math.random() * 21), 'Укажите название варианта')
               .then((name) => {
-                const proto = this.scheme._obj._clone();
+                const proto = utils._clone(this.scheme._obj);
                 delete proto.ref;
                 proto.name = name;
                 return this.scheme._manager.create(proto);

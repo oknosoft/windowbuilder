@@ -78,7 +78,8 @@ export default function ($p) {
       });
 
       // добавляем табчасть продукции
-      this.meta_production = $p.dp.buyers_order.metadata('production').fields._clone();
+      const {utils, dp: {buyers_order}} = $p;
+      this.meta_production = utils._clone(buyers_order.metadata('production').fields);
       elmnts.grids.production = elmnts.layout.cells('a').attachTabular({
         metadata: this.meta_production,
         obj: dp,

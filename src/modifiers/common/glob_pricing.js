@@ -138,6 +138,7 @@ class Pricing {
 
   // если оффлайн и есть доступ к серверу
   sync_local(pouch, step = 0) {
+    const {utils} = $p;
     return pouch.remote.templates.get(`_local/price_${step}`)
       .then((remote) => {
 
@@ -159,7 +160,7 @@ class Pricing {
               else {
                 remote._rev = local._rev;
               }
-              pouch.local.templates.put(remote._clone());
+              pouch.local.templates.put(utils._clone(remote));
             }
 
             // грузим цены из remote
