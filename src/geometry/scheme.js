@@ -1648,16 +1648,20 @@ class Scheme extends paper.Project {
    * учитываются узлы всех путей, в том числе и не выделенных
    */
   deselect_all_points(with_items) {
+    const res = [];
     this.getItems({class: paper.Path}).forEach((item) => {
       item.segments.forEach((segm) => {
         if(segm.selected) {
           segm.selected = false;
+          res.push(segm);
         }
       });
       if(with_items && item.selected) {
         item.selected = false;
+        res.push(item);
       }
     });
+    return res;
   }
 
   /**

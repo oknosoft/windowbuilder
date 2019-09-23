@@ -1168,9 +1168,27 @@ class ProfileItem extends GeneratrixElement {
     if(profile instanceof ProfileConnective) {
       const gen = profile.generatrix.clone({insert: false}).elongation(1000);
       this._attr._rays.clear();
-      this.b = gen.getNearestPoint(this.b);
-      this.e = gen.getNearestPoint(this.e);
-      moved_fact = true;
+      const b = gen.getNearestPoint(this.b);
+      const e = gen.getNearestPoint(this.e);
+      const db = b.subtract(this.b);
+      const de = e.subtract(this.e);
+      if(db.length || de.length) {
+        const selected = this.project.deselect_all_points(true);
+        if(db.subtract(de).length < consts.epsilon) {
+          this.move_points(de, true);
+        }
+        else {
+          this.select_node('b');
+          this.move_points(db);
+          this.project.deselectAll();
+          this.select_node('e');
+          this.move_points(de);
+        }
+        this.project.deselectAll();
+        for(const el of selected) {
+          el.selected = true;
+        }
+      }
     }
     else {
       if(bcnn.cnn && bcnn.profile == profile) {
