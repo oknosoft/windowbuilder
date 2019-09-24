@@ -298,9 +298,8 @@ class GeneratrixElement extends BuilderElement {
 
       // ранняя привязка импостов
       isegments.forEach(({profile, node}) => {
-        if(!noti.profiles.includes(profile)) {
-          profile.do_sub_bind(this, node);
-        }
+        profile.do_sub_bind(this, node);
+        !noti.profiles.includes(profile) && noti.profiles.push(profile);
       });
 
       _attr._rays.clear();
