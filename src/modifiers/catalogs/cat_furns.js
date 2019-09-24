@@ -355,7 +355,7 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
    * @param cache {Object}
    */
   check_restrictions(contour, cache) {
-    const {elm, dop, handle_height_min, handle_height_max, formula} = this;
+    const {elm, dop, handle_height_min, handle_height_max, formula, side} = this;
     const {direction, h_ruch, cnstr} = contour;
 
     // проверка по высоте ручки
@@ -375,10 +375,14 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
     let res = true;
 
     // по таблице параметров
+    let profile;
     selection_params.find_rows({elm, dop}, (prm_row) => {
+      if(!profile) {
+        profile = contour.profile_by_furn_side(side, cache);
+      }
       // выполнение условия рассчитывает объект CchProperties
       const ok = (prop_direction == prm_row.param) ?
-        direction == prm_row.value : prm_row.param.check_condition({row_spec: this, prm_row, cnstr, ox: cache.ox});
+        direction == prm_row.value : prm_row.param.check_condition({row_spec: this, prm_row, elm: profile, cnstr, ox: cache.ox});
       if(!ok){
         return res = false;
       }

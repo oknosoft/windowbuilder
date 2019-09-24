@@ -13601,7 +13601,7 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
 $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurnsSpecificationRow {
 
   check_restrictions(contour, cache) {
-    const {elm, dop, handle_height_min, handle_height_max, formula} = this;
+    const {elm, dop, handle_height_min, handle_height_max, formula, side} = this;
     const {direction, h_ruch, cnstr} = contour;
 
     if(h_ruch < handle_height_min || (handle_height_max && h_ruch > handle_height_max)){
@@ -13617,9 +13617,13 @@ $p.CatFurnsSpecificationRow = class CatFurnsSpecificationRow extends $p.CatFurns
 
     let res = true;
 
+    let profile;
     selection_params.find_rows({elm, dop}, (prm_row) => {
+      if(!profile) {
+        profile = contour.profile_by_furn_side(side, cache);
+      }
       const ok = (prop_direction == prm_row.param) ?
-        direction == prm_row.value : prm_row.param.check_condition({row_spec: this, prm_row, cnstr, ox: cache.ox});
+        direction == prm_row.value : prm_row.param.check_condition({row_spec: this, prm_row, elm: profile, cnstr, ox: cache.ox});
       if(!ok){
         return res = false;
       }
