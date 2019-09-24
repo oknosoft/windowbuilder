@@ -4906,6 +4906,18 @@ class GeneratrixElement extends BuilderElement {
       });
     }
 
+    const imposts = this.joined_imposts ? this.joined_imposts() : {inner: [], outer: []};
+    const isegments = [];
+    imposts.inner.concat(imposts.outer).forEach(({profile}) => {
+      const {b, e} = profile.rays;
+      if(b.profile === this) {
+        isegments.push({profile, node: 'b'});
+      }
+      if(e.profile === this) {
+        isegments.push({profile, node: 'e'});
+      }
+    });
+
     this.generatrix.segments.forEach((segm) => {
 
       let cnn_point;
@@ -5006,6 +5018,13 @@ class GeneratrixElement extends BuilderElement {
 
     if(changed){
       const {_attr, layer, project} = this;
+
+      isegments.forEach(({profile, node}) => {
+        if(!noti.profiles.includes(profile)) {
+          profile.do_sub_bind(this, node);
+        }
+      });
+
       _attr._rays.clear();
       layer && layer.notify && layer.notify(noti);
       project.notify(this, 'update', {x1: true, x2: true, y1: true, y2: true});
