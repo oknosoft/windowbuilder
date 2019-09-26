@@ -13,13 +13,14 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
 
     // после загрузки данных, надо настроить отборы в метаданных полей рисовалки
     pouch.once('pouch_complete_loaded', () => {
-      if(job_prm.properties && $p.current_user && !$p.current_user.branch.empty() && job_prm.builder) {
+      const {current_user} = $p;
+      if(job_prm.properties && current_user && !current_user.branch.empty() && job_prm.builder) {
 
         const {ПараметрВыбора} = enm.parameters_keys_applying;
-        const {furn, sys} = job_prm.properties;
+        const {furn, sys, client_of_dealer_mode} = job_prm.properties;
 
         // накапливаем
-        $p.current_user.branch.load()
+        current_user.branch.load()
           .then(({keys, divisions}) => {
             const branch_filter = job_prm.builder.branch_filter = {furn: [], sys: []};
             const add = ({acl_obj}) => {
@@ -37,6 +38,9 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
             keys.forEach(add);
             divisions.forEach(({acl_obj}) => {
               acl_obj.keys.forEach(add);
+              acl_obj.extra_fields.find_rows({property: client_of_dealer_mode}, ({value}) => {
+                job_prm.builder.client_of_dealer_mode = value;
+              });
             });
             return branch_filter;
           })
