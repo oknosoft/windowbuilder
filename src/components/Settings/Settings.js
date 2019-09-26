@@ -38,12 +38,13 @@ class Settings extends Component {
   constructor(props) {
     super(props);
     const {zone, couch_path, enable_save_pwd, couch_direct, ram_indexer} = props;
+    const {wsql, cat, current_user, pricing} = $p;
 
     let hide_price;
-    if($p.wsql.get_user_param('hide_price_dealer')) {
+    if(wsql.get_user_param('hide_price_dealer')) {
       hide_price = 'dealer';
     }
-    else if($p.wsql.get_user_param('hide_price_manufacturer')) {
+    else if(wsql.get_user_param('hide_price_manufacturer')) {
       hide_price = 'manufacturer';
     }
     else {
@@ -54,24 +55,24 @@ class Settings extends Component {
     let discount_percent_internal = $p.wsql.get_user_param('discount_percent_internal', 'number');
     let surcharge_disabled = false;
 
-    if($p.current_user && $p.current_user.partners_uids.length) {
+    if(current_user && current_user.partners_uids.length) {
 
       // если заданы параметры для текущего пользователя - используем их
       if(!surcharge_internal) {
 
-        let partner = $p.cat.partners.get($p.current_user.partners_uids[0]);
+        let partner = cat.partners.get(current_user.partners_uids[0]);
         let prm = {
           calc_order_row: {
-            nom: $p.cat.nom.get(),
+            nom: cat.nom.get(),
             characteristic: {params: {find_rows: () => null}},
             _owner: {_owner: {partner: partner}}
           }
         };
 
-        $p.pricing.price_type(prm);
+        pricing.price_type(prm);
 
-        $p.wsql.set_user_param('surcharge_internal', surcharge_internal = prm.price_type.extra_charge_external);
-        $p.wsql.set_user_param('discount_percent_internal', discount_percent_internal = prm.price_type.discount_external);
+        wsql.set_user_param('surcharge_internal', surcharge_internal = prm.price_type.extra_charge_external);
+        wsql.set_user_param('discount_percent_internal', discount_percent_internal = prm.price_type.discount_external);
       }
     }
     else {
@@ -152,7 +153,7 @@ class Settings extends Component {
     return (
       <Paper className={classes.root} elevation={4}>
 
-        <Typography variant="h6" style={{paddingTop: 16}}>Подключение к базе данных</Typography>
+        <Typography variant="subtitle2" style={{paddingTop: 16}}>Подключение к базе данных</Typography>
 
         <TextField
           fullWidth
@@ -178,9 +179,9 @@ class Settings extends Component {
               control={<Switch
                 onChange={(event, checked) => this.setState({couch_direct: checked})}
                 checked={Boolean(couch_direct)}/>}
-              label="Прямое подключение без кеширования"
+              label={couch_direct ? "Прямое подключение к серверу" : "Работа через IDB браузера" }
             />
-            <FormHelperText style={{marginTop: -4}}>Отключает режим оффлайн</FormHelperText>
+            <FormHelperText style={{marginTop: -4}}>{couch_direct ? "Оффлайн не используется" : "Автономный режим при недоступности сервера"}</FormHelperText>
           </FormControl>
 
           <FormControl>
@@ -198,7 +199,7 @@ class Settings extends Component {
               control={<Switch
                 onChange={(event, checked) => this.setState({ram_indexer: checked})}
                 checked={Boolean(ram_indexer)}/>}
-              label="Использовать RamIndexer"
+              label="Использовать Indexer Postgres"
             />
             <FormHelperText style={{marginTop: -4}}>Новый источник данных для динсписков</FormHelperText>
           </FormControl>
@@ -206,7 +207,7 @@ class Settings extends Component {
         </FormGroup>
 
 
-        <Typography variant="h6" style={{paddingTop: 16}}>Колонки цен</Typography>
+        <Typography variant="subtitle2" style={{paddingTop: 16}}>Колонки цен</Typography>
         <Typography>Настройка видимости колонок в документе &quot;Расчет&quot; и графическом построителе</Typography>
 
         <RadioGroup
@@ -220,7 +221,7 @@ class Settings extends Component {
 
         </RadioGroup>
 
-        <Typography variant="h6" style={{paddingTop: 16}}>Наценки и скидки</Typography>
+        <Typography variant="subtitle2" style={{paddingTop: 16}}>Наценки и скидки</Typography>
         <Typography>Значения наценки и скидки по умолчанию, которые дилер предоставляет своим (конечным) покупателям</Typography>
 
         <TextField
