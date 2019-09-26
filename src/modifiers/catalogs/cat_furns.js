@@ -66,6 +66,8 @@ Object.defineProperties($p.cat.furns, {
 
 });
 
+$p.cat.furns.metadata('selection_params').index = 'elm';
+
 /**
  * Методы объекта фурнитуры
  */

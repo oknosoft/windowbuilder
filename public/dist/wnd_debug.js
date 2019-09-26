@@ -1247,7 +1247,9 @@ $p.cat.cnns.__define({
     }
   },
 
-})
+});
+
+$p.cat.cnns.metadata('selection_params').index = 'elm';
 
 $p.CatCnns.prototype.__define({
 
@@ -1514,6 +1516,8 @@ Object.defineProperties($p.cat.furns, {
   }
 
 });
+
+$p.cat.furns.metadata('selection_params').index = 'elm';
 
 $p.CatFurns = class CatFurns extends $p.CatFurns {
 
@@ -2108,6 +2112,9 @@ $p.cat.inserts.__define({
   }
 
 });
+
+$p.cat.inserts.metadata('selection_params').index = 'elm';
+$p.cat.inserts.metadata('specification').index = 'is_main_elm';
 
 $p.CatInserts = class CatInserts extends $p.CatInserts {
 
@@ -4449,7 +4456,6 @@ class ProductsBuilding {
     }
 
     this.recalc = function (scheme, attr) {
-
 
 
       ox = scheme.ox;

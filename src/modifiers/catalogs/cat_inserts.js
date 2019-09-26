@@ -298,6 +298,9 @@ $p.cat.inserts.__define({
 
 });
 
+$p.cat.inserts.metadata('selection_params').index = 'elm';
+$p.cat.inserts.metadata('specification').index = 'is_main_elm';
+
 // переопределяем прототип
 $p.CatInserts = class CatInserts extends $p.CatInserts {
 

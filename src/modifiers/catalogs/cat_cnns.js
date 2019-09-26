@@ -223,7 +223,9 @@ $p.cat.cnns.__define({
     }
   },
 
-})
+});
+
+$p.cat.cnns.metadata('selection_params').index = 'elm';
 
 // публичные методы объекта
 $p.CatCnns.prototype.__define({

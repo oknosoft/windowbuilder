@@ -749,9 +749,8 @@ class ProductsBuilding {
      */
     this.recalc = function (scheme, attr) {
 
-      //console.time("base_spec");
-      //console.profile();
-
+      // console.time('base_spec');
+      // console.profile();
 
       // ссылки для быстрого доступа к свойствам объекта продукции
       ox = scheme.ox;
@@ -775,8 +774,8 @@ class ProductsBuilding {
       spec.group_by('nom,clr,characteristic,len,width,s,elm,alp1,alp2,origin,specify,dop', 'qty,totqty,totqty1');
 
 
-      //console.timeEnd("base_spec");
-      //console.profileEnd();
+      // console.timeEnd('base_spec');
+      // console.profileEnd();
 
       // информируем мир об окончании расчета координат
       scheme.draw_visualization();
