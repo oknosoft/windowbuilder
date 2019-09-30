@@ -99,6 +99,11 @@ module.exports = function(proxy, allowedHost) {
       // it used the same host and port.
       // https://github.com/facebook/create-react-app/issues/2272#issuecomment-302832432
       app.use(noopServiceWorkerMiddleware());
+
+      // app.get('/service-worker.js', function (req, res) {
+      //   res.set({ 'Content-Type': 'application/javascript; charset=utf-8' });
+      //   res.send(fs.readFileSync('build/service-worker.js'));
+      // });
     },
   };
 };

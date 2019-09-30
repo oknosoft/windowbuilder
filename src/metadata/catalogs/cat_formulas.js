@@ -44,7 +44,9 @@ exports.CatFormulasManager = class CatFormulasManager extends Object {
       else {
         // выполняем модификаторы
         try {
-          utils.cron ? utils.cron(formula.execute()) : formula.execute();
+          const res = formula.execute();
+          // еслм модификатор вернул задание кроносу - добавляем планировщик
+          res && utils.cron && utils.cron(res);
         }
         catch (err) {
         }
@@ -54,9 +56,20 @@ exports.CatFormulasManager = class CatFormulasManager extends Object {
 
   // переопределяем load_array - не грузим неактивные формулы
   load_array(aattr, forse) {
-    super.load_array(aattr.filter((v) => {
-      return !v.disabled || v.is_folder;
-    }), forse);
+    const res = super.load_array(aattr.filter((v) => !v.disabled || v.is_folder), forse);
+    const modifiers = this.predefined('modifiers');
+    for(const doc of res) {
+      const {_data, _owner, parent} = doc;
+      if(_data._formula) {
+        _data._formula = null;
+        if(parent === modifiers) {
+          _owner.$p.record_log(`runtime modifier '${doc.name}'`);
+        }
+      }
+      if(_data._template) {
+        _data._template = null;
+      }
+    }
   }
 
 };

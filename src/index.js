@@ -12,6 +12,9 @@ import {Provider} from 'react-redux';
 import configureStore, {history} from './redux';
 import RootView from './components/App/RootView';
 
+// sw для оффлайна и прочих дел
+import * as serviceWorker from './serviceWorker';
+
 const store = configureStore();
 
 class RootProvider extends React.Component {
@@ -46,3 +49,9 @@ RootProvider.childContextTypes = {
 };
 
 render(<RootProvider />, document.getElementById('root'));
+
+serviceWorker.unregister({
+  onUpdate() {
+    $p && $p.record_log('Доступен новый контент, обновите страницу');
+  }
+});
