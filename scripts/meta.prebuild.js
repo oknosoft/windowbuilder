@@ -18,12 +18,32 @@ debug('Читаем конструктор и плагины');
 
 // путь настроек приложения
 const settings_path = path.resolve(__dirname, '../config/app.settings.js');
+const custom_constructors_path = path.resolve(__dirname, '../src/metadata/common/custom_constructors.js');
 
 // текст модуля начальных настроек приложения для включения в итоговый скрипт
 const settings = fs.readFileSync(settings_path, 'utf8');
 
 // конфигурация подключения к CouchDB
 const config = require(settings_path)();
+
+// эти классы создадим руками
+const custom_constructor = [
+  'CatFormulasParamsRow',
+  'DpBuyers_orderProduct_paramsRow',
+  'CatProduction_paramsFurn_paramsRow',
+  'CatProduction_paramsProduct_paramsRow',
+  'CatProduction_paramsFurn_paramsRow',
+  'CatInsertsProduct_paramsRow',
+  'CatCnnsSizesRow',
+  'CatInsertsSelection_paramsRow',
+  'CatCnnsSelection_paramsRow',
+  'CatFurnsSelection_paramsRow',
+  'DocCredit_card_orderPayment_detailsRow',
+  'DocDebit_bank_orderPayment_detailsRow',
+  'DocCredit_bank_orderPayment_detailsRow',
+  'DocDebit_cash_orderPayment_detailsRow',
+  'DocCredit_cash_orderPayment_detailsRow',
+];
 
 // конструктор metadata-core и плагин metadata-pouchdb
 const MetaEngine = require('metadata-core')
@@ -176,6 +196,8 @@ function create_modules(_m) {
     }
   }
 
+  text += fs.readFileSync(custom_constructors_path, 'utf8');
+
   return text + '})();\n';
 
 }
@@ -266,6 +288,9 @@ function obj_constructor_text(_m, category, name, categoties) {
 
     // создаём конструктор строки табчасти
     const row_fn_name = DataManager.prototype.obj_constructor.call({class_name: category + '.' + name, constructor_names: {}}, ts);
+    if(custom_constructor.includes(row_fn_name)) {
+      continue;
+    }
 
     text += `class ${row_fn_name} extends TabularSectionRow{\n`;
 
