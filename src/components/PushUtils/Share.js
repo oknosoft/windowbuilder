@@ -80,7 +80,7 @@ class Share extends Component {
     const map = this.state.users.get(value);
     const {ref} = this.state.doc;
     const {doc} = $p.adapters.pouch.remote;
-    if(map.hasOwnProperty(ref)) {
+    if(Object.prototype.hasOwnProperty.call(map, ref)) {
       delete map[ref];
     }
     else {
@@ -97,7 +97,7 @@ class Share extends Component {
       })
       .then((rdoc) => {
         if(rdoc !== map) {
-          if(rdoc.hasOwnProperty(ref)) {
+          if(Object.prototype.hasOwnProperty.call(rdoc, ref)) {
             delete rdoc[ref];
           }
           else {

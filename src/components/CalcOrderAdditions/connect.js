@@ -142,7 +142,7 @@ export function find_inset(insert_type) {
       if(name === 'insert_type') {
         return;
       }
-      if(filter.hasOwnProperty(name)) {
+      if(Object.prototype.hasOwnProperty.call(filter, name)) {
         filter[name] = [filter[name]];
         filter[name].push(path);
       }

@@ -25,7 +25,7 @@ class Additions extends React.Component {
   }
 
   inset_change = (obj, fields) => {
-    if(fields.hasOwnProperty('inset')) {
+    if(Object.prototype.hasOwnProperty.call(fields, 'inset')) {
       this.setState({inset: obj.inset});
     }
   }

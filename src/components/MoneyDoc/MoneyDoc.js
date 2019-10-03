@@ -30,8 +30,8 @@ class MoneyDoc extends DataObj {
         <DataField _obj={_obj} _fld="department"/>
       </FormGroup>,
       <FormGroup row key="row2" className={classes.paddingBottom}>
-        {fields.hasOwnProperty('cashbox') && <DataField _obj={_obj} _fld="cashbox"/>}
-        {fields.hasOwnProperty('bank_account') && <DataField _obj={_obj} _fld="bank_account"/>}
+        {Object.prototype.hasOwnProperty.call(fields, 'cashbox') && <DataField _obj={_obj} _fld="cashbox"/>}
+        {Object.prototype.hasOwnProperty.call(fields, 'bank_account') && <DataField _obj={_obj} _fld="bank_account"/>}
         <DataField _obj={_obj} _fld="responsible"/>
         <DataField _obj={_obj} _fld="doc_amount" read_only/>
       </FormGroup>,

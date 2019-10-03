@@ -31,7 +31,7 @@ class AdditionsGroup extends React.Component {
 
 
   onRowUpdated = (updated, row) => {
-    if(updated && updated.hasOwnProperty('inset')){
+    if(updated && Object.prototype.hasOwnProperty.call(updated, 'inset')){
       const {inset} = row;
       $p.cat.clrs.selection_exclude_service(this.props.meta.fields.clr, inset);
       // проверим доступность цветов, при необходимости обновим

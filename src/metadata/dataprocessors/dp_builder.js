@@ -8,7 +8,6 @@
  * @module dp_builder_pen
  */
 
-/* global paper */
 
 export default function ({dp, enm}) {
 
