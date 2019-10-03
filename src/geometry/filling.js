@@ -588,7 +588,7 @@ class Filling extends AbstractFilling(BuilderElement) {
           curr.cnn || this.project.elm_cnn(this, curr.profile), false, curr.outer);
 
         curr.sub_path = sub_path.equidistant(
-          (sub_path._reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);
+          (sub_path._reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.size(this) : 20), consts.sticking);
 
       }
       // получам пересечения

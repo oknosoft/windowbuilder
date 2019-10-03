@@ -4361,7 +4361,7 @@ class Filling extends AbstractFilling(BuilderElement) {
           curr.cnn || this.project.elm_cnn(this, curr.profile), false, curr.outer);
 
         curr.sub_path = sub_path.equidistant(
-          (sub_path._reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);
+          (sub_path._reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.size(this) : 20), consts.sticking);
 
       }
       for (let i = 0; i < length; i++) {
@@ -6382,7 +6382,7 @@ class ProfileItem extends GeneratrixElement {
     ppoints.e = gen.getOffsetOf(ppoints[2]) > gen.getOffsetOf(ppoints[3]) ? ppoints[2] : ppoints[3];
 
     const sub_gen = gen.get_subpath(ppoints.b, ppoints.e);
-    const res = sub_gen.length + (b.cnn ? b.cnn.sz : 0) + (e.cnn ? e.cnn.sz : 0);
+    const res = sub_gen.length + (b.cnn ? b.cnn.size(this) : 0) + (e.cnn ? e.cnn.size(this) : 0);
     sub_gen.remove();
 
     return res;
@@ -7637,7 +7637,7 @@ class Profile extends ProfileItem {
       _attr.d0 = this.offset;
       const nearest = this.nearest();
       if(nearest) {
-        _attr.d0 -= nearest.d2 + (_attr._nearest_cnn ? _attr._nearest_cnn.sz : 20);
+        _attr.d0 -= nearest.d2 + (_attr._nearest_cnn ? _attr._nearest_cnn.size(this) : 20);
       }
     }
     return _attr.d0;
@@ -7937,7 +7937,7 @@ class ProfileAddl extends ProfileItem {
 
   get d0() {
     this.nearest();
-    return this._attr._nearest_cnn ? -this._attr._nearest_cnn.sz : 0;
+    return this._attr._nearest_cnn ? -this._attr._nearest_cnn.size(this) : 0;
   }
 
   get outer() {
@@ -13160,11 +13160,11 @@ $p.CatCnns.prototype.__define({
 	main_row: {
 		value(elm) {
 
-			var ares, nom = elm.nom;
+      let ares, nom = elm.nom;
 
 			if($p.enm.cnn_types.acn.a.indexOf(this.cnn_type) != -1){
 
-				var art12 = elm.orientation == $p.enm.orientations.Вертикальная ? $p.job_prm.nom.art1 : $p.job_prm.nom.art2;
+        let art12 = elm.orientation == $p.enm.orientations.Вертикальная ? $p.job_prm.nom.art1 : $p.job_prm.nom.art2;
 
 				ares = this.specification.find_rows({nom: art12});
 				if(ares.length)
@@ -13190,12 +13190,25 @@ $p.CatCnns.prototype.__define({
 
 	check_nom2: {
 		value(nom) {
-			var ref = $p.utils.is_data_obj(nom) ? nom.ref : nom;
+			let ref = $p.utils.is_data_obj(nom) ? nom.ref : nom;
 			return this.cnn_elmnts._obj.some(function (row) {
 				return row.nom == ref;
 			})
 		}
-	}
+	},
+
+  size: {
+	  value(elm) {
+	    let {sz, sizes} = this;
+      sizes.forEach((prm_row) => {
+        if(prm_row.param.check_condition({row_spec: {}, prm_row, elm, cnstr: 0, ox: elm.project.ox})) {
+          sz = prm_row.elm;
+          return false;
+        }
+      });
+      return sz;
+    }
+  }
 
 });
 

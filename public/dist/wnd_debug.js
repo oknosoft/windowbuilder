@@ -1256,11 +1256,11 @@ $p.CatCnns.prototype.__define({
 	main_row: {
 		value(elm) {
 
-			var ares, nom = elm.nom;
+      let ares, nom = elm.nom;
 
 			if($p.enm.cnn_types.acn.a.indexOf(this.cnn_type) != -1){
 
-				var art12 = elm.orientation == $p.enm.orientations.Вертикальная ? $p.job_prm.nom.art1 : $p.job_prm.nom.art2;
+        let art12 = elm.orientation == $p.enm.orientations.Вертикальная ? $p.job_prm.nom.art1 : $p.job_prm.nom.art2;
 
 				ares = this.specification.find_rows({nom: art12});
 				if(ares.length)
@@ -1286,12 +1286,25 @@ $p.CatCnns.prototype.__define({
 
 	check_nom2: {
 		value(nom) {
-			var ref = $p.utils.is_data_obj(nom) ? nom.ref : nom;
+			let ref = $p.utils.is_data_obj(nom) ? nom.ref : nom;
 			return this.cnn_elmnts._obj.some(function (row) {
 				return row.nom == ref;
 			})
 		}
-	}
+	},
+
+  size: {
+	  value(elm) {
+	    let {sz, sizes} = this;
+      sizes.forEach((prm_row) => {
+        if(prm_row.param.check_condition({row_spec: {}, prm_row, elm, cnstr: 0, ox: elm.project.ox})) {
+          sz = prm_row.elm;
+          return false;
+        }
+      });
+      return sz;
+    }
+  }
 
 });
 

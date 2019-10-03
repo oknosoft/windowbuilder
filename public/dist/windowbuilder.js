@@ -6898,7 +6898,7 @@ class Filling extends AbstractFilling(BuilderElement) {
           curr.cnn || this.project.elm_cnn(this, curr.profile), false, curr.outer);
 
         curr.sub_path = sub_path.equidistant(
-          (sub_path._reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.sz : 20), consts.sticking);
+          (sub_path._reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.size(this) : 20), consts.sticking);
 
       }
       for (let i = 0; i < length; i++) {
@@ -8919,7 +8919,7 @@ class ProfileItem extends GeneratrixElement {
     ppoints.e = gen.getOffsetOf(ppoints[2]) > gen.getOffsetOf(ppoints[3]) ? ppoints[2] : ppoints[3];
 
     const sub_gen = gen.get_subpath(ppoints.b, ppoints.e);
-    const res = sub_gen.length + (b.cnn ? b.cnn.sz : 0) + (e.cnn ? e.cnn.sz : 0);
+    const res = sub_gen.length + (b.cnn ? b.cnn.size(this) : 0) + (e.cnn ? e.cnn.size(this) : 0);
     sub_gen.remove();
 
     return res;
@@ -10174,7 +10174,7 @@ class Profile extends ProfileItem {
       _attr.d0 = this.offset;
       const nearest = this.nearest();
       if(nearest) {
-        _attr.d0 -= nearest.d2 + (_attr._nearest_cnn ? _attr._nearest_cnn.sz : 20);
+        _attr.d0 -= nearest.d2 + (_attr._nearest_cnn ? _attr._nearest_cnn.size(this) : 20);
       }
     }
     return _attr.d0;
@@ -10474,7 +10474,7 @@ class ProfileAddl extends ProfileItem {
 
   get d0() {
     this.nearest();
-    return this._attr._nearest_cnn ? -this._attr._nearest_cnn.sz : 0;
+    return this._attr._nearest_cnn ? -this._attr._nearest_cnn.size(this) : 0;
   }
 
   get outer() {

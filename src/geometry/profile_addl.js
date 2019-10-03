@@ -68,7 +68,7 @@ class ProfileAddl extends ProfileItem {
    */
   get d0() {
     this.nearest();
-    return this._attr._nearest_cnn ? -this._attr._nearest_cnn.sz : 0;
+    return this._attr._nearest_cnn ? -this._attr._nearest_cnn.size(this) : 0;
   }
 
   /**

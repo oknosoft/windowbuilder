@@ -665,7 +665,7 @@ class ProfileItem extends GeneratrixElement {
 
     // получаем фрагмент образующей
     const sub_gen = gen.get_subpath(ppoints.b, ppoints.e);
-    const res = sub_gen.length + (b.cnn ? b.cnn.sz : 0) + (e.cnn ? e.cnn.sz : 0);
+    const res = sub_gen.length + (b.cnn ? b.cnn.size(this) : 0) + (e.cnn ? e.cnn.size(this) : 0);
     sub_gen.remove();
 
     return res;
@@ -2185,7 +2185,7 @@ class Profile extends ProfileItem {
       _attr.d0 = this.offset;
       const nearest = this.nearest();
       if(nearest) {
-        _attr.d0 -= nearest.d2 + (_attr._nearest_cnn ? _attr._nearest_cnn.sz : 20);
+        _attr.d0 -= nearest.d2 + (_attr._nearest_cnn ? _attr._nearest_cnn.size(this) : 20);
       }
     }
     return _attr.d0;
