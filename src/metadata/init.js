@@ -979,12 +979,12 @@ set params(v){this._setter_ts('params',v)}
     // создаём функцию из текста формулы
     if(!_data._formula && this.formula){
       try{
-        if(this.async){
+        if(this.async) {
           const AsyncFunction = Object.getPrototypeOf(eval('(async function(){})')).constructor;
-          _data._formula = (new AsyncFunction("obj,$p,attr", this.formula)).bind(this);
+          _data._formula = (new AsyncFunction('obj,$p,attr', this.formula)).bind(this);
         }
-        else{
-          _data._formula = (new Function("obj,$p,attr", this.formula)).bind(this);
+        else {
+          _data._formula = (new Function('obj,$p,attr', this.formula)).bind(this);
         }
       }
       catch(err){
@@ -995,12 +995,12 @@ set params(v){this._setter_ts('params',v)}
 
     const {_formula} = _data;
 
-    if(this.parent == _manager.predefined("printing_plates")){
+    if(this.parent == _manager.predefined('printing_plates')) {
 
-      if(!_formula){
+      if(!_formula) {
         $p.msg.show_msg({
           title: $p.msg.bld_title,
-          type: "alert-error",
+          type: 'alert-error',
           text: `Ошибка в формуле<br /><b>${this.name}</b>`
         });
         return Promise.resolve();
@@ -1013,8 +1013,8 @@ set params(v){this._setter_ts('params',v)}
         .then((doc) => doc instanceof $p.SpreadsheetDocument && doc.print());
 
     }
-    else{
-      return _formula && _formula(obj, $p, attr)
+    else {
+      return _formula && _formula(obj, $p, attr);
     }
 
   }
@@ -1032,7 +1032,7 @@ class CatFormulasManager extends CatManager {
 
   constructor(owner, class_name) {
     super(owner, class_name);
-    this._owner.$p.adapters.pouch.once('pouch_doc_ram_start', () => this.load_formulas());
+    this._owner.$p.adapters.pouch.once('pouch_doc_ram_start', this.load_formulas.bind(this));
   }
 
   load_formulas() {
