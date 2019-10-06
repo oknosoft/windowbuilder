@@ -13,7 +13,8 @@ exports.CatUsersManager = class CatUsersManager extends Object {
   load_array(aattr, forse) {
     const res = [];
     for (let aobj of aattr) {
-      if(this.by_ref[aobj.ref]) {
+      let obj = this.by_ref[aobj.ref];
+      if(obj && !obj.is_new()) {
         continue;
       }
       if(!aobj.acl_objs) {
@@ -21,7 +22,13 @@ exports.CatUsersManager = class CatUsersManager extends Object {
       }
       const {acl} = aobj;
       delete aobj.acl;
-      const obj = new $p.CatUsers(aobj, this, true);
+      if(obj) {
+        obj._mixin(aobj);
+      }
+      else {
+        obj = new $p.CatUsers(aobj, this, true);
+      }
+
       const {_obj} = obj;
       if(_obj && !_obj._acl) {
         _obj._acl = acl;
