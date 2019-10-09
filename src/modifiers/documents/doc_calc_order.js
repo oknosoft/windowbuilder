@@ -335,6 +335,25 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
   }
 
+  // удаление строки
+  del_row(row) {
+    // запрет удаления подчиненной продукции
+    if(!row.characteristic.empty()) {
+      const {msg} = $p;
+      const {leading_elm, leading_product, name} = row.characteristic;
+      if(leading_elm !== 0 && !leading_product.empty() && leading_product.calc_order_row) {
+        msg.show_msg && msg.show_msg({
+          type: 'alert-warning',
+          text: `Изделие не может быть удалено. Для удаления, пройдите в ${leading_product.name} и отредактируйте доп. вставки.`,
+          title: this.presentation
+        });
+        return false;
+      }
+    }
+
+    return this;
+  }
+
   // при удалении строки
   after_del_row(name) {
     name === 'production' && this.product_rows();
