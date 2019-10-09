@@ -143,7 +143,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
       name += '/' + calc_order_row.row.pad();
 
       // для подчиненных, номер строки родителя
-      if(!leading_product.empty()) {
+      if(!leading_product.empty() && leading_product.calc_order_row) {
         name += ':' + leading_product.calc_order_row.row.pad();
       }
 
