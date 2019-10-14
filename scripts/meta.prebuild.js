@@ -43,6 +43,23 @@ const custom_constructor = [
   'DocCredit_bank_orderPayment_detailsRow',
   'DocDebit_cash_orderPayment_detailsRow',
   'DocCredit_cash_orderPayment_detailsRow',
+  'CatProjectsExtra_fieldsRow',
+  'CatStoresExtra_fieldsRow',
+  'CatCharacteristicsExtra_fieldsRow',
+  'DocPurchaseExtra_fieldsRow',
+  'DocCalc_orderExtra_fieldsRow',
+  'DocCredit_card_orderExtra_fieldsRow',
+  'DocDebit_bank_orderExtra_fieldsRow',
+  'DocCredit_bank_orderExtra_fieldsRow',
+  'DocDebit_cash_orderExtra_fieldsRow',
+  'DocCredit_cash_orderExtra_fieldsRow',
+  'DocSellingExtra_fieldsRow',
+  'CatBranchesExtra_fieldsRow',
+  'CatPartnersExtra_fieldsRow',
+  'CatNomExtra_fieldsRow',
+  'CatOrganizationsExtra_fieldsRow',
+  'CatDivisionsExtra_fieldsRow',
+  'CatUsersExtra_fieldsRow',
 ];
 
 // конструктор metadata-core и плагин metadata-pouchdb

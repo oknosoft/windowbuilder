@@ -236,6 +236,20 @@ class CchPredefined_elmntsManager extends ChartOfCharacteristicManager {
           enumerable: true
         });
       }
+      else if(row.predefined_name === 'abonent') {
+        const {by_ref} = $p.cch.properties;
+        row.elmnts.forEach((row) => {
+          const property = by_ref[row.property];
+          if(!property || !property.predefined_name) return;
+          const _mgr = property.type.is_ref && md.mgr_by_class_name(property.type.types[0]);
+          parent.__define(property.predefined_name, {
+            value: _mgr ? _mgr.get(row.value, false, false) : row.value,
+            configurable: true,
+            enumerable: true,
+            writable: true
+          });
+        });
+      }
       else {
         parent.__define(row.synonym, {
           value: _mgr ? _mgr.get(row.value, false, false) : row.value,
@@ -1238,15 +1252,6 @@ get acl_obj(){return this._getter('acl_obj')}
 set acl_obj(v){this._setter('acl_obj',v)}
 }
 $p.CatBranchesKeysRow = CatBranchesKeysRow;
-class CatBranchesExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.CatBranchesExtra_fieldsRow = CatBranchesExtra_fieldsRow;
 class CatBranchesManager extends CatManager {
 
   constructor (owner, class_name) {
@@ -1605,15 +1610,6 @@ get phone_without_codes(){return this._getter('phone_without_codes')}
 set phone_without_codes(v){this._setter('phone_without_codes',v)}
 }
 $p.CatPartnersContact_informationRow = CatPartnersContact_informationRow;
-class CatPartnersExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.CatPartnersExtra_fieldsRow = CatPartnersExtra_fieldsRow;
 $p.cat.create('partners');
 
 /**
@@ -1708,15 +1704,6 @@ get extra_fields(){return this._getter_ts('extra_fields')}
 set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.CatNom = CatNom;
-class CatNomExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.CatNomExtra_fieldsRow = CatNomExtra_fieldsRow;
 $p.cat.create('nom');
 
 /**
@@ -1794,15 +1781,6 @@ get act_from(){return this._getter('act_from')}
 set act_from(v){this._setter('act_from',v)}
 }
 $p.CatOrganizationsContact_informationRow = CatOrganizationsContact_informationRow;
-class CatOrganizationsExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.CatOrganizationsExtra_fieldsRow = CatOrganizationsExtra_fieldsRow;
 $p.cat.create('organizations');
 
 /**
@@ -2479,15 +2457,6 @@ get keys(){return this._getter_ts('keys')}
 set keys(v){this._setter_ts('keys',v)}
 }
 $p.CatDivisions = CatDivisions;
-class CatDivisionsExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.CatDivisionsExtra_fieldsRow = CatDivisionsExtra_fieldsRow;
 class CatDivisionsKeysRow extends TabularSectionRow{
 get acl_obj(){return this._getter('acl_obj')}
 set acl_obj(v){this._setter('acl_obj',v)}
@@ -2547,15 +2516,6 @@ get subscribers(){return this._getter_ts('subscribers')}
 set subscribers(v){this._setter_ts('subscribers',v)}
 }
 $p.CatUsers = CatUsers;
-class CatUsersExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.CatUsersExtra_fieldsRow = CatUsersExtra_fieldsRow;
 class CatUsersContact_informationRow extends TabularSectionRow{
 get type(){return this._getter('type')}
 set type(v){this._setter('type',v)}
@@ -2680,15 +2640,6 @@ get extra_fields(){return this._getter_ts('extra_fields')}
 set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.CatProjects = CatProjects;
-class CatProjectsExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.CatProjectsExtra_fieldsRow = CatProjectsExtra_fieldsRow;
 $p.cat.create('projects');
 
 /**
@@ -2709,15 +2660,6 @@ get extra_fields(){return this._getter_ts('extra_fields')}
 set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.CatStores = CatStores;
-class CatStoresExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.CatStoresExtra_fieldsRow = CatStoresExtra_fieldsRow;
 $p.cat.create('stores');
 
 /**
@@ -3041,15 +2983,6 @@ get clr(){return this._getter('clr')}
 set clr(v){this._setter('clr',v)}
 }
 $p.CatCharacteristicsGlass_specificationRow = CatCharacteristicsGlass_specificationRow;
-class CatCharacteristicsExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.CatCharacteristicsExtra_fieldsRow = CatCharacteristicsExtra_fieldsRow;
 class CatCharacteristicsGlassesRow extends TabularSectionRow{
 get elm(){return this._getter('elm')}
 set elm(v){this._setter('elm',v)}
@@ -3333,15 +3266,6 @@ get buyers_order(){return this._getter('buyers_order')}
 set buyers_order(v){this._setter('buyers_order',v)}
 }
 $p.DocPurchaseServicesRow = DocPurchaseServicesRow;
-class DocPurchaseExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.DocPurchaseExtra_fieldsRow = DocPurchaseExtra_fieldsRow;
 $p.doc.create('purchase');
 
 /**
@@ -3602,15 +3526,6 @@ get changed(){return this._getter('changed')}
 set changed(v){this._setter('changed',v)}
 }
 $p.DocCalc_orderProductionRow = DocCalc_orderProductionRow;
-class DocCalc_orderExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.DocCalc_orderExtra_fieldsRow = DocCalc_orderExtra_fieldsRow;
 class DocCalc_orderContact_informationRow extends TabularSectionRow{
 get type(){return this._getter('type')}
 set type(v){this._setter('type',v)}
@@ -3681,15 +3596,6 @@ get extra_fields(){return this._getter_ts('extra_fields')}
 set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.DocCredit_card_order = DocCredit_card_order;
-class DocCredit_card_orderExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.DocCredit_card_orderExtra_fieldsRow = DocCredit_card_orderExtra_fieldsRow;
 $p.doc.create('credit_card_order');
 
 /**
@@ -3751,15 +3657,6 @@ get extra_fields(){return this._getter_ts('extra_fields')}
 set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.DocDebit_bank_order = DocDebit_bank_order;
-class DocDebit_bank_orderExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.DocDebit_bank_orderExtra_fieldsRow = DocDebit_bank_orderExtra_fieldsRow;
 $p.doc.create('debit_bank_order');
 
 /**
@@ -3790,15 +3687,6 @@ get extra_fields(){return this._getter_ts('extra_fields')}
 set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.DocCredit_bank_order = DocCredit_bank_order;
-class DocCredit_bank_orderExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.DocCredit_bank_orderExtra_fieldsRow = DocCredit_bank_orderExtra_fieldsRow;
 $p.doc.create('credit_bank_order');
 
 /**
@@ -3829,15 +3717,6 @@ get extra_fields(){return this._getter_ts('extra_fields')}
 set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.DocDebit_cash_order = DocDebit_cash_order;
-class DocDebit_cash_orderExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.DocDebit_cash_orderExtra_fieldsRow = DocDebit_cash_orderExtra_fieldsRow;
 $p.doc.create('debit_cash_order');
 
 /**
@@ -3868,15 +3747,6 @@ get extra_fields(){return this._getter_ts('extra_fields')}
 set extra_fields(v){this._setter_ts('extra_fields',v)}
 }
 $p.DocCredit_cash_order = DocCredit_cash_order;
-class DocCredit_cash_orderExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.DocCredit_cash_orderExtra_fieldsRow = DocCredit_cash_orderExtra_fieldsRow;
 $p.doc.create('credit_cash_order');
 
 /**
@@ -3951,15 +3821,6 @@ get trans(){return this._getter('trans')}
 set trans(v){this._setter('trans',v)}
 }
 $p.DocSellingServicesRow = DocSellingServicesRow;
-class DocSellingExtra_fieldsRow extends TabularSectionRow{
-get property(){return this._getter('property')}
-set property(v){this._setter('property',v)}
-get value(){return this._getter('value')}
-set value(v){this._setter('value',v)}
-get txt_row(){return this._getter('txt_row')}
-set txt_row(v){this._setter('txt_row',v)}
-}
-$p.DocSellingExtra_fieldsRow = DocSellingExtra_fieldsRow;
 $p.doc.create('selling');
 
 /**
@@ -4802,6 +4663,15 @@ class SelectionParamsRow extends ElmParamsRow{
   set txt_row(v){this._setter('txt_row',v)}
 }
 
+class Extra_fieldsRow extends TabularSectionRow{
+  get property(){return this._getter('property')}
+  set property(v){this._setter('property',v)}
+  get value(){return this._getter('value')}
+  set value(v){this._setter('value',v)}
+  get txt_row(){return this._getter('txt_row')}
+  set txt_row(v){this._setter('txt_row',v)}
+}
+
 class CatFormulasParamsRow extends ParamsRow{}
 
 class DpBuyers_orderProduct_paramsRow extends ElmParamsRow{
@@ -4849,6 +4719,24 @@ class DocCredit_bank_orderPayment_detailsRow extends Payment_detailsRow{}
 class DocDebit_cash_orderPayment_detailsRow extends Payment_detailsRow{}
 class DocCredit_cash_orderPayment_detailsRow extends Payment_detailsRow{}
 
+class CatProjectsExtra_fieldsRow extends Extra_fieldsRow{}
+class CatStoresExtra_fieldsRow extends Extra_fieldsRow{}
+class CatCharacteristicsExtra_fieldsRow extends Extra_fieldsRow{}
+class DocPurchaseExtra_fieldsRow extends Extra_fieldsRow{}
+class DocCalc_orderExtra_fieldsRow extends Extra_fieldsRow{}
+class DocCredit_card_orderExtra_fieldsRow extends Extra_fieldsRow{}
+class DocDebit_bank_orderExtra_fieldsRow extends Extra_fieldsRow{}
+class DocCredit_bank_orderExtra_fieldsRow extends Extra_fieldsRow{}
+class DocDebit_cash_orderExtra_fieldsRow extends Extra_fieldsRow{}
+class DocCredit_cash_orderExtra_fieldsRow extends Extra_fieldsRow{}
+class DocSellingExtra_fieldsRow extends Extra_fieldsRow{}
+class CatBranchesExtra_fieldsRow extends Extra_fieldsRow{}
+class CatPartnersExtra_fieldsRow extends Extra_fieldsRow{}
+class CatNomExtra_fieldsRow extends Extra_fieldsRow{}
+class CatOrganizationsExtra_fieldsRow extends Extra_fieldsRow{}
+class CatDivisionsExtra_fieldsRow extends Extra_fieldsRow{}
+class CatUsersExtra_fieldsRow extends TabularSectionRow{}
+
 Object.assign($p, {
   CatFormulasParamsRow,
   DpBuyers_orderProduct_paramsRow,
@@ -4864,6 +4752,23 @@ Object.assign($p, {
   DocCredit_bank_orderPayment_detailsRow,
   DocDebit_cash_orderPayment_detailsRow,
   DocCredit_cash_orderPayment_detailsRow,
+  CatProjectsExtra_fieldsRow,
+  CatStoresExtra_fieldsRow,
+  CatCharacteristicsExtra_fieldsRow,
+  DocPurchaseExtra_fieldsRow,
+  DocCalc_orderExtra_fieldsRow,
+  DocCredit_card_orderExtra_fieldsRow,
+  DocDebit_bank_orderExtra_fieldsRow,
+  DocCredit_bank_orderExtra_fieldsRow,
+  DocDebit_cash_orderExtra_fieldsRow,
+  DocCredit_cash_orderExtra_fieldsRow,
+  DocSellingExtra_fieldsRow,
+  CatBranchesExtra_fieldsRow,
+  CatPartnersExtra_fieldsRow,
+  CatNomExtra_fieldsRow,
+  CatOrganizationsExtra_fieldsRow,
+  CatDivisionsExtra_fieldsRow,
+  CatUsersExtra_fieldsRow,
 });
 
 })();

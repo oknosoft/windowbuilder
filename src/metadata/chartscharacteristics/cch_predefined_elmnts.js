@@ -90,6 +90,20 @@ exports.CchPredefined_elmntsManager = class CchPredefined_elmntsManager extends 
           enumerable: true
         });
       }
+      else if(row.predefined_name === 'abonent') {
+        const {by_ref} = $p.cch.properties;
+        row.elmnts.forEach((row) => {
+          const property = by_ref[row.property];
+          if(!property || !property.predefined_name) return;
+          const _mgr = property.type.is_ref && md.mgr_by_class_name(property.type.types[0]);
+          parent.__define(property.predefined_name, {
+            value: _mgr ? _mgr.get(row.value, false, false) : row.value,
+            configurable: true,
+            enumerable: true,
+            writable: true
+          });
+        });
+      }
       else {
         parent.__define(row.synonym, {
           value: _mgr ? _mgr.get(row.value, false, false) : row.value,

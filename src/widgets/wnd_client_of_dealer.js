@@ -35,30 +35,37 @@ class eXcell_client extends eXcell {
   ti_keydown(e) {
     const {code, ctrlKey} = e;
     const {grid} = this;
+    const {iface, job_prm: {builder}} = $p;
+    // по {F4} открываем форму списка
+    if(code === 'F4' || (ctrlKey && code === 'KeyF')) {
+      return this.open_selection(e);
+    }
+    // по {F2} открываем форму объекта
+    if(code === 'F2' && builder.client_of_dealer_mode != 'string') {
+      return this.open_obj(e);
+    }
+
+    // если разрешена только форма, другие клавиши не обрабатываем
+    if(builder.client_of_dealer_mode == 'frm') {
+      return iface.cancel_bubble(e, true);
+    }
+
     // по {del} очищаем значение
     if(code === 'Delete') {
       this.setValue('')
       grid.editStop();
-      return $p.iface.cancel_bubble(e);
+      return iface.cancel_bubble(e);
     }
     // по {tab} добавляем неразрывный пробел
-    else if(code === 'Tab') {
+    if(code === 'Tab') {
       const {cell: {firstChild}} = this;
       firstChild.childNodes[0].value += '\u00A0';
-      return $p.iface.cancel_bubble(e);
+      return iface.cancel_bubble(e);
     }
     // по {enter} заканчиваем редактирование
-    else if(code === 'Enter') {
+    if(code === 'Enter') {
       grid.editStop();
-      return $p.iface.cancel_bubble(e);
-    }
-    // по {F4} открываем форму списка
-    else if(code === 'F4' || (ctrlKey && code === 'KeyF')) {
-      return this.open_selection(e);
-    }
-    // по {F2} открываем форму объекта
-    else if(code === 'F2') {
-      return this.open_obj(e);
+      return iface.cancel_bubble(e);
     }
   }
 
@@ -112,7 +119,7 @@ class eXcell_client extends eXcell {
   edit() {
 
     this.val = this.getValue();		//save current value
-    this.cell.innerHTML = `<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_ofrm21">&nbsp;</div><div class="ref_field21">&nbsp;</div></div>`;
+    this.cell.innerHTML = `<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_ofrm21" title="Открыть форму ввода по реквизитам {F2}">&nbsp;</div><div class="ref_field21" title="Выбрать из списка прежних клиентов {F4}">&nbsp;</div></div>`;
 
     const {cell: {firstChild}, val} = this;
     const ti = firstChild.childNodes[0];

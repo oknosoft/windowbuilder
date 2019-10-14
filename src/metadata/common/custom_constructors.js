@@ -33,6 +33,15 @@ class SelectionParamsRow extends ElmParamsRow{
   set txt_row(v){this._setter('txt_row',v)}
 }
 
+class Extra_fieldsRow extends TabularSectionRow{
+  get property(){return this._getter('property')}
+  set property(v){this._setter('property',v)}
+  get value(){return this._getter('value')}
+  set value(v){this._setter('value',v)}
+  get txt_row(){return this._getter('txt_row')}
+  set txt_row(v){this._setter('txt_row',v)}
+}
+
 class CatFormulasParamsRow extends ParamsRow{}
 
 class DpBuyers_orderProduct_paramsRow extends ElmParamsRow{
@@ -80,6 +89,24 @@ class DocCredit_bank_orderPayment_detailsRow extends Payment_detailsRow{}
 class DocDebit_cash_orderPayment_detailsRow extends Payment_detailsRow{}
 class DocCredit_cash_orderPayment_detailsRow extends Payment_detailsRow{}
 
+class CatProjectsExtra_fieldsRow extends Extra_fieldsRow{}
+class CatStoresExtra_fieldsRow extends Extra_fieldsRow{}
+class CatCharacteristicsExtra_fieldsRow extends Extra_fieldsRow{}
+class DocPurchaseExtra_fieldsRow extends Extra_fieldsRow{}
+class DocCalc_orderExtra_fieldsRow extends Extra_fieldsRow{}
+class DocCredit_card_orderExtra_fieldsRow extends Extra_fieldsRow{}
+class DocDebit_bank_orderExtra_fieldsRow extends Extra_fieldsRow{}
+class DocCredit_bank_orderExtra_fieldsRow extends Extra_fieldsRow{}
+class DocDebit_cash_orderExtra_fieldsRow extends Extra_fieldsRow{}
+class DocCredit_cash_orderExtra_fieldsRow extends Extra_fieldsRow{}
+class DocSellingExtra_fieldsRow extends Extra_fieldsRow{}
+class CatBranchesExtra_fieldsRow extends Extra_fieldsRow{}
+class CatPartnersExtra_fieldsRow extends Extra_fieldsRow{}
+class CatNomExtra_fieldsRow extends Extra_fieldsRow{}
+class CatOrganizationsExtra_fieldsRow extends Extra_fieldsRow{}
+class CatDivisionsExtra_fieldsRow extends Extra_fieldsRow{}
+class CatUsersExtra_fieldsRow extends TabularSectionRow{}
+
 Object.assign($p, {
   CatFormulasParamsRow,
   DpBuyers_orderProduct_paramsRow,
@@ -95,5 +122,22 @@ Object.assign($p, {
   DocCredit_bank_orderPayment_detailsRow,
   DocDebit_cash_orderPayment_detailsRow,
   DocCredit_cash_orderPayment_detailsRow,
+  CatProjectsExtra_fieldsRow,
+  CatStoresExtra_fieldsRow,
+  CatCharacteristicsExtra_fieldsRow,
+  DocPurchaseExtra_fieldsRow,
+  DocCalc_orderExtra_fieldsRow,
+  DocCredit_card_orderExtra_fieldsRow,
+  DocDebit_bank_orderExtra_fieldsRow,
+  DocCredit_bank_orderExtra_fieldsRow,
+  DocDebit_cash_orderExtra_fieldsRow,
+  DocCredit_cash_orderExtra_fieldsRow,
+  DocSellingExtra_fieldsRow,
+  CatBranchesExtra_fieldsRow,
+  CatPartnersExtra_fieldsRow,
+  CatNomExtra_fieldsRow,
+  CatOrganizationsExtra_fieldsRow,
+  CatDivisionsExtra_fieldsRow,
+  CatUsersExtra_fieldsRow,
 });
 
