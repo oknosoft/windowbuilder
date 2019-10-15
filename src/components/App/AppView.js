@@ -24,14 +24,6 @@ import items, {item_props} from './menu_items';     // массив элемен
 
 class AppRoot extends Component {
 
-  static propTypes = {
-    handleNavigate: PropTypes.func.isRequired,
-    handleLogin: PropTypes.func.isRequired,
-    handleIfaceState: PropTypes.func.isRequired,
-    first_run: PropTypes.bool.isRequired,
-    snack: PropTypes.object,
-  };
-
   handleDialogClose(name) {
     this.props.handleIfaceState({component: '', name, value: {open: false}});
   }
@@ -162,6 +154,29 @@ class AppRoot extends Component {
     ];
   }
 }
+
+AppRoot.propTypes = {
+  handleNavigate: PropTypes.func.isRequired,
+  handleLogin: PropTypes.func.isRequired,
+  handleIfaceState: PropTypes.func.isRequired,
+  first_run: PropTypes.bool,
+  meta_loaded: PropTypes.bool,
+  doc_ram_loaded: PropTypes.bool,
+  couch_direct: PropTypes.bool,
+  complete_loaded: PropTypes.bool,
+  sync_started: PropTypes.bool,
+  idle: PropTypes.bool,
+  offline: PropTypes.bool,
+  path_log_in: PropTypes.bool,
+  snack: PropTypes.object,
+  alert: PropTypes.object,
+  confirm: PropTypes.object,
+  repl: PropTypes.object,
+  user: PropTypes.object,
+  page: PropTypes.object,
+  nom_prices_step: PropTypes.number,
+  title: PropTypes.string,
+};
 
 export default withNavigateAndMeta(AppRoot);
 

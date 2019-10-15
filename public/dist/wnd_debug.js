@@ -122,7 +122,7 @@ $p.CatCharacteristics = class CatCharacteristics extends $p.CatCharacteristics {
 
       name += '/' + calc_order_row.row.pad();
 
-      if(!leading_product.empty()) {
+      if(!leading_product.empty() && !leading_product.calc_order.empty()) {
         name += ':' + leading_product.calc_order_row.row.pad();
       }
 
@@ -5200,6 +5200,34 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     }
     this._manager.emit_add_fields(this, ads);
 
+  }
+
+  del_row(row) {
+    const {characteristic} = row;
+    if(!characteristic.empty() && !characteristic.calc_order.empty()) {
+      const {production, presentation, _data} = this;
+
+      const {msg} = $p;
+      const {leading_elm, leading_product} = characteristic;
+      if(leading_elm !== 0 && !leading_product.empty() && leading_product.calc_order_row) {
+        msg.show_msg && msg.show_msg({
+          type: 'alert-warning',
+          text: `Изделие <i>${characteristic.prod_name(true)}</i> не может быть удалено<br/><br/>Для удаления, пройдите в <i>${
+            leading_product.prod_name(true)}</i> и отредактируйте доп. вставки`,
+          title: this.presentation
+        });
+        return false;
+      }
+
+      const {_loading} = _data;
+      _data._loading = true;
+      production.find_rows({ordn: characteristic}).forEach(({_row}) => {
+        production.del(_row.row - 1);
+      });
+      _data._loading = _loading;
+    }
+
+    return this;
   }
 
   after_del_row(name) {

@@ -69,9 +69,13 @@ class RootView extends React.Component {
 RootView.propTypes = {
   user: PropTypes.object,
   history: PropTypes.object,
+  repl: PropTypes.object,
   data_empty: PropTypes.bool,
   couch_direct: PropTypes.bool,
+  meta_loaded: PropTypes.bool,
+  data_loaded: PropTypes.bool,
   offline: PropTypes.bool,
+  second_instance: PropTypes.bool,
 };
 
 export default withMeta(RootView);

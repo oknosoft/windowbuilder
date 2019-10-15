@@ -9,10 +9,6 @@ import DataList from 'metadata-react/DataList';
 
 class SelectOrder extends Component {
 
-  static propTypes = {
-    handleSelect: PropTypes.func.isRequired,
-  };
-
   constructor(props, context) {
     super(props, context);
     this.state = {open: false};
@@ -105,4 +101,8 @@ class SelectOrder extends Component {
   }
 }
 
+SelectOrder.propTypes = {
+  handleSelect: PropTypes.func.isRequired,
+  _acl: PropTypes.object
+};
 export default SelectOrder;
