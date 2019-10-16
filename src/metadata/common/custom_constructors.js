@@ -42,6 +42,15 @@ class Extra_fieldsRow extends TabularSectionRow{
   set txt_row(v){this._setter('txt_row',v)}
 }
 
+class Payment_detailsRow extends TabularSectionRow{
+  get cash_flow_article(){return this._getter('cash_flow_article')}
+  set cash_flow_article(v){this._setter('cash_flow_article',v)}
+  get trans(){return this._getter('trans')}
+  set trans(v){this._setter('trans',v)}
+  get amount(){return this._getter('amount')}
+  set amount(v){this._setter('amount',v)}
+}
+
 class CatFormulasParamsRow extends ParamsRow{}
 
 class DpBuyers_orderProduct_paramsRow extends ElmParamsRow{
@@ -74,14 +83,7 @@ class CatFurnsSelection_paramsRow extends SelectionParamsRow{
   set dop(v){this._setter('dop',v)}
 }
 
-class Payment_detailsRow extends TabularSectionRow{
-  get cash_flow_article(){return this._getter('cash_flow_article')}
-  set cash_flow_article(v){this._setter('cash_flow_article',v)}
-  get trans(){return this._getter('trans')}
-  set trans(v){this._setter('trans',v)}
-  get amount(){return this._getter('amount')}
-  set amount(v){this._setter('amount',v)}
-}
+
 
 class DocCredit_card_orderPayment_detailsRow extends Payment_detailsRow{}
 class DocDebit_bank_orderPayment_detailsRow extends Payment_detailsRow{}
@@ -105,7 +107,7 @@ class CatPartnersExtra_fieldsRow extends Extra_fieldsRow{}
 class CatNomExtra_fieldsRow extends Extra_fieldsRow{}
 class CatOrganizationsExtra_fieldsRow extends Extra_fieldsRow{}
 class CatDivisionsExtra_fieldsRow extends Extra_fieldsRow{}
-class CatUsersExtra_fieldsRow extends TabularSectionRow{}
+class CatUsersExtra_fieldsRow extends Extra_fieldsRow{}
 
 Object.assign($p, {
   CatFormulasParamsRow,
