@@ -33,6 +33,10 @@ class Pricing {
   // грузит в ram цены номенклатуры
   load_prices() {
 
+    if($p.job_prm.use_ram === false) {
+      return this.by_proxy();
+    }
+
     // сначала, пытаемся из local
     return this.by_local()
       .then((loc) => {
@@ -136,7 +140,12 @@ class Pricing {
     }
   }
 
-  // если оффлайн и есть доступ к серверу
+  /**
+   * если оффлайн и есть доступ к серверу, выполняет синхронизацию
+   * @param pouch
+   * @param step
+   * @return {Promise<T>}
+   */
   sync_local(pouch, step = 0) {
     const {utils} = $p;
     return pouch.remote.templates.get(`_local/price_${step}`)
@@ -180,7 +189,9 @@ class Pricing {
       });
   }
 
-  // из локальной базы или direct
+  /**
+   * Получает цены из локальной базы или direct
+   */
   by_local(step = 0) {
     const {adapters: {pouch}, job_prm} = $p;
 
@@ -214,6 +225,20 @@ class Pricing {
       })
       .catch((err) => {
         return step !== 0;
+      });
+  }
+
+  /**
+   * Получает цены из облака или сервисворкера
+   */
+  by_proxy() {
+    const {pouch} = $p.adapters;
+    const {remote: {doc}, props} = pouch;
+    return fetch(`/couchdb/mdm/${props.zone}/${props._suffix || '0000'}/prices`, {
+      headers: doc.getBasicAuthHeaders({prefix: pouch.auth_prefix(), ...doc.__opts.auth}),
+    })
+      .then((res) => {
+        pouch.emit('pouch_complete_loaded');
       });
   }
 

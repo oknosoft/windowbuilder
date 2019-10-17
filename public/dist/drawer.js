@@ -10277,6 +10277,10 @@ class Pricing {
 
   load_prices() {
 
+    if($p.job_prm.use_ram === false) {
+      return this.by_proxy();
+    }
+
     return this.by_local()
       .then((loc) => {
         return !loc && this.by_range();
@@ -10444,6 +10448,17 @@ class Pricing {
       })
       .catch((err) => {
         return step !== 0;
+      });
+  }
+
+  by_proxy() {
+    const {pouch} = $p.adapters;
+    const {remote: {doc}, props} = pouch;
+    return fetch(`/couchdb/mdm/${props.zone}/${props._suffix || '0000'}/prices`, {
+      headers: doc.getBasicAuthHeaders({prefix: pouch.auth_prefix(), ...doc.__opts.auth}),
+    })
+      .then((res) => {
+        pouch.emit('pouch_complete_loaded');
       });
   }
 
@@ -12174,12 +12189,12 @@ $p.spec_building = new SpecBuilding($p);
 $p.md.once('predefined_elmnts_inited', () => {
   const _mgr = $p.cat.characteristics;
 
-  _mgr.adapter.load_view(_mgr, 'linked', {
+  ($p.job_prm.use_ram === false ? Promise.resolve() : _mgr.adapter.load_view(_mgr, 'linked', {
     limit: 10000,
     include_docs: true,
     startkey: [$p.utils.blank.guid, 'cat.characteristics'],
     endkey: [$p.utils.blank.guid, 'cat.characteristics\u0fff']
-  })
+  }))
     .then(() => {
       const {current_user} = $p;
       if(current_user && (
@@ -12189,7 +12204,10 @@ $p.md.once('predefined_elmnts_inited', () => {
         )) {
         return;
       };
-      _mgr.metadata().form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
+      const {form} = _mgr.metadata();
+      if(form && form.obj && form.obj.tabular_sections) {
+        form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
+      }
     });
 });
 

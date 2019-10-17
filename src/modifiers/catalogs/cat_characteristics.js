@@ -26,12 +26,12 @@ $p.md.once('predefined_elmnts_inited', () => {
   const _mgr = $p.cat.characteristics;
 
   // грузим характеристики
-  _mgr.adapter.load_view(_mgr, 'linked', {
+  ($p.job_prm.use_ram === false ? Promise.resolve() : _mgr.adapter.load_view(_mgr, 'linked', {
     limit: 10000,
     include_docs: true,
     startkey: [$p.utils.blank.guid, 'cat.characteristics'],
     endkey: [$p.utils.blank.guid, 'cat.characteristics\u0fff']
-  })
+  }))
     .then(() => {
       // и корректируем метаданные формы спецификации с учетом ролей пользователя
       const {current_user} = $p;
@@ -42,7 +42,10 @@ $p.md.once('predefined_elmnts_inited', () => {
         )) {
         return;
       };
-      _mgr.metadata().form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
+      const {form} = _mgr.metadata();
+      if(form && form.obj && form.obj.tabular_sections) {
+        form.obj.tabular_sections.specification.widths = "50,*,70,*,50,70,70,80,70,70,70,0,0,0";
+      }
     });
 });
 
