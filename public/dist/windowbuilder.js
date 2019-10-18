@@ -11899,8 +11899,8 @@ class Scheme extends paper.Project {
         }
       }
 
-      this.load(ox);
-      ox._data._modified = true;
+      return this.load(ox)
+        .then(() => ox._data._modified = true);
 
     };
 
@@ -11908,10 +11908,11 @@ class Scheme extends paper.Project {
 
     if(is_snapshot) {
       this._attr._snapshot = true;
-      do_load(obx);
+      return do_load(obx);
     }
     else {
-      $p.cat.characteristics.get(obx, true, true).then(do_load);
+      return $p.cat.characteristics.get(obx, true, true)
+        .then(do_load);
     }
   }
 
