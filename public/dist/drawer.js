@@ -11580,11 +11580,14 @@ class ProductsBuilding {
 
         })
           .then(() => {
-            if(!scheme._attr._from_service && (scheme._scope || attr.close)) {
+            if(!scheme._attr._from_service && !attr._from_service && (scheme._scope || attr.close)) {
               return new Promise((resolve, reject) => {
-                setTimeout(() => ox.calc_order._modified && ox.calc_order.save()
-                  .then(resolve)
-                  .catch(reject), 1000);
+                setTimeout(() => ox.calc_order._modified ?
+                  ox.calc_order.save()
+                    .then(resolve)
+                    .catch(reject)
+                  :
+                  resolve(ox), 1000)
               });
             }
           })
