@@ -215,7 +215,8 @@ class CchPredefined_elmntsManager extends ChartOfCharacteristicManager {
             return res;
           })(),
           configurable: true,
-          enumerable: true
+          enumerable: true,
+          writable: true,
         });
       }
       else if(row.list) {
@@ -233,7 +234,8 @@ class CchPredefined_elmntsManager extends ChartOfCharacteristicManager {
             }
           }),
           configurable: true,
-          enumerable: true
+          enumerable: true,
+          writable: true,
         });
       }
       else if(row.predefined_name === 'abonent') {
@@ -246,7 +248,7 @@ class CchPredefined_elmntsManager extends ChartOfCharacteristicManager {
             value: _mgr ? _mgr.get(row.value, false, false) : row.value,
             configurable: true,
             enumerable: true,
-            writable: true
+            writable: true,
           });
         });
       }
@@ -254,7 +256,8 @@ class CchPredefined_elmntsManager extends ChartOfCharacteristicManager {
         parent.__define(row.synonym, {
           value: _mgr ? _mgr.get(row.value, false, false) : row.value,
           configurable: true,
-          enumerable: true
+          enumerable: true,
+          writable: true,
         });
       }
     }

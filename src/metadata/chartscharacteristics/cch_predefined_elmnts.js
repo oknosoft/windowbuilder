@@ -69,7 +69,8 @@ exports.CchPredefined_elmntsManager = class CchPredefined_elmntsManager extends 
             return res;
           })(),
           configurable: true,
-          enumerable: true
+          enumerable: true,
+          writable: true,
         });
       }
       else if(row.list) {
@@ -87,7 +88,8 @@ exports.CchPredefined_elmntsManager = class CchPredefined_elmntsManager extends 
             }
           }),
           configurable: true,
-          enumerable: true
+          enumerable: true,
+          writable: true,
         });
       }
       else if(row.predefined_name === 'abonent') {
@@ -100,7 +102,7 @@ exports.CchPredefined_elmntsManager = class CchPredefined_elmntsManager extends 
             value: _mgr ? _mgr.get(row.value, false, false) : row.value,
             configurable: true,
             enumerable: true,
-            writable: true
+            writable: true,
           });
         });
       }
@@ -108,7 +110,8 @@ exports.CchPredefined_elmntsManager = class CchPredefined_elmntsManager extends 
         parent.__define(row.synonym, {
           value: _mgr ? _mgr.get(row.value, false, false) : row.value,
           configurable: true,
-          enumerable: true
+          enumerable: true,
+          writable: true,
         });
       }
     }
