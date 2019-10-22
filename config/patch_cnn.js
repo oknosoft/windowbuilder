@@ -1,7 +1,7 @@
 
 function reset_replace(prm) {
 
-  const {pouch} = $p.wsql;
+  const {pouch} = $p.adapters;
   const {local} = pouch;
   const destroy_ram = local.ram && local.ram.destroy.bind(local.ram);
   const destroy_doc = local.doc && local.doc.destroy.bind(local.doc);
@@ -50,14 +50,14 @@ export const predefined = {
     keys: keys21,
     crazy_ram: true,
   },
-  // 'localhost': {
-  //   zone: 21,
-  //   splash: {css: 'splash21', title: false},
-  //   log_level: 'warn',
-  //   templates: true,
-  //   //keys: {google: ''},
-  //   crazy_ram: false,
-  // },
+  'localhost': {
+    zone: 21,
+    splash: {css: 'splash21', title: false},
+    log_level: 'warn',
+    templates: true,
+    //keys: {google: ''},
+    crazy_ram: false,
+  },
   'rusokon.': {
     zone: 19,
     host: 'https://rusokon.oknosoft.ru/',
