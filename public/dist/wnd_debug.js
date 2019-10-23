@@ -5472,7 +5472,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     };
 
     this.extra_fields.forEach((row) => {
-      res['Свойство' + row.property.name.replace(/\s/g, '')] = row.value.presentation || row.value;
+      res['Свойство' + row.property.name.replace(/\s/g, '')] = String(row.value);
     });
 
     res.МонтажДоставкаСамовывоз = !this.shipping_address ? 'Самовывоз' : 'Монтаж по адресу: ' + this.shipping_address;

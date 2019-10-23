@@ -609,7 +609,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
     // дополняем значениями свойств
     this.extra_fields.forEach((row) => {
-      res['Свойство' + row.property.name.replace(/\s/g, '')] = row.value.presentation || row.value;
+      res['Свойство' + row.property.name.replace(/\s/g, '')] = String(row.value);
     });
 
     // TODO: дополнить датами доставки и монтажа
