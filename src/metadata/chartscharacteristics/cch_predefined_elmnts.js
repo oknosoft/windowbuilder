@@ -64,7 +64,9 @@ exports.CchPredefined_elmntsManager = class CchPredefined_elmntsManager extends 
           value: (() => {
             const res = {};
             row.elmnts.forEach((row) => {
-              res[row.elm.valueOf()] = _mgr ? _mgr.get(row.value, false, false) : row.value;
+              if(row.elm) {
+                res[row.elm.valueOf()] = _mgr ? _mgr.get(row.value, false, false) : row.value;
+              }
             });
             return res;
           })(),

@@ -7558,6 +7558,7 @@ class GeneratrixElement extends BuilderElement {
 
       isegments.forEach(({profile, node}) => {
         profile.do_sub_bind(this, node);
+        other.push(profile.generatrix[node === 'b' ? 'firstSegment' : 'lastSegment']);
         !noti.profiles.includes(profile) && noti.profiles.push(profile);
       });
 
