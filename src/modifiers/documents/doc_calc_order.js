@@ -343,8 +343,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
       // запрет удаления подчиненной продукции
       const {msg} = $p;
-      const {leading_elm, leading_product} = characteristic;
-      if(leading_elm !== 0 && !leading_product.empty() && leading_product.calc_order_row) {
+      const {leading_elm, leading_product, origin} = characteristic;
+      if(leading_elm !== 0 && !leading_product.empty() && leading_product.calc_order_row && leading_product.inserts.find({cnstr: -leading_elm, inset: origin})) {
         msg.show_msg && msg.show_msg({
           type: 'alert-warning',
           text: `Изделие <i>${characteristic.prod_name(true)}</i> не может быть удалено<br/><br/>Для удаления, пройдите в <i>${
