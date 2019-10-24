@@ -21,6 +21,5 @@
   }],
   "scope": "/",
   "start_url": "./index.html",
-  "display": "fullscreen",
-  "orientation": "landscape"
+  "display": "fullscreen"
 }
