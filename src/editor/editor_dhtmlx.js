@@ -1584,6 +1584,7 @@ class Editor extends EditorInvisible {
   }
 
   close(ox, calc_order) {
+    this.project.getItems({class: Editor.DimensionLine}).forEach((el) => el.wnd && el.wnd.close());
     if(!ox) {
       ox = this.project.ox;
     }

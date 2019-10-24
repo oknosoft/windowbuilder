@@ -294,17 +294,18 @@ class GeneratrixElement extends BuilderElement {
 
     // информируем систему об изменениях
     if(changed){
-      const {_attr, layer, project} = this;
+      const {_attr: {_rays}, layer, project} = this;
 
       // ранняя привязка импостов
+      _rays.clear();
       isegments.forEach(({profile, node}) => {
         profile.do_sub_bind(this, node);
-        //profile.generatrix[node === 'b' ? 'firstSegment' : 'lastSegment'].selected = false;
+        profile.rays.clear();
         other.push(profile.generatrix[node === 'b' ? 'firstSegment' : 'lastSegment']);
         !noti.profiles.includes(profile) && noti.profiles.push(profile);
       });
+      _rays.clear();
 
-      _attr._rays.clear();
       layer && layer.notify && layer.notify(noti);
       project.notify(this, 'update', {x1: true, x2: true, y1: true, y2: true});
     }
@@ -319,7 +320,7 @@ class GeneratrixElement extends BuilderElement {
     const ppath = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).clone({insert: false});
     let mpoint = ppath.getNearestPoint(this[node]);
     if(!mpoint.is_nearest(this[node], 0)) {
-      const gen = this.generatrix.clone({insert: false}).elongation(1000);
+      const gen = this.generatrix.clone({insert: false}).elongation(3000);
       mpoint = ppath.intersect_point(gen, mpoint, true);
       this[node] = mpoint;
       return true;

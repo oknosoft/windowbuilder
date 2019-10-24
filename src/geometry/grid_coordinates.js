@@ -90,7 +90,7 @@ class GridCoordinates extends paper.Group {
     }
     if(dangle) {
       line.rotate(dangle);
-      line.elongation(1000);
+      line.elongation(3000);
       line.firstSegment.point = line.getNearestPoint(b);
       line.lastSegment.point = line.getNearestPoint(e);
     }

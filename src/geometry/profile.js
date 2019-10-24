@@ -1166,7 +1166,7 @@ class ProfileItem extends GeneratrixElement {
     let moved_fact;
 
     if(profile instanceof ProfileConnective) {
-      const gen = profile.generatrix.clone({insert: false}).elongation(1000);
+      const gen = profile.generatrix.clone({insert: false}).elongation(3000);
       this._attr._rays.clear();
       const b = gen.getNearestPoint(this.b);
       const e = gen.getNearestPoint(this.e);
@@ -2254,7 +2254,7 @@ class Profile extends ProfileItem {
         const pb = elm.cnn_point('b').profile;
         const pe = elm.cnn_point('e').profile;
         if(pb && pb.nearest(true) || pe && pe.nearest(true)) {
-          generatrix = generatrix.clone({insert: false}).elongation(90);
+          generatrix = generatrix.clone({insert: false}).elongation(100);
         }
       }
       let is_nearest = [];
