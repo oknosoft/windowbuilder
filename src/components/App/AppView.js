@@ -130,10 +130,10 @@ class AppRoot extends Component {
       />,
 
       // диалог сообщений пользователю
-      alert && alert.open && <Alert key="alert" open text={alert.text} title={alert.title} handleOk={this.handleDialogClose.bind(this, 'alert')}/>,
+      alert && alert.open && <Alert key="alert" {...alert} handleOk={this.handleDialogClose.bind(this, 'alert')}/>,
 
       // диалог вопросов пользователю (да, нет)
-      confirm && confirm.open && <Confirm key="confirm" open {...confirm}/>,
+      confirm && confirm.open && <Confirm key="confirm" {...confirm}/>,
 
       // обрыв связи
       couch_direct && user.logged_in && !offline && props.complete_loaded && !props.sync_started &&
