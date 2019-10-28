@@ -33,8 +33,9 @@ class Pricing {
   // грузит в ram цены номенклатуры
   load_prices() {
 
-    if($p.job_prm.use_ram === false) {
-      return this.by_proxy();
+    const {adapters: {pouch}, job_prm} = $p;
+    if(job_prm.use_ram === false) {
+      return Promise.resolve();
     }
 
     // сначала, пытаемся из local
@@ -43,7 +44,7 @@ class Pricing {
         return !loc && this.by_range();
       })
       .then(() => {
-        const {adapters: {pouch}, doc: {calc_order}, wsql} = $p;
+        const {doc: {calc_order}, wsql} = $p;
         // излучаем событие "можно открывать формы"
         pouch.emit('pouch_complete_loaded');
 
@@ -225,20 +226,6 @@ class Pricing {
       })
       .catch((err) => {
         return step !== 0;
-      });
-  }
-
-  /**
-   * Получает цены из облака или сервисворкера
-   */
-  by_proxy() {
-    const {pouch} = $p.adapters;
-    const {remote: {doc}, props} = pouch;
-    return fetch(`/couchdb/mdm/${props.zone}/${props._suffix || '0000'}/prices`, {
-      headers: doc.getBasicAuthHeaders({prefix: pouch.auth_prefix(), ...doc.__opts.auth}),
-    })
-      .then((res) => {
-        pouch.emit('pouch_complete_loaded');
       });
   }
 
