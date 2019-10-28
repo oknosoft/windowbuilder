@@ -1105,6 +1105,89 @@ class EditorInvisible extends paper.PaperScope {
     }
   }
 
+  paths_intersecting_rect(rect) {
+
+    const paths = [];
+    const boundingRect = new paper.Path.Rectangle(rect);
+
+    this.project.getItems({class: ProfileItem}).forEach((item) => {
+      if (rect.contains(item.generatrix.bounds)) {
+        paths.push(item.generatrix);
+        return;
+      }
+    });
+
+    boundingRect.remove();
+
+    return paths;
+  }
+
+  segments_in_rect(rect) {
+    const segments = [];
+
+    function checkPathItem(item) {
+      if(item._locked || !item._visible || item._guide) {
+        return;
+      }
+      const children = item.children || [];
+      if(!rect.intersects(item.bounds)) {
+        return;
+      }
+      if (item instanceof paper.Path) {
+        if(item.parent instanceof ProfileItem){
+          if(item != item.parent.generatrix) {
+            return;
+          }
+          for (let i = 0; i < item.segments.length; i++) {
+            if(rect.contains(item.segments[i].point)) {
+              segments.push(item.segments[i]);
+            }
+          }
+        }
+      }
+      else {
+        for (let i = children.length - 1; i >= 0; i--)
+          checkPathItem(children[i]);
+      }
+    }
+
+    this.project.getItems({class: Contour}).forEach(checkPathItem);
+
+    return segments;
+  }
+
+  clear_selection_bounds() {
+    if (this._selectionBoundsShape) {
+      this._selectionBoundsShape.remove();
+    }
+    this._selectionBoundsShape = null;
+  }
+
+  hide_selection_bounds() {
+    if(this._drawSelectionBounds > 0) {
+      this._drawSelectionBounds--;
+    }
+    if(this._drawSelectionBounds == 0) {
+      if(this._selectionBoundsShape) {
+        this._selectionBoundsShape.visible = false;
+      }
+    }
+  }
+
+  canvas_cursor(name) {
+    this.projects.forEach((_scheme) => {
+      for(let i=0; i<_scheme.view.element.classList.length; i++){
+        const class_name = _scheme.view.element.classList[i];
+        if(class_name == name) {
+          return;
+        }
+        else if((/\bcursor-\S+/g).test(class_name))
+          _scheme.view.element.classList.remove(class_name);
+      }
+      _scheme.view.element.classList.add(name);
+    });
+  }
+
 }
 
 $p.EditorInvisible = EditorInvisible;
@@ -1552,19 +1635,6 @@ class Editor extends EditorInvisible {
     _editor._acc.attach(_editor.project._dp);
   }
 
-  canvas_cursor(name) {
-    this.projects.forEach((_scheme) => {
-      for(let i=0; i<_scheme.view.element.classList.length; i++){
-        const class_name = _scheme.view.element.classList[i];
-        if(class_name == name)
-          return;
-        else if((/\bcursor-\S+/g).test(class_name))
-          _scheme.view.element.classList.remove(class_name);
-      }
-      _scheme.view.element.classList.add(name);
-    })
-  }
-
   select_tool(name) {
 
     switch (name) {
@@ -1603,38 +1673,6 @@ class Editor extends EditorInvisible {
     });
   }
 
-  segments_in_rect(rect) {
-    var segments = [];
-
-    function checkPathItem(item) {
-      if (item._locked || !item._visible || item._guide)
-        return;
-      var children = item.children || [];
-      if (!rect.intersects(item.bounds))
-        return;
-      if (item instanceof paper.Path) {
-
-        if(item.parent instanceof ProfileItem){
-          if(item != item.parent.generatrix)
-            return;
-
-          for (var i = 0; i < item.segments.length; i++) {
-            if (rect.contains(item.segments[i].point))
-              segments.push(item.segments[i]);
-          }
-        }
-
-      } else {
-        for (var j = children.length-1; j >= 0; j--)
-          checkPathItem(children[j]);
-      }
-    }
-
-    this.project.getItems({class: Contour}).forEach(checkPathItem);
-
-    return segments;
-  }
-
   purge_selection(){
     let selected = this.project.selectedItems;
     const deselect = selected.filter((path) => path.parent instanceof ProfileItem && path != path.parent.generatrix);
@@ -1670,23 +1708,6 @@ class Editor extends EditorInvisible {
         item._id = id;
       }
     })
-  }
-
-  paths_intersecting_rect(rect) {
-
-    const paths = [];
-    const boundingRect = new paper.Path.Rectangle(rect);
-
-    this.project.getItems({class: ProfileItem}).forEach((item) => {
-      if (rect.contains(item.generatrix.bounds)) {
-        paths.push(item.generatrix);
-        return;
-      }
-    });
-
-    boundingRect.remove();
-
-    return paths;
   }
 
   drag_rect(p1, p2) {
@@ -2328,24 +2349,6 @@ class Editor extends EditorInvisible {
       }
       ev._shown = true;
       $p.msg.show_msg(ev);
-    }
-  }
-
-  clear_selection_bounds() {
-    if (this._selectionBoundsShape) {
-      this._selectionBoundsShape.remove();
-    }
-    this._selectionBoundsShape = null;
-  }
-
-  hide_selection_bounds() {
-    if(this._drawSelectionBounds > 0) {
-      this._drawSelectionBounds--;
-    }
-    if(this._drawSelectionBounds == 0) {
-      if(this._selectionBoundsShape) {
-        this._selectionBoundsShape.visible = false;
-      }
     }
   }
 
@@ -12849,7 +12852,7 @@ class ToolElement extends paper.Tool {
 
       this.check_layer();
 
-      if (this._scope.project._dp.sys.empty()) {
+      if (this.project._dp.sys.empty()) {
         $p.msg.show_msg({
           type: "alert-warning",
           text: $p.msg.bld_not_sys,

@@ -28,8 +28,6 @@ class ToolElement extends paper.Tool {
   }
 
   testHot(type, event, mode) {
-    /*	if (mode != 'tool-select')
-     return false;*/
     return this.hitTest(event)
   }
 
@@ -64,7 +62,7 @@ class ToolElement extends paper.Tool {
   }
 
   /**
-   * ### Проверяет, есть ли в проекте стои, при необходимости добавляет
+   * ### Проверяет, есть ли в проекте слои, при необходимости добавляет
    * @method detache_wnd
    * @for ToolElement
    */
@@ -96,7 +94,7 @@ class ToolElement extends paper.Tool {
       this.check_layer();
 
       // проверяем заполненность системы
-      if (this._scope.project._dp.sys.empty()) {
+      if (this.project._dp.sys.empty()) {
         $p.msg.show_msg({
           type: "alert-warning",
           text: $p.msg.bld_not_sys,
