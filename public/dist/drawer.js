@@ -102,6 +102,89 @@ class EditorInvisible extends paper.PaperScope {
     }
   }
 
+  paths_intersecting_rect(rect) {
+
+    const paths = [];
+    const boundingRect = new paper.Path.Rectangle(rect);
+
+    this.project.getItems({class: ProfileItem}).forEach((item) => {
+      if (rect.contains(item.generatrix.bounds)) {
+        paths.push(item.generatrix);
+        return;
+      }
+    });
+
+    boundingRect.remove();
+
+    return paths;
+  }
+
+  segments_in_rect(rect) {
+    const segments = [];
+
+    function checkPathItem(item) {
+      if(item._locked || !item._visible || item._guide) {
+        return;
+      }
+      const children = item.children || [];
+      if(!rect.intersects(item.bounds)) {
+        return;
+      }
+      if (item instanceof paper.Path) {
+        if(item.parent instanceof ProfileItem){
+          if(item != item.parent.generatrix) {
+            return;
+          }
+          for (let i = 0; i < item.segments.length; i++) {
+            if(rect.contains(item.segments[i].point)) {
+              segments.push(item.segments[i]);
+            }
+          }
+        }
+      }
+      else {
+        for (let i = children.length - 1; i >= 0; i--)
+          checkPathItem(children[i]);
+      }
+    }
+
+    this.project.getItems({class: Contour}).forEach(checkPathItem);
+
+    return segments;
+  }
+
+  clear_selection_bounds() {
+    if (this._selectionBoundsShape) {
+      this._selectionBoundsShape.remove();
+    }
+    this._selectionBoundsShape = null;
+  }
+
+  hide_selection_bounds() {
+    if(this._drawSelectionBounds > 0) {
+      this._drawSelectionBounds--;
+    }
+    if(this._drawSelectionBounds == 0) {
+      if(this._selectionBoundsShape) {
+        this._selectionBoundsShape.visible = false;
+      }
+    }
+  }
+
+  canvas_cursor(name) {
+    this.projects.forEach((_scheme) => {
+      for(let i=0; i<_scheme.view.element.classList.length; i++){
+        const class_name = _scheme.view.element.classList[i];
+        if(class_name == name) {
+          return;
+        }
+        else if((/\bcursor-\S+/g).test(class_name))
+          _scheme.view.element.classList.remove(class_name);
+      }
+      _scheme.view.element.classList.add(name);
+    });
+  }
+
 }
 
 $p.EditorInvisible = EditorInvisible;
@@ -10273,8 +10356,9 @@ class Pricing {
 
   load_prices() {
 
-    if($p.job_prm.use_ram === false) {
-      return this.by_proxy();
+    const {adapters: {pouch}, job_prm} = $p;
+    if(job_prm.use_ram === false) {
+      return Promise.resolve();
     }
 
     return this.by_local()
@@ -10282,7 +10366,7 @@ class Pricing {
         return !loc && this.by_range();
       })
       .then(() => {
-        const {adapters: {pouch}, doc: {calc_order}, wsql} = $p;
+        const {doc: {calc_order}, wsql} = $p;
         pouch.emit('pouch_complete_loaded');
 
         if(pouch.local.doc === pouch.remote.doc) {
@@ -10444,17 +10528,6 @@ class Pricing {
       })
       .catch((err) => {
         return step !== 0;
-      });
-  }
-
-  by_proxy() {
-    const {pouch} = $p.adapters;
-    const {remote: {doc}, props} = pouch;
-    return fetch(`/couchdb/mdm/${props.zone}/${props._suffix || '0000'}/prices`, {
-      headers: doc.getBasicAuthHeaders({prefix: pouch.auth_prefix(), ...doc.__opts.auth}),
-    })
-      .then((res) => {
-        pouch.emit('pouch_complete_loaded');
       });
   }
 
@@ -11413,24 +11486,22 @@ class ProductsBuilding {
       const spec_tmp = spec;
 
       ox.inserts.find_rows({cnstr: -elm.elm}, ({inset, clr}) => {
-        let len_angl;
+        const len_angl = {
+          angle: 0,
+          alp1: 0,
+          alp2: 0,
+          len: 0,
+          origin: inset,
+          cnstr: -elm.elm
+        };
         if(inset.is_order_row == $p.enm.specification_order_row_types.Продукция) {
           const cx = Object.assign(ox.find_create_cx(elm.elm, inset.ref), inset.contour_attrs(elm.layer));
           ox._order_rows.push(cx);
           spec = cx.specification.clear();
-          len_angl = {
-            angle: 0,
-            alp1: 0,
-            alp2: 0,
-            len: 0,
-            origin: inset,
-            cnstr: -elm.elm
-          };
         }
         else {
           spec = spec_tmp;
         }
-
         inset.calculate_spec({elm, len_angl, ox, spec});
       });
       spec = spec_tmp;
@@ -14588,238 +14659,8 @@ $p.cat.nom.__define({
 		}
 	},
 
-  load_array: {
-    value(aattr, forse){
-      const units = [];
-      for(const row of aattr) {
-        if(row.units) {
-          row.units.split('\n').forEach((urow) => {
-            const uattr = urow.split(',');
-            units.push({
-              ref: uattr[0],
-              owner: row.ref,
-              id: uattr[1],
-              name: uattr[2],
-              qualifier_unit: uattr[3],
-              heft: parseFloat(uattr[4]),
-              volume: parseFloat(uattr[5]),
-              coefficient: parseFloat(uattr[6]),
-              rounding_threshold: parseFloat(uattr[7]),
-            });
-          });
-          delete row.units;
-        }
-      }
-      const res = this.constructor.prototype.load_array.call(this, aattr, forse);
-      units.length && $p.cat.nom_units.load_array(units, forse);
-      return res;
-    }
-  }
 });
 
-$p.CatNom.prototype.__define({
-
-	_price: {
-		value(attr) {
-		  const {job_prm, utils, cat, pricing} = $p;
-
-      let price = 0,
-        currency = job_prm.pricing.main_currency,
-        start_date = utils.blank.date;
-
-			if(!attr){
-        attr = {currency};
-      }
-      const {_price} = this._data;
-      const {x, y, z, clr, ref, calc_order} = (attr.characteristic || {});
-
-			if(attr.price_type){
-
-        if(utils.is_data_obj(attr.price_type)){
-          attr.price_type = attr.price_type.ref;
-        }
-
-        if(!attr.characteristic){
-          attr.characteristic = utils.blank.guid;
-        }
-        else if(utils.is_data_obj(attr.characteristic)){
-          attr.characteristic = ref;
-          if(!calc_order.empty()){
-            const tmp = [];
-            const {by_ref} = cat.characteristics;
-            for(let clrx in _price) {
-              const cx = by_ref[clrx];
-              if(cx && cx.clr == clr){
-                if(_price[clrx][attr.price_type]){
-                  if(cx.x && x && cx.x - x < -10){
-                    continue;
-                  }
-                  if(cx.y && y && cx.y - y < -10){
-                    continue;
-                  }
-                  tmp.push({
-                    cx,
-                    rate: (cx.x && x ? Math.abs(cx.x - x) : 0) + (cx.y && y ? Math.abs(cx.y - y) : 0) + (cx.z && z && cx.z == z ? 1 : 0)
-                  })
-                }
-              }
-            }
-            if(tmp.length){
-              tmp.sort((a, b) => a.rate - b.rate);
-              attr.characteristic = tmp[0].cx.ref;
-            }
-          }
-        }
-        if(!attr.date){
-          attr.date = new Date();
-        }
-
-        if(_price){
-          if(_price[attr.characteristic]){
-            if(_price[attr.characteristic][attr.price_type]){
-              _price[attr.characteristic][attr.price_type].forEach((row) => {
-                if(row.date > start_date && row.date <= attr.date){
-                  price = row.price;
-                  currency = row.currency;
-                  start_date = row.date;
-                }
-              })
-            }
-          }
-          else if(attr.clr){
-            const {by_ref} = cat.characteristics;
-            for(let clrx in _price){
-              const cx = by_ref[clrx];
-              if(cx && cx.clr == attr.clr){
-                if(_price[clrx][attr.price_type]){
-                  _price[clrx][attr.price_type].forEach((row) => {
-                    if(row.date > start_date && row.date <= attr.date){
-                      price = row.price;
-                      currency = row.currency;
-                      start_date = row.date;
-                    }
-                  })
-                  break;
-                }
-              }
-            }
-          }
-        }
-      }
-
-
-      if(attr.formula){
-
-        if(!price && _price && _price[utils.blank.guid]){
-          if(_price[utils.blank.guid][attr.price_type]){
-            _price[utils.blank.guid][attr.price_type].forEach((row) => {
-              if(row.date > start_date && row.date <= attr.date){
-                price = row.price;
-                currency = row.currency;
-                start_date = row.date;
-              }
-            })
-          }
-        }
-        price = attr.formula.execute({
-          nom: this,
-          characteristic: cat.characteristics.get(attr.characteristic, false),
-          date: attr.date,
-          price, currency, x, y, z, clr, calc_order,
-        })
-      }
-
-			return pricing.from_currency_to_currency(price, attr.date, currency, attr.currency);
-
-		}
-	},
-
-  grouping: {
-	  get() {
-      if(!this.hasOwnProperty('_grouping')){
-        this.extra_fields.find_rows({property: $p.job_prm.properties.grouping}, (row) => {
-          this._grouping = row.value.name;
-        })
-      }
-      return this._grouping || '';
-    }
-  },
-
-  presentation: {
-    get(){
-      return this.name + (this.article ? ' ' + this.article : '');
-    },
-    set(v){
-    }
-  },
-
-  by_clr_key: {
-    value(clr) {
-
-      if(this.clr == clr){
-        return this;
-      }
-      if(!this._clr_keys){
-        this._clr_keys = new Map();
-      }
-      const {_clr_keys} = this;
-      if(_clr_keys.has(clr)){
-        return _clr_keys.get(clr);
-      }
-      if(_clr_keys.size){
-        return this;
-      }
-
-      const {properties} = $p.job_prm;
-      const clr_key = properties.clr_key && properties.clr_key.ref;
-      let clr_value;
-      this.extra_fields.find_rows({property: properties.clr_key}, (row) => clr_value = row.value);
-      if(!clr_value){
-        return this;
-      }
-
-      this._manager.alatable.forEach((nom) => {
-        nom.extra_fields && nom.extra_fields.some((row) => {
-          row.property === clr_key && row.value === clr_value &&
-            _clr_keys.set($p.cat.clrs.get(nom.clr), $p.cat.nom.get(nom.ref));
-        })
-      });
-
-      if(_clr_keys.has(clr)){
-        return _clr_keys.get(clr);
-      }
-      if(!_clr_keys.size){
-        _clr_keys.set(0, 0);
-      }
-      return this;
-    }
-  },
-
-  toJSON: {
-    value() {
-      const {_obj, ref} = this;
-      const {guid} = $p.utils.blank;
-      if(!_obj.units && !_obj.is_folder) {
-        _obj.units = '';
-        for(const unit of $p.cat.nom_units.alatable) {
-          if(unit.owner === ref) {
-            if(_obj.units) {
-              _obj.units += '\n';
-            }
-            _obj.units += `${unit.ref},${unit.id},${unit.name},${unit.qualifier_unit},${unit.heft},${unit.volume},${unit.coefficient},${unit.rounding_threshold}`;
-          }
-        }
-      }
-      for(const fld in _obj) {
-        if(_obj[fld] === guid) {
-          _obj[fld] = '';
-        }
-      }
-      return _obj;
-    }
-  }
-
-});
 
 
 $p.cat.partners.__define({
@@ -15421,7 +15262,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
 
       const {msg} = $p;
       const {leading_elm, leading_product} = characteristic;
-      if(leading_elm !== 0 && !leading_product.empty() && leading_product.calc_order_row) {
+      if(leading_elm !== 0 && !leading_product.empty() && leading_product.calc_order_row && leading_product.inserts.find({cnstr: -leading_elm, inset: origin})) {
         msg.show_msg && msg.show_msg({
           type: 'alert-warning',
           text: `Изделие <i>${characteristic.prod_name(true)}</i> не может быть удалено<br/><br/>Для удаления, пройдите в <i>${

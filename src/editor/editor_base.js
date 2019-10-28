@@ -80,6 +80,108 @@ class EditorInvisible extends paper.PaperScope {
     }
   }
 
+  /**
+   * Returns all items intersecting the rect.
+   * Note: only the item outlines are tested
+   */
+  paths_intersecting_rect(rect) {
+
+    const paths = [];
+    const boundingRect = new paper.Path.Rectangle(rect);
+
+    this.project.getItems({class: ProfileItem}).forEach((item) => {
+      if (rect.contains(item.generatrix.bounds)) {
+        paths.push(item.generatrix);
+        return;
+      }
+    });
+
+    boundingRect.remove();
+
+    return paths;
+  }
+
+  /**
+   * Returns path points which are contained in the rect
+   * @method segments_in_rect
+   * @for Editor
+   * @param rect
+   * @returns {Array}
+   */
+  segments_in_rect(rect) {
+    const segments = [];
+
+    function checkPathItem(item) {
+      if(item._locked || !item._visible || item._guide) {
+        return;
+      }
+      const children = item.children || [];
+      if(!rect.intersects(item.bounds)) {
+        return;
+      }
+      if (item instanceof paper.Path) {
+        if(item.parent instanceof ProfileItem){
+          if(item != item.parent.generatrix) {
+            return;
+          }
+          for (let i = 0; i < item.segments.length; i++) {
+            if(rect.contains(item.segments[i].point)) {
+              segments.push(item.segments[i]);
+            }
+          }
+        }
+      }
+      else {
+        for (let i = children.length - 1; i >= 0; i--)
+          checkPathItem(children[i]);
+      }
+    }
+
+    this.project.getItems({class: Contour}).forEach(checkPathItem);
+
+    return segments;
+  }
+
+  clear_selection_bounds() {
+    if (this._selectionBoundsShape) {
+      this._selectionBoundsShape.remove();
+    }
+    this._selectionBoundsShape = null;
+  }
+
+  hide_selection_bounds() {
+    if(this._drawSelectionBounds > 0) {
+      this._drawSelectionBounds--;
+    }
+    if(this._drawSelectionBounds == 0) {
+      if(this._selectionBoundsShape) {
+        this._selectionBoundsShape.visible = false;
+      }
+    }
+  }
+
+  /**
+   * ### Устанавливает икону курсора
+   * Действие выполняется для всех канвасов редактора
+   *
+   * @method canvas_cursor
+   * @for Editor
+   * @param name {String} - имя css класса курсора
+   */
+  canvas_cursor(name) {
+    this.projects.forEach((_scheme) => {
+      for(let i=0; i<_scheme.view.element.classList.length; i++){
+        const class_name = _scheme.view.element.classList[i];
+        if(class_name == name) {
+          return;
+        }
+        else if((/\bcursor-\S+/g).test(class_name))
+          _scheme.view.element.classList.remove(class_name);
+      }
+      _scheme.view.element.classList.add(name);
+    });
+  }
+
 }
 
 /**
