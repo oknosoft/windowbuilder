@@ -895,7 +895,7 @@ class Contour extends AbstractFilling(paper.Layer) {
       elm._attr.binded = false;
       res.push({
         elm: elm,
-        profile: elm.nearest(),
+        profile: elm.nearest(true),
         b: elm.b,
         e: elm.e,
       });
@@ -1162,12 +1162,12 @@ class Contour extends AbstractFilling(paper.Layer) {
       _rays.b.check_err(err_attrs);
       _rays.e.check_err(err_attrs);
       // ошибки примыкающих соединений
-      if (elm.nearest() && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())) {
+      if (elm.nearest(true) && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())) {
         Object.assign(elm.path.get_subpath(_corns[1], _corns[2]), err_attrs);
       }
       // если у профиля есть доборы, проверим их соединения
       elm.addls.forEach((elm) => {
-        if (elm.nearest() && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())) {
+        if (elm.nearest(true) && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())) {
           Object.assign(elm.path.get_subpath(_corns[1], _corns[2]), err_attrs);
         }
       });

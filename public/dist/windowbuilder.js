@@ -3488,7 +3488,7 @@ class Contour extends AbstractFilling(paper.Layer) {
       elm._attr.binded = false;
       res.push({
         elm: elm,
-        profile: elm.nearest(),
+        profile: elm.nearest(true),
         b: elm.b,
         e: elm.e,
       });
@@ -3700,11 +3700,11 @@ class Contour extends AbstractFilling(paper.Layer) {
       const {_corns, _rays} = elm._attr;
       _rays.b.check_err(err_attrs);
       _rays.e.check_err(err_attrs);
-      if (elm.nearest() && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())) {
+      if (elm.nearest(true) && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())) {
         Object.assign(elm.path.get_subpath(_corns[1], _corns[2]), err_attrs);
       }
       elm.addls.forEach((elm) => {
-        if (elm.nearest() && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())) {
+        if (elm.nearest(true) && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())) {
           Object.assign(elm.path.get_subpath(_corns[1], _corns[2]), err_attrs);
         }
       });
@@ -11867,14 +11867,57 @@ class Scheme extends paper.Project {
     if(!options.precision) {
       options.precision = 1;
     }
+    const hidden = new Set();
+    if(this.ox.calc_order.obj_delivery_state == 'Шаблон') {
+      for(const el of this.getItems({class: DimensionLine})) {
+        el.visible = false;
+        hidden.add(el);
+      }
+      for(const el of this.getItems({class: paper.PointText})) {
+        el.visible = false;
+        hidden.add(el);
+      }
+      for(const el of this.getItems({class: Contour})) {
+        if(el.l_visualization._opening) {
+          el.l_visualization._opening.strokeScaling = false;
+          el.l_visualization._opening.opacity = 0.8;
+          el.l_visualization._by_spec.opacity = 0.5;
+        }
+      }
+      this.zoom_fit();
+
+      const {ownerDocument} = this.view.element;
+      if(ownerDocument) {
+        options.onExport = function (item, node, options) {
+          if(!item.visible) {
+            return ownerDocument.createElement('g');
+          }
+        }
+      }
+    }
     const svg = this.exportSVG(options);
     const bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
 
     svg.setAttribute('x', bounds.x);
     svg.setAttribute('y', bounds.y);
-    svg.setAttribute('width', bounds.width);
+    svg.setAttribute('width', bounds.width + 40);
     svg.setAttribute('height', bounds.height);
     svg.querySelector('g').removeAttribute('transform');
+
+    options.onExport = null;
+    if(hidden.size) {
+      for(const el of hidden) {
+        el.visible = true;
+      }
+      for(const el of this.getItems({class: Contour})) {
+        if(el.l_visualization._opening) {
+          el.l_visualization._opening.strokeScaling = true;
+          el.l_visualization._opening.opacity = 1;
+          el.l_visualization._by_spec.opacity = 1;
+        }
+      }
+      this.zoom_fit();
+    }
 
     return svg.outerHTML;
   }
@@ -12311,7 +12354,7 @@ class Scheme extends paper.Project {
       const p = item.parent;
 
       if(p instanceof ProfileItem) {
-        if(all || !item.layer.parent || !p.nearest || !p.nearest()) {
+        if(all || !item.layer.parent || !p.nearest || !p.nearest(true)) {
 
           if(res.indexOf(p) != -1) {
             return;
