@@ -1437,7 +1437,7 @@ $p.CatElm_visualization.prototype.__define({
         }
 
 				if(elm instanceof constructor.Filling) {
-          subpath.position = elm.bounds.topLeft.add([20,10]);
+          subpath.position = elm.bounds.topLeft.add(offset);
         }
         else {
           const {generatrix, rays: {inner, outer}} = elm;

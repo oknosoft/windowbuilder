@@ -31,7 +31,7 @@ import plugin_react from 'metadata-react/plugin';
 plugin_react.constructor.call($p);
 
 // подключаем cron
-import cron from 'metadata-abstract-ui/cron.min';
+import cron from 'metadata-abstract-ui/cron';
 cron.constructor.call($p);
 
 import reset_cache from './reset_cache';

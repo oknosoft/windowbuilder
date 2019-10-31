@@ -10,6 +10,12 @@
 // публичные методы объекта
 $p.CatElm_visualization.prototype.__define({
 
+  /**
+   *
+   * @param elm {BuilderElement}
+   * @param layer {Contour}
+   * @param offset {Number|[Number,Number]}
+   */
 	draw: {
 		value(elm, layer, offset) {
 

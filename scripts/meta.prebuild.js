@@ -150,7 +150,7 @@ $p.wsql.init((prm) => {
           } else {
             debug(`Успешно записан > ${fname}`);
             fname = path.resolve(__dirname, '../src/metadata/init.js');
-            fs.writeFile(fname, text.replace('module.exports =', 'export default'), 'utf8', (err) => {
+            fs.writeFile(fname, text, 'utf8', (err) => {
               if (err) {
                 debug(err);
                 process.exit(1);
