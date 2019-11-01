@@ -1931,7 +1931,7 @@ class Contour extends AbstractFilling(paper.Layer) {
    * @method redraw
    * @for Contour
    */
-  redraw(on_redrawed) {
+  redraw() {
 
     if (!this.visible) {
       return;
@@ -1941,10 +1941,9 @@ class Contour extends AbstractFilling(paper.Layer) {
     this._attr._bounds = null;
 
     // чистим визуализацию
-    const {l_visualization} = this;
-
-    l_visualization._by_insets.removeChildren();
-    !this.project._attr._saving && l_visualization._by_spec.removeChildren();
+    const {_by_insets, _by_spec} = this.l_visualization;
+    _by_insets.removeChildren();
+    !this.project._attr._saving && _by_spec.removeChildren();
 
     // сначала перерисовываем все профили контура
     this.profiles.forEach((elm) => elm.redraw());

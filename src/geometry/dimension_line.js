@@ -71,7 +71,7 @@ class DimensionLine extends paper.Group {
       fontFamily: consts.font_family,
       fontSize: this._font_size()});
 
-    this.on({
+    !this.project._attr._from_service && this.on({
       mouseenter: this._mouseenter,
       click: this._click
     });

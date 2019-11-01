@@ -18,7 +18,7 @@ class EditableText extends paper.PointText {
     this._edit = null;
     this._owner = props._owner;
 
-    this.on({
+    !this.project._attr._from_service && this.on({
       mouseenter: this.mouseenter,
       mouseleave: this.mouseleave,
       click: this.click,

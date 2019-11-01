@@ -35,7 +35,8 @@ class Scheme extends paper.Project {
       _silent,
       _bounds: null,
       _calc_order_row: null,
-      _update_timer: 0
+      _update_timer: 0,
+      _vis_timer: 0,
     };
 
     // массив с моментами времени изменений изделия
@@ -83,7 +84,8 @@ class Scheme extends paper.Project {
 
         // если перерисованы все контуры, перерисовываем их размерные линии
         _attr._bounds = null;
-        contours.forEach(({contours, l_dimensions}) => {
+        contours.forEach((contour) => {
+          const {contours, l_dimensions} = contour;
           contours.forEach((l) => {
             l.save_coordinates(true);
             isBrowser && l.refresh_prm_links();
@@ -110,6 +112,13 @@ class Scheme extends paper.Project {
       this._dp_listener = this._dp_listener.bind(this);
       this._dp._manager.on('update', this._dp_listener);
     }
+
+    // начинаем следить за событиями контуров для перерисовки допвизуализации
+    _editor.eve.on('contour_redrawed', () => {
+      clearTimeout(_attr._vis_timer);
+      _attr._vis_timer = setTimeout(this.draw_visualization.bind(this), 300);
+    });
+
   }
 
   /**
@@ -173,6 +182,58 @@ class Scheme extends paper.Project {
       }
     }
 
+  }
+
+  /**
+   * устанавливает систему
+   * @param sys
+   */
+  set_sys(sys) {
+
+    const {_dp, ox} = this;
+
+    if(_dp.sys === sys) {
+      return;
+    }
+
+    _dp.sys = sys;
+    ox.sys = sys;
+
+    _dp.sys.refill_prm(ox, 0, true);
+
+    // информируем контуры о смене системы, чтобы пересчитать материал профилей и заполнений
+    for (const contour of this.contours) {
+      contour.on_sys_changed();
+    }
+
+    if(ox.clr.empty()) {
+      ox.clr = _dp.sys.default_clr;
+    }
+
+  }
+
+  /**
+   * Меняет вставку прозрачных заполнений
+   * @param inset
+   */
+  set_glasses(inset) {
+    for(const glass of this.getItems({class: Filling})) {
+      glass.set_inset(inset, true);
+    }
+  }
+
+  /**
+   * Устанавливает фурнитуру в створках изделия
+   * @param furn
+   */
+  set_furn(furn) {
+    for (const rama of this.contours) {
+      for (const contour of rama.contours) {
+        if(!contour.furn.empty()) {
+          contour.furn = furn;
+        }
+      }
+    }
   }
 
   /**
@@ -442,16 +503,16 @@ class Scheme extends paper.Project {
             .then(() => {
               if(_scheme.ox.coordinates.count()) {
                 if(_scheme.ox.specification.count() || from_service) {
-                  if(from_service){
-                    Promise.resolve().then(() => {
+                  Promise.resolve().then(() => {
+                    if(from_service){
                       _scheme.draw_visualization();
                       _scheme.zoom_fit();
                       resolve();
-                    })
-                  }
-                  else{
-                    setTimeout(() => _scheme.draw_visualization(), 100);
-                  }
+                    }
+                    else {
+                      setTimeout(_scheme.draw_visualization.bind(_scheme), 100);
+                    }
+                  });
                 }
                 else {
                   // если нет спецификации при заполненных координатах, скорее всего, прочитали типовой блок или снапшот - запускаем пересчет
