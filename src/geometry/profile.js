@@ -1357,6 +1357,7 @@ class ProfileItem extends GeneratrixElement {
       if(_attr && _attr._rays) {
 
         _attr._rays.clear(true);
+        delete _attr.d0;
 
         // прибиваем соединения в точках b и e
         const b = this.cnn_point('b');
