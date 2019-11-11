@@ -27,8 +27,12 @@ $p.CatElm_visualization.prototype.__define({
 
 				const attr = JSON.parse(this.svg_path);
 
-				if(attr.method == "subpath_outer"){
-					subpath = elm.rays.outer.get_subpath(elm.corns(1), elm.corns(2)).equidistant(attr.offset || 10);
+				if(["subpath_outer", "subpath_generatrix"].includes(attr.method)){
+          if(attr.method == "subpath_outer"){
+            subpath = elm.rays.outer.get_subpath(elm.corns(1), elm.corns(2)).equidistant(attr.offset || 10);
+          }else{
+            subpath = elm.generatrix.get_subpath(elm.b, elm.e).equidistant((attr.offset || 0) + (elm.offset || 0));
+          }
 					subpath.parent = layer._by_spec;
 					subpath.strokeWidth = attr.strokeWidth || 4;
 					subpath.strokeColor = attr.strokeColor || 'red';
