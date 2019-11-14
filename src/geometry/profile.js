@@ -999,11 +999,11 @@ class ProfileItem extends GeneratrixElement {
     _row.nom = this.nom;
 
     // радиус, как дань традиции
-    const rmin = generatrix.rmin();
-    if(rmin) {
+    const raverage = generatrix.raverage();
+    if(raverage) {
       // записываем среднее значение, дельту не анализируем
       // если овал или несколько перегибов, мы это увидим в path_data
-      _row.r = ((rmin + generatrix.rmax()) / 2).round();
+      _row.r = raverage.round();
     }
     else {
       _row.r = 0;

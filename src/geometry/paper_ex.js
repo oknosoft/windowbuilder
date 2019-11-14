@@ -409,6 +409,26 @@ Object.defineProperties(paper.Path.prototype, {
     }
   },
 
+  /**
+   * ### Усреднённый радиус, высисляемый по кривизне пути
+   * для прямых = 0
+   */
+  raverage: {
+    value() {
+      if(!this.hasHandles()){
+        return 0;
+      }
+      const {length} = this;
+      const step = length / 50;
+      let sum = 0, count = 0;
+      for(let pos = 0; pos < length; pos += step){
+        sum += Math.abs(this.getCurvatureAt(pos));
+        count++;
+      }
+      return sum === 0 ? 0 : 1 / (sum / count);
+    }
+  },
+
 });
 
 
