@@ -1391,7 +1391,7 @@ $p.CatElm_visualization.prototype.__define({
 	draw: {
 		value(elm, layer, offset) {
 
-		  const {CompoundPath, PointText, constructor} = elm.project._scope;
+		  const {CompoundPath, PointText, Path, constructor} = elm.project._scope;
 
 			let subpath;
 
@@ -1399,16 +1399,45 @@ $p.CatElm_visualization.prototype.__define({
 
 				const attr = JSON.parse(this.svg_path);
 
-				if(attr.method == "subpath_outer"){
-					subpath = elm.rays.outer.get_subpath(elm.corns(1), elm.corns(2)).equidistant(attr.offset || 10);
-					subpath.parent = layer._by_spec;
-					subpath.strokeWidth = attr.strokeWidth || 4;
-					subpath.strokeColor = attr.strokeColor || 'red';
-					subpath.strokeCap = attr.strokeCap || 'round';
-					if(attr.dashArray){
+        if(['subpath_inner', 'subpath_outer', 'subpath_generatrix', 'subpath_median'].includes(attr.method)) {
+          if(attr.method == 'subpath_outer') {
+            subpath = elm.rays.outer.get_subpath(elm.corns(1), elm.corns(2)).equidistant(attr.offset || 10);
+          }
+          else if(attr.method == 'subpath_inner') {
+            subpath = elm.rays.inner.get_subpath(elm.corns(3), elm.corns(4)).equidistant(attr.offset || 10);
+          }
+          else if(attr.method == 'subpath_median') {
+            if(elm.is_linear()) {
+              subpath = new Path({segments: [elm.corns(1).add(elm.corns(4)).divide(2), elm.corns(2).add(elm.corns(3)).divide(2)]})
+                .equidistant(attr.offset || 0);
+            }
+            else {
+              const inner = elm.rays.inner.get_subpath(elm.corns(3), elm.corns(4));
+              inner.reverse();
+              const outer = elm.rays.outer.get_subpath(elm.corns(1), elm.corns(2));
+              const li = inner.length / 50;
+              const lo = outer.length / 50;
+              subpath = new Path();
+              for(let i = 0; i < 50; i++) {
+                subpath.add(inner.getPointAt(li * i).add(outer.getPointAt(lo * i)).divide(2));
+              }
+              subpath.simplify(0.8);
+              if(attr.offset) {
+                subpath = subpath.equidistant(attr.offset);
+              }
+            }
+          }
+          else {
+            subpath = elm.generatrix.get_subpath(elm.b, elm.e).equidistant(attr.offset || 0);
+          }
+          subpath.parent = layer._by_spec;
+          subpath.strokeWidth = attr.strokeWidth || 4;
+          subpath.strokeColor = attr.strokeColor || 'red';
+          subpath.strokeCap = attr.strokeCap || 'round';
+          if(attr.dashArray){
             subpath.dashArray = attr.dashArray
           }
-				}
+        }
 			}
 			else if(this.svg_path){
 
