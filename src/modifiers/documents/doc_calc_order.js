@@ -602,6 +602,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       Продукция: [],
       Аксессуары: [],
       Услуги: [],
+      Материалы: [],
       НомерВнутр: this.number_internal,
       КлиентДилера: this.client_of_dealer,
       Комментарий: this.note,
@@ -667,6 +668,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         else if(!row.nom.is_procedure && row.nom.is_service && !row.nom.is_accessory) {
           res.Услуги.push(this.row_description(row));
         }
+        else if(row.characteristic.empty() && !row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
+          res.Материалы.push(this.row_description(row));
+        }
       });
       res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
 
@@ -703,7 +707,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   row_description(row) {
 
     if(!(row instanceof $p.DocCalc_orderProductionRow) && row.characteristic) {
-      this.production.find_rows({characteristic: row.characteristic}, (prow) => {
+      this.production.find_rows({characteristic: row.characteristic, nom: row.nom}, (prow) => {
         row = prow;
         return false;
       });
@@ -714,7 +718,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       НомерСтроки: row.row,
       Количество: row.quantity,
       Ед: row.unit.name || 'шт',
-      Цвет: characteristic.clr.name,
+      Цвет: characteristic.empty() ? '' : characteristic.clr.name,
       Размеры: row.len + 'x' + row.width + ', ' + row.s + 'м²',
       Площадь: row.s,
       //Отдельно размеры, общая площадь позиции и комментарий к позиции
@@ -723,7 +727,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       ВсегоПлощадь: row.s * row.quantity,
       Примечание: row.note,
       Комментарий: row.note,
-      СистемаПрофилей: characteristic.sys.presentation,
+      СистемаПрофилей: characteristic.empty() ? '' : characteristic.sys.presentation,
       Номенклатура: nom.name_full || nom.name,
       Характеристика: characteristic.name,
       Заполнения: '',
