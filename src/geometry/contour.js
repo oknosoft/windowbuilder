@@ -2022,8 +2022,10 @@ class Contour extends AbstractFilling(paper.Layer) {
   save_coordinates(short) {
 
     if (!short) {
-      // удаляем скрытые заполнения
-      this.glasses(false, true).forEach((glass) => !glass.visible && glass.remove());
+      // если контур не скрыт, удаляем скрытые заполнения
+      if(!this.hidden) {
+        this.glasses(false, true).forEach((glass) => !glass.visible && glass.remove());
+      }
 
       // запись в таблице координат, каждый элемент пересчитывает самостоятельно
       const {l_text, l_dimensions} = this;

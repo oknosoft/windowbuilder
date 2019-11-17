@@ -4451,7 +4451,9 @@ class Contour extends AbstractFilling(paper.Layer) {
   save_coordinates(short) {
 
     if (!short) {
-      this.glasses(false, true).forEach((glass) => !glass.visible && glass.remove());
+      if(!this.hidden) {
+        this.glasses(false, true).forEach((glass) => !glass.visible && glass.remove());
+      }
 
       const {l_text, l_dimensions} = this;
       for (let elm of this.children) {
@@ -6834,6 +6836,12 @@ class Filling extends AbstractFilling(BuilderElement) {
     for(let onlay of this.imposts){
       onlay.remove();
     }
+  }
+
+  remove() {
+    this.remove_onlays();
+
+    super.remove();
   }
 
 

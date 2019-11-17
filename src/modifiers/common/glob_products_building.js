@@ -777,7 +777,7 @@ class ProductsBuilding {
 
       // информируем мир об окончании расчета координат
       scheme.draw_visualization();
-      scheme.notify(scheme, 'coordinates_calculated', attr);
+      Promise.resolve().then(() => scheme._scope && scheme._scope.eve.emit('coordinates_calculated', scheme, attr));
 
 
       // производим корректировку спецификации с возможным вытягиванием строк в заказ и удалением строк из заказа

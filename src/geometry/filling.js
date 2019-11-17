@@ -505,6 +505,18 @@ class Filling extends AbstractFilling(BuilderElement) {
     }
   }
 
+  /**
+   * При удалении заполнения, не забываем про вложенные раскладки
+   * @method remove
+   */
+  remove() {
+    //удаляем детей
+    this.remove_onlays();
+
+    // стандартные действия по удалению элемента paperjs
+    super.remove();
+  }
+
 
   /**
    * Габаритная площадь заполнения
