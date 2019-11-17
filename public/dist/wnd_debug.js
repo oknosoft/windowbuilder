@@ -4274,7 +4274,7 @@ class ProductsBuilding {
 
 
       scheme.draw_visualization();
-      scheme.notify(scheme, 'coordinates_calculated', attr);
+      Promise.resolve().then(() => scheme._scope && scheme._scope.eve.emit('coordinates_calculated', scheme, attr));
 
 
       if(ox.calc_order_row) {
@@ -4885,7 +4885,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           text += `<b>${characteristic.name}:</b><br/>`;
           errors.forEach((elms, nom) => {
             text += `${nom.name} - элементы:${Array.from(elms)}<br/>`;
-            if(nom.elm_type = ОшибкаКритическая) {
+            if(nom.elm_type == ОшибкаКритическая) {
               critical = true;
             }
           });
@@ -4995,7 +4995,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           type: 'alert-warning',
           text: `Изделие <i>${characteristic.prod_name(true)}</i> не может быть удалено<br/><br/>Для удаления, пройдите в <i>${
             leading_product.prod_name(true)}</i> и отредактируйте доп. вставки`,
-          title: this.presentation
+          title: presentation
         });
         return false;
       }
@@ -5117,7 +5117,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
     const {individual_person} = manager;
     const our_bank_account = bank_account && !bank_account.empty() ? bank_account : organization.main_bank_account;
     const get_imgs = [];
-    const {cat: {contact_information_kinds, characteristics}, utils: {blank, blob_as_text, snake_ref}} = $p;
+    const {cat: {contact_information_kinds}, utils: {blank, blob_as_text, snake_ref}} = $p;
 
     const res = {
       АдресДоставки: this.shipping_address,
@@ -5226,6 +5226,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       Продукция: [],
       Аксессуары: [],
       Услуги: [],
+      Материалы: [],
       НомерВнутр: this.number_internal,
       КлиентДилера: this.client_of_dealer,
       Комментарий: this.note,
@@ -5286,6 +5287,9 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         else if(!row.nom.is_procedure && row.nom.is_service && !row.nom.is_accessory) {
           res.Услуги.push(this.row_description(row));
         }
+        else if(!row.nom.is_procedure && !row.nom.is_service && !row.nom.is_accessory) {
+          res.Материалы.push(this.row_description(row));
+        }
       });
       res.ВсегоПлощадьИзделий = res.ВсегоПлощадьИзделий.round(3);
 
@@ -5324,21 +5328,21 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
         return false;
       });
     }
-    const {characteristic, nom} = row;
+    const {characteristic, nom, s, quantity, note} = row;
     const res = {
       ref: characteristic.ref,
       НомерСтроки: row.row,
-      Количество: row.quantity,
+      Количество: quantity,
       Ед: row.unit.name || 'шт',
       Цвет: characteristic.clr.name,
-      Размеры: row.len + 'x' + row.width + ', ' + row.s + 'м²',
-      Площадь: row.s,
+      Размеры: row.len + 'x' + row.width + ', ' + s + 'м²',
+      Площадь: s,
       Длина: row.len,
       Ширина: row.width,
-      ВсегоПлощадь: row.s * row.quantity,
-      Примечание: row.note,
-      Комментарий: row.note,
-      СистемаПрофилей: characteristic.sys.presentation,
+      ВсегоПлощадь: s * quantity,
+      Примечание: note,
+      Комментарий: note,
+      СистемаПрофилей: characteristic.sys.name,
       Номенклатура: nom.name_full || nom.name,
       Характеристика: characteristic.name,
       Заполнения: '',
@@ -5420,10 +5424,10 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
           .then(response => response.json())
           .then(json => {
             if (json.rows) {
-              this.planning.load(json.rows)
+              this.planning.load(json.rows);
             }
             else{
-              console.log(json)
+              console.log(json);
             }
           })
           .catch(err => {
@@ -5459,7 +5463,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   load_production(forse) {
     const prod = [];
     const {cat: {characteristics}, enm: {obj_delivery_states}} = $p;
-    this.production.forEach(({nom, characteristic}) => {
+    this.production.forEach(({characteristic}) => {
       if(!characteristic.empty() && (forse || characteristic.is_new())) {
         prod.push(characteristic.ref);
       }

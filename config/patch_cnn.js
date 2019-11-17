@@ -66,6 +66,7 @@ export const predefined = {
   'kaleva.': {
     zone: 8,
     host: 'https://zakaz.kaleva.ru/',
+    splash: {css: 'splash21', title: false},
     keys: keys21,
   },
   'tmk.': {zone: 23, host: 'https://tmk-online.ru/'},
