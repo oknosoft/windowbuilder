@@ -576,7 +576,7 @@ class Scheme extends paper.Project {
    * @param [attr.sz_lines] {enm.ТипыРазмерныхЛиний} - правила формирования размерных линий (по умолчению - Обычные)
    * @param [attr.txt_cnstr] {Boolean} - выводить текст, привязанный к слоям изделия (по умолчению - Да)
    * @param [attr.txt_elm] {Boolean} - выводить текст, привязанный к элементам (например, формулы заполнений, по умолчению - Да)
-   * @param [attr.visualisation] {Boolean} - выводить визуализацию (по умолчению - Да)
+   * @param [attr.visualization] {Boolean} - выводить визуализацию (по умолчению - Да)
    * @param [attr.opening] {Boolean} - выводить направление открывания (по умолчению - Да)
    * @param [attr.select] {Number} - выделить на эскизе элемент по номеру (по умолчению - 0)
    * @param [attr.format] {String} - [svg, png, pdf] - (по умолчению - png)
@@ -592,10 +592,38 @@ class Scheme extends paper.Project {
     l_dimensions.visible = false;
     l_connective.visible = false;
 
+    function draw (elm, l_visualization) {
+      if (this.elm === elm.elm) {
+        this.nom.visualization.draw(elm, l_visualization, this.len * 1000);
+        return true;
+      }
+    };
+
     let elm;
     if(attr.elm > 0) {
       elm = this.getItem({class: BuilderElement, elm: attr.elm});
       elm && elm.draw_fragment && elm.draw_fragment();
+      if(elm && elm.draw_fragment /*&& attr.visualization*/) {
+        const {l_visualization} = elm.parent;
+        l_visualization._by_spec.removeChildren();
+        l_visualization.visible = true;
+        const rows = [];
+        this.ox.specification.find_rows({dop: -1}, (row) => rows.push(row));
+        // бежим по строкам спецификации с визуализацией
+        for(const row of rows){
+          if(elm instanceof Filling) {
+            if (row.elm === elm.elm) {
+              row.nom.visualization.draw(elm, l_visualization, [row.len * 1000, row.width * 1000]);
+            }else{
+              // визуализация для текущей раскладки
+              elm.imposts.some((elm) => draw.bind(row)(elm, l_visualization));
+            }
+          }else{
+            // визуализация для текущего профиля
+            draw.bind(row)(elm, l_visualization);
+          }
+        }
+      }
     }
     else if(attr.elm < 0) {
       const cnstr = -attr.elm;
@@ -605,6 +633,8 @@ class Scheme extends paper.Project {
           l.hide_generatrix();
           l.l_dimensions.redraw(true);
           l.zoom_fit();
+          // визуализация для текущего контура
+          /*attr.visualization &&*/ l.draw_visualization();
           return true;
         }
       });
