@@ -634,7 +634,7 @@ class Scheme extends paper.Project {
           l.l_dimensions.redraw(true);
           l.zoom_fit();
           // визуализация для текущего контура
-          /*attr.visualization &&*/ l.draw_visualization();
+          /*attr.visualization &&*/ l.draw_visualization(false, false);
           return true;
         }
       });

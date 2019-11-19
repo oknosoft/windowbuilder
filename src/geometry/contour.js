@@ -1561,7 +1561,7 @@ class Contour extends AbstractFilling(paper.Layer) {
   /**
    * Рисует дополнительную визуализацию. Данные берёт из спецификации и проблемных соединений
    */
-  draw_visualization(rows) {
+  draw_visualization(rows, nested = true) {
 
     const {profiles, l_visualization, contours} = this;
     const glasses = this.glasses(false, true);
@@ -1606,8 +1606,10 @@ class Contour extends AbstractFilling(paper.Layer) {
     }
 
     // перерисовываем вложенные контуры
-    for(const contour of contours){
-      contour.draw_visualization(rows);
+    if(nested){
+      for(const contour of contours){
+        contour.draw_visualization(rows);
+      }
     }
 
   }
