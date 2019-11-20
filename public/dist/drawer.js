@@ -13523,16 +13523,17 @@ $p.CatElm_visualization.prototype.__define({
           if(attr.method == 'subpath_outer') {
             subpath = elm.rays.outer.get_subpath(elm.corns(1), elm.corns(2)).equidistant(attr.offset || 10);
           }
-          if(attr.method == 'subpath_inner') {
-            subpath = elm.rays.inner.get_subpath(elm.corns(3), elm.corns(4)).equidistant(-(attr.offset || 10));
+          else if(attr.method == 'subpath_inner') {
+            subpath = elm.rays.inner.get_subpath(elm.corns(3), elm.corns(4)).equidistant(attr.offset || 10);
           }
-          if(attr.method == 'subpath_median') {
+          else if(attr.method == 'subpath_median') {
             if(elm.is_linear()) {
-              subpath = new Path({segments: [elm.corns(1).add(elm.corns(4)).divide(2), elm.corns(2).add(elm.corns(2)).divide(2)]})
+              subpath = new Path({segments: [elm.corns(1).add(elm.corns(4)).divide(2), elm.corns(2).add(elm.corns(3)).divide(2)]})
                 .equidistant(attr.offset || 0);
             }
             else {
-              const inner = elm.rays.inner.get_subpath(elm.corns(3), elm.corns(4)).reverce();
+              const inner = elm.rays.inner.get_subpath(elm.corns(3), elm.corns(4));
+              inner.reverse();
               const outer = elm.rays.outer.get_subpath(elm.corns(1), elm.corns(2));
               const li = inner.length / 50;
               const lo = outer.length / 50;

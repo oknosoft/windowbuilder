@@ -1485,18 +1485,22 @@ class Editor extends EditorInvisible {
   }
 
   close(ox, calc_order) {
-    this.project.getItems({class: Editor.DimensionLine}).forEach((el) => el.wnd && el.wnd.close());
-    if(!ox) {
-      ox = this.project.ox;
-    }
-    if(!calc_order) {
-      calc_order = ox.calc_order;
-    }
+    const {project} = this;
     let path = '/';
-    if(calc_order && !calc_order.empty()){
-      path += `${calc_order.class_name}/${calc_order.ref}`;
-      if(ox && !ox.empty()){
-        path += `/?ref=${ox.ref}`
+    if(project) {
+      project.getItems({class: Editor.DimensionLine}).forEach((el) => el.wnd && el.wnd.close());
+      if(!ox) {
+        ox = project.ox;
+      }
+      if(!calc_order) {
+        calc_order = ox.calc_order;
+      }
+
+      if(calc_order && !calc_order.empty()){
+        path += `${calc_order.class_name}/${calc_order.ref}`;
+        if(ox && !ox.empty()){
+          path += `/?ref=${ox.ref}`
+        }
       }
     }
     this.handlers.handleNavigate(path);
