@@ -372,6 +372,8 @@ class Filling extends AbstractFilling(BuilderElement) {
       opacity: 0.6,
     });
     l_dimensions.redraw(true);
+    layer.draw_visualization();
+    layer.l_visualization.visible = true;
     layer.zoom_fit();
   }
 

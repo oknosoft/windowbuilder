@@ -1614,7 +1614,7 @@ class Contour extends AbstractFilling(paper.Layer) {
   draw_visualization(rows) {
 
     const {profiles, l_visualization, contours} = this;
-    const glasses = this.glasses(false, true);
+    const glasses = this.glasses(false, true).filter(({visible}) => visible);
     l_visualization._by_spec.removeChildren();
 
     if(!rows){
@@ -1623,7 +1623,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     }
 
     function draw (elm) {
-      if (this.elm === elm.elm) {
+      if (this.elm === elm.elm && elm.visible) {
         this.nom.visualization.draw(elm, l_visualization, this.len * 1000);
         return true;
       }
@@ -4279,6 +4279,8 @@ class Filling extends AbstractFilling(BuilderElement) {
       opacity: 0.6,
     });
     l_dimensions.redraw(true);
+    layer.draw_visualization();
+    layer.l_visualization.visible = true;
     layer.zoom_fit();
   }
 

@@ -1564,7 +1564,7 @@ class Contour extends AbstractFilling(paper.Layer) {
   draw_visualization(rows) {
 
     const {profiles, l_visualization, contours} = this;
-    const glasses = this.glasses(false, true);
+    const glasses = this.glasses(false, true).filter(({visible}) => visible);
     l_visualization._by_spec.removeChildren();
 
     // если кеш строк визуализации пустой - наполняем
@@ -1574,7 +1574,7 @@ class Contour extends AbstractFilling(paper.Layer) {
     }
 
     function draw (elm) {
-      if (this.elm === elm.elm) {
+      if (this.elm === elm.elm && elm.visible) {
         this.nom.visualization.draw(elm, l_visualization, this.len * 1000);
         return true;
       }
