@@ -6742,7 +6742,11 @@ class Filling extends AbstractFilling(BuilderElement) {
     });
     l_dimensions.redraw(true);
     layer.draw_visualization();
-    layer.l_visualization.visible = true;
+    const {l_visualization: lv} = layer;
+    lv._by_insets.removeChildren();
+    lv._cnn.removeChildren();
+    lv._opening.removeChildren();
+    lv.visible = true;
     layer.zoom_fit();
   }
 
