@@ -4281,9 +4281,9 @@ class Filling extends AbstractFilling(BuilderElement) {
     l_dimensions.redraw(true);
     layer.draw_visualization();
     const {l_visualization: lv} = layer;
-    lv._by_insets.removeChildren();
-    lv._cnn.removeChildren();
-    lv._opening.removeChildren();
+    lv._by_insets && lv._by_insets.removeChildren();
+    lv._cnn && lv._cnn.removeChildren();
+    lv._opening && lv._opening.removeChildren();
     lv.visible = true;
     layer.zoom_fit();
   }
