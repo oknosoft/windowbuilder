@@ -4924,7 +4924,7 @@ class DimensionDrawer extends paper.Group {
           dx2,
           parent: this,
           offset: invert ? -150 : 150,
-          outer: outer.indexOf(impost) !== -1,
+          outer: outer.includes(impost),
         });
 
       }
@@ -5729,7 +5729,19 @@ class DimensionLineImpost extends DimensionLineCustom {
     const ns = normal.normalize(normal.length - 20);
     const bs = b.add(ns);
     const es = e.add(ns);
-    const offsetB = elm1.generatrix.getOffsetOf(elm1.generatrix.getNearestPoint(elm1.corns(1)));
+    let offsetB = 0;
+    const elmB = elm1.cnn_point('b').profile;
+    if(elmB) {
+      const gen = elm1.generatrix.clone({insert: false}).elongation(200);
+      const po = elmB.rays.outer.intersect_point(gen, elm1.b);
+      const pi = elmB.rays.inner.intersect_point(gen, elm1.b);
+      if(po && pi) {
+        const ob = gen.getOffsetOf(elm1.b);
+        const oo = gen.getOffsetOf(po);
+        const oi = gen.getOffsetOf(pi);
+        offsetB = Math.min(oo - ob, oi - ob);
+      }
+    }
 
     if(children.callout1.segments.length){
       children.callout1.firstSegment.point = b;

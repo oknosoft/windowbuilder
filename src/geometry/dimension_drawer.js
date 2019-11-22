@@ -245,7 +245,7 @@ class DimensionDrawer extends paper.Group {
           dx2,
           parent: this,
           offset: invert ? -150 : 150,
-          outer: outer.indexOf(impost) !== -1,
+          outer: outer.includes(impost),
         });
 
       }
