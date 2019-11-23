@@ -20,9 +20,9 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
         const {furn, sys, client_of_dealer_mode} = job_prm.properties;
 
         // накапливаем
-        current_user.branch.load()
+        const branch_filter = job_prm.builder.branch_filter = {furn: [], sys: []};
+        (current_user.branch.is_new() ? current_user.branch.load() : Promise.resolve(current_user.branch))
           .then(({keys, divisions}) => {
-            const branch_filter = job_prm.builder.branch_filter = {furn: [], sys: []};
             const add = ({acl_obj}) => {
               if(acl_obj.applying == ПараметрВыбора) {
                 acl_obj.params.forEach(({property, value}) => {
@@ -42,9 +42,8 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
                 job_prm.builder.client_of_dealer_mode = value;
               });
             });
-            return branch_filter;
           })
-          .then((branch_filter) => {
+          .then(() => {
 
             // применяем
             if(branch_filter.furn.length) {
@@ -62,7 +61,8 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
               }];
             }
 
-          });
+          })
+          .catch((err) => null);
 
       }
     });
