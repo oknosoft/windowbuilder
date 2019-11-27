@@ -84,12 +84,17 @@ exports.CatFormulas = class CatFormulas extends Object {
     // создаём функцию из текста формулы
     if(!_data._formula && this.formula){
       try{
-        if(this.async) {
-          const AsyncFunction = Object.getPrototypeOf(eval('(async function(){})')).constructor;
-          _data._formula = (new AsyncFunction('obj,$p,attr', this.formula)).bind(this);
+        if(this.jsx) {
+          _data._formula = new Function('$p', this.formula)($p);
         }
         else {
-          _data._formula = (new Function('obj,$p,attr', this.formula)).bind(this);
+          if(this.async) {
+            const AsyncFunction = Object.getPrototypeOf(eval('(async function(){})')).constructor;
+            _data._formula = (new AsyncFunction('obj,$p,attr', this.formula)).bind(this);
+          }
+          else {
+            _data._formula = (new Function('obj,$p,attr', this.formula)).bind(this);
+          }
         }
       }
       catch(err){
@@ -109,6 +114,16 @@ exports.CatFormulas = class CatFormulas extends Object {
           text: `Ошибка в формуле<br /><b>${this.name}</b>`
         });
         return Promise.resolve();
+      }
+
+      // jsx на время отладки рендерим в глобальный диалог, TODO: придумать лучшее место
+      if(this.jsx) {
+        const CustomComponent = _formula;
+        return $p.ui.dialogs.alert({
+          title: 'Demo JSX',
+          text: $p.ui.React.createElement(CustomComponent, {obj, attr}),
+          initFullScreen: true,
+        });
       }
 
       // получаем HTMLDivElement с отчетом
