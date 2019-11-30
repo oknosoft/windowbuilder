@@ -1295,32 +1295,35 @@ class Editor extends EditorInvisible {
     let restored;
     for(let impost of glass.imposts) {
       for(let node of ['b','e']) {
-        if(impost.rays[node].cnn)
+        if(impost.rays[node].cnn) {
           continue;
+        }
 
         let intersections = glass.path.getIntersections(impost.generatrix);
         if(intersections.length) {
           impost[node] = intersections[0].point;
           restored = true;
-        } else {
+        }
+        else {
           let p1, p2;
           if(node === 'b') {
             p1 = impost.generatrix.firstSegment.point;
             p2 = impost.generatrix.firstSegment.point.add(impost.generatrix.getTangentAt(0).negate().multiply(2048));
-          } else if(node === 'e') {
+          }
+          else if(node === 'e') {
             p1 = impost.generatrix.lastSegment.point;
             p2 = impost.generatrix.lastSegment.point.add(impost.generatrix.getTangentAt(impost.generatrix.length).negate().multiply(-2048));
           }
           const line = new paper.Path({
             segments: [p1, p2],
-            strokeColor: 'black'
+            strokeColor: 'black',
+            insert: false,
           });
           intersections = glass.path.getIntersections(line);
           if(intersections.length) {
             impost[node] = intersections[0].point;
             restored = true;
           }
-          line.remove();
         }
       }
     }
