@@ -16382,6 +16382,12 @@ $p.DocCalc_orderProductionRow = class DocCalc_orderProductionRow extends $p.DocC
       }
 
 
+      if(field === 'quantity' && !characteristic.empty() && !characteristic.calc_order.empty()) {
+        this._owner.find_rows({ordn: characteristic}, (row) => {
+          row.value_change('quantity', type, _obj.quantity, no_extra_charge);
+        });
+      }
+
       return false;
     }
   }
