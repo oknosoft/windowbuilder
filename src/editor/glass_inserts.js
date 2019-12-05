@@ -13,6 +13,14 @@ class GlassInserts {
       });
     }
 
+    if(elm.inset.empty()){
+      return $p.msg.show_msg({
+        type: "alert-info",
+        text: 'Укажите вставку для заполнения',
+        title: $p.msg.glass_spec
+      });
+    }
+
     this.elm = elm;
     this.glasses = glasses;
 
