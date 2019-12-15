@@ -67,12 +67,12 @@ class ToolElement extends paper.Tool {
    * @for ToolElement
    */
   check_layer() {
-    const {_scope} = this;
-    if (!_scope.project.contours.length) {
+    const {project, eve} = this._scope;
+    if (!project.contours.length) {
       // создаём пустой новый слой
       new Contour({parent: undefined});
       // оповещаем мир о новых слоях
-      _scope.eve.emit_async('rows', _scope.project.ox, {constructions: true});
+      eve.emit_async('rows', project.ox, {constructions: true});
     }
   }
 

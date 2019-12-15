@@ -80,7 +80,6 @@ class PenControls {
 
     _cont.querySelector("[name=click]").onclick = this.create_click;
 
-
   }
 
   get point(){
