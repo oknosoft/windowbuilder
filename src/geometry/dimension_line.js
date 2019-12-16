@@ -347,6 +347,12 @@ class DimensionLine extends paper.Group {
       path.firstSegment.point = b;
       path.lastSegment.point = e;
     }
+    if(_attr.faltz) {
+      b = path.getPointAt(_attr.faltz);
+      e = path.getPointAt(path.length - _attr.faltz);
+      path.firstSegment.point = b;
+      path.lastSegment.point = e;
+    }
     path.offset = offset;
 
     return path;

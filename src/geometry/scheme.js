@@ -603,7 +603,7 @@ class Scheme extends paper.Project {
         if(l.cnstr == cnstr) {
           l.hidden = false;
           l.hide_generatrix();
-          l.l_dimensions.redraw(true);
+          l.l_dimensions.redraw(attr.faltz || true);
           l.zoom_fit();
           return true;
         }

@@ -2407,7 +2407,7 @@ class DimensionDrawer extends paper.Group {
         ivert.length = 0;
       }
 
-      this.by_contour(ihor, ivert, forse);
+      this.by_contour(ihor, ivert, forse, by_side);
 
     }
 
@@ -2498,7 +2498,7 @@ class DimensionDrawer extends paper.Group {
     }
   }
 
-  by_contour(ihor, ivert, forse) {
+  by_contour(ihor, ivert, forse, by_side) {
 
     const {project, parent} = this;
     const {bounds} = parent;
@@ -2594,6 +2594,31 @@ class DimensionDrawer extends paper.Group {
         }
       }
 
+    }
+
+    if(forse === 'faltz') {
+      this.by_faltz(ihor, ivert, by_side);
+    }
+  }
+
+  by_faltz(ihor, ivert, by_side) {
+    if (!this.left) {
+      this.left = new DimensionLine({
+        pos: 'left',
+        parent: this,
+        offset: ihor.length > 2 ? 220 : 90,
+        contour: true,
+        faltz: (by_side.top.nom.sizefaltz + by_side.bottom.nom.sizefaltz) / 2,
+      });
+    }
+    if(!this.top) {
+      this.top = new DimensionLine({
+        pos: 'top',
+        parent: this,
+        offset: ivert.length > 2 ? 220 : 90,
+        contour: true,
+        faltz: (by_side.left.nom.sizefaltz + by_side.right.nom.sizefaltz) / 2,
+      });
     }
   }
 
@@ -2967,6 +2992,12 @@ class DimensionLine extends paper.Group {
       if(path.getOffsetOf(b) > path.getOffsetOf(e)){
         [b, e] = [e, b]
       }
+      path.firstSegment.point = b;
+      path.lastSegment.point = e;
+    }
+    if(_attr.faltz) {
+      b = path.getPointAt(_attr.faltz);
+      e = path.getPointAt(path.length - _attr.faltz);
       path.firstSegment.point = b;
       path.lastSegment.point = e;
     }
@@ -9274,7 +9305,7 @@ class Scheme extends paper.Project {
         if(l.cnstr == cnstr) {
           l.hidden = false;
           l.hide_generatrix();
-          l.l_dimensions.redraw(true);
+          l.l_dimensions.redraw(attr.faltz || true);
           l.zoom_fit();
           return true;
         }

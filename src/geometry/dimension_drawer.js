@@ -184,7 +184,7 @@ class DimensionDrawer extends paper.Group {
       }
 
       // далее - размерные линии контура
-      this.by_contour(ihor, ivert, forse);
+      this.by_contour(ihor, ivert, forse, by_side);
 
     }
 
@@ -289,7 +289,7 @@ class DimensionDrawer extends paper.Group {
   /**
    * ### Формирует размерные линии контура
    */
-  by_contour(ihor, ivert, forse) {
+  by_contour(ihor, ivert, forse, by_side) {
 
     const {project, parent} = this;
     const {bounds} = parent;
@@ -385,6 +385,34 @@ class DimensionDrawer extends paper.Group {
         }
       }
 
+    }
+
+    if(forse === 'faltz') {
+      this.by_faltz(ihor, ivert, by_side);
+    }
+  }
+
+  /**
+   * ### Формирует размерные линии контура по фальцу
+   */
+  by_faltz(ihor, ivert, by_side) {
+    if (!this.left) {
+      this.left = new DimensionLine({
+        pos: 'left',
+        parent: this,
+        offset: ihor.length > 2 ? 220 : 90,
+        contour: true,
+        faltz: (by_side.top.nom.sizefaltz + by_side.bottom.nom.sizefaltz) / 2,
+      });
+    }
+    if(!this.top) {
+      this.top = new DimensionLine({
+        pos: 'top',
+        parent: this,
+        offset: ivert.length > 2 ? 220 : 90,
+        contour: true,
+        faltz: (by_side.left.nom.sizefaltz + by_side.right.nom.sizefaltz) / 2,
+      });
     }
   }
 
