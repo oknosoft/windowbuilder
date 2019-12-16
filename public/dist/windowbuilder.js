@@ -5107,7 +5107,7 @@ class DimensionDrawer extends paper.Group {
       this.left = new DimensionLine({
         pos: 'left',
         parent: this,
-        offset: ihor.length > 2 ? 220 : 90,
+        offset: 90,
         contour: true,
         faltz: (by_side.top.nom.sizefaltz + by_side.bottom.nom.sizefaltz) / 2,
       });
@@ -5116,7 +5116,7 @@ class DimensionDrawer extends paper.Group {
       this.top = new DimensionLine({
         pos: 'top',
         parent: this,
-        offset: ivert.length > 2 ? 220 : 90,
+        offset: 90,
         contour: true,
         faltz: (by_side.left.nom.sizefaltz + by_side.right.nom.sizefaltz) / 2,
       });
