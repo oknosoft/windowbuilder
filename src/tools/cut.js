@@ -36,44 +36,46 @@ class ToolCut extends ToolElement{
         this.on_activate('cursor-arrow-cut');
       },
 
-      deactivate() {
-        this.remove_cont();
-      },
+      deactivate: this.remove_cont,
 
-      keydown(event) {
-        if (event.key == 'escape') {
-          this.remove_cont();
-          this._scope.canvas_cursor('cursor-arrow-cut');
-        }
-      },
+      keydown: this.keydown,
 
-      mouseup(event) {
-
-        const hitItem = this.project.hitTest(event.point, {fill: true, stroke: false, segments: false});
-        if(hitItem && hitItem.item.parent instanceof Profile) {
-          let item = hitItem.item.parent;
-          if(event.modifiers.shift) {
-            item.selected = !item.selected;
-          }
-          else {
-            this.project.deselectAll();
-            item.selected = true;
-          }
-          item.attache_wnd(this._scope._acc.elm);
-          this.profile = item;
-        }
-        else {
-          this.profile = null;
-        }
-
-        this.remove_cont();
-        this._scope.canvas_cursor('cursor-arrow-cut');
-
-      },
+      mouseup: this.mouseup,
 
       mousemove: this.hitTest
 
     })
+
+  }
+
+  keydown(event) {
+    if (event.key == 'escape') {
+      this.remove_cont();
+      this._scope.canvas_cursor('cursor-arrow-cut');
+    }
+  }
+
+  mouseup(event) {
+
+    const hitItem = this.project.hitTest(event.point, {fill: true, stroke: false, segments: false});
+    if(hitItem && hitItem.item.parent instanceof Profile) {
+      let item = hitItem.item.parent;
+      if(event.modifiers.shift) {
+        item.selected = !item.selected;
+      }
+      else {
+        this.project.deselectAll();
+        item.selected = true;
+      }
+      item.attache_wnd(this._scope._acc.elm);
+      this.profile = item;
+    }
+    else {
+      this.profile = null;
+    }
+
+    this.remove_cont();
+    this._scope.canvas_cursor('cursor-arrow-cut');
 
   }
 

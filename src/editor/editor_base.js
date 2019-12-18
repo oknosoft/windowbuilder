@@ -29,6 +29,10 @@ class EditorInvisible extends paper.PaperScope {
     consts.tune_paper(this.settings);
   }
 
+  get consts() {
+    return consts;
+  }
+
   /**
    * Возвращает элемент по номеру
    * @param num

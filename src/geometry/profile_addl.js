@@ -314,3 +314,5 @@ class ProfileAddl extends ProfileItem {
   }
 
 }
+
+EditorInvisible.ProfileAddl = ProfileAddl;

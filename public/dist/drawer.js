@@ -62,6 +62,10 @@ class EditorInvisible extends paper.PaperScope {
     consts.tune_paper(this.settings);
   }
 
+  get consts() {
+    return consts;
+  }
+
   elm(num) {
     return this.project.getItem({class: BuilderElement, elm: num});
   }
@@ -8342,6 +8346,8 @@ class ProfileAddl extends ProfileItem {
   }
 
 }
+
+EditorInvisible.ProfileAddl = ProfileAddl;
 
 
 
