@@ -1300,8 +1300,9 @@ class Editor extends EditorInvisible {
         }
 
         let intersections = glass.path.getIntersections(impost.generatrix);
-        if(intersections.length) {
-          impost[node] = intersections[0].point;
+        let intersection = impost.get_nearest_intersection(intersections, node);
+        if(intersection) {
+          impost[node] = intersection.point;
           restored = true;
         }
         else {
@@ -1320,8 +1321,9 @@ class Editor extends EditorInvisible {
             insert: false,
           });
           intersections = glass.path.getIntersections(line);
-          if(intersections.length) {
-            impost[node] = intersections[0].point;
+          intersection = impost.get_nearest_intersection(intersections, node);
+          if(intersection) {
+            impost[node] = intersection.point;
             restored = true;
           }
         }
