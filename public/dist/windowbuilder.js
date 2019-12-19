@@ -2213,7 +2213,7 @@ class Editor extends EditorInvisible {
         if(cnn && cnn.cnn_type !== cnn.cnn_type._manager.i) {
           continue;
         }
-        const point = impost.generatrix.clone({insert: false}).intersect_point(glass.path, impost[node], 1500);
+        const point = impost.generatrix.clone({insert: false}).elongation(1500).intersect_point(glass.path, impost[node]);
         if(point && !impost[node].is_nearest(point, 0)) {
           impost[node] = point;
           restored = true;
@@ -5092,7 +5092,7 @@ class DimensionDrawer extends paper.Group {
         parent: this,
         offset: 90,
         contour: true,
-        faltz: (by_side.top.nom.sizefaltz + by_side.bottom.nom.sizefaltz) / 2,
+        faltz: (by_side.top.nom.sizefurn + by_side.bottom.nom.sizefurn) / 2,
       });
     }
     if(!this.top) {
@@ -5101,7 +5101,7 @@ class DimensionDrawer extends paper.Group {
         parent: this,
         offset: 90,
         contour: true,
-        faltz: (by_side.left.nom.sizefaltz + by_side.right.nom.sizefaltz) / 2,
+        faltz: (by_side.left.nom.sizefurn + by_side.right.nom.sizefurn) / 2,
       });
     }
   }

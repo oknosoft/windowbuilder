@@ -402,7 +402,7 @@ class DimensionDrawer extends paper.Group {
         parent: this,
         offset: 90,
         contour: true,
-        faltz: (by_side.top.nom.sizefaltz + by_side.bottom.nom.sizefaltz) / 2,
+        faltz: (by_side.top.nom.sizefurn + by_side.bottom.nom.sizefurn) / 2,
       });
     }
     if(!this.top) {
@@ -411,7 +411,7 @@ class DimensionDrawer extends paper.Group {
         parent: this,
         offset: 90,
         contour: true,
-        faltz: (by_side.left.nom.sizefaltz + by_side.right.nom.sizefaltz) / 2,
+        faltz: (by_side.left.nom.sizefurn + by_side.right.nom.sizefurn) / 2,
       });
     }
   }
