@@ -121,24 +121,6 @@ class Onlay extends ProfileItem {
   }
 
   /**
-   * Получение ближайшего пересечения для узла импоста с учётом противоположного узла
-   * @method save_coordinates
-   * @for Onlay
-   */
-  get_nearest_intersection(intersections, node) {
-    let res;
-    const opposite = node === 'b' ? 'e' : 'b';
-    for(let intersection of intersections) {
-      const distance = intersection.point.getDistance(this[node]);
-      const dist_opp = intersection.point.getDistance(this[opposite]);
-      if(distance < dist_opp || (this.rays[opposite].cnn && dist_opp > 1)) {
-        res = intersection;
-      }
-    }
-    return res;
-  }
-
-  /**
    * Вычисляемые поля в таблице координат
    * @method save_coordinates
    * @for Onlay

@@ -289,7 +289,7 @@ Object.defineProperties(paper.Path.prototype, {
      * @method intersect_point
      * @for Path
      * @param path {paper.Path}
-     * @param point {paper.Point}
+     * @param point {paper.Point|String} - точка или имя узла (b,e)
      * @param elongate {Boolean} - если истина, пути будут продолжены до пересечения
      * @return point {paper.Point}
      */
@@ -302,6 +302,10 @@ Object.defineProperties(paper.Path.prototype, {
           return intersections[0].point;
         }
         else if(intersections.length > 1){
+
+          if(typeof point === 'string' && this.parent) {
+            point = this.parent[point];
+          }
 
           if(!point){
             point = this.getPointAt(this.length /2);
@@ -331,20 +335,28 @@ Object.defineProperties(paper.Path.prototype, {
             p2last = path.firstSegment.point.getDistance(p2, true) > path.lastSegment.point.getDistance(p2, true),
             tg;
 
-          tg = (p1last ? this.getTangentAt(this.length) : this.getTangentAt(0).negate()).multiply(100);
-          if(this.is_linear){
-            if(p1last)
-              this.lastSegment.point = this.lastSegment.point.add(tg);
-            else
-              this.firstSegment.point = this.firstSegment.point.add(tg);
+          if(!this.closed) {
+            tg = (p1last ? this.getTangentAt(this.length) : this.getTangentAt(0).negate()).multiply(typeof elongate === 'number' ? elongate : 100);
+            if(this.is_linear){
+              if(p1last) {
+                this.lastSegment.point = this.lastSegment.point.add(tg);
+              }
+              else {
+                this.firstSegment.point = this.firstSegment.point.add(tg);
+              }
+            }
           }
 
-          tg = (p2last ? path.getTangentAt(path.length) : path.getTangentAt(0).negate()).multiply(100);
-          if(path.is_linear){
-            if(p2last)
-              path.lastSegment.point = path.lastSegment.point.add(tg);
-            else
-              path.firstSegment.point = path.firstSegment.point.add(tg);
+          if(!path.closed) {
+            tg = (p2last ? path.getTangentAt(path.length) : path.getTangentAt(0).negate()).multiply(typeof elongate === 'number' ? elongate : 100);
+            if(path.is_linear){
+              if(p2last) {
+                path.lastSegment.point = path.lastSegment.point.add(tg);
+              }
+              else {
+                path.firstSegment.point = path.firstSegment.point.add(tg);
+              }
+            }
           }
 
           return this.intersect_point(path, point);

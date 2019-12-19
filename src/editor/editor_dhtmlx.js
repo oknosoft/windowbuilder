@@ -1293,39 +1293,16 @@ class Editor extends EditorInvisible {
 
     // восстановление соединений с заполнением
     let restored;
-    for(let impost of glass.imposts) {
-      for(let node of ['b','e']) {
-        if(impost.rays[node].cnn) {
+    for(const impost of glass.imposts) {
+      for(const node of ['b','e']) {
+        const {cnn} = impost.rays[node];
+        if(cnn && cnn.cnn_type !== cnn.cnn_type._manager.i) {
           continue;
         }
-
-        let intersections = glass.path.getIntersections(impost.generatrix);
-        let intersection = impost.get_nearest_intersection(intersections, node);
-        if(intersection) {
-          impost[node] = intersection.point;
+        const point = impost.generatrix.clone({insert: false}).intersect_point(glass.path, impost[node], 1500);
+        if(point && !impost[node].is_nearest(point, 0)) {
+          impost[node] = point;
           restored = true;
-        }
-        else {
-          let p1, p2;
-          if(node === 'b') {
-            p1 = impost.generatrix.firstSegment.point;
-            p2 = impost.generatrix.firstSegment.point.add(impost.generatrix.getTangentAt(0).negate().multiply(2048));
-          }
-          else if(node === 'e') {
-            p1 = impost.generatrix.lastSegment.point;
-            p2 = impost.generatrix.lastSegment.point.add(impost.generatrix.getTangentAt(impost.generatrix.length).negate().multiply(-2048));
-          }
-          const line = new paper.Path({
-            segments: [p1, p2],
-            strokeColor: 'black',
-            insert: false,
-          });
-          intersections = glass.path.getIntersections(line);
-          intersection = impost.get_nearest_intersection(intersections, node);
-          if(intersection) {
-            impost[node] = intersection.point;
-            restored = true;
-          }
         }
       }
     }
