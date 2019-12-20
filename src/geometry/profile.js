@@ -2100,6 +2100,11 @@ class ProfileItem extends GeneratrixElement {
     return this.project.check_distance(element, this, res, point, check_only);
   }
 
+  /**
+   * Дополняет и сортирует массив свойств примыкающих профилей
+   * @param ares
+   * @return {boolean}
+   */
   max_right_angle(ares) {
     const {generatrix} = this;
     let has_a = true;
@@ -2115,6 +2120,35 @@ class ProfileItem extends GeneratrixElement {
       return aa - ab;
     });
     return has_a;
+  }
+
+  /**
+   * Выводит текст с номером элемента
+   * @param show
+   */
+  show_number(show = true) {
+    let {elm_number} = this.children;
+    if(!show) {
+      return elm_number && elm_number.remove();
+    }
+    if(elm_number) {
+      elm_number.position = this.path.interiorPoint;
+    }
+    else {
+      elm_number = new paper.PointText({
+        parent: this,
+        guide: true,
+        name: 'elm_number',
+        justification: 'center',
+        fillColor: 'darkblue',
+        fontFamily: consts.font_family,
+        fontSize: consts.font_size * 1.1,
+        fontWeight: 'bold',
+        content: this.elm,
+        position: this.interiorPoint(),
+      });
+    }
+
   }
 
 }
