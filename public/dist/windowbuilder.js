@@ -5624,6 +5624,9 @@ class DimensionLineCustom extends DimensionLine {
     if(_attr.hide_line) {
       path_data.hide_line = true;
     }
+    if(_attr.by_curve) {
+      path_data.by_curve = true;
+    }
     _row.path_data = JSON.stringify(path_data);
   }
 
@@ -5669,7 +5672,6 @@ class DimensionLineCustom extends DimensionLine {
     this._attr.angle = parseFloat(v).round(1);
     this.project.register_change(true);
   }
-
 
   get fix_angle() {
     return !!this._attr.fix_angle;
@@ -5918,12 +5920,20 @@ class DimensionRadius extends DimensionLineCustom {
       children.scale.addSegments([b, e]);
     }
 
-    const curv = Math.abs(_attr.elm1.path.getCurvatureAt(_attr.p1));
-    if(curv) {
-      children.text.content = `R${(1 / curv).round(-1)}`;
-      children.text.rotation = e.subtract(b).angle;
-      children.text.justification = 'left';
+    children.text.rotation = e.subtract(b).angle;
+    children.text.justification = 'left';
+    if(_attr.by_curve) {
+      const curv = Math.abs(_attr.elm1.path.getCurvatureAt(_attr.p1));
+      if(curv) {
+        children.text.content = `R${(1 / curv).round(0)}`;
+      }
     }
+    else {
+      const {path, _attr: {_corns}} = _attr.elm1;
+      const sub = _attr.p1 > _attr.elm1.length ? path.get_subpath(_corns[3], _corns[4]) : path.get_subpath(_corns[1], _corns[2])
+      children.text.content = `R${sub.ravg().round(0)}`;
+    }
+
     children.text.position = e.add(path.getTangentAt(0).multiply(consts.font_size * 1.4));
   }
 
@@ -8398,6 +8408,19 @@ Object.defineProperties(paper.Path.prototype, {
     }
   },
 
+  ravg: {
+    value() {
+      if(!this.hasHandles()){
+        return 0;
+      }
+      const b = this.firstSegment.point;
+      const e = this.lastSegment.point;
+      const ph0 = b.add(e).divide(2);
+      const ph1 = this.getPointAt(this.length / 2);
+      return ph0.arc_r(b.x, b.y, e.x, e.y, ph0.getDistance(ph1));
+    }
+  }
+
 });
 
 
@@ -8493,12 +8516,12 @@ Object.defineProperties(paper.Point.prototype, {
 	},
 
   arc_r: {
-	  value(x1,y1,x2,y2,h) {
-      if (!h){
+    value(x1, y1, x2, y2, h) {
+      if(!h) {
         return 0;
       }
-	    const [dx, dy] = [(x1-x2), (y1-y2)];
-      return (h/2 + (dx * dx + dy * dy) / (8 * h)).round(3);
+      const [dx, dy] = [(x1 - x2), (y1 - y2)];
+      return (h / 2 + (dx * dx + dy * dy) / (8 * h)).round(3);
     }
   },
 
@@ -8952,6 +8975,10 @@ class ProfileItem extends GeneratrixElement {
     return this.generatrix.rmax();
   }
 
+  get ravg() {
+    return this.generatrix.ravg();
+  }
+
   get arc_ccw() {
     return this._row.arc_ccw;
   }
@@ -9295,12 +9322,14 @@ class ProfileItem extends GeneratrixElement {
     _row.path_data = generatrix.pathData;
     _row.nom = this.nom;
 
-    const rmin = generatrix.rmin();
-    if(rmin) {
-      _row.r = ((rmin + generatrix.rmax()) / 2).round();
+    if(generatrix.is_linear()) {
+      _row.r = 0;
     }
     else {
-      _row.r = 0;
+      const {path} = this;
+      const r1 = path.get_subpath(_attr._corns[1], _attr._corns[2]).ravg();
+      const r2 = path.get_subpath(_attr._corns[3], _attr._corns[4]).ravg();
+      _row.r = Math.max(r1, r2);
     }
 
     _row.len = this.length.round(1);
@@ -16823,6 +16852,7 @@ class ToolRuler extends ToolElement {
                 elm1: parent,
                 p1: this.hitItem.item.getOffsetOf(this.hitPoint).round(),
                 parent: parent.layer.l_dimensions,
+                by_curve: event.modifiers.control || event.modifiers.shift || window.event.ctrlKey || window.event.shiftKey,
               });
               this.project.register_change(true);
             }

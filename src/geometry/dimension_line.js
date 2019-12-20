@@ -523,6 +523,9 @@ class DimensionLineCustom extends DimensionLine {
     if(_attr.hide_line) {
       path_data.hide_line = true;
     }
+    if(_attr.by_curve) {
+      path_data.by_curve = true;
+    }
     _row.path_data = JSON.stringify(path_data);
   }
 
@@ -571,7 +574,6 @@ class DimensionLineCustom extends DimensionLine {
     this._attr.angle = parseFloat(v).round(1);
     this.project.register_change(true);
   }
-
 
   // использование фикс угла
   get fix_angle() {

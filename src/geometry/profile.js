@@ -576,6 +576,14 @@ class ProfileItem extends GeneratrixElement {
   }
 
   /**
+   * ### Средний радиус, высисляемый по трём точкам
+   * для прямых = 0
+   */
+  get ravg() {
+    return this.generatrix.ravg();
+  }
+
+  /**
    * ### Направление дуги сегмента профиля против часовой стрелки
    *
    * @property arc_ccw
@@ -998,15 +1006,15 @@ class ProfileItem extends GeneratrixElement {
     _row.path_data = generatrix.pathData;
     _row.nom = this.nom;
 
-    // радиус, как дань традиции
-    const rmin = generatrix.rmin();
-    if(rmin) {
-      // записываем среднее значение, дельту не анализируем
-      // если овал или несколько перегибов, мы это увидим в path_data
-      _row.r = ((rmin + generatrix.rmax()) / 2).round();
+    // радиус, как дань традиции - вычисляем для внешнего ребра профиля
+    if(generatrix.is_linear()) {
+      _row.r = 0;
     }
     else {
-      _row.r = 0;
+      const {path} = this;
+      const r1 = path.get_subpath(_attr._corns[1], _attr._corns[2]).ravg();
+      const r2 = path.get_subpath(_attr._corns[3], _attr._corns[4]).ravg();
+      _row.r = Math.max(r1, r2);
     }
 
     // добавляем припуски соединений

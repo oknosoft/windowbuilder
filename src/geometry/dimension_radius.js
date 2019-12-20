@@ -78,12 +78,20 @@ class DimensionRadius extends DimensionLineCustom {
       children.scale.addSegments([b, e]);
     }
 
-    const curv = Math.abs(_attr.elm1.path.getCurvatureAt(_attr.p1));
-    if(curv) {
-      children.text.content = `R${(1 / curv).round(-1)}`;
-      children.text.rotation = e.subtract(b).angle;
-      children.text.justification = 'left';
+    children.text.rotation = e.subtract(b).angle;
+    children.text.justification = 'left';
+    if(_attr.by_curve) {
+      const curv = Math.abs(_attr.elm1.path.getCurvatureAt(_attr.p1));
+      if(curv) {
+        children.text.content = `R${(1 / curv).round(0)}`;
+      }
     }
+    else {
+      const {path, _attr: {_corns}} = _attr.elm1;
+      const sub = _attr.p1 > _attr.elm1.length ? path.get_subpath(_corns[3], _corns[4]) : path.get_subpath(_corns[1], _corns[2])
+      children.text.content = `R${sub.ravg().round(0)}`;
+    }
+
     children.text.position = e.add(path.getTangentAt(0).multiply(consts.font_size * 1.4));
   }
 

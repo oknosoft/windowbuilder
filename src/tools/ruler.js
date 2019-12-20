@@ -459,6 +459,7 @@ class ToolRuler extends ToolElement {
                 elm1: parent,
                 p1: this.hitItem.item.getOffsetOf(this.hitPoint).round(),
                 parent: parent.layer.l_dimensions,
+                by_curve: event.modifiers.control || event.modifiers.shift || window.event.ctrlKey || window.event.shiftKey,
               });
               this.project.register_change(true);
             }

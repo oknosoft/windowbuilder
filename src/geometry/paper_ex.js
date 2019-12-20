@@ -421,6 +421,22 @@ Object.defineProperties(paper.Path.prototype, {
     }
   },
 
+  /**
+   * ### Cредний радиус пути по трём точкам
+   */
+  ravg: {
+    value() {
+      if(!this.hasHandles()){
+        return 0;
+      }
+      const b = this.firstSegment.point;
+      const e = this.lastSegment.point;
+      const ph0 = b.add(e).divide(2);
+      const ph1 = this.getPointAt(this.length / 2);
+      return ph0.arc_r(b.x, b.y, e.x, e.y, ph0.getDistance(ph1));
+    }
+  }
+
 });
 
 
@@ -558,12 +574,12 @@ Object.defineProperties(paper.Point.prototype, {
    * Рассчитывает радиус окружности по двум точкам и высоте
    */
   arc_r: {
-	  value(x1,y1,x2,y2,h) {
-      if (!h){
+    value(x1, y1, x2, y2, h) {
+      if(!h) {
         return 0;
       }
-	    const [dx, dy] = [(x1-x2), (y1-y2)];
-      return (h/2 + (dx * dx + dy * dy) / (8 * h)).round(3);
+      const [dx, dy] = [(x1 - x2), (y1 - y2)];
+      return (h / 2 + (dx * dx + dy * dy) / (8 * h)).round(3);
     }
   },
 
