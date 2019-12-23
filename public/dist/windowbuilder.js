@@ -4835,34 +4835,7 @@ class DimensionDrawer extends paper.Group {
         const eb = our ? (elm instanceof GlassSegment ? elm._sub.b : elm.b) : elm.rays.b.npoint;
         const ee = our ? (elm instanceof GlassSegment ? elm._sub.e : elm.e) : elm.rays.e.npoint;
 
-        if(ihor.every((v) => v.point != eb.y.round())) {
-          ihor.push({
-            point: eb.y.round(),
-            elm: elm,
-            p: 'b'
-          });
-        }
-        if(ihor.every((v) => v.point != ee.y.round())) {
-          ihor.push({
-            point: ee.y.round(),
-            elm: elm,
-            p: 'e'
-          });
-        }
-        if(ivert.every((v) => v.point != eb.x.round())) {
-          ivert.push({
-            point: eb.x.round(),
-            elm: elm,
-            p: 'b'
-          });
-        }
-        if(ivert.every((v) => v.point != ee.x.round())) {
-          ivert.push({
-            point: ee.x.round(),
-            elm: elm,
-            p: 'e'
-          });
-        }
+        this.push_by_point({ihor, ivert, eb, ee, elm});
       }
 
       if(ihor.length > 2) {
@@ -4901,10 +4874,39 @@ class DimensionDrawer extends paper.Group {
 
   }
 
+  push_by_point({ihor, ivert, eb, ee, elm}) {
+    if(eb && ihor.every((v) => v.point != eb.y.round())) {
+      ihor.push({
+        point: eb.y.round(),
+        elm: elm,
+        p: 'b'
+      });
+    }
+    if(ee && ihor.every((v) => v.point != ee.y.round())) {
+      ihor.push({
+        point: ee.y.round(),
+        elm: elm,
+        p: 'e'
+      });
+    }
+    if(eb && ivert.every((v) => v.point != eb.x.round())) {
+      ivert.push({
+        point: eb.x.round(),
+        elm: elm,
+        p: 'b'
+      });
+    }
+    if(ee && ivert.every((v) => v.point != ee.x.round())) {
+      ivert.push({
+        point: ee.x.round(),
+        elm: elm,
+        p: 'e'
+      });
+    }
+  }
+
   draw_by_imposts() {
-
-    const {parent, project: {builder_props}} = this;
-
+    const {parent} = this;
     this.clear();
 
     let index = 0;
@@ -4960,6 +4962,55 @@ class DimensionDrawer extends paper.Group {
 
   }
 
+  draw_by_falsebinding() {
+    const {parent} = this;
+    this.clear();
+
+    const {ihor, ivert, by_side} = this.imposts();
+
+    for(const filling of parent.fillings) {
+      if(!filling.visible) {
+        continue;
+      }
+      const {path} = filling;
+      for(const elm of filling.imposts) {
+        let {b: eb, e: ee} = elm;
+        if(path.is_nearest(eb)) {
+          eb = null;
+        }
+        if(path.is_nearest(ee)) {
+          ee = null;
+        }
+        if(eb || ee) {
+          this.push_by_point({ihor, ivert, eb, ee, elm});
+        }
+
+      }
+    }
+
+    this.by_contour([], [], true, by_side);
+
+    if(ihor.length > 2) {
+      ihor.sort((a, b) => b.point - a.point);
+      this.by_base(ihor, this.ihor, 'left');
+    }
+    else {
+      ihor.length = 0;
+    }
+
+    if(ivert.length > 2) {
+      ivert.sort((a, b) => a.point - b.point);
+      this.by_base(ivert, this.ivert, 'top');
+    }
+    else {
+      ivert.length = 0;
+    }
+
+    for (let dl of this.children) {
+      dl.redraw && dl.redraw();
+    }
+  }
+
   by_imposts(arr, collection, pos) {
     const offset = (pos == 'right' || pos == 'bottom') ? -130 : 90;
     for (let i = 0; i < arr.length - 1; i++) {
@@ -4978,6 +5029,25 @@ class DimensionDrawer extends paper.Group {
           offset: offset - shift,
           impost: true
         });
+      }
+    }
+  }
+
+  by_base(arr, collection, pos) {
+    let offset = (pos == 'right' || pos == 'bottom') ? -130 : 90;
+    for (let i = 1; i < arr.length - 1; i++) {
+      if(!collection[i - 1]) {
+        collection[i - 1] = new DimensionLine({
+          pos: pos,
+          elm1: arr[0].elm instanceof GlassSegment ? arr[0].elm._sub : arr[0].elm,
+          p1: arr[0].p,
+          elm2: arr[i].elm instanceof GlassSegment ? arr[i].elm._sub : arr[i].elm,
+          p2: arr[i].p,
+          parent: this,
+          offset: offset,
+          impost: true
+        });
+        offset += 90;
       }
     }
   }
@@ -14016,8 +14086,6 @@ class ZoomFit extends paper.Tool {
 }
 
 
-
-
 class ToolLayImpost extends ToolElement {
 
   constructor() {
@@ -14239,359 +14307,360 @@ class ToolLayImpost extends ToolElement {
         tool_wnd();
       },
 
-      deactivate() {
+      deactivate: this.deactivate,
 
-        this._scope.clear_selection_bounds();
+      mouseup: this.mouseup,
 
-        this.paths.forEach(function (p) {
-          p.remove();
+      mousemove: this.mousemove,
+    });
+
+  }
+
+  deactivate() {
+    this._scope.clear_selection_bounds();
+    this.paths.forEach((p) => p.remove());
+    this.paths.length = 0;
+    this.detache_wnd();
+  }
+
+  mouseup(event) {
+
+    this._scope.canvas_cursor('cursor-arrow-lay');
+
+    if(this.profile.elm_type == $p.enm.elm_types.Раскладка && this.hitItem instanceof Filling && this.hitItem.imposts.length) {
+      this.confirmed = false;
+      dhtmlx.confirm({
+        type: 'confirm',
+        text: 'Раскладка уже существует, добавить к имеющейся?',
+        title: $p.msg.glass_spec,
+        callback: result => {
+          result && this.add_profiles();
+          this.confirmed = true;
+        }
+      });
+    }
+    else {
+      this.add_profiles();
+    }
+
+  }
+
+  mousemove(event) {
+
+    if(!this.confirmed) {
+      return;
+    }
+
+    this.hitTest(event);
+
+    this.paths.forEach((p) => p.removeSegments());
+
+    const {profile} = this;
+    if (profile.inset_by_y.empty() && profile.inset_by_x.empty()) {
+      return;
+    }
+
+    var bounds, gen, hit = !!this.hitItem;
+
+    if (hit) {
+      bounds = this.hitItem.bounds;
+      gen = this.hitItem.path;
+    }
+    else if (profile.w && profile.h) {
+      gen = new paper.Path({
+        insert: false,
+        segments: [[0, 0], [0, -profile.h], [profile.w, -profile.h], [profile.w, 0]],
+        closed: true,
+      });
+      bounds = gen.bounds;
+      this.project.zoom_fit(this.project.strokeBounds.unite(bounds));
+
+    }
+    else
+      return;
+
+    var stepy = profile.step_by_y || (profile.elm_by_y && bounds.height / (profile.elm_by_y + ((hit || profile.elm_by_y < 2) ? 1 : -1))),
+      county = profile.elm_by_y > 0 ? profile.elm_by_y.round() : Math.round(bounds.height / stepy) - 1,
+      stepx = profile.step_by_x || (profile.elm_by_x && bounds.width / (profile.elm_by_x + ((hit || profile.elm_by_x < 2) ? 1 : -1))),
+      countx = profile.elm_by_x > 0 ? profile.elm_by_x.round() : Math.round(bounds.width / stepx) - 1,
+      w2x = profile.inset_by_x.nom().width / 2,
+      w2y = profile.inset_by_y.nom().width / 2,
+      clr = BuilderElement.clr_by_clr(profile.clr, false),
+      by_x = [], by_y = [], base, pos, path, i, j, pts;
+
+    const get_path = (segments, b, e) => {
+      base++;
+      if (base < this.paths.length) {
+        path = this.paths[base];
+        path.fillColor = clr;
+        if(!path.isInserted()) {
+          path.parent = this.hitItem ? this.hitItem.layer : this.project.activeLayer;
+        }
+      }
+      else {
+        path = new paper.Path({
+          strokeColor: 'black',
+          fillColor: clr,
+          strokeScaling: false,
+          guide: true,
+          closed: true,
         });
-        this.paths.length = 0;
+        this.paths.push(path);
+      }
+      path.addSegments(segments);
+      path.b = b.clone();
+      path.e = e.clone();
+      return path;
+    }
 
-        this.detache_wnd();
-      },
+    function get_points(p1, p2) {
 
-      mouseup(event) {
+      var res = {
+          p1: new paper.Point(p1),
+          p2: new paper.Point(p2),
+        },
+        c1 = gen.contains(res.p1),
+        c2 = gen.contains(res.p2);
 
-        this._scope.canvas_cursor('cursor-arrow-lay');
+      if (c1 && c2)
+        return res;
 
-        if(this.profile.elm_type == $p.enm.elm_types.Раскладка && this.hitItem instanceof Filling && this.hitItem.imposts.length) {
-          this.confirmed = false;
-          dhtmlx.confirm({
-            type: 'confirm',
-            text: 'Раскладка уже существует, добавить к имеющейся?',
-            title: $p.msg.glass_spec,
-            callback: result => {
-              result && this.add_profiles();
-              this.confirmed = true;
-            }
-          });
+      var intersect = gen.getIntersections(new paper.Path({insert: false, segments: [res.p1, res.p2]}));
+
+      if (c1) {
+        intersect.reduce((sum, curr) => {
+          const dist = sum.point.getDistance(curr.point);
+          if (dist < sum.dist) {
+            res.p2 = curr.point;
+            sum.dist = dist;
+          }
+          return sum;
+        }, {dist: Infinity, point: res.p2});
+      }
+      else if (c2) {
+        intersect.reduce((sum, curr) => {
+          const dist = sum.point.getDistance(curr.point);
+          if (dist < sum.dist) {
+            res.p1 = curr.point;
+            sum.dist = dist;
+          }
+          return sum;
+        }, {dist: Infinity, point: res.p1});
+      }
+      else if (intersect.length > 1) {
+        intersect.reduce((sum, curr) => {
+          const dist = sum.point.getDistance(curr.point);
+          if (dist < sum.dist) {
+            res.p2 = curr.point;
+            sum.dist = dist;
+          }
+          return sum;
+        }, {dist: Infinity, point: res.p2});
+        intersect.reduce((sum, curr) => {
+          const dist = sum.point.getDistance(curr.point);
+          if (dist < sum.dist) {
+            res.p1 = curr.point;
+            sum.dist = dist;
+          }
+          return sum;
+        }, {dist: Infinity, point: res.p1});
+      }
+      else {
+        return null;
+      }
+
+      return res;
+    }
+
+    function do_x() {
+      for (i = 0; i < by_x.length; i++) {
+
+        if (!by_y.length || profile.split.empty() ||
+          profile.split == $p.enm.lay_split_types.ДелениеГоризонтальных ||
+          profile.split == $p.enm.lay_split_types.КрестПересечение) {
+
+          if (pts = get_points([by_x[i], bounds.bottom], [by_x[i], bounds.top]))
+            get_path([[pts.p1.x - w2x, pts.p1.y], [pts.p2.x - w2x, pts.p2.y], [pts.p2.x + w2x, pts.p2.y], [pts.p1.x + w2x, pts.p1.y]], pts.p1, pts.p2);
         }
         else {
-          this.add_profiles();
+          by_y.sort((a, b) => b - a);
+          for (j = 0; j < by_y.length; j++) {
+            if (j === 0) {
+              if (hit && (pts = get_points([by_x[i], bounds.bottom], [by_x[i], by_y[j]])))
+                get_path([[pts.p1.x - w2x, pts.p1.y], [pts.p2.x - w2x, pts.p2.y + w2x], [pts.p2.x + w2x, pts.p2.y + w2x], [pts.p1.x + w2x, pts.p1.y]], pts.p1, pts.p2);
+            }
+            else {
+              if (pts = get_points([by_x[i], by_y[j - 1]], [by_x[i], by_y[j]]))
+                get_path([[pts.p1.x - w2x, pts.p1.y - w2x], [pts.p2.x - w2x, pts.p2.y + w2x], [pts.p2.x + w2x, pts.p2.y + w2x], [pts.p1.x + w2x, pts.p1.y - w2x]], pts.p1, pts.p2);
+            }
+            if (j === by_y.length - 1) {
+              if (hit && (pts = get_points([by_x[i], by_y[j]], [by_x[i], bounds.top])))
+                get_path([[pts.p1.x - w2x, pts.p1.y - w2x], [pts.p2.x - w2x, pts.p2.y], [pts.p2.x + w2x, pts.p2.y], [pts.p1.x + w2x, pts.p1.y - w2x]], pts.p1, pts.p2);
+            }
+          }
+        }
+      }
+    }
+
+    function do_y() {
+      for (i = 0; i < by_y.length; i++) {
+
+        if (!by_x.length || profile.split.empty() ||
+          profile.split == $p.enm.lay_split_types.ДелениеВертикальных ||
+          profile.split == $p.enm.lay_split_types.КрестПересечение) {
+
+          if (pts = get_points([bounds.left, by_y[i]], [bounds.right, by_y[i]]))
+            get_path([[pts.p1.x, pts.p1.y - w2y], [pts.p2.x, pts.p2.y - w2y], [pts.p2.x, pts.p2.y + w2y], [pts.p1.x, pts.p1.y + w2y]], pts.p1, pts.p2);
+        }
+        else {
+          by_x.sort((a, b) => a - b);
+          for (j = 0; j < by_x.length; j++) {
+            if (j === 0) {
+              if (hit && (pts = get_points([bounds.left, by_y[i]], [by_x[j], by_y[i]])))
+                get_path([[pts.p1.x, pts.p1.y - w2y], [pts.p2.x - w2y, pts.p2.y - w2y], [pts.p2.x - w2y, pts.p2.y + w2y], [pts.p1.x, pts.p1.y + w2y]], pts.p1, pts.p2);
+            }
+            else {
+              if (pts = get_points([by_x[j - 1], by_y[i]], [by_x[j], by_y[i]]))
+                get_path([[pts.p1.x + w2y, pts.p1.y - w2y], [pts.p2.x - w2y, pts.p2.y - w2y], [pts.p2.x - w2y, pts.p2.y + w2y], [pts.p1.x + w2y, pts.p1.y + w2y]], pts.p1, pts.p2);
+            }
+            if (j === by_x.length - 1) {
+              if (hit && (pts = get_points([by_x[j], by_y[i]], [bounds.right, by_y[i]])))
+                get_path([[pts.p1.x + w2y, pts.p1.y - w2y], [pts.p2.x, pts.p2.y - w2y], [pts.p2.x, pts.p2.y + w2y], [pts.p1.x + w2y, pts.p1.y + w2y]], pts.p1, pts.p2);
+            }
+          }
+        }
+      }
+    }
+
+    if (stepy) {
+      if (profile.align_by_y == $p.enm.positions.Центр) {
+
+        base = bounds.top + bounds.height / 2;
+        if (county % 2) {
+          by_y.push(base);
+        }
+        for (i = 1; i < county; i++) {
+
+          if (county % 2)
+            pos = base + stepy * i;
+          else
+            pos = base + stepy / 2 + (i > 1 ? stepy * (i - 1) : 0);
+
+          if (pos + w2y + consts.sticking_l < bounds.bottom)
+            by_y.push(pos);
+
+          if (county % 2)
+            pos = base - stepy * i;
+          else
+            pos = base - stepy / 2 - (i > 1 ? stepy * (i - 1) : 0);
+
+          if (pos - w2y - consts.sticking_l > bounds.top)
+            by_y.push(pos);
         }
 
-      },
-
-      mousemove(event) {
-
-        if(!this.confirmed) {
-          return;
-        }
-
-        this.hitTest(event);
-
-        this.paths.forEach((p) => p.removeSegments());
-
-        const {profile} = this;
-        if (profile.inset_by_y.empty() && profile.inset_by_x.empty()) {
-          return;
-        }
-
-        var bounds, gen, hit = !!this.hitItem;
+      } else if (profile.align_by_y == $p.enm.positions.Верх) {
 
         if (hit) {
-          bounds = this.hitItem.bounds;
-          gen = this.hitItem.path;
-        }
-        else if (profile.w && profile.h) {
-          gen = new paper.Path({
-            insert: false,
-            segments: [[0, 0], [0, -profile.h], [profile.w, -profile.h], [profile.w, 0]],
-            closed: true,
-          });
-          bounds = gen.bounds;
-          this.project.zoom_fit(this.project.strokeBounds.unite(bounds));
-
-        }
-        else
-          return;
-
-        var stepy = profile.step_by_y || (profile.elm_by_y && bounds.height / (profile.elm_by_y + ((hit || profile.elm_by_y < 2) ? 1 : -1))),
-          county = profile.elm_by_y > 0 ? profile.elm_by_y.round() : Math.round(bounds.height / stepy) - 1,
-          stepx = profile.step_by_x || (profile.elm_by_x && bounds.width / (profile.elm_by_x + ((hit || profile.elm_by_x < 2) ? 1 : -1))),
-          countx = profile.elm_by_x > 0 ? profile.elm_by_x.round() : Math.round(bounds.width / stepx) - 1,
-          w2x = profile.inset_by_x.nom().width / 2,
-          w2y = profile.inset_by_y.nom().width / 2,
-          clr = BuilderElement.clr_by_clr(profile.clr, false),
-          by_x = [], by_y = [], base, pos, path, i, j, pts;
-
-        function get_path(segments, b, e) {
-          base++;
-          if (base < tool.paths.length) {
-            path = tool.paths[base];
-            path.fillColor = clr;
-            if(!path.isInserted()) {
-              path.parent = tool.hitItem ? tool.hitItem.layer : this.project.activeLayer;
-            }
+          for (i = 1; i <= county; i++) {
+            pos = bounds.top + stepy * i;
+            if (pos + w2y + consts.sticking_l < bounds.bottom)
+              by_y.push(pos);
           }
-          else {
-            path = new paper.Path({
-              strokeColor: 'black',
-              fillColor: clr,
-              strokeScaling: false,
-              guide: true,
-              closed: true,
-            });
-            tool.paths.push(path);
-          }
-          path.addSegments(segments);
-          path.b = b.clone();
-          path.e = e.clone();
-          return path;
-        }
-
-        function get_points(p1, p2) {
-
-          var res = {
-              p1: new paper.Point(p1),
-              p2: new paper.Point(p2),
-            },
-            c1 = gen.contains(res.p1),
-            c2 = gen.contains(res.p2);
-
-          if (c1 && c2)
-            return res;
-
-          var intersect = gen.getIntersections(new paper.Path({insert: false, segments: [res.p1, res.p2]}));
-
-          if (c1) {
-            intersect.reduce((sum, curr) => {
-              const dist = sum.point.getDistance(curr.point);
-              if (dist < sum.dist) {
-                res.p2 = curr.point;
-                sum.dist = dist;
-              }
-              return sum;
-            }, {dist: Infinity, point: res.p2});
-          }
-          else if (c2) {
-            intersect.reduce((sum, curr) => {
-              const dist = sum.point.getDistance(curr.point);
-              if (dist < sum.dist) {
-                res.p1 = curr.point;
-                sum.dist = dist;
-              }
-              return sum;
-            }, {dist: Infinity, point: res.p1});
-          }
-          else if (intersect.length > 1) {
-            intersect.reduce((sum, curr) => {
-              const dist = sum.point.getDistance(curr.point);
-              if (dist < sum.dist) {
-                res.p2 = curr.point;
-                sum.dist = dist;
-              }
-              return sum;
-            }, {dist: Infinity, point: res.p2});
-            intersect.reduce((sum, curr) => {
-              const dist = sum.point.getDistance(curr.point);
-              if (dist < sum.dist) {
-                res.p1 = curr.point;
-                sum.dist = dist;
-              }
-              return sum;
-            }, {dist: Infinity, point: res.p1});
-          }
-          else {
-            return null;
-          }
-
-          return res;
-        }
-
-        function do_x() {
-          for (i = 0; i < by_x.length; i++) {
-
-            if (!by_y.length || profile.split.empty() ||
-              profile.split == $p.enm.lay_split_types.ДелениеГоризонтальных ||
-              profile.split == $p.enm.lay_split_types.КрестПересечение) {
-
-              if (pts = get_points([by_x[i], bounds.bottom], [by_x[i], bounds.top]))
-                get_path([[pts.p1.x - w2x, pts.p1.y], [pts.p2.x - w2x, pts.p2.y], [pts.p2.x + w2x, pts.p2.y], [pts.p1.x + w2x, pts.p1.y]], pts.p1, pts.p2);
-            }
-            else {
-              by_y.sort((a, b) => b - a);
-              for (j = 0; j < by_y.length; j++) {
-                if (j === 0) {
-                  if (hit && (pts = get_points([by_x[i], bounds.bottom], [by_x[i], by_y[j]])))
-                    get_path([[pts.p1.x - w2x, pts.p1.y], [pts.p2.x - w2x, pts.p2.y + w2x], [pts.p2.x + w2x, pts.p2.y + w2x], [pts.p1.x + w2x, pts.p1.y]], pts.p1, pts.p2);
-                }
-                else {
-                  if (pts = get_points([by_x[i], by_y[j - 1]], [by_x[i], by_y[j]]))
-                    get_path([[pts.p1.x - w2x, pts.p1.y - w2x], [pts.p2.x - w2x, pts.p2.y + w2x], [pts.p2.x + w2x, pts.p2.y + w2x], [pts.p1.x + w2x, pts.p1.y - w2x]], pts.p1, pts.p2);
-                }
-                if (j === by_y.length - 1) {
-                  if (hit && (pts = get_points([by_x[i], by_y[j]], [by_x[i], bounds.top])))
-                    get_path([[pts.p1.x - w2x, pts.p1.y - w2x], [pts.p2.x - w2x, pts.p2.y], [pts.p2.x + w2x, pts.p2.y], [pts.p1.x + w2x, pts.p1.y - w2x]], pts.p1, pts.p2);
-                }
-              }
-            }
-          }
-        }
-
-        function do_y() {
-          for (i = 0; i < by_y.length; i++) {
-
-            if (!by_x.length || profile.split.empty() ||
-              profile.split == $p.enm.lay_split_types.ДелениеВертикальных ||
-              profile.split == $p.enm.lay_split_types.КрестПересечение) {
-
-              if (pts = get_points([bounds.left, by_y[i]], [bounds.right, by_y[i]]))
-                get_path([[pts.p1.x, pts.p1.y - w2y], [pts.p2.x, pts.p2.y - w2y], [pts.p2.x, pts.p2.y + w2y], [pts.p1.x, pts.p1.y + w2y]], pts.p1, pts.p2);
-            }
-            else {
-              by_x.sort((a, b) => a - b);
-              for (j = 0; j < by_x.length; j++) {
-                if (j === 0) {
-                  if (hit && (pts = get_points([bounds.left, by_y[i]], [by_x[j], by_y[i]])))
-                    get_path([[pts.p1.x, pts.p1.y - w2y], [pts.p2.x - w2y, pts.p2.y - w2y], [pts.p2.x - w2y, pts.p2.y + w2y], [pts.p1.x, pts.p1.y + w2y]], pts.p1, pts.p2);
-                }
-                else {
-                  if (pts = get_points([by_x[j - 1], by_y[i]], [by_x[j], by_y[i]]))
-                    get_path([[pts.p1.x + w2y, pts.p1.y - w2y], [pts.p2.x - w2y, pts.p2.y - w2y], [pts.p2.x - w2y, pts.p2.y + w2y], [pts.p1.x + w2y, pts.p1.y + w2y]], pts.p1, pts.p2);
-                }
-                if (j === by_x.length - 1) {
-                  if (hit && (pts = get_points([by_x[j], by_y[i]], [bounds.right, by_y[i]])))
-                    get_path([[pts.p1.x + w2y, pts.p1.y - w2y], [pts.p2.x, pts.p2.y - w2y], [pts.p2.x, pts.p2.y + w2y], [pts.p1.x + w2y, pts.p1.y + w2y]], pts.p1, pts.p2);
-                }
-              }
-            }
-          }
-        }
-
-        if (stepy) {
-          if (profile.align_by_y == $p.enm.positions.Центр) {
-
-            base = bounds.top + bounds.height / 2;
-            if (county % 2) {
-              by_y.push(base);
-            }
-            for (i = 1; i < county; i++) {
-
-              if (county % 2)
-                pos = base + stepy * i;
-              else
-                pos = base + stepy / 2 + (i > 1 ? stepy * (i - 1) : 0);
-
-              if (pos + w2y + consts.sticking_l < bounds.bottom)
-                by_y.push(pos);
-
-              if (county % 2)
-                pos = base - stepy * i;
-              else
-                pos = base - stepy / 2 - (i > 1 ? stepy * (i - 1) : 0);
-
-              if (pos - w2y - consts.sticking_l > bounds.top)
-                by_y.push(pos);
-            }
-
-          } else if (profile.align_by_y == $p.enm.positions.Верх) {
-
-            if (hit) {
-              for (i = 1; i <= county; i++) {
-                pos = bounds.top + stepy * i;
-                if (pos + w2y + consts.sticking_l < bounds.bottom)
-                  by_y.push(pos);
-              }
-            } else {
-              for (i = 0; i < county; i++) {
-                pos = bounds.top + stepy * i;
-                if (pos - w2y - consts.sticking_l < bounds.bottom)
-                  by_y.push(pos);
-              }
-            }
-
-          } else if (profile.align_by_y == $p.enm.positions.Низ) {
-
-            if (hit) {
-              for (i = 1; i <= county; i++) {
-                pos = bounds.bottom - stepy * i;
-                if (pos - w2y - consts.sticking_l > bounds.top)
-                  by_y.push(bounds.bottom - stepy * i);
-              }
-            } else {
-              for (i = 0; i < county; i++) {
-                pos = bounds.bottom - stepy * i;
-                if (pos + w2y + consts.sticking_l > bounds.top)
-                  by_y.push(bounds.bottom - stepy * i);
-              }
-            }
-          }
-        }
-
-        if (stepx) {
-          if (profile.align_by_x == $p.enm.positions.Центр) {
-
-            base = bounds.left + bounds.width / 2;
-            if (countx % 2) {
-              by_x.push(base);
-            }
-            for (i = 1; i < countx; i++) {
-
-              if (countx % 2)
-                pos = base + stepx * i;
-              else
-                pos = base + stepx / 2 + (i > 1 ? stepx * (i - 1) : 0);
-
-              if (pos + w2x + consts.sticking_l < bounds.right)
-                by_x.push(pos);
-
-              if (countx % 2)
-                pos = base - stepx * i;
-              else
-                pos = base - stepx / 2 - (i > 1 ? stepx * (i - 1) : 0);
-
-              if (pos - w2x - consts.sticking_l > bounds.left)
-                by_x.push(pos);
-            }
-
-          } else if (profile.align_by_x == $p.enm.positions.Лев) {
-
-            if (hit) {
-              for (i = 1; i <= countx; i++) {
-                pos = bounds.left + stepx * i;
-                if (pos + w2x + consts.sticking_l < bounds.right)
-                  by_x.push(pos);
-              }
-            } else {
-              for (i = 0; i < countx; i++) {
-                pos = bounds.left + stepx * i;
-                if (pos - w2x - consts.sticking_l < bounds.right)
-                  by_x.push(pos);
-              }
-            }
-
-
-          } else if (profile.align_by_x == $p.enm.positions.Прав) {
-
-            if (hit) {
-              for (i = 1; i <= countx; i++) {
-                pos = bounds.right - stepx * i;
-                if (pos - w2x - consts.sticking_l > bounds.left)
-                  by_x.push(pos);
-              }
-            } else {
-              for (i = 0; i < countx; i++) {
-                pos = bounds.right - stepx * i;
-                if (pos + w2x + consts.sticking_l > bounds.left)
-                  by_x.push(pos);
-              }
-            }
-          }
-        }
-
-        base = 0;
-        if (profile.split == $p.enm.lay_split_types.ДелениеВертикальных) {
-          do_y();
-          do_x();
         } else {
-          do_x();
-          do_y();
+          for (i = 0; i < county; i++) {
+            pos = bounds.top + stepy * i;
+            if (pos - w2y - consts.sticking_l < bounds.bottom)
+              by_y.push(pos);
+          }
         }
 
-      },
-    });
+      } else if (profile.align_by_y == $p.enm.positions.Низ) {
+
+        if (hit) {
+          for (i = 1; i <= county; i++) {
+            pos = bounds.bottom - stepy * i;
+            if (pos - w2y - consts.sticking_l > bounds.top)
+              by_y.push(bounds.bottom - stepy * i);
+          }
+        } else {
+          for (i = 0; i < county; i++) {
+            pos = bounds.bottom - stepy * i;
+            if (pos + w2y + consts.sticking_l > bounds.top)
+              by_y.push(bounds.bottom - stepy * i);
+          }
+        }
+      }
+    }
+
+    if (stepx) {
+      if (profile.align_by_x == $p.enm.positions.Центр) {
+
+        base = bounds.left + bounds.width / 2;
+        if (countx % 2) {
+          by_x.push(base);
+        }
+        for (i = 1; i < countx; i++) {
+
+          if (countx % 2)
+            pos = base + stepx * i;
+          else
+            pos = base + stepx / 2 + (i > 1 ? stepx * (i - 1) : 0);
+
+          if (pos + w2x + consts.sticking_l < bounds.right)
+            by_x.push(pos);
+
+          if (countx % 2)
+            pos = base - stepx * i;
+          else
+            pos = base - stepx / 2 - (i > 1 ? stepx * (i - 1) : 0);
+
+          if (pos - w2x - consts.sticking_l > bounds.left)
+            by_x.push(pos);
+        }
+
+      } else if (profile.align_by_x == $p.enm.positions.Лев) {
+
+        if (hit) {
+          for (i = 1; i <= countx; i++) {
+            pos = bounds.left + stepx * i;
+            if (pos + w2x + consts.sticking_l < bounds.right)
+              by_x.push(pos);
+          }
+        } else {
+          for (i = 0; i < countx; i++) {
+            pos = bounds.left + stepx * i;
+            if (pos - w2x - consts.sticking_l < bounds.right)
+              by_x.push(pos);
+          }
+        }
+
+
+      } else if (profile.align_by_x == $p.enm.positions.Прав) {
+
+        if (hit) {
+          for (i = 1; i <= countx; i++) {
+            pos = bounds.right - stepx * i;
+            if (pos - w2x - consts.sticking_l > bounds.left)
+              by_x.push(pos);
+          }
+        } else {
+          for (i = 0; i < countx; i++) {
+            pos = bounds.right - stepx * i;
+            if (pos + w2x + consts.sticking_l > bounds.left)
+              by_x.push(pos);
+          }
+        }
+      }
+    }
+
+    base = 0;
+    if (profile.split == $p.enm.lay_split_types.ДелениеВертикальных) {
+      do_y();
+      do_x();
+    } else {
+      do_x();
+      do_y();
+    }
 
   }
 

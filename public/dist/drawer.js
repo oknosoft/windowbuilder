@@ -2355,34 +2355,7 @@ class DimensionDrawer extends paper.Group {
         const eb = our ? (elm instanceof GlassSegment ? elm._sub.b : elm.b) : elm.rays.b.npoint;
         const ee = our ? (elm instanceof GlassSegment ? elm._sub.e : elm.e) : elm.rays.e.npoint;
 
-        if(ihor.every((v) => v.point != eb.y.round())) {
-          ihor.push({
-            point: eb.y.round(),
-            elm: elm,
-            p: 'b'
-          });
-        }
-        if(ihor.every((v) => v.point != ee.y.round())) {
-          ihor.push({
-            point: ee.y.round(),
-            elm: elm,
-            p: 'e'
-          });
-        }
-        if(ivert.every((v) => v.point != eb.x.round())) {
-          ivert.push({
-            point: eb.x.round(),
-            elm: elm,
-            p: 'b'
-          });
-        }
-        if(ivert.every((v) => v.point != ee.x.round())) {
-          ivert.push({
-            point: ee.x.round(),
-            elm: elm,
-            p: 'e'
-          });
-        }
+        this.push_by_point({ihor, ivert, eb, ee, elm});
       }
 
       if(ihor.length > 2) {
@@ -2421,10 +2394,39 @@ class DimensionDrawer extends paper.Group {
 
   }
 
+  push_by_point({ihor, ivert, eb, ee, elm}) {
+    if(eb && ihor.every((v) => v.point != eb.y.round())) {
+      ihor.push({
+        point: eb.y.round(),
+        elm: elm,
+        p: 'b'
+      });
+    }
+    if(ee && ihor.every((v) => v.point != ee.y.round())) {
+      ihor.push({
+        point: ee.y.round(),
+        elm: elm,
+        p: 'e'
+      });
+    }
+    if(eb && ivert.every((v) => v.point != eb.x.round())) {
+      ivert.push({
+        point: eb.x.round(),
+        elm: elm,
+        p: 'b'
+      });
+    }
+    if(ee && ivert.every((v) => v.point != ee.x.round())) {
+      ivert.push({
+        point: ee.x.round(),
+        elm: elm,
+        p: 'e'
+      });
+    }
+  }
+
   draw_by_imposts() {
-
-    const {parent, project: {builder_props}} = this;
-
+    const {parent} = this;
     this.clear();
 
     let index = 0;
@@ -2480,6 +2482,55 @@ class DimensionDrawer extends paper.Group {
 
   }
 
+  draw_by_falsebinding() {
+    const {parent} = this;
+    this.clear();
+
+    const {ihor, ivert, by_side} = this.imposts();
+
+    for(const filling of parent.fillings) {
+      if(!filling.visible) {
+        continue;
+      }
+      const {path} = filling;
+      for(const elm of filling.imposts) {
+        let {b: eb, e: ee} = elm;
+        if(path.is_nearest(eb)) {
+          eb = null;
+        }
+        if(path.is_nearest(ee)) {
+          ee = null;
+        }
+        if(eb || ee) {
+          this.push_by_point({ihor, ivert, eb, ee, elm});
+        }
+
+      }
+    }
+
+    this.by_contour([], [], true, by_side);
+
+    if(ihor.length > 2) {
+      ihor.sort((a, b) => b.point - a.point);
+      this.by_base(ihor, this.ihor, 'left');
+    }
+    else {
+      ihor.length = 0;
+    }
+
+    if(ivert.length > 2) {
+      ivert.sort((a, b) => a.point - b.point);
+      this.by_base(ivert, this.ivert, 'top');
+    }
+    else {
+      ivert.length = 0;
+    }
+
+    for (let dl of this.children) {
+      dl.redraw && dl.redraw();
+    }
+  }
+
   by_imposts(arr, collection, pos) {
     const offset = (pos == 'right' || pos == 'bottom') ? -130 : 90;
     for (let i = 0; i < arr.length - 1; i++) {
@@ -2498,6 +2549,25 @@ class DimensionDrawer extends paper.Group {
           offset: offset - shift,
           impost: true
         });
+      }
+    }
+  }
+
+  by_base(arr, collection, pos) {
+    let offset = (pos == 'right' || pos == 'bottom') ? -130 : 90;
+    for (let i = 1; i < arr.length - 1; i++) {
+      if(!collection[i - 1]) {
+        collection[i - 1] = new DimensionLine({
+          pos: pos,
+          elm1: arr[0].elm instanceof GlassSegment ? arr[0].elm._sub : arr[0].elm,
+          p1: arr[0].p,
+          elm2: arr[i].elm instanceof GlassSegment ? arr[i].elm._sub : arr[i].elm,
+          p2: arr[i].p,
+          parent: this,
+          offset: offset,
+          impost: true
+        });
+        offset += 90;
       }
     }
   }
