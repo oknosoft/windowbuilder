@@ -7873,7 +7873,7 @@ class ProfileItem extends GeneratrixElement {
         fontSize: consts.font_size * 1.1,
         fontWeight: 'bold',
         content: this.elm,
-        position: this.interiorPoint(),
+        position: this.interiorPoint().add(this.generatrix.getTangentAt(this.generatrix.length / 1).multiply(consts.font_size * 2)),
       });
     }
 
