@@ -96,3 +96,5 @@ class DimensionRadius extends DimensionLineCustom {
   }
 
 }
+
+EditorInvisible.DimensionRadius = DimensionRadius;
