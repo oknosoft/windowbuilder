@@ -328,3 +328,5 @@ class GeneratrixElement extends BuilderElement {
   }
 
 }
+
+EditorInvisible.GeneratrixElement = GeneratrixElement;
