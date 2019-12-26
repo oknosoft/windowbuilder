@@ -5067,7 +5067,7 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
   get rounding() {
     const {pricing} = $p.job_prm;
     if(!pricing.hasOwnProperty('rounding')) {
-      const parts = this.doc_currency.parameters_russian_recipe.split(',');
+      const parts = this.doc_currency ? this.doc_currency.parameters_russian_recipe.split(',') : [2];
       pricing.rounding = parseInt(parts[parts.length - 1]);
       if(isNaN(pricing.rounding)) {
         pricing.rounding = 2;
