@@ -215,7 +215,7 @@ class Filling extends AbstractFilling(BuilderElement) {
   /**
    * Создаёт створку в текущем заполнении
    */
-  create_leaf() {
+  create_leaf(furn, direction) {
 
     const {project} = this;
 
@@ -233,13 +233,17 @@ class Filling extends AbstractFilling(BuilderElement) {
     this._row.cnstr = contour.cnstr;
 
     // фурнитура и параметры по умолчанию
-    contour.furn = project.default_furn;
+    if(direction) {
+      contour.direction = direction;
+    }
+    contour.furn = furn || project.default_furn;
 
     // оповещаем мир о новых слоях
     project.notify(contour, 'rows', {constructions: true});
 
     // делаем створку текущей
     contour.activate();
+    return contour;
   }
 
   /**

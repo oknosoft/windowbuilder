@@ -6755,7 +6755,7 @@ class Filling extends AbstractFilling(BuilderElement) {
     imposts.forEach((curr) => curr.save_coordinates());
   }
 
-  create_leaf() {
+  create_leaf(furn, direction) {
 
     const {project} = this;
 
@@ -6768,11 +6768,15 @@ class Filling extends AbstractFilling(BuilderElement) {
     this.parent = contour;
     this._row.cnstr = contour.cnstr;
 
-    contour.furn = project.default_furn;
+    if(direction) {
+      contour.direction = direction;
+    }
+    contour.furn = furn || project.default_furn;
 
     project.notify(contour, 'rows', {constructions: true});
 
     contour.activate();
+    return contour;
   }
 
   cnn_side() {
@@ -7744,6 +7748,8 @@ class GeneratrixElement extends BuilderElement {
   }
 
 }
+
+EditorInvisible.GeneratrixElement = GeneratrixElement;
 
 
 class GridCoordinates extends paper.Group {
@@ -13107,6 +13113,7 @@ class Sectional extends GeneratrixElement {
 }
 
 EditorInvisible.Sectional = Sectional;
+EditorInvisible.EditableText = EditableText;
 
 
 class ToolElement extends paper.Tool {

@@ -344,6 +344,24 @@ $p.CatFurns = class CatFurns extends $p.CatFurns {
     return res;
   }
 
+  /**
+   * Вычисляет штульповость фурнитуры
+   * 0 - не штульповая, 1 - активная, 2 - пассивная
+   * @return {number}
+   */
+  shtulp_kind() {
+    let res = 0;
+    this.open_tunes.forEach(({shtulp_available, shtulp_fix_here}) => {
+      if(shtulp_available && !res) {
+        res = 1;
+      }
+      if(shtulp_fix_here) {
+        res = 2;
+      }
+    });
+    return res;
+  }
+
 };
 
 /**
