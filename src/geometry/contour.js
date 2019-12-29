@@ -316,24 +316,25 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   set furn(v) {
-    if (this._row.furn == v) {
+    const {_row} = this;
+    if (_row.furn == v) {
       return;
     }
 
-    this._row.furn = v;
+    _row.furn = v;
 
     // при необходимости устанавливаем направление открывания
     if (this.direction.empty()) {
       this.project._dp.sys.furn_params.find_rows({
         param: $p.job_prm.properties.direction,
-      }, function (row) {
-        this.direction = row.value;
+      }, ({value}) => {
+        _row.direction = value;
         return false;
-      }.bind(this._row));
+      });
     }
 
     // перезаполняем параметры фурнитуры
-    this._row.furn.refill_prm(this);
+    _row.furn.refill_prm(this);
 
     this.project.register_change(true);
 

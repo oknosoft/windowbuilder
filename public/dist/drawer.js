@@ -544,22 +544,23 @@ class Contour extends AbstractFilling(paper.Layer) {
   }
 
   set furn(v) {
-    if (this._row.furn == v) {
+    const {_row} = this;
+    if (_row.furn == v) {
       return;
     }
 
-    this._row.furn = v;
+    _row.furn = v;
 
     if (this.direction.empty()) {
       this.project._dp.sys.furn_params.find_rows({
         param: $p.job_prm.properties.direction,
-      }, function (row) {
-        this.direction = row.value;
+      }, ({value}) => {
+        _row.direction = value;
         return false;
-      }.bind(this._row));
+      });
     }
 
-    this._row.furn.refill_prm(this);
+    _row.furn.refill_prm(this);
 
     this.project.register_change(true);
 
@@ -15601,8 +15602,8 @@ $p.DocCalc_order = class DocCalc_order extends $p.DocCalc_order {
       const {production, presentation, _data} = this;
 
       const {msg} = $p;
-      const {leading_elm, leading_product} = characteristic;
-      if(leading_elm !== 0 && !leading_product.empty() && leading_product.calc_order_row && leading_product.inserts.find({cnstr: -leading_elm, inset: origin})) {
+      const {leading_elm, leading_product, origin} = characteristic;
+      if(!leading_product.empty() && leading_product.calc_order_row && leading_product.inserts.find({cnstr: -leading_elm, inset: origin})) {
         msg.show_msg && msg.show_msg({
           type: 'alert-warning',
           text: `Изделие <i>${characteristic.prod_name(true)}</i> не может быть удалено<br/><br/>Для удаления, пройдите в <i>${
