@@ -14,6 +14,14 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
     // после загрузки данных, надо настроить отборы в метаданных полей рисовалки
     pouch.once('pouch_complete_loaded', () => {
       const {current_user} = $p;
+
+      // если отделы не загружены и полноправный пользователь...
+      let next = Promise.resolve();
+      if(current_user.branch.empty() && !/ram$/.test(this.cachable)) {
+        next = this.find_rows_remote({_top: 10000})
+          .then(() => this.metadata().cachable = 'ram');
+      }
+
       if(job_prm.properties && current_user && !current_user.branch.empty() && job_prm.builder) {
 
         const {ПараметрВыбора} = enm.parameters_keys_applying;
@@ -21,7 +29,7 @@ exports.CatBranchesManager = class CatBranchesManager extends Object {
 
         // накапливаем
         const branch_filter = job_prm.builder.branch_filter = {furn: [], sys: []};
-        (current_user.branch.is_new() ? current_user.branch.load() : Promise.resolve(current_user.branch))
+        next.then(() => current_user.branch.is_new() ? current_user.branch.load() : current_user.branch)
           .then(({keys, divisions}) => {
             const add = ({acl_obj}) => {
               if(acl_obj.applying == ПараметрВыбора) {
