@@ -38,7 +38,7 @@ class Settings extends Component {
   constructor(props) {
     super(props);
     const {zone, couch_path, enable_save_pwd, couch_direct, ram_indexer} = props;
-    const {wsql, cat, current_user, pricing} = $p;
+    const {wsql, job_prm, cat, current_user, pricing} = $p;
 
     let hide_price;
     if(wsql.get_user_param('hide_price_dealer')) {
@@ -51,8 +51,8 @@ class Settings extends Component {
       hide_price = 'none';
     }
 
-    let surcharge_internal = $p.wsql.get_user_param('surcharge_internal', 'number');
-    let discount_percent_internal = $p.wsql.get_user_param('discount_percent_internal', 'number');
+    let surcharge_internal = wsql.get_user_param('surcharge_internal', 'number');
+    let discount_percent_internal = wsql.get_user_param('discount_percent_internal', 'number');
     let surcharge_disabled = false;
 
     if(current_user && current_user.partners_uids.length) {
@@ -80,7 +80,7 @@ class Settings extends Component {
     }
 
     this.state = {
-      zone, couch_path, enable_save_pwd, couch_direct, ram_indexer, hide_price,
+      zone, couch_path, enable_save_pwd, couch_direct, ram_indexer, use_ram: job_prm.use_ram, hide_price,
       confirm_reset: false, surcharge_internal, discount_percent_internal, surcharge_disabled
     };
   }
@@ -146,7 +146,7 @@ class Settings extends Component {
   render() {
     const {classes} = this.props;
     const {
-      zone, couch_path, enable_save_pwd, couch_direct, ram_indexer, confirm_reset, hide_price,
+      zone, couch_path, enable_save_pwd, couch_direct, ram_indexer, use_ram, confirm_reset, hide_price,
       surcharge_internal, discount_percent_internal, surcharge_disabled
     } = this.state;
 
@@ -202,6 +202,18 @@ class Settings extends Component {
               label="Использовать Indexer Postgres"
             />
             <FormHelperText style={{marginTop: -4}}>Новый источник данных для динсписков</FormHelperText>
+          </FormControl>
+
+          <FormControl>
+            <FormControlLabel
+              control={<Switch
+                onChange={(event, checked) => this.setState({use_ram: checked})}
+                checked={Boolean(use_ram)}/>}
+              label={use_ram ? "Данные ram в IDB браузера" : "Динамический mdm на сервере"}
+            />
+            <FormHelperText style={{marginTop: -4}}>{
+              use_ram ? "Классический режим - справочники в pouchdb" : "Новый режим - mdm auth-proxy"
+            }</FormHelperText>
           </FormControl>
 
         </FormGroup>

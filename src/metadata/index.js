@@ -16,7 +16,7 @@ import {customPouchMiddleware} from '../redux/reducers/pouchdb';
 // читаем скрипт инициализации метаданных, полученный в результате выполнения meta:prebuild
 import meta_init from './init';
 import modifiers from './modifiers';
-import proxy_login from 'metadata-superlogin/proxy';
+import proxy_login, {load_ram, load_common} from 'metadata-superlogin/proxy';
 
 // загружаем metadata.transition и экспортируем $p глобально
 import $p from 'metadata-dhtmlx';
@@ -60,10 +60,20 @@ export function init(store) {
     addMiddleware(customPouchMiddleware($p));
 
     // сообщяем адаптерам пути, суффиксы и префиксы
-    const {wsql, job_prm, classes, adapters: {pouch}} = $p;
+    const {wsql, job_prm, classes, adapters: {pouch}, md} = $p;
     classes.PouchDB.plugin(proxy_login());
     pouch.init(wsql, job_prm);
     reset_cache(pouch);
+
+    if(job_prm.use_ram === false) {
+      pouch.remote.ram = new classes.PouchDB(pouch.dbpath('ram'), {auto_compaction: true, revs_limit: 3, owner: pouch, fetch: pouch.fetch});
+      pouch.on({
+        on_log_in() {
+          return load_ram($p);
+        },
+      });
+      md.once('predefined_elmnts_inited', () => pouch.emit('pouch_complete_loaded'));
+    }
 
     // читаем paperjs и deep-diff
     $p.load_script('/dist/paperjs-deep-diff.min.js', 'script')
@@ -84,7 +94,7 @@ export function init(store) {
         dispatch(metaActions.META_LOADED($p));
 
         // читаем локальные данные в ОЗУ
-        return pouch.load_data();
+        return job_prm.use_ram === false ? load_common($p) : pouch.load_data();
 
       })
       .catch((err) => {

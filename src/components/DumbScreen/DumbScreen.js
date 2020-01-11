@@ -31,11 +31,12 @@ class DumbScreen extends Component {
     }
 
     let splash;
-    if(global.$p) {
-      splash = $p.job_prm.splash;
+    const job_prm = global.$p && $p.job_prm;
+    if(job_prm) {
+      splash = job_prm.splash;
       if(!splash) {
         import('./splash.css');
-        $p.job_prm.splash = splash = {loaded: true, title: true};
+        job_prm.splash = splash = {loaded: true, title: true};
       }
       else if(!splash.loaded) {
         import('./splash21.css');
@@ -46,7 +47,8 @@ class DumbScreen extends Component {
     const footer = page ? (over ?
       <div>{`Такт №${page.page}, загружено ${page.total_rows} объектов - чтение изменений `} <i className="fa fa-spinner fa-pulse"></i></div>
       :
-      page.text || `Такт №${page.page}, загружено ${Math.min(page.page * page.limit, page.total_rows)} из ${page.total_rows} объектов`)
+      page.text || `Такт №${page.page}, загружено ${
+        job_prm && job_prm.use_ram === false ? page.docs_written : Math.min(page.page * page.limit, page.total_rows)} из ${page.total_rows} объектов`)
       : '';
 
     return <div className='splash' style={{marginTop: top, opacity: splash ? 1 : 0.15}}>

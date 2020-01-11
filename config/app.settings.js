@@ -51,8 +51,10 @@ module.exports = function settings(prm = {}) {
     // объявляем номер демо-зоны
     zone_demo: 1,
 
-    // если use_meta === false, не используем базу meta в рантайме
-    // см.: https://github.com/oknosoft/metadata.js/issues/255
+    // по умолчанию, работаем в старом режиме с couchdb-ram, но можем переключить
+    use_ram: true,
+
+    // если use_meta === false, не используем базу meta в рантайме - см.: https://github.com/oknosoft/metadata.js/issues/255
     use_meta: false,
 
     // размер вложений 2Mb
@@ -69,6 +71,9 @@ module.exports = function settings(prm = {}) {
 
     // используем геокодер
     use_ip_geo: true,
+
+    // здесь можно перечислить имена параметров для включения в корень job_prm c подтягиванием значений из local_storage
+    //additional_params: [],
 
     //
     keys: {
