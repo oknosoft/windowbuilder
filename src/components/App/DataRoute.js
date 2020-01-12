@@ -5,26 +5,10 @@ import {Switch, Route} from 'react-router';
 import WindowSizer from 'metadata-react/WindowSize';
 import {withObj} from 'metadata-redux';
 
-//import DataList from 'metadata-react/DataList';
-import DataList from 'metadata-react/DynList';
-import DataObj from '../DataObjPage';
-import MetaObjPage from '../MetaObjPage';
+import {lazy} from './lazy';                        // конструкторы для контекста
 import NotFoundPage from '../NotFoundPage';
-import FrmReport from 'metadata-react/FrmReport';
 
 class DataRoute extends Component {
-
-  static propTypes = {
-    match: PropTypes.object.isRequired,
-    location: PropTypes.object.isRequired,
-    windowHeight: PropTypes.number.isRequired,
-    windowWidth: PropTypes.number.isRequired,
-    handlers: PropTypes.object.isRequired,
-  };
-
-  static childContextTypes = {
-    components: PropTypes.object,
-  };
 
   render() {
     const {match, handlers, windowHeight, windowWidth} = this.props;
@@ -56,22 +40,26 @@ class DataRoute extends Component {
     };
 
     if(area === 'rep') {
-      const Component = _mgr.FrmObj || FrmReport;
+      const Component = _mgr.FrmObj || lazy.FrmReport;
       return <Component _mgr={_mgr} _acl={_acl} match={match} location={this.props.location} {...sizes} />;
     }
 
     return <Switch>
       <Route path={`${match.url}/:ref([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})`}
-             render={(props) => wraper(DataObj, props, 'obj')}/>
-      <Route path={`${match.url}/list`} render={(props) => wraper(DataList, props, 'list')}/>
-      <Route path={`${match.url}/meta`} render={(props) => wraper(MetaObjPage, props)}/>
+             render={(props) => wraper(lazy.DataObj, props, 'obj')}/>
+      <Route path={`${match.url}/list`} render={(props) => wraper(lazy.DataList, props, 'list')}/>
       <Route component={NotFoundPage}/>
     </Switch>;
   }
 
-  getChildContext() {
-    return {components: {DataObj, DataList}};
-  }
 }
+
+DataRoute.propTypes = {
+  match: PropTypes.object.isRequired,
+  location: PropTypes.object.isRequired,
+  windowHeight: PropTypes.number.isRequired,
+  windowWidth: PropTypes.number.isRequired,
+  handlers: PropTypes.object.isRequired,
+};
 
 export default WindowSizer(withObj(DataRoute));

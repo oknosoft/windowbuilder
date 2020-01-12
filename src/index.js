@@ -30,7 +30,6 @@ class RootProvider extends React.Component {
       .then((module) => module.init(store));
 
     // подгрузим стили асинхронно
-    import('metadata-react/styles/react-data-grid.css');
     import('metadata-dhtmlx/dhx_terrace.css')
       .then(() => import('metadata-dhtmlx/metadata.css'))
       .then(() => import('./styles/windowbuilder.css'));
