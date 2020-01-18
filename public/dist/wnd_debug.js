@@ -4316,7 +4316,7 @@ class ProductsBuilding {
 
 
       scheme.draw_visualization();
-      Promise.resolve().then(() => scheme._scope && scheme._scope.eve.emit('coordinates_calculated', scheme, attr));
+      Promise.resolve().then(() => scheme._scope && !attr.silent && scheme._scope.eve.emit('coordinates_calculated', scheme, attr));
 
 
       if(ox.calc_order_row) {
@@ -4349,7 +4349,7 @@ class ProductsBuilding {
           finish();
 
           ox.calc_order.characteristic_saved(scheme, attr);
-          scheme._scope && scheme._scope.eve.emit('characteristic_saved', scheme, attr);
+          scheme._scope && !attr.silent && scheme._scope.eve.emit('characteristic_saved', scheme, attr);
 
         })
           .then(() => {
@@ -4376,7 +4376,7 @@ class ProductsBuilding {
             let text = err.message || err;
             if(ox._data && ox._data._err) {
               if(typeof ox._data._err === 'object') {
-                $p.md.emit('alert', Object.assign({obj: ox}, ox._data._err));
+                !attr.silent && $p.md.emit('alert', Object.assign({obj: ox}, ox._data._err));
                 delete ox._data._err;
                 return;
               }
@@ -4384,7 +4384,7 @@ class ProductsBuilding {
               delete ox._data._err;
             }
 
-            $p.md.emit('alert', {type: 'alert-error', obj: ox, text});
+            !attr.silent && $p.md.emit('alert', {type: 'alert-error', obj: ox, text});
 
           });
       }
