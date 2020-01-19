@@ -5,7 +5,7 @@ class GlassInserts {
 
     const elm = glasses.length && glasses[0];
 
-    if(!(elm instanceof Filling)){
+    if(!(elm instanceof $p.EditorInvisible.Filling)){
       return $p.msg.show_msg({
         type: "alert-info",
         text: $p.msg.glass_invalid_elm,
@@ -69,8 +69,8 @@ class GlassInserts {
           elm: selm.elm,
           inset: row.inset,
           clr: row.clr
-        })
-      })
+        });
+      });
     }
 
     elm.project.register_change(true);
@@ -88,7 +88,7 @@ class GlassInserts {
             elm: elm,
             inset: row.nom,
             clr: row.clr
-          })
+          });
         }
       });
     }

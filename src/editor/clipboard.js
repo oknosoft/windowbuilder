@@ -40,9 +40,7 @@ function Clipbrd(_editor) {
       try {
         var data = JSON.parse(e.clipboardData.getData('text/plain'));
         e.preventDefault();
-      } catch (e) {
-        return;
-      }
+      } catch (e) {}
 
     }
   }
@@ -59,10 +57,10 @@ function Clipbrd(_editor) {
       // получаем выделенные элементы
       var sitems = [];
       _scheme.selectedItems.forEach(function (el) {
-        if(el.parent instanceof Profile) {
+        if(el.parent instanceof $p.EditorInvisible.Profile) {
           el = el.parent;
         }
-        if(el instanceof BuilderElement && sitems.indexOf(el) == -1) {
+        if(el instanceof $p.EditorInvisible.BuilderElement && sitems.indexOf(el) == -1) {
           sitems.push(el);
         }
       });
@@ -146,5 +144,5 @@ function Clipbrd(_editor) {
   document.addEventListener('copy', oncopy);
 
   document.addEventListener('paste', onpaste);
-};
+}
 

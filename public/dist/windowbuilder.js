@@ -81,7 +81,7 @@ class SchemeLayers {
       const layers = [];
       const {project} = this.editor;
       for(const elm of project.getSelectedItems()) {
-        elm.layer instanceof Contour && layers.indexOf(elm.layer) === -1 && layers.push(elm.layer);
+        elm.layer instanceof $p.EditorInvisible.Contour && layers.indexOf(elm.layer) === -1 && layers.push(elm.layer);
       }
       if(layers.length > 1) {
         const parents = [];
@@ -102,7 +102,7 @@ class SchemeLayers {
         tree.selectItem(contour.cnstr);
         this._set_text(this.layer_text(contour));
       }
-    };
+    }
   }
 
   contour_redrawed(contour, bounds) {
@@ -112,7 +112,7 @@ class SchemeLayers {
       tree.setItemText(contour.cnstr, text);
       if(contour.project.activeLayer == contour){
         this._set_text(text);
-      };
+      }
     }
   }
 
@@ -363,7 +363,7 @@ class SchemeProps {
   }
 
   scheme_snapshot(scheme, attr) {
-    const {_obj, _reflect_id, editor: {project}} = this;
+    const {_obj, editor: {project}} = this;
     const {_calc_order_row} = scheme._attr;
     if(_obj && scheme === project && !attr.clipboard && _calc_order_row){
       ["price_internal","amount_internal","price","amount"].forEach((fld) => {
@@ -531,7 +531,7 @@ class EditorAccordion {
           case 'delete':
             _editor.project.selectedItems.forEach((path) => {
               const {parent} = path;
-              if(parent instanceof ProfileItem){
+              if(parent instanceof $p.EditorInvisible.ProfileItem){
                 parent.removeChildren();
                 parent.remove();
               }
@@ -539,7 +539,7 @@ class EditorAccordion {
             break;
 
           default:
-            _editor.profile_align(name)
+            _editor.profile_align(name);
         }
       }
     });
@@ -567,7 +567,7 @@ class EditorAccordion {
         switch(name) {
 
           case 'new_stv':
-            const fillings = _editor.project.getItems({class: Filling, selected: true});
+            const fillings = _editor.project.getItems({class: $p.EditorInvisible.Filling, selected: true});
             if(fillings.length){
               fillings[0].create_leaf();
             }
@@ -586,7 +586,7 @@ class EditorAccordion {
 
           case 'new_layer':
 
-            new Contour({parent: undefined});
+            new $p.EditorInvisible.Contour({parent: undefined});
 
             _editor.eve.emit_async('rows', _editor.project.ox, {constructions: true});
             break;
@@ -712,7 +712,7 @@ class EditorAccordion {
     }
   }
 
-};
+}
 
 
 
@@ -846,10 +846,10 @@ class AdditionalInserts {
           cnstr,
           inset: row.obj.inset,
           hide: {not: true},
-        }
+        };
       }
     }
-    return {cnstr, inset: $p.utils.generate_guid()}
+    return {cnstr, inset: $p.utils.generate_guid()};
   }
 
   refill_prms(){
@@ -896,9 +896,7 @@ function Clipbrd(_editor) {
       try {
         var data = JSON.parse(e.clipboardData.getData('text/plain'));
         e.preventDefault();
-      } catch (e) {
-        return;
-      }
+      } catch (e) {}
 
     }
   }
@@ -914,10 +912,10 @@ function Clipbrd(_editor) {
 
       var sitems = [];
       _scheme.selectedItems.forEach(function (el) {
-        if(el.parent instanceof Profile) {
+        if(el.parent instanceof $p.EditorInvisible.Profile) {
           el = el.parent;
         }
-        if(el instanceof BuilderElement && sitems.indexOf(el) == -1) {
+        if(el instanceof $p.EditorInvisible.BuilderElement && sitems.indexOf(el) == -1) {
           sitems.push(el);
         }
       });
@@ -998,206 +996,11 @@ function Clipbrd(_editor) {
   document.addEventListener('copy', oncopy);
 
   document.addEventListener('paste', onpaste);
-};
-
-
-
-const consts = {
-
-	tune_paper(settings) {
-
-	  const builder = $p.job_prm.builder || {};
-
-		if(builder.handle_size) {
-      settings.handleSize = builder.handle_size;
-    }
-
-		this.sticking = builder.sticking || 90;
-		this.sticking_l = builder.sticking_l || 9;
-		this.sticking0 = this.sticking / 2;
-		this.sticking2 = this.sticking * this.sticking;
-		this.font_size = builder.font_size || 90;
-    this.font_family = builder.font_family || 'GOST type B';
-    this.elm_font_size = builder.elm_font_size || 60;
-    this.cutoff = builder.cutoff || 1300; 
-
-    if(!builder.font_family) {
-      builder.font_family = this.font_family;
-    }
-    if(!builder.font_size) {
-      builder.font_size = this.font_size;
-    }
-    if(!builder.elm_font_size) {
-      builder.elm_font_size = this.elm_font_size;
-    }
-
-    if($p.wsql.alasql.utils.isNode) {
-      this.font_size *= 1.2;
-      this.elm_font_size *= 1.2;
-    }
-
-		this.orientation_delta = builder.orientation_delta || 30;
-
-
-	},
-
-  epsilon: 0.01,
-	move_points: 'move_points',
-	move_handle: 'move_handle',
-	move_shapes: 'move-shapes',
-
-};
-
-
-class EditorInvisible extends paper.PaperScope {
-
-  constructor() {
-
-    super();
-
-    this._undo = {
-      clear() {},
-      save_snapshot() {},
-    };
-
-    this.eve = new (Object.getPrototypeOf($p.md.constructor))();
-
-    consts.tune_paper(this.settings);
-  }
-
-  get consts() {
-    return consts;
-  }
-
-  elm(num) {
-    return this.project.getItem({class: BuilderElement, elm: num});
-  }
-
-  set_text() {
-  }
-
-  create_scheme() {
-    if(!this._canvas) {
-      this._canvas = document.createElement('CANVAS');
-      this._canvas.height = 480;
-      this._canvas.width = 480;
-      this.setup(this._canvas);
-    }
-    if(this.projects.lengrh && !(this.projects[0] instanceof Scheme)) {
-      this.projects[0].remove();
-    }
-    return new Scheme(this._canvas, this, true);
-  }
-
-  unload() {
-    this.eve.removeAllListeners();
-    const arr = this.projects.concat(this.tools);
-    while (arr.length) {
-      const elm = arr[0];
-      if(elm.unload) {
-        elm.unload();
-      }
-      else if(elm.remove) {
-        elm.remove();
-      }
-      arr.splice(0, 1);
-    }
-    for(let i in EditorInvisible._scopes) {
-      if(EditorInvisible._scopes[i] === this) {
-        delete EditorInvisible._scopes[i];
-      }
-    }
-  }
-
-  paths_intersecting_rect(rect) {
-
-    const paths = [];
-    const boundingRect = new paper.Path.Rectangle(rect);
-
-    this.project.getItems({class: ProfileItem}).forEach((item) => {
-      if (rect.contains(item.generatrix.bounds)) {
-        paths.push(item.generatrix);
-        return;
-      }
-    });
-
-    boundingRect.remove();
-
-    return paths;
-  }
-
-  segments_in_rect(rect) {
-    const segments = [];
-
-    function checkPathItem(item) {
-      if(item._locked || !item._visible || item._guide) {
-        return;
-      }
-      const children = item.children || [];
-      if(!rect.intersects(item.bounds)) {
-        return;
-      }
-      if (item instanceof paper.Path) {
-        if(item.parent instanceof ProfileItem){
-          if(item != item.parent.generatrix) {
-            return;
-          }
-          for (let i = 0; i < item.segments.length; i++) {
-            if(rect.contains(item.segments[i].point)) {
-              segments.push(item.segments[i]);
-            }
-          }
-        }
-      }
-      else {
-        for (let i = children.length - 1; i >= 0; i--)
-          checkPathItem(children[i]);
-      }
-    }
-
-    this.project.getItems({class: Contour}).forEach(checkPathItem);
-
-    return segments;
-  }
-
-  clear_selection_bounds() {
-    if (this._selectionBoundsShape) {
-      this._selectionBoundsShape.remove();
-    }
-    this._selectionBoundsShape = null;
-  }
-
-  hide_selection_bounds() {
-    if(this._drawSelectionBounds > 0) {
-      this._drawSelectionBounds--;
-    }
-    if(this._drawSelectionBounds == 0) {
-      if(this._selectionBoundsShape) {
-        this._selectionBoundsShape.visible = false;
-      }
-    }
-  }
-
-  canvas_cursor(name) {
-    this.projects.forEach((_scheme) => {
-      for(let i=0; i<_scheme.view.element.classList.length; i++){
-        const class_name = _scheme.view.element.classList[i];
-        if(class_name == name) {
-          return;
-        }
-        else if((/\bcursor-\S+/g).test(class_name))
-          _scheme.view.element.classList.remove(class_name);
-      }
-      _scheme.view.element.classList.add(name);
-    });
-  }
-
 }
 
-$p.EditorInvisible = EditorInvisible;
 
 
-class Editor extends EditorInvisible {
+class Editor extends $p.EditorInvisible {
 
   constructor(pwnd, handlers){
 
@@ -1226,7 +1029,7 @@ class Editor extends EditorInvisible {
         width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 440 : 260
       }],
       offsets: {top: 28, right: 0, bottom: 0, left: 0}
-    })
+    });
 
     this._wrapper = document.createElement('div');
 
@@ -1322,7 +1125,7 @@ class Editor extends EditorInvisible {
           break;
 
         case 'new_stv':
-          var fillings = _editor.project.getItems({class: Filling, selected: true});
+          var fillings = _editor.project.getItems({class: $p.EditorInvisible.Filling, selected: true});
           if(fillings.length) {
             fillings[0].create_leaf();
           }
@@ -1362,7 +1165,7 @@ class Editor extends EditorInvisible {
           $p.msg.show_msg(name);
           break;
 
-        case 'triangle3':
+        case 'triangle2':
           $p.msg.show_msg(name);
           break;
 
@@ -1450,14 +1253,14 @@ class Editor extends EditorInvisible {
         value: title,
       });
 
-      if(project.getItems({class: Profile}).some((p) => {
+      if(project.getItems({class: $p.EditorInvisible.Profile}).some((p) => {
         return (p.angle_hor % 90) > 0.02;
       })){
         this._ortpos.style.display = '';
       }
       else {
         this._ortpos.style.display = 'none';
-      };
+      }
 
       const {ОшибкаКритическая, ОшибкаИнфо} = $p.enm.elm_types;
       let has_errors;
@@ -1472,10 +1275,10 @@ class Editor extends EditorInvisible {
   }
 
   show_ortpos(hide) {
-    for (const elm of this.project.getItems({class: Profile})) {
+    for (const elm of this.project.getItems({class: $p.EditorInvisible.Profile})) {
       if((elm.angle_hor % 90) > 0.02) {
         if(hide) {
-          elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+          elm.path.fillColor = $p.EditorInvisible.BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
         }
         else {
           elm.path.fillColor = '#fcc';
@@ -1541,7 +1344,7 @@ class Editor extends EditorInvisible {
     _editor._wrapper.appendChild(_canvas);
     _canvas.style.backgroundColor = "#f9fbfa";
 
-    const _scheme = new Scheme(_canvas, _editor);
+    const _scheme = new $p.EditorInvisible.Scheme(_canvas, _editor);
     const pwnd_resize_finish = () => {
       _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
     };
@@ -1679,7 +1482,7 @@ class Editor extends EditorInvisible {
 
   purge_selection(){
     let selected = this.project.selectedItems;
-    const deselect = selected.filter((path) => path.parent instanceof ProfileItem && path != path.parent.generatrix);
+    const deselect = selected.filter((path) => path.parent instanceof $p.EditorInvisible.ProfileItem && path != path.parent.generatrix);
     while(selected = deselect.pop()){
       selected.selected = false;
     }
@@ -1711,7 +1514,7 @@ class Editor extends EditorInvisible {
         item.importJSON(orig.json);
         item._id = id;
       }
-    })
+    });
   }
 
   drag_rect(p1, p2) {
@@ -1747,14 +1550,14 @@ class Editor extends EditorInvisible {
   }
 
   additional_inserts(cnstr, cell){
-    new AdditionalInserts(cnstr, this.project, cell)
+    new AdditionalInserts(cnstr, this.project, cell);
   }
 
   profile_radius(){
 
     const elm = this.project.selected_elm;
 
-    if(elm instanceof ProfileItem){
+    if(elm instanceof $p.EditorInvisible.ProfileItem){
 
       const options = {
         name: 'profile_radius',
@@ -1808,13 +1611,13 @@ class Editor extends EditorInvisible {
 
         if(bcnn.profile){
           const d = bcnn.profile.e.getDistance(b);
-          if(d && d < consts.sticking_l){
+          if(d && d < this.consts.sticking_l){
             bcnn.profile.e = b;
           }
         }
         if(ecnn.profile){
           const d = ecnn.profile.b.getDistance(e);
-          if(d && d < consts.sticking_l){
+          if(d && d < this.consts.sticking_l){
             ecnn.profile.b = e;
           }
         }
@@ -1945,7 +1748,7 @@ class Editor extends EditorInvisible {
     }
 
     if(!profiles.length){
-      return
+      return;
     }
 
     profiles.forEach(function (p) {
@@ -1994,13 +1797,13 @@ class Editor extends EditorInvisible {
 
   do_glass_align(name = 'auto', glasses) {
 
-    const {project, Point, Key} = this;
+    const {project, Point, Key, consts} = this;
 
     if(!glasses){
       glasses = project.selected_glasses();
     }
     if(glasses.length < 2){
-      return
+      return;
     }
 
     let parent_layer;
@@ -2033,11 +1836,11 @@ class Editor extends EditorInvisible {
     }
 
     if(name == 'auto'){
-      name = 'width'
+      name = 'width';
     }
 
     const orientation = name == 'width' ? $p.enm.orientations.vert : $p.enm.orientations.hor;
-    const shift = parent_layer.getItems({class: Profile}).filter((impost) => {
+    const shift = parent_layer.getItems({class: $p.EditorInvisible.Profile}).filter((impost) => {
       const {b, e} = impost.rays;
       return impost.orientation == orientation && (b.is_tt || e.is_tt || b.is_i || e.is_i);
     });
@@ -2052,7 +1855,8 @@ class Editor extends EditorInvisible {
         glass,
         width: bounds.width,
         height: bounds.height,
-      }
+      };
+
       if(galign){
         const by_side = glass.profiles_by_side(null, profiles);
         res.width = (by_side.right.b.x + by_side.right.e.x - by_side.left.b.x - by_side.left.e.x) / 2;
@@ -2084,19 +1888,19 @@ class Editor extends EditorInvisible {
           if(name == 'width'){
             gl.dx.add(res);
             if(point.x < bounds.center.x){
-              res.left = profile
+              res.left = profile;
             }
             else{
-              res.right = profile
+              res.right = profile;
             }
           }
           else{
             gl.dy.add(res);
             if(point.y < bounds.center.y){
-              res.top = profile
+              res.top = profile;
             }
             else{
-              res.bottom = profile
+              res.bottom = profile;
             }
           }
         }
@@ -2156,7 +1960,7 @@ class Editor extends EditorInvisible {
         impost.move_points(delta, true);
         res.push(delta);
       }
-    })
+    });
 
     return res;
   }
@@ -2165,7 +1969,7 @@ class Editor extends EditorInvisible {
 
     const shift = this.do_glass_align(name, glasses);
     if(!shift){
-      return
+      return;
     }
 
     const {_attr} = this.project;
@@ -2174,7 +1978,7 @@ class Editor extends EditorInvisible {
     }
     if(_attr._align_counter > 24){
       _attr._align_counter = 0;
-      return
+      return;
     }
 
     if(shift.some((delta) => delta.length > 0.3)){
@@ -2200,7 +2004,7 @@ class Editor extends EditorInvisible {
       glass = glasses[0];
     }
 
-    if (!(glass instanceof Filling)
+    if (!(glass instanceof $p.EditorInvisible.Filling)
       || !glass.imposts.length
       || glass.imposts.some(impost => impost.elm_type != $p.enm.elm_types.Раскладка)) {
         return;
@@ -2432,7 +2236,7 @@ class GlassInserts {
 
     const elm = glasses.length && glasses[0];
 
-    if(!(elm instanceof Filling)){
+    if(!(elm instanceof $p.EditorInvisible.Filling)){
       return $p.msg.show_msg({
         type: "alert-info",
         text: $p.msg.glass_invalid_elm,
@@ -2494,8 +2298,8 @@ class GlassInserts {
           elm: selm.elm,
           inset: row.inset,
           clr: row.clr
-        })
-      })
+        });
+      });
     }
 
     elm.project.register_change(true);
@@ -2513,7 +2317,7 @@ class GlassInserts {
             elm: elm,
             inset: row.nom,
             clr: row.clr
-          })
+          });
         }
       });
     }
@@ -2674,10462 +2478,16 @@ class UndoRedo {
 
 
 
-const AbstractFilling = (superclass) => class extends superclass {
-
-  is_pos(pos) {
-    if(this.project.contours.count == 1 || this.parent){
-      return true;
-    }
-
-    let res = Math.abs(this.bounds[pos] - this.project.bounds[pos]) < consts.sticking_l;
-
-    if(!res){
-      let rect;
-      if(pos == "top"){
-        rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.topRight.add([0, -200]));
-      }
-      else if(pos == "left"){
-        rect = new paper.Rectangle(this.bounds.topLeft, this.bounds.bottomLeft.add([-200, 0]));
-      }
-      else if(pos == "right"){
-        rect = new paper.Rectangle(this.bounds.topRight, this.bounds.bottomRight.add([200, 0]));
-      }
-      else if(pos == "bottom"){
-        rect = new paper.Rectangle(this.bounds.bottomLeft, this.bounds.bottomRight.add([0, 200]));
-      }
-
-      res = !this.project.contours.some((l) => {
-        return l != this && rect.intersects(l.bounds);
-      });
-    }
-
-    return res;
-  }
-
-  profiles_by_side(side, profiles) {
-    if(!profiles){
-      profiles = this.profiles;
-    }
-    const bounds = {
-      left: Infinity,
-      top: Infinity,
-      bottom: -Infinity,
-      right: -Infinity
-    };
-    const res = {};
-    const ares = [];
-
-    function by_side(name) {
-      ares.some((elm) => {
-        if(elm[name] == bounds[name]){
-          res[name] = elm.profile;
-          return true;
-        }
-      })
-    };
-
-    if (profiles.length) {
-      profiles.forEach((profile) => {
-        const {b, e} = profile;
-        const x = b.x + e.x;
-        const y = b.y + e.y;
-        if(x < bounds.left){
-          bounds.left = x;
-        }
-        if(x > bounds.right){
-          bounds.right = x;
-        }
-        if(y < bounds.top){
-          bounds.top = y;
-        }
-        if(y > bounds.bottom){
-          bounds.bottom = y;
-        }
-        ares.push({
-          profile: profile,
-          left: x,
-          top: y,
-          bottom: y,
-          right: x
-        });
-      });
-      if (side) {
-        by_side(side);
-        return res[side];
-      }
-
-      Object.keys(bounds).forEach(by_side);
-    }
-
-    return res;
-  }
-
-  get contours() {
-    return this.children.filter((elm) => elm instanceof Contour);
-  }
-
-  get l_dimensions() {
-    const {_attr} = this;
-    return _attr._dimlns || (_attr._dimlns = new DimensionDrawer({parent: this}));
-  }
-
-  get dimension_bounds() {
-    let {bounds} = this;
-    this.getItems({class: DimensionLineCustom}).forEach((dl) => {
-      bounds = bounds.unite(dl.bounds);
-    });
-    return bounds;
-  }
-
-};
-
-
-
-class GlassSegment {
-
-  constructor(profile, b, e, outer) {
-    this.profile = profile;
-    this.b = b.clone();
-    this.e = e.clone();
-    this.outer = outer;
-    this.segment();
-  }
-
-  segment() {
-
-    let gen;
-
-    if (this.profile.children.some((addl) => {
-
-        if (addl instanceof ProfileAddl && this.outer == addl.outer) {
-
-          if (!gen) {
-            gen = this.profile.generatrix;
-          }
-
-          const b = this.profile instanceof ProfileAddl ? this.profile.b : this.b;
-          const e = this.profile instanceof ProfileAddl ? this.profile.e : this.e;
-
-
-          if (b.is_nearest(gen.getNearestPoint(addl.b), true) && e.is_nearest(gen.getNearestPoint(addl.e), true)) {
-            this.profile = addl;
-            this.outer = false;
-            return true;
-          }
-        }
-      })) {
-
-      this.segment();
-    }
-
-  }
-
-  break_by_angle(nodes, segments, point, offset, curr_profile, segm_profile) {
-
-    const node = nodes.byPoint(point);
-    if(!node) {
-      return false;
-    }
-
-    let tangent = curr_profile.generatrix.getTangentAt(offset);
-    if(this.outer) {
-      tangent = tangent.negate();
-    }
-
-    const angles = [];
-    for(const elm of node) {
-      if(elm.profile === curr_profile) {
-        continue;
-      }
-      const {generatrix} = elm.profile;
-      const ppoint = generatrix.getNearestPoint(point);
-      const poffset = generatrix.getOffsetOf(ppoint);
-      const ptangent = generatrix.getTangentAt(poffset);
-      for(const segm of segments) {
-        if(segm.profile === elm.profile && segm.b.is_nearest(ppoint, true)) {
-          angles.push({profile: elm.profile, angle: tangent.getDirectedAngle(segm.outer ? ptangent.negate() : ptangent)});
-        }
-      }
-    }
-    let angle;
-    for(const elm of angles) {
-      if(elm.profile === segm_profile && (!angle || elm.angle > angle)) {
-        angle = elm.angle;
-      }
-    }
-    if(angle < 0) {
-      return true;
-    }
-    for(const elm of angles) {
-      if(elm.profile !== segm_profile && elm.angle > angle) {
-        return true;
-      }
-    }
-  }
-
-  has_cnn(segm, nodes, segments) {
-
-    const point = segm.b;
-    if(!this.e.is_nearest(point)) {
-      return false;
-    }
-
-    let curr_profile = this.profile;
-    let segm_profile = segm.profile;
-    while (curr_profile.parent instanceof ProfileItem) {
-      curr_profile = curr_profile.parent;
-    }
-    while (segm_profile.parent instanceof ProfileItem) {
-      segm_profile = segm_profile.parent;
-    }
-
-    if(curr_profile.b.is_nearest(point, true)) {
-      const by_angle = this.break_by_angle(nodes, segments, point, 0, curr_profile, segm_profile);
-      if(by_angle) {
-        return false;
-      }
-      else if(by_angle === undefined || curr_profile.cnn_point('b').profile === segm_profile) {
-        return true;
-      }
-    }
-
-    if(curr_profile.e.is_nearest(point, true)) {
-      const by_angle = this.break_by_angle(nodes, segments, point, curr_profile.generatrix.length, curr_profile, segm_profile);
-      if(by_angle) {
-        return false;
-      }
-      else if(by_angle === undefined || curr_profile.cnn_point('e').profile === segm_profile) {
-        return true;
-      }
-    }
-
-    if(segm_profile.b.is_nearest(point, true)) {
-      const by_angle = segm.break_by_angle(nodes, segments, point, 0, segm_profile, curr_profile)
-      if(by_angle) {
-        return false;
-      }
-      else if(by_angle === undefined || segm_profile.cnn_point('b').profile == curr_profile) {
-        return true;
-      }
-    }
-
-    if(segm_profile.e.is_nearest(point, true)) {
-      const by_angle = segm.break_by_angle(nodes, segments, point, segm_profile.generatrix.length, segm_profile, curr_profile);
-      if(by_angle) {
-        return false;
-      }
-      else if(by_angle === undefined || segm_profile.cnn_point('e').profile == curr_profile) {
-        return true;
-      }
-    }
-
-    return false;
-
-  }
-
-  get _sub() {
-    const {sub_path} = this;
-    return {
-      get b() {
-        return sub_path ? sub_path.firstSegment.point : new paper.Point();
-      },
-      set b(v) {
-        sub_path && (sub_path.firstSegment.point = v);
-      },
-      get e() {
-        return sub_path ? sub_path.lastSegment.point : new paper.Point();
-      },
-      set e(v) {
-        sub_path && (sub_path.lastSegment.point = v);
-      },
-    };
-  }
-}
-
-class PointMap extends Map {
-
-  byPoint(point) {
-    for(const [key, value] of this) {
-      if(point.is_nearest(key)) {
-        return value.length > 2 && value;
-      }
-    }
-  }
-}
-
-class Contour extends AbstractFilling(paper.Layer) {
-
-  constructor(attr) {
-
-    super({parent: attr.parent});
-
-    this._attr = {};
-
-    const {ox, l_connective} = this.project;
-
-    if (attr.row) {
-      this._row = attr.row;
-    }
-    else {
-      const {constructions} = ox;
-      this._row = constructions.add({parent: attr.parent ? attr.parent.cnstr : 0});
-      this._row.cnstr = constructions.aggregate([], ['cnstr'], 'MAX') + 1;
-    }
-
-    const {cnstr} = this;
-    if (cnstr) {
-
-      const {coordinates} = ox;
-
-      coordinates.find_rows({cnstr, elm_type: {in: $p.enm.elm_types.profiles}}, (row) => new Profile({row, parent: this}));
-
-      coordinates.find_rows({cnstr, elm_type: {in: $p.enm.elm_types.glasses}}, (row) => new Filling({row, parent: this}));
-
-      coordinates.find_rows({cnstr, elm_type: $p.enm.elm_types.Водоотлив}, (row) => new Sectional({row, parent: this}));
-
-      coordinates.find_rows({cnstr, elm_type: $p.enm.elm_types.Текст}, (row) => new FreeText({row, parent: this.l_text}));
-    }
-
-    l_connective.bringToFront();
-
-  }
-
-  activate(custom) {
-    this.project._activeLayer = this;
-    if (this._row) {
-      this.notify(this, 'layer_activated', !custom);
-      this.project.register_update();
-    }
-  }
-
-  get area() {
-    return (this.bounds.area/1e6).round(3);
-  }
-
-  get form_area() {
-    let upath;
-    this.glasses(false, true).concat(this.profiles).forEach(({path}) => {
-      if(upath) {
-        upath = upath.unite(path, {insert: false});
-      }
-      else {
-        upath = path.clone({insert: false});
-      }
-    });
-    return (upath.area/1e6).round(3);
-  }
-
-  get furn() {
-    return this._row.furn;
-  }
-
-  set furn(v) {
-    const {_row} = this;
-    if (_row.furn == v) {
-      return;
-    }
-
-    _row.furn = v;
-
-    if (this.direction.empty()) {
-      this.project._dp.sys.furn_params.find_rows({
-        param: $p.job_prm.properties.direction,
-      }, ({value}) => {
-        _row.direction = value;
-        return false;
-      });
-    }
-
-    _row.furn.refill_prm(this);
-
-    this.project.register_change(true);
-
-    this.notify(this, 'furn_changed');
-  }
-
-  glasses(hide, glass_only) {
-    return this.children.filter((elm) => {
-      if ((!glass_only && elm instanceof Contour) || elm instanceof Filling) {
-        if (hide) {
-          elm.visible = false;
-        }
-        return true;
-      }
-    });
-  }
-
-  get fillings() {
-    const fillings = [];
-    for(const glass of this.glasses()){
-      if(glass instanceof Contour){
-        fillings.push.apply(fillings, glass.fillings);
-      }
-      else{
-        fillings.push(glass);
-      }
-    }
-    return fillings;
-  }
-
-  get glass_contours() {
-    const segments = this.glass_segments;
-    const nodes = this.count_nodes();
-    const res = [];
-    let curr, acurr;
-
-    function find_next(curr) {
-      if (!curr.anext) {
-        curr.anext = [];
-        segments.forEach((segm) => {
-          if (segm == curr || segm.profile == curr.profile){
-            return;
-          }
-          if (curr.has_cnn(segm, nodes, segments)) {
-            const angle = curr.e.subtract(curr.b).getDirectedAngle(segm.e.subtract(segm.b));
-            if (segments.length < 3 || angle >= 0 || Math.abs(angle + 180) < 1)
-              curr.anext.push(segm);
-          }
-
-        });
-      }
-      return curr.anext;
-    }
-
-    function go_go(segm) {
-      const anext = find_next(segm);
-      for (const next of anext) {
-        if (next === curr) {
-          return anext;
-        }
-        else if (acurr.every((el) => el !== next)) {
-          acurr.push(next);
-          return go_go(next);
-        }
-      }
-    }
-
-    while (segments.length) {
-
-      curr = segments[0];
-      acurr = [curr];
-      if (go_go(curr) && acurr.length > 1) {
-        res.push(acurr);
-      }
-
-      acurr.forEach((el) => {
-        const ind = segments.indexOf(el);
-        if (ind != -1) {
-          segments.splice(ind, 1);
-        }
-      });
-    }
-
-    return res;
-  }
-
-  glass_nodes(path, nodes, bind) {
-    const curve_nodes = [];
-    const path_nodes = [];
-    const ipoint = path.interiorPoint.negate();
-    let curve, findedb, findede, d, node1, node2;
-
-    if (!nodes) {
-      nodes = this.nodes;
-    }
-
-    for (let i in path.curves) {
-      curve = path.curves[i];
-
-      let d1 = Infinity;
-      let d2 = Infinity;
-      nodes.forEach((n) => {
-        if ((d = n.getDistance(curve.point1, true)) < d1) {
-          d1 = d;
-          node1 = n;
-        }
-        if ((d = n.getDistance(curve.point2, true)) < d2) {
-          d2 = d;
-          node2 = n;
-        }
-      });
-
-      if (path_nodes.indexOf(node1) == -1)
-        path_nodes.push(node1);
-      if (path_nodes.indexOf(node2) == -1)
-        path_nodes.push(node2);
-
-      if (!bind)
-        continue;
-
-      if (node1 == node2)
-        continue;
-      findedb = false;
-      for (let n in curve_nodes) {
-        if (curve_nodes[n].node1 == node1 && curve_nodes[n].node2 == node2) {
-          findedb = true;
-          break;
-        }
-      }
-      if (!findedb) {
-        findedb = this.profile_by_nodes(node1, node2);
-        const loc1 = findedb.generatrix.getNearestLocation(node1);
-        const loc2 = findedb.generatrix.getNearestLocation(node2);
-        if (node1.add(ipoint).getDirectedAngle(node2.add(ipoint)) < 0)
-          curve_nodes.push({
-            node1: node2,
-            node2: node1,
-            profile: findedb,
-            out: loc2.index == loc1.index ? loc2.parameter > loc1.parameter : loc2.index > loc1.index,
-          });
-        else
-          curve_nodes.push({
-            node1: node1,
-            node2: node2,
-            profile: findedb,
-            out: loc1.index == loc2.index ? loc1.parameter > loc2.parameter : loc1.index > loc2.index,
-          });
-      }
-    }
-
-    this.sort_nodes(curve_nodes);
-
-    return path_nodes;
-  }
-
-  glass_recalc() {
-    const {glass_contours} = this;      
-    const glasses = this.glasses(true); 
-    const binded = new Set();
-
-    function calck_rating(glcontour, glass) {
-
-      const {outer_profiles} = glass;
-
-      let crating = 0;
-
-      if (outer_profiles.length) {
-        glcontour.some((cnt) => {
-          outer_profiles.some((curr) => {
-            if (cnt.profile == curr.profile &&
-              cnt.b.is_nearest(curr.b) &&
-              cnt.e.is_nearest(curr.e)) {
-              crating++;
-              return true;
-            }
-          });
-          if (crating > 2) {
-            return true;
-          }
-        });
-      }
-      else {
-        const {nodes} = glass;
-        glcontour.some((cnt) => {
-          nodes.some((node) => {
-            if (cnt.b.is_nearest(node)) {
-              crating++;
-              return true;
-            }
-          });
-          if (crating > 2) {
-            return true;
-          }
-        });
-      }
-
-      return crating;
-
-    }
-
-    glasses.forEach((glass) => {
-      if (glass.visible) {
-        return;
-      }
-      glass_contours.some((glcontour) => {
-        if (binded.has(glcontour)) {
-          return;
-        }
-        if (calck_rating(glcontour, glass) > 2) {
-          glass.path = glcontour;
-          glass.visible = true;
-          if (glass instanceof Filling) {
-            glass.redraw();
-          }
-          binded.add(glcontour);
-          return true;
-        }
-      });
-    });
-
-    glass_contours.forEach((glcontour) => {
-
-      if (binded.has(glcontour)) {
-        return;
-      }
-
-      let rating = 0, glass, crating, cglass, glass_center;
-
-      for (let g in glasses) {
-
-        glass = glasses[g];
-        if (glass.visible) {
-          continue;
-        }
-
-        crating = calck_rating(glcontour, glass);
-
-        if (crating > rating || !cglass) {
-          rating = crating;
-          cglass = glass;
-        }
-        if (crating == rating && cglass != glass) {
-          if (!glass_center) {
-            glass_center = glcontour.reduce((sum, val) => sum.add(val.b), new paper.Point).divide(glcontour.length);
-          }
-          if (glass_center.getDistance(glass.bounds.center, true) < glass_center.getDistance(cglass.bounds.center, true)) {
-            cglass = glass;
-          }
-        }
-      }
-
-      if (cglass || (cglass = this.getItem({class: Filling, visible: false}))) {
-        cglass.path = glcontour;
-        cglass.visible = true;
-        if (cglass instanceof Filling) {
-          cglass.redraw();
-        }
-      }
-      else {
-        if (glass = this.getItem({class: Filling})) {
-
-        }
-        else if (glass = this.project.getItem({class: Filling})) {
-
-        }
-        else {
-
-        }
-        cglass = new Filling({proto: glass, parent: this, path: glcontour});
-        cglass.redraw();
-      }
-    });
-  }
-
-  get glass_segments() {
-    const nodes = [];
-
-    function fn_sort(a, b) {
-      const da = this.getOffsetOf(a.point);
-      const db = this.getOffsetOf(b.point);
-      if (da < db) {
-        return -1;
-      }
-      else if (da > db) {
-        return 1;
-      }
-      return 0;
-    }
-
-    function push_new(profile, b, e, outer = false) {
-      if(b.is_nearest(e, 0)){
-        return;
-      }
-      for(const segm of nodes) {
-        if(segm.profile === profile && segm.b.equals(b) && segm.e.equals(e) && segm.outer == outer){
-          return;
-        }
-      }
-      nodes.push(new GlassSegment(profile, b, e, outer));
-    }
-
-    this.profiles.forEach((p) => {
-
-      const sort = fn_sort.bind(p.generatrix);
-
-      const ip = p.joined_imposts();
-      const pb = p.cnn_point('b');
-      const pe = p.cnn_point('e');
-
-      const pbg = pb.is_t && pb.profile.d0 ? pb.profile.generatrix.getNearestPoint(p.b) : p.b;
-      const peg = pe.is_t && pe.profile.d0 ? pe.profile.generatrix.getNearestPoint(p.e) : p.e;
-
-      if (ip.inner.length) {
-
-        ip.inner.sort(sort);
-
-        if (!pb.is_i && !pbg.is_nearest(ip.inner[0].point)) {
-          push_new(p, pbg, ip.inner[0].point);
-        }
-
-        for (let i = 1; i < ip.inner.length; i++) {
-          push_new(p, ip.inner[i - 1].point, ip.inner[i].point);
-        }
-
-        if (!pe.is_i && !ip.inner[ip.inner.length - 1].point.is_nearest(peg)) {
-          push_new(p, ip.inner[ip.inner.length - 1].point, peg);
-        }
-
-      }
-      if (ip.outer.length) {
-
-        ip.outer.sort(sort);
-
-        if (!pb.is_i && !ip.outer[0].point.is_nearest(pbg)) {
-          push_new(p, ip.outer[0].point, pbg, true);
-        }
-
-        for (let i = 1; i < ip.outer.length; i++) {
-          push_new(p, ip.outer[i].point, ip.outer[i - 1].point, true);
-        }
-
-        if (!pe.is_i && !peg.is_nearest(ip.outer[ip.outer.length - 1].point)) {
-          push_new(p, peg, ip.outer[ip.outer.length - 1].point, true);
-        }
-      }
-
-      if (!ip.inner.length) {
-        if (!pb.is_i && !pe.is_i) {
-          push_new(p, pbg, peg);
-        }
-      }
-
-      if (!ip.outer.length && (pb.is_cut || pe.is_cut || pb.is_t || pe.is_t)) {
-        if (!pb.is_i && !pe.is_i) {
-          push_new(p, peg, pbg, true);
-        }
-      }
-      else if(pb.is_x || pe.is_x) {
-        push_new(p, peg, pbg, true);
-      }
-
-    });
-
-    return nodes;
-  }
-
-  get is_rectangular() {
-    const {Импост} = $p.enm.elm_types;
-    const outer = this.profiles.filter((v) => v.elm_type != Импост);
-    return outer.length === 4 && !outer.some(profile => !(profile.is_linear() && Math.abs(profile.angle_hor % 90) < 0.2));
-  }
-
-  move(delta) {
-    const {contours, profiles, project} = this;
-    const crays = (p) => p.rays.clear();
-    this.translate(delta);
-    contours.forEach((elm) => elm.profiles.forEach(crays));
-    profiles.forEach(crays);
-    project.register_change();
-  }
-
-  get nodes() {
-    const nodes = [];
-    this.profiles.forEach((p) => {
-      let findedb;
-      let findede;
-      nodes.forEach((n) => {
-        if (p.b.is_nearest(n)) {
-          findedb = true;
-        }
-        if (p.e.is_nearest(n)) {
-          findede = true;
-        }
-      });
-      if (!findedb) {
-        nodes.push(p.b.clone());
-      }
-      if (!findede) {
-        nodes.push(p.e.clone());
-      }
-    });
-    return nodes;
-  }
-
-  count_nodes() {
-    const nodes = new PointMap();
-    this.profiles.forEach((profile) => {
-      const {b, e} = profile;
-      let findedb;
-      let findede;
-      for(const [key, value] of nodes) {
-        if (b.is_nearest(key)) {
-          value.push({profile, point: 'b'})
-          findedb = true;
-        }
-        if (e.is_nearest(key)) {
-          value.push({profile, point: 'e'})
-          findede = true;
-        }
-      }
-      if (!findedb) {
-        nodes.set(b.clone(), [{profile, point: 'b'}]);
-      }
-      if (!findede) {
-        nodes.set(e.clone(), [{profile, point: 'e'}]);
-      }
-    });
-    return nodes;
-  }
-
-  notify(obj, type = 'update') {
-    if (obj.type) {
-      type = obj.type;
-    }
-    this.project._scope.eve.emit_async(type, obj);
-    type === consts.move_points && this.project.register_change();
-  }
-
-  get outer_nodes() {
-    return this.outer_profiles.map((v) => v.elm);
-  }
-
-  get outer_profiles() {
-    const {profiles} = this;
-    const to_remove = [];
-    const res = [];
-
-    let findedb, findede;
-
-    for (let i = 0; i < profiles.length; i++) {
-      const elm = profiles[i];
-      if (elm._attr.simulated)
-        continue;
-      findedb = false;
-      findede = false;
-      for (let j = 0; j < profiles.length; j++) {
-        if (profiles[j] == elm)
-          continue;
-        if (!findedb && elm.has_cnn(profiles[j], elm.b) && elm.b.is_nearest(profiles[j].e))
-          findedb = true;
-        if (!findede && elm.has_cnn(profiles[j], elm.e) && elm.e.is_nearest(profiles[j].b))
-          findede = true;
-      }
-      if (!findedb || !findede){
-        to_remove.push(elm);
-      }
-    }
-    for (let i = 0; i < profiles.length; i++) {
-      const elm = profiles[i];
-      if (to_remove.indexOf(elm) != -1)
-        continue;
-      elm._attr.binded = false;
-      res.push({
-        elm: elm,
-        profile: elm.nearest(true),
-        b: elm.b,
-        e: elm.e,
-      });
-    }
-    return res;
-  }
-
-  profile_by_furn_side(side, cache) {
-
-    if (!cache || !cache.profiles) {
-      cache = {
-        profiles: this.outer_nodes,
-        bottom: this.profiles_by_side('bottom'),
-      };
-    }
-
-    const profile_node = this.direction == $p.enm.open_directions.Правое ? 'b' : 'e';
-    const other_node = profile_node == 'b' ? 'e' : 'b';
-
-    let profile = cache.bottom;
-
-    const next = () => {
-      side--;
-      if (side <= 0) {
-        return profile;
-      }
-
-      cache.profiles.some((curr) => {
-        if (curr[other_node].is_nearest(profile[profile_node])) {
-          profile = curr;
-          return true;
-        }
-      });
-
-      return next();
-    };
-
-    return next();
-
-  }
-
-
-  profile_by_nodes(n1, n2, point) {
-    const profiles = this.profiles;
-    for (let i = 0; i < profiles.length; i++) {
-      const {generatrix} = profiles[i];
-      if (generatrix.getNearestPoint(n1).is_nearest(n1) && generatrix.getNearestPoint(n2).is_nearest(n2)) {
-        if (!point || generatrix.getNearestPoint(point).is_nearest(point))
-          return profiles[i];
-      }
-    }
-  }
-
-  remove() {
-    const {children, _row, cnstr} = this;
-    while (children.length) {
-      children[0].remove();
-    }
-
-    if (_row) {
-      const {ox} = this.project;
-      ox.coordinates.clear({cnstr});
-      ox.params.clear({cnstr});
-
-      if (ox === _row._owner._owner) {
-        _row._owner.del(_row);
-      }
-      this._row = null;
-    }
-
-    super.remove();
-  }
-
-  get _manager() {
-    return this.project._dp._manager;
-  }
-
-  _metadata(fld) {
-
-    const {tabular_sections} = this.project.ox._metadata();
-    const {fields} = tabular_sections.constructions;
-
-    return fld ? (fields[fld] || tabular_sections[fld]) : {
-      fields: {
-        furn: fields.furn,
-        direction: fields.direction,
-        h_ruch: fields.h_ruch,
-      },
-      tabular_sections: {
-        params: tabular_sections.params,
-      },
-    };
-
-  }
-
-  get bounds() {
-    const {_attr, parent} = this;
-    if (!_attr._bounds || !_attr._bounds.width || !_attr._bounds.height) {
-
-      this.profiles.forEach((profile) => {
-        const path = profile.path && profile.path.segments.length ? profile.path : profile.generatrix;
-        if (path) {
-          _attr._bounds = _attr._bounds ? _attr._bounds.unite(path.bounds) : path.bounds;
-          if (!parent) {
-            const {d0} = profile;
-            if (d0) {
-              _attr._bounds = _attr._bounds.unite(profile.generatrix.bounds);
-            }
-          }
-        }
-      });
-      this.sectionals.forEach((sectional) => {
-        _attr._bounds = _attr._bounds ? _attr._bounds.unite(sectional.bounds) : sectional.bounds;
-      });
-
-      if (!_attr._bounds) {
-        _attr._bounds = new paper.Rectangle();
-      }
-    }
-    return _attr._bounds;
-  }
-
-  get cnstr() {
-    return this._row ? this._row.cnstr : 0;
-  }
-
-  set cnstr(v) {
-    this._row && (this._row.cnstr = v);
-  }
-
-  get dimension_bounds() {
-    let bounds = super.dimension_bounds;
-    const ib = this.l_visualization._by_insets.bounds;
-    if (ib.height && ib.bottom > bounds.bottom) {
-      const delta = ib.bottom - bounds.bottom + 10;
-      bounds = bounds.unite(
-        new paper.Rectangle(bounds.bottomLeft, bounds.bottomRight.add([0, delta < 250 ? delta * 1.1 : delta * 1.2]))
-      );
-    }
-    return bounds;
-  }
-
-  get direction() {
-    return this._row.direction;
-  }
-
-  set direction(v) {
-    this._row.direction = v;
-    this.project.register_change(true);
-  }
-
-  zoom_fit() {
-    this.project.zoom_fit.call(this, null, true);
-  }
-
-  draw_cnn_errors() {
-
-    const {l_visualization} = this;
-
-    if (l_visualization._cnn) {
-      l_visualization._cnn.removeChildren();
-    }
-    else {
-      l_visualization._cnn = new paper.Group({parent: l_visualization});
-    }
-
-    const err_attrs = {
-      strokeColor: 'red',
-      strokeWidth: 2,
-      strokeCap: 'round',
-      strokeScaling: false,
-      dashOffset: 4,
-      dashArray: [4, 4],
-      guide: true,
-      parent: l_visualization._cnn,
-    };
-
-    this.glasses(false, true).forEach(glass => {
-      let err;
-      glass.profiles.forEach(({cnn, sub_path}) => {
-        if (!cnn) {
-          Object.assign(sub_path, err_attrs);
-          err = true;
-        }
-      });
-      if (err || glass.path.is_self_intersected()) {
-        glass.fill_error();
-      }
-      else {
-        const {form_area, inset: {smin, smax}} = glass;
-        if((smin && smin > form_area) || (smax && smax < form_area)) {
-          glass.fill_error();
-        }
-        else {
-          glass.path.fillColor = BuilderElement.clr_by_clr.call(glass, glass._row.clr, false);
-        }
-      }
-      glass.imposts.forEach((impost) => {
-        if(impost instanceof Onlay) {
-          const {b, e} = impost._attr._rays;
-          const oerr_attrs = Object.assign({radius: 50}, err_attrs);
-          b.check_err(oerr_attrs);
-          e.check_err(oerr_attrs);
-        }
-      });
-    });
-
-    this.profiles.forEach((elm) => {
-      const {_corns, _rays} = elm._attr;
-      _rays.b.check_err(err_attrs);
-      _rays.e.check_err(err_attrs);
-      if (elm.nearest(true) && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())) {
-        Object.assign(elm.path.get_subpath(_corns[1], _corns[2]), err_attrs);
-      }
-      elm.addls.forEach((elm) => {
-        if (elm.nearest(true) && (!elm._attr._nearest_cnn || elm._attr._nearest_cnn.empty())) {
-          Object.assign(elm.path.get_subpath(_corns[1], _corns[2]), err_attrs);
-        }
-      });
-    });
-  }
-
-  draw_mosquito() {
-    const {l_visualization, project} = this;
-    if(project.builder_props.mosquito === false) {
-      return;
-    }
-    project.ox.inserts.find_rows({cnstr: this.cnstr}, (row) => {
-      if (row.inset.insert_type == $p.enm.inserts_types.МоскитнаяСетка) {
-        const props = {
-          parent: new paper.Group({parent: l_visualization._by_insets}),
-          strokeColor: 'grey',
-          strokeWidth: 3,
-          dashArray: [6, 4],
-          strokeScaling: false,
-        };
-        let sz, imposts;
-        row.inset.specification.forEach((rspec) => {
-          if (!sz && rspec.count_calc_method == $p.enm.count_calculating_ways.ПоПериметру && rspec.nom.elm_type == $p.enm.elm_types.Рама) {
-            sz = rspec.sz;
-          }
-          if (!imposts && rspec.count_calc_method == $p.enm.count_calculating_ways.ПоШагам && rspec.nom.elm_type == $p.enm.elm_types.Импост) {
-            imposts = rspec;
-          }
-        });
-
-        const perimetr = [];
-        if (typeof sz != 'number') {
-          sz = 20;
-        }
-        this.outer_profiles.forEach((curr) => {
-          const profile = curr.profile || curr.elm;
-          const is_outer = Math.abs(profile.angle_hor - curr.elm.angle_hor) > 60;
-          const ray = is_outer ? profile.rays.outer : profile.rays.inner;
-          const segm = ray.get_subpath(curr.b, curr.e).equidistant(sz);
-          perimetr.push(Object.assign(segm, props));
-        });
-
-        const count = perimetr.length - 1;
-        perimetr.forEach((curr, index) => {
-          const prev = index == 0 ? perimetr[count] : perimetr[index - 1];
-          const next = index == count ? perimetr[0] : perimetr[index + 1];
-          const b = curr.getIntersections(prev);
-          const e = curr.getIntersections(next);
-          if (b.length) {
-            curr.firstSegment.point = b[0].point;
-          }
-          if (e.length) {
-            curr.lastSegment.point = e[0].point;
-          }
-        });
-
-        const {elm_font_size} = consts;
-        const {bounds} = props.parent;
-        new paper.PointText({
-          parent: props.parent,
-          fillColor: 'black',
-          fontFamily: consts.font_family,
-          fontSize: consts.elm_font_size,
-          guide: true,
-          content: row.inset.presentation,
-          point: bounds.bottomLeft.add([elm_font_size * 1.2, -elm_font_size * 0.4]),
-        });
-
-        if (imposts) {
-          const {offsets, do_center, step} = imposts;
-          const add_impost = function (y) {
-            const impost = Object.assign(new paper.Path({
-              insert: false,
-              segments: [[bounds.left, y], [bounds.right, y]],
-            }), props);
-            const {length} = impost;
-            perimetr.forEach((curr) => {
-              const aloc = curr.getIntersections(impost);
-              if (aloc.length) {
-                const l1 = impost.firstSegment.point.getDistance(aloc[0].point);
-                const l2 = impost.lastSegment.point.getDistance(aloc[0].point);
-                if (l1 < length / 2) {
-                  impost.firstSegment.point = aloc[0].point;
-                }
-                if (l2 < length / 2) {
-                  impost.lastSegment.point = aloc[0].point;
-                }
-              }
-            });
-          }
-
-          if (step) {
-            const height = bounds.height - offsets;
-            if (height >= step) {
-              if (do_center) {
-                add_impost(bounds.centerY);
-              }
-              else {
-                for (let y = step; y < height; y += step) {
-                  add_impost(y);
-                }
-              }
-            }
-          }
-        }
-
-        return false;
-      }
-    });
-  }
-
-  draw_jalousie(glass) {
-    const {l_visualization, project} = this;
-    if(project.builder_props.jalousie === false) {
-      return;
-    }
-    project.ox.inserts.find_rows({cnstr: -glass.elm}, ({inset, clr}) => {
-      if(inset.insert_type == $p.enm.inserts_types.Жалюзи) {
-
-        let control, type, shift, step, steps, pos;
-        project.ox.params.find_rows({inset, cnstr: -glass.elm}, ({param, value}) => {
-          if(value.css && ['tb_jalousie_horizontal', 'tb_jalousie_vertical', 'tb_jalousie_roller'].includes(value.css)) {
-            type = value.css.replace('tb_jalousie_', '');
-          }
-          if(value.css && ['tb_jalousie_control-side-left', 'tb_jalousie_control-side-right'].includes(value.css)) {
-            control = value.css.replace('tb_jalousie_control-side-', '');
-          }
-        });
-        if(!type) {
-          type = 'horizontal';
-        }
-        if(!control) {
-          control = 'left';
-        }
-
-        const props = {
-          parent: new paper.Group({parent: l_visualization._by_insets}),
-          fillColor: BuilderElement.clr_by_clr(clr),
-          shadowColor: 'lightgray',
-          shadowBlur: 20,
-          shadowOffset: [13, 13],
-          opacity: 0.3,
-          strokeScaling: false,
-          closed: true,
-          guide: true,
-        };
-        const bounds = glass.bounds_light();
-        inset.specification.forEach(({count_calc_method, sz, offsets}) => {
-          if (count_calc_method == $p.enm.count_calculating_ways.ПоПлощади && sz && offsets) {
-            bounds.height += offsets;
-            bounds.width += sz;
-            bounds.left -= sz * 0.6;
-            bounds.top -= offsets * 0.6;
-            return false;
-          }
-        });
-
-        switch (type) {
-        case 'roller':
-          new paper.Path(Object.assign({
-            segments: [bounds.topLeft, bounds.topRight, bounds.bottomRight, bounds.bottomLeft],
-          }, props));
-          break;
-
-        case 'horizontal':
-          steps = Math.floor(bounds.height / 60);
-          step = bounds.height / steps - 0.01;
-          pos = bounds.top;
-          while (pos < bounds.bottom - step) {
-            new paper.Path(Object.assign({
-              segments: [[bounds.left, pos], [bounds.right, pos], [bounds.right, pos + step - 20], [bounds.left, pos + step - 20]],
-            }, props));
-            pos += step;
-          }
-          break;
-
-        case 'vertical':
-          steps = Math.floor(bounds.width / 60);
-          step = bounds.width / steps - 0.01;
-          pos = bounds.left;
-          while (pos < bounds.right - step) {
-            new paper.Path(Object.assign({
-              segments: [[pos, bounds.top], [pos + step - 20, bounds.top], [pos + step - 20, bounds.bottom], [pos, bounds.bottom]],
-            }, props));
-            pos += step;
-          }
-          break;
-        }
-
-        pos = control === 'left' ? bounds.left - 10 : bounds.right + 10;
-        new paper.Path(Object.assign({
-          segments: [
-            [pos, bounds.top],
-            [pos + 10, bounds.top],
-            [pos + 10, bounds.bottom - 80],
-            [pos + 20, bounds.bottom - 40],
-            [pos - 10, bounds.bottom - 40],
-            [pos, bounds.bottom - 80],
-          ],
-        }, props, {
-          strokeColor: 'lightgray',
-          strokeOpacity: 0.5,
-          strokeWidth: 1,
-          fillColor: 'gray',
-          opacity: 0.6,
-        }));
-        new paper.Path(Object.assign({
-          segments: [
-            bounds.topLeft.add([0, -10]),
-            bounds.topRight.add([0, -10]),
-            bounds.topRight.add([0, 20]),
-            bounds.topLeft.add([0, 20]),
-          ],
-        }, props, {
-          strokeColor: 'lightgray',
-          strokeOpacity: 0.5,
-          strokeWidth: 1,
-          fillColor: 'lightgray',
-          opacity: 0.6,
-        }));
-
-        const {elm_font_size} = consts;
-        new paper.PointText({
-          parent: props.parent,
-          fillColor: 'black',
-          fontFamily: consts.font_family,
-          fontSize: consts.elm_font_size,
-          guide: true,
-          content: inset.presentation,
-          point: bounds.topLeft.add([elm_font_size/3, 0]),
-        });
-
-        return false;
-      }
-    });
-  }
-
-  draw_sill() {
-    const {l_visualization, project, cnstr} = this;
-    const {ox} = project;
-    const {properties} = $p.job_prm;
-    if (!properties) {
-      return;
-    }
-    const {length, width} = properties;
-
-    ox.inserts.find_rows({cnstr}, (row) => {
-      if (row.inset.insert_type == $p.enm.inserts_types.Подоконник) {
-
-        const bottom = this.profiles_by_side('bottom');
-        let vlen, vwidth;
-        ox.params.find_rows({cnstr: cnstr, inset: row.inset}, (prow) => {
-          if (prow.param == length) {
-            vlen = prow.value;
-          }
-          if (prow.param == width) {
-            vwidth = prow.value;
-          }
-        });
-        if (!vlen) {
-          vlen = bottom.length + 160;
-        }
-        if (vwidth) {
-          vwidth = vwidth * 0.7;
-        }
-        else {
-          vwidth = 200;
-        }
-        const delta = (vlen - bottom.length) / 2;
-
-        new paper.Path({
-          parent: new paper.Group({parent: l_visualization._by_insets}),
-          strokeColor: 'grey',
-          fillColor: BuilderElement.clr_by_clr(row.clr),
-          shadowColor: 'grey',
-          shadowBlur: 20,
-          shadowOffset: [10, 20],
-          opacity: 0.7,
-          strokeWidth: 1,
-          strokeScaling: false,
-          closed: true,
-          segments: [
-            bottom.b.add([delta, 0]),
-            bottom.e.add([-delta, 0]),
-            bottom.e.add([-delta - vwidth, vwidth]),
-            bottom.b.add([delta - vwidth, vwidth]),
-          ],
-        });
-
-        return false;
-      }
-    });
-  }
-
-  draw_opening() {
-
-    const _contour = this;
-    const {l_visualization, furn} = this;
-
-    if (!this.parent || !$p.enm.open_types.is_opening(furn.open_type)) {
-      if (l_visualization._opening && l_visualization._opening.visible)
-        l_visualization._opening.visible = false;
-      return;
-    }
-
-    const cache = {
-      profiles: this.outer_nodes,
-      bottom: this.profiles_by_side('bottom'),
-    };
-
-    function rotary_folding() {
-
-      const {_opening} = l_visualization;
-      const {side_count} = _contour;
-
-      furn.open_tunes.forEach((row) => {
-
-        if (row.rotation_axis) {
-          const axis = _contour.profile_by_furn_side(row.side, cache);
-          const other = _contour.profile_by_furn_side(
-            row.side + 2 <= side_count ? row.side + 2 : row.side - 2, cache);
-
-          _opening.moveTo(axis.corns(3));
-          _opening.lineTo(other.rays.inner.getPointAt(other.rays.inner.length / 2));
-          _opening.lineTo(axis.corns(4));
-
-        }
-      });
-    }
-
-    function sliding() {
-      const {center} = _contour.bounds;
-      const {_opening} = l_visualization;
-
-      if (_contour.direction == $p.enm.open_directions.Правое) {
-        _opening.moveTo(center.add([-100, 0]));
-        _opening.lineTo(center.add([100, 0]));
-        _opening.moveTo(center.add([30, 30]));
-        _opening.lineTo(center.add([100, 0]));
-        _opening.lineTo(center.add([30, -30]));
-      }
-      else {
-        _opening.moveTo(center.add([100, 0]));
-        _opening.lineTo(center.add([-100, 0]));
-        _opening.moveTo(center.add([-30, 30]));
-        _opening.lineTo(center.add([-100, 0]));
-        _opening.lineTo(center.add([-30, -30]));
-      }
-    }
-
-    if (!l_visualization._opening) {
-      l_visualization._opening = new paper.CompoundPath({
-        parent: _contour.l_visualization,
-        strokeColor: 'black',
-      });
-    }
-    else {
-      l_visualization._opening.removeChildren();
-    }
-
-    return furn.is_sliding ? sliding() : rotary_folding();
-
-  }
-
-  draw_visualization(rows) {
-
-    const {profiles, l_visualization, contours} = this;
-    const glasses = this.glasses(false, true).filter(({visible}) => visible);
-    l_visualization._by_spec.removeChildren();
-
-    if(!rows){
-      rows = [];
-      this.project.ox.specification.find_rows({dop: -1}, (row) => rows.push(row));
-    }
-
-    function draw (elm) {
-      if (this.elm === elm.elm && elm.visible) {
-        this.nom.visualization.draw(elm, l_visualization, this.len * 1000);
-        return true;
-      }
-    };
-
-    this.draw_mosquito();
-
-    this.draw_sill();
-
-    glasses.forEach(this.draw_jalousie.bind(this));
-
-    for(const row of rows){
-      if(!profiles.some(draw.bind(row))){
-        glasses.some((elm) => {
-          if (row.elm === elm.elm) {
-            row.nom.visualization.draw(elm, l_visualization, [row.len * 1000, row.width * 1000]);
-            return true;
-          }
-          return elm.imposts.some(draw.bind(row));
-        })
-      }
-    }
-
-    for(const contour of contours){
-      contour.draw_visualization(rows);
-    }
-
-  }
-
-  get hidden() {
-    return !!this._hidden;
-  }
-
-  set hidden(v) {
-    if (this.hidden != v) {
-      this._hidden = v;
-      const visible = !this._hidden;
-      this.children.forEach((elm) => {
-        if (elm instanceof BuilderElement) {
-          elm.visible = visible;
-        }
-      });
-      this.l_visualization.visible = visible;
-      this.l_dimensions.visible = visible;
-    }
-
-  }
-
-  hide_generatrix() {
-    this.profiles.forEach((elm) => {
-      elm.generatrix.visible = false;
-    });
-  }
-
-  get imposts() {
-    return this.getItems({class: Profile}).filter((elm) => {
-      const {b, e} = elm.rays;
-      return b.is_tt || e.is_tt || b.is_i || e.is_i;
-    });
-  }
-
-  get params() {
-    return this.project.ox.params;
-  }
-
-  get path() {
-    return this.bounds;
-  }
-
-  set path(attr) {
-    if (!Array.isArray(attr)) {
-      return;
-    }
-
-    const noti = {type: consts.move_points, profiles: [], points: []};
-    const {outer_nodes} = this;
-
-    let need_bind = attr.length,
-      available_bind = outer_nodes.length,
-      elm, curr;
-
-    function set_node(n) {
-      if (!curr[n].is_nearest(elm[n], 0)) {
-        elm.rays.clear(true);
-        elm[n] = curr[n];
-        if (noti.profiles.indexOf(elm) == -1) {
-          noti.profiles.push(elm);
-        }
-        if (!noti.points.some((point) => point.is_nearest(elm[n], 0))) {
-          noti.points.push(elm[n]);
-        }
-      }
-    }
-
-    if (need_bind) {
-      for (let i = 0; i < attr.length; i++) {
-        curr = attr[i];             
-        for (let j = 0; j < outer_nodes.length; j++) {
-          elm = outer_nodes[j];   
-          if (elm._attr.binded) {
-            continue;
-          }
-          if (curr.profile.is_nearest(elm)) {
-            elm._attr.binded = true;
-            curr.binded = true;
-            need_bind--;
-            available_bind--;
-
-            set_node('b');
-            set_node('e');
-
-            break;
-          }
-        }
-      }
-    }
-
-    if (need_bind) {
-      for (let i = 0; i < attr.length; i++) {
-        curr = attr[i];
-        if (curr.binded)
-          continue;
-        for (let j = 0; j < outer_nodes.length; j++) {
-          elm = outer_nodes[j];
-          if (elm._attr.binded)
-            continue;
-          if (curr.b.is_nearest(elm.b, true) || curr.e.is_nearest(elm.e, true)) {
-            elm._attr.binded = true;
-            curr.binded = true;
-            need_bind--;
-            available_bind--;
-
-            set_node('b');
-            set_node('e');
-
-            break;
-          }
-        }
-      }
-    }
-
-    if (need_bind && available_bind) {
-      for (let i = 0; i < attr.length; i++) {
-        curr = attr[i];
-        if (curr.binded)
-          continue;
-        for (let j = 0; j < outer_nodes.length; j++) {
-          elm = outer_nodes[j];
-          if (elm._attr.binded)
-            continue;
-          elm._attr.binded = true;
-          curr.binded = true;
-          need_bind--;
-          available_bind--;
-
-          set_node('b');
-          set_node('e');
-
-          break;
-        }
-      }
-    }
-
-    if (need_bind) {
-      for (let i = 0; i < attr.length; i++) {
-        curr = attr[i];
-        if (curr.binded) {
-          continue;
-        }
-        elm = new Profile({
-          generatrix: curr.profile.generatrix.get_subpath(curr.b, curr.e),
-          proto: outer_nodes.length ? outer_nodes[0] : {parent: this, clr: curr.profile.clr},
-        });
-        elm._attr._nearest = curr.profile;
-        elm._attr.binded = true;
-        elm._attr.simulated = true;
-
-        curr.profile = elm;
-        delete curr.outer;
-        curr.binded = true;
-
-        noti.profiles.push(elm);
-        noti.points.push(elm.b);
-        noti.points.push(elm.e);
-
-        need_bind--;
-      }
-    }
-
-    if (available_bind) {
-      outer_nodes.forEach((elm) => {
-        if (!elm._attr.binded) {
-          elm.rays.clear(true);
-          elm.remove();
-          available_bind--;
-        }
-      });
-    }
-
-    this.profiles.forEach((p) => p.default_inset());
-
-    if (noti.points.length) {
-      this.profiles.forEach((p) => p._attr._rays && p._attr._rays.clear());
-      this.notify(noti);
-    }
-
-    this._attr._bounds = null;
-  }
-
-  get perimeter() {
-    const res = [];
-    this.outer_profiles.forEach((curr) => {
-      const tmp = curr.sub_path ? {
-        len: curr.sub_path.length,
-        angle: curr.e.subtract(curr.b).angle,
-      } : {
-        len: curr.elm.length,
-        angle: curr.elm.angle_hor,
-      };
-      res.push(tmp);
-      if (tmp.angle < 0) {
-        tmp.angle += 360;
-      }
-      tmp.angle_hor = tmp.angle;
-      tmp.profile = curr.profile || curr.elm;
-    });
-    return res;
-  }
-
-  perimeter_inner(size) {
-    const {center} = this.bounds;
-    const res = this.outer_profiles.map((curr) => {
-      const profile = curr.profile || curr.elm;
-      const {inner, outer} = profile.rays;
-      const sub_path = inner.getNearestPoint(center).getDistance(center, true) < outer.getNearestPoint(center).getDistance(center, true) ?
-        inner.get_subpath(inner.getNearestPoint(curr.b), inner.getNearestPoint(curr.e)) : outer.get_subpath(outer.getNearestPoint(curr.b), outer.getNearestPoint(curr.e));
-      let angle = curr.e.subtract(curr.b).angle.round(1);
-      if(angle < 0) angle += 360;
-      return {
-        profile,
-        sub_path,
-        angle,
-        b: curr.b,
-        e: curr.e,
-      };
-    });
-    const ubound = res.length - 1;
-    return res.map((curr, index) => {
-      let sub_path = curr.sub_path.equidistant(size);
-      const prev = !index ? res[ubound] : res[index - 1];
-      const next = (index == ubound) ? res[0] : res[index + 1];
-      const b = sub_path.intersect_point(prev.sub_path.equidistant(size), curr.b, true);
-      const e = sub_path.intersect_point(next.sub_path.equidistant(size), curr.e, true);
-      if (b && e) {
-        sub_path = sub_path.get_subpath(b, e);
-      }
-      return {
-        profile: curr.profile,
-        angle: curr.angle,
-        len: sub_path.length,
-        sub_path,
-      };
-    });
-  }
-
-  bounds_inner(size) {
-    const path = new paper.Path({insert: false});
-    for (let curr of this.perimeter_inner(size)) {
-      path.addSegments(curr.sub_path.segments);
-    }
-    if (path.segments.length && !path.closed) {
-      path.closePath(true);
-    }
-    path.reduce();
-    return path.bounds;
-  }
-
-  get pos() {
-
-  }
-
-  get profiles() {
-    return this.children.filter((elm) => elm instanceof Profile);
-  }
-
-  get sectionals() {
-    return this.children.filter((elm) => elm instanceof Sectional);
-  }
-
-  get onlays() {
-    const res = [];
-    this.fillings.forEach((filling) => {
-      filling.children.forEach((elm) => elm instanceof Onlay && res.push(elm));
-    })
-    return res;
-  }
-
-
-  redraw() {
-
-    if (!this.visible) {
-      return;
-    }
-
-    this._attr._bounds = null;
-
-    const {_by_insets, _by_spec} = this.l_visualization;
-    _by_insets.removeChildren();
-    !this.project._attr._saving && _by_spec.removeChildren();
-
-    this.profiles.forEach((elm) => elm.redraw());
-
-    this.glass_recalc();
-
-    this.draw_opening();
-
-    this.contours.forEach((elm) => elm.redraw());
-
-    this.draw_cnn_errors();
-
-    this.sectionals.forEach((elm) => elm.redraw());
-
-    this.notify(this, 'contour_redrawed', this._attr._bounds);
-
-  }
-
-  refresh_prm_links(root) {
-
-    const cnstr = root ? 0 : this.cnstr || -9999;
-    let notify;
-
-    this.params.find_rows({
-      cnstr,
-      inset: $p.utils.blank.guid,
-    }, (prow) => {
-      const {param} = prow;
-      const links = param.params_links({grid: {selection: {cnstr}}, obj: prow});
-      let hide = !param.show_calculated && param.is_calculated;
-      if(!hide){
-        if(links.length) {
-          hide = links.some((link) => link.hide);
-        }
-        else {
-          hide = prow.hide;
-        }
-      };
-
-      if (links.length && param.linked_values(links, prow)) {
-        notify = true;
-      }
-      if (prow.hide !== hide) {
-        prow.hide = hide;
-        notify = true;
-      }
-    });
-
-    if(notify) {
-      this.notify(this, 'refresh_prm_links');
-      if(root) {
-        const {_dp} = this.project;
-        _dp._manager.emit_async('rows', _dp, {extra_fields: true});
-      }
-    };
-
-  }
-
-  save_coordinates(short) {
-
-    if (!short) {
-      if(!this.hidden) {
-        this.glasses(false, true).forEach((glass) => !glass.visible && glass.remove());
-      }
-
-      const {l_text, l_dimensions} = this;
-      for (let elm of this.children) {
-        if (elm.save_coordinates) {
-          elm.save_coordinates();
-        }
-        else if (elm == l_text || elm == l_dimensions) {
-          elm.children.forEach((elm) => elm.save_coordinates && elm.save_coordinates());
-        }
-      }
-    }
-
-    const {bounds} = this;
-    this._row.x = bounds ? bounds.width.round(4) : 0;
-    this._row.y = bounds ? bounds.height.round(4) : 0;
-    this._row.is_rectangular = this.is_rectangular;
-    if (this.parent) {
-      this._row.w = this.w.round(4);
-      this._row.h = this.h.round(4);
-    }
-    else {
-      this._row.w = 0;
-      this._row.h = 0;
-    }
-  }
-
-  sort_nodes(nodes) {
-    if (!nodes.length) {
-      return nodes;
-    }
-    let prev = nodes[0];
-    const res = [prev];
-    let couner = nodes.length + 1;
-
-    while (res.length < nodes.length && couner) {
-      couner--;
-      for (let i = 0; i < nodes.length; i++) {
-        const curr = nodes[i];
-        if (res.indexOf(curr) != -1)
-          continue;
-        if (prev.node2 == curr.node1) {
-          res.push(curr);
-          prev = curr;
-          break;
-        }
-      }
-    }
-    if (couner) {
-      nodes.length = 0;
-      for (let i = 0; i < res.length; i++) {
-        nodes.push(res[i]);
-      }
-      res.length = 0;
-    }
-  }
-
-
-  get furn_cache() {
-    return {
-      profiles: this.outer_nodes,
-      bottom: this.profiles_by_side('bottom'),
-      ox: this.project.ox,
-      w: this.w,
-      h: this.h,
-    };
-  }
-
-  handle_line(elm) {
-
-    const {bounds, h_ruch} = this;
-    const by_side = this.profiles_by_side();
-    return (elm == by_side.top || elm == by_side.bottom) ?
-      new paper.Path({
-        insert: false,
-        segments: [[bounds.left + h_ruch, bounds.top - 200], [bounds.left + h_ruch, bounds.bottom + 200]],
-      }) :
-      new paper.Path({
-        insert: false,
-        segments: [[bounds.left - 200, bounds.bottom - h_ruch], [bounds.right + 200, bounds.bottom - h_ruch]],
-      });
-
-  }
-
-  update_handle_height(cache, from_setter) {
-
-    const {furn, _row, project} = this;
-    const {furn_set, handle_side} = furn;
-    if (!handle_side || furn_set.empty()) {
-      return;
-    }
-
-    if (!cache) {
-      cache = this.furn_cache;
-      cache.ignore_formulas = true;
-    }
-
-    const elm = this.profile_by_furn_side(handle_side, cache);
-    if (!elm) {
-      return;
-    }
-
-    const {len} = elm._row;
-    let handle_height;
-
-    function set_handle_height(row) {
-      const {handle_height_base, fix_ruch} = row;
-      if (handle_height_base < 0) {
-        if (fix_ruch || _row.fix_ruch != -3) {
-          _row.fix_ruch = fix_ruch ? -2 : -1;
-          return handle_height = (len / 2).round();
-        }
-      }
-      else if (handle_height_base > 0) {
-        if (fix_ruch || _row.fix_ruch != -3) {
-          _row.fix_ruch = fix_ruch ? -2 : -1
-          return handle_height = handle_height_base;
-        }
-      }
-    }
-
-    furn.furn_set.specification.find_rows({dop: 0}, (row) => {
-
-      if (!row.quantity || !row.check_restrictions(this, cache)) {
-        return;
-      }
-      if (set_handle_height(row)) {
-        return false;
-      }
-      const {nom} = row;
-      if (nom && row.is_set_row) {
-        let ok = false;
-        nom.get_spec(this, cache, true).each((sub_row) => {
-          if (set_handle_height(sub_row)) {
-            return !(ok = true);
-          }
-        });
-        if (ok) {
-          return false;
-        }
-      }
-    });
-
-    if(handle_height && !from_setter && _row.h_ruch != handle_height){
-      _row.h_ruch = handle_height;
-      project._dp._manager.emit('update', this, {h_ruch: true});
-    }
-    return handle_height;
-  }
-
-  get h_ruch() {
-    const {layer, _row} = this;
-    return layer ? _row.h_ruch : 0;
-  }
-
-  set h_ruch(v) {
-    const {layer, _row, project} = this;
-
-    if (layer) {
-      const old_fix_ruch = _row.fix_ruch;
-      if (old_fix_ruch == -3) {
-        _row.fix_ruch = -1;
-      }
-      const h_ruch = this.update_handle_height(null, true);
-      if(h_ruch && (old_fix_ruch != -3 || v == 0)){
-        _row.h_ruch = h_ruch;
-      }
-
-      if (v != 0 && [0, -1, -3].indexOf(_row.fix_ruch) != -1) {
-        _row.h_ruch = v;
-        if (_row.fix_ruch == -1 && v != h_ruch) {
-          _row.fix_ruch = -3;
-        }
-      }
-      project.register_change();
-    }
-    else {
-      _row.h_ruch = 0;
-    }
-    project._dp._manager.emit('update', this, {h_ruch: true});
-  }
-
-  get side_count() {
-    const {Импост} = $p.enm.elm_types;
-    let res = 0;
-    this.profiles.forEach((v) => v.elm_type != Импост && res++);
-    return res;
-  }
-
-  get w() {
-    const {is_rectangular, bounds} = this;
-    const {left, right} = this.profiles_by_side();
-    return bounds && left && right ? bounds.width - left.nom.sizefurn - right.nom.sizefurn : 0;
-  }
-
-  get h() {
-    const {is_rectangular, bounds} = this;
-    const {top, bottom} = this.profiles_by_side();
-    return bounds && top && bottom ? bounds.height - top.nom.sizefurn - bottom.nom.sizefurn : 0;
-  }
-
-  get l_text() {
-    const {_attr} = this;
-    return _attr._txt || (_attr._txt = new paper.Group({parent: this}));
-  }
-
-  get l_visualization() {
-    const {_attr} = this;
-    if (!_attr._visl) {
-      _attr._visl = new paper.Group({parent: this, guide: true});
-      _attr._visl._by_insets = new paper.Group({parent: _attr._visl});
-      _attr._visl._by_spec = new paper.Group({parent: _attr._visl});
-    }
-    return _attr._visl;
-  }
-
-  get opacity() {
-    return this.children.length ? this.children[0].opacity : 1;
-  }
-
-  set opacity(v) {
-    this.children.forEach((elm) => {
-      if (elm instanceof BuilderElement)
-        elm.opacity = v;
-    });
-  }
-
-  on_remove_elm(elm) {
-    if (this.parent) {
-      this.parent.on_remove_elm(elm);
-    }
-    if (elm instanceof Profile && !this.project._attr._loading) {
-      this.l_dimensions.clear();
-    }
-  }
-
-  on_insert_elm(elm) {
-    if (this.parent) {
-      this.parent.on_remove_elm(elm);
-    }
-    if (elm instanceof Profile && !this.project._attr._loading) {
-      this.l_dimensions.clear();
-    }
-  }
-
-  on_sys_changed() {
-    this.profiles.forEach((elm) => elm.default_inset(true));
-
-    this.glasses().forEach((elm) => {
-      if (elm instanceof Contour) {
-        elm.on_sys_changed();
-      }
-      else {
-        if (elm.thickness < elm.project._dp.sys.tmin || elm.thickness > elm.project._dp.sys.tmax)
-          elm._row.inset = elm.project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
-        elm.profiles.forEach((curr) => {
-          if (!curr.cnn || !curr.cnn.check_nom2(curr.profile))
-            curr.cnn = $p.cat.cnns.elm_cnn(elm, curr.profile, $p.enm.cnn_types.acn.ii);
-        });
-      }
-    });
-  }
-
-}
-
-EditorInvisible.Contour = Contour;
-
-
-class DimensionGroup {
-
-  clear() {
-    for (let key in this) {
-      this[key].removeChildren();
-      this[key].remove();
-      delete this[key];
-    }
-  }
-
-  has_size(size) {
-    for (let key in this) {
-      const {path} = this[key];
-      if(path && Math.abs(path.length - size) < 1) {
-        return true;
-      }
-    }
-  }
-
-}
-
-class DimensionLayer extends paper.Layer {
-
-  get bounds() {
-    return this.project.bounds;
-  }
-
-  get owner_bounds() {
-    return this.bounds;
-  }
-
-  get dimension_bounds() {
-    return this.project.dimension_bounds;
-  }
-
-}
-
-class DimensionDrawer extends paper.Group {
-
-  constructor(attr) {
-    super(attr);
-    this.bringToFront();
-  }
-
-  clear() {
-
-    this.ihor && this.ihor.clear();
-    this.ivert && this.ivert.clear();
-
-    for (let pos of ['bottom', 'top', 'right', 'left']) {
-      if(this[pos]) {
-        this[pos].removeChildren();
-        this[pos].remove();
-        this[pos] = null;
-      }
-    }
-
-    this.layer && this.layer.parent && this.layer.parent.l_dimensions.clear();
-  }
-
-  redraw(forse) {
-
-    const {parent, project: {builder_props}} = this;
-
-    if(forse || !builder_props.auto_lines) {
-      this.clear();
-    }
-
-    for (let chld of parent.contours) {
-      chld.l_dimensions.redraw();
-    }
-
-    if(builder_props.auto_lines && (!parent.parent || forse)) {
-
-      const {ihor, ivert, by_side} = this.imposts();
-      if(!Object.keys(by_side).length) {
-        return this.clear();
-      }
-
-      const profiles = new Set(parent.profiles);
-      parent.imposts.forEach((elm) => elm.visible && profiles.add(elm));
-
-      for (let elm of profiles) {
-
-        const our = !elm.parent || elm.parent === parent;
-        const eb = our ? (elm instanceof GlassSegment ? elm._sub.b : elm.b) : elm.rays.b.npoint;
-        const ee = our ? (elm instanceof GlassSegment ? elm._sub.e : elm.e) : elm.rays.e.npoint;
-
-        this.push_by_point({ihor, ivert, eb, ee, elm});
-      }
-
-      if(ihor.length > 2) {
-        ihor.sort((a, b) => b.point - a.point);
-        if(parent.is_pos('right')) {
-          this.by_imposts(ihor, this.ihor, 'right');
-        }
-        else if(parent.is_pos('left')) {
-          this.by_imposts(ihor, this.ihor, 'left');
-        }
-      }
-      else {
-        ihor.length = 0;
-      }
-
-      if(ivert.length > 2) {
-        ivert.sort((a, b) => a.point - b.point);
-        if(parent.is_pos('bottom')) {
-          this.by_imposts(ivert, this.ivert, 'bottom');
-        }
-        else if(parent.is_pos('top')) {
-          this.by_imposts(ivert, this.ivert, 'top');
-        }
-      }
-      else {
-        ivert.length = 0;
-      }
-
-      this.by_contour(ihor, ivert, forse, by_side);
-
-    }
-
-    for (let dl of this.children) {
-      dl.redraw && dl.redraw();
-    }
-
-  }
-
-  push_by_point({ihor, ivert, eb, ee, elm}) {
-    if(eb && ihor.every((v) => v.point != eb.y.round())) {
-      ihor.push({
-        point: eb.y.round(),
-        elm: elm,
-        p: 'b'
-      });
-    }
-    if(ee && ihor.every((v) => v.point != ee.y.round())) {
-      ihor.push({
-        point: ee.y.round(),
-        elm: elm,
-        p: 'e'
-      });
-    }
-    if(eb && ivert.every((v) => v.point != eb.x.round())) {
-      ivert.push({
-        point: eb.x.round(),
-        elm: elm,
-        p: 'b'
-      });
-    }
-    if(ee && ivert.every((v) => v.point != ee.x.round())) {
-      ivert.push({
-        point: ee.x.round(),
-        elm: elm,
-        p: 'e'
-      });
-    }
-  }
-
-  draw_by_imposts() {
-    const {parent} = this;
-    this.clear();
-
-    let index = 0;
-    for (let elm of parent.profiles) {
-
-      const {inner, outer} = elm.joined_imposts();
-      const {generatrix, angle_hor} = elm;
-      generatrix.visible = false;
-      const imposts = inner.concat(outer);
-      if(!imposts.length) {
-        continue;
-      }
-      elm.mark_direction();
-      let invert = angle_hor > 135 && angle_hor < 315;
-      for(const impost of imposts) {
-        const {point, profile: {rays, nom}} = impost;
-        const pi = generatrix.intersect_point(rays.inner, point);
-        const po = generatrix.intersect_point(rays.outer, point);
-        const dx = generatrix.getOffsetOf(point);
-        const dxi = generatrix.getOffsetOf(pi);
-        const dxo = generatrix.getOffsetOf(po);
-        let dx1, dx2;
-        if(dx > dxi) {
-          dx1 = dxi + nom.sizefaltz;
-          dx2 = dxo - nom.sizefaltz;
-        }
-        else {
-          dx1 = dxo + nom.sizefaltz;
-          dx2 = dxi - nom.sizefaltz;
-        }
-
-
-        this.ihor[`i${++index}`] = new DimensionLineImpost({
-          elm1: elm,
-          elm2: elm,
-          p1: invert ? dx : 'b',
-          p2: invert ? 'b' : dx,
-          dx1,
-          dx2,
-          parent: this,
-          offset: invert ? -150 : 150,
-          outer: outer.includes(impost),
-        });
-
-      }
-    }
-
-    this.by_contour([], [], true);
-
-    for (let dl of this.children) {
-      dl.redraw && dl.redraw();
-    }
-
-  }
-
-  draw_by_falsebinding() {
-    const {parent} = this;
-    this.clear();
-
-    const {ihor, ivert, by_side} = this.imposts();
-
-    for(const filling of parent.fillings) {
-      if(!filling.visible) {
-        continue;
-      }
-      const {path} = filling;
-      for(const elm of filling.imposts) {
-        let {b: eb, e: ee} = elm;
-        if(path.is_nearest(eb)) {
-          eb = null;
-        }
-        if(path.is_nearest(ee)) {
-          ee = null;
-        }
-        if(eb || ee) {
-          this.push_by_point({ihor, ivert, eb, ee, elm});
-        }
-
-      }
-    }
-
-    this.by_contour([], [], true, by_side);
-
-    if(ihor.length > 2) {
-      ihor.sort((a, b) => b.point - a.point);
-      this.by_base(ihor, this.ihor, 'left');
-    }
-    else {
-      ihor.length = 0;
-    }
-
-    if(ivert.length > 2) {
-      ivert.sort((a, b) => a.point - b.point);
-      this.by_base(ivert, this.ivert, 'top');
-    }
-    else {
-      ivert.length = 0;
-    }
-
-    for (let dl of this.children) {
-      dl.redraw && dl.redraw();
-    }
-  }
-
-  by_imposts(arr, collection, pos) {
-    const offset = (pos == 'right' || pos == 'bottom') ? -130 : 90;
-    for (let i = 0; i < arr.length - 1; i++) {
-      if(!collection[i]) {
-        let shift = Math.abs(arr[i].point - arr[i + 1].point) < 60 ? 70 : 0;
-        if(shift && collection[i - 1] && collection[i - 1].offset !== offset) {
-          shift += 70;
-        }
-        collection[i] = new DimensionLine({
-          pos: pos,
-          elm1: arr[i].elm instanceof GlassSegment ? arr[i].elm._sub : arr[i].elm,
-          p1: arr[i].p,
-          elm2: arr[i + 1].elm instanceof GlassSegment ? arr[i + 1].elm._sub : arr[i + 1].elm,
-          p2: arr[i + 1].p,
-          parent: this,
-          offset: offset - shift,
-          impost: true
-        });
-      }
-    }
-  }
-
-  by_base(arr, collection, pos) {
-    let offset = (pos == 'right' || pos == 'bottom') ? -130 : 90;
-    for (let i = 1; i < arr.length - 1; i++) {
-      if(!collection[i - 1]) {
-        collection[i - 1] = new DimensionLine({
-          pos: pos,
-          elm1: arr[0].elm instanceof GlassSegment ? arr[0].elm._sub : arr[0].elm,
-          p1: arr[0].p,
-          elm2: arr[i].elm instanceof GlassSegment ? arr[i].elm._sub : arr[i].elm,
-          p2: arr[i].p,
-          parent: this,
-          offset: offset,
-          impost: true
-        });
-        offset += 90;
-      }
-    }
-  }
-
-  by_contour(ihor, ivert, forse, by_side) {
-
-    const {project, parent} = this;
-    const {bounds} = parent;
-
-
-    if(project.contours.length > 1 || forse) {
-
-      if(parent.is_pos('left') && !parent.is_pos('right') && project.bounds.height != bounds.height) {
-        if(!this.ihor.has_size(bounds.height)) {
-          if(!this.left) {
-            this.left = new DimensionLine({
-              pos: 'left',
-              parent: this,
-              offset: ihor.length > 2 ? 220 : 90,
-              contour: true
-            });
-          }
-          else {
-            this.left.offset = ihor.length > 2 ? 220 : 90;
-          }
-        }
-      }
-      else {
-        if(this.left) {
-          this.left.remove();
-          this.left = null;
-        }
-      }
-
-      if(parent.is_pos('right') && (project.bounds.height != bounds.height || forse)) {
-        if(!this.ihor.has_size(bounds.height)) {
-          if(!this.right) {
-            this.right = new DimensionLine({
-              pos: 'right',
-              parent: this,
-              offset: ihor.length > 2 ? -260 : -130,
-              contour: true
-            });
-          }
-          else {
-            this.right.offset = ihor.length > 2 ? -260 : -130;
-          }
-        }
-      }
-      else {
-        if(this.right) {
-          this.right.remove();
-          this.right = null;
-        }
-      }
-
-      if(parent.is_pos('top') && !parent.is_pos('bottom') && project.bounds.width != bounds.width) {
-        if(!this.ivert.has_size(bounds.width)) {
-          if(!this.top) {
-            this.top = new DimensionLine({
-              pos: 'top',
-              parent: this,
-              offset: ivert.length > 2 ? 220 : 90,
-              contour: true
-            });
-          }
-          else {
-            this.top.offset = ivert.length > 2 ? 220 : 90;
-          }
-        }
-      }
-      else {
-        if(this.top) {
-          this.top.remove();
-          this.top = null;
-        }
-      }
-
-      if(parent.is_pos('bottom') && (project.bounds.width != bounds.width || forse)) {
-        if(!this.ivert.has_size(bounds.width)) {
-          if(!this.bottom) {
-            this.bottom = new DimensionLine({
-              pos: 'bottom',
-              parent: this,
-              offset: ivert.length > 2 ? -260 : -130,
-              contour: true
-            });
-          }
-          else {
-            this.bottom.offset = ivert.length > 2 ? -260 : -130;
-          }
-        }
-      }
-      else {
-        if(this.bottom) {
-          this.bottom.remove();
-          this.bottom = null;
-        }
-      }
-
-    }
-
-    if(forse === 'faltz') {
-      this.by_faltz(ihor, ivert, by_side);
-    }
-  }
-
-  by_faltz(ihor, ivert, by_side) {
-    if (!this.left) {
-      this.left = new DimensionLine({
-        pos: 'left',
-        parent: this,
-        offset: 90,
-        contour: true,
-        faltz: (by_side.top.nom.sizefurn + by_side.bottom.nom.sizefurn) / 2,
-      });
-    }
-    if(!this.top) {
-      this.top = new DimensionLine({
-        pos: 'top',
-        parent: this,
-        offset: 90,
-        contour: true,
-        faltz: (by_side.left.nom.sizefurn + by_side.right.nom.sizefurn) / 2,
-      });
-    }
-  }
-
-  imposts() {
-
-    const {parent} = this;
-    const {bounds} = parent;
-
-    const by_side = parent.profiles_by_side();
-    if(!Object.keys(by_side).length) {
-      return {ihor: [], ivert: [], by_side: {}};
-    }
-
-    const ihor = [
-      {
-        point: bounds.top.round(),
-        elm: by_side.top,
-        p: by_side.top.b.y < by_side.top.e.y ? 'b' : 'e'
-      },
-      {
-        point: bounds.bottom.round(),
-        elm: by_side.bottom,
-        p: by_side.bottom.b.y > by_side.bottom.e.y ? 'b' : 'e'
-      }];
-    const ivert = [
-      {
-        point: bounds.left.round(),
-        elm: by_side.left,
-        p: by_side.left.b.x < by_side.left.e.x ? 'b' : 'e'
-      },
-      {
-        point: bounds.right.round(),
-        elm: by_side.right,
-        p: by_side.right.b.x > by_side.right.e.x ? 'b' : 'e'
-      }];
-
-    return {ihor, ivert, by_side};
-  }
-
-  get owner_bounds() {
-    return this.parent.bounds;
-  }
-
-  get dimension_bounds() {
-    return this.parent.dimension_bounds;
-  }
-
-  get ihor() {
-    return this._ihor || (this._ihor = new DimensionGroup());
-  }
-
-  get ivert() {
-    return this._ivert || (this._ivert = new DimensionGroup());
-  }
-}
-
-EditorInvisible.DimensionDrawer = DimensionDrawer;
-
-
-
-class DimensionLine extends paper.Group {
-
-  constructor(attr) {
-
-    super({parent: attr.parent});
-
-    const _attr = this._attr = {};
-
-    this._row = attr.row;
-
-    if(this._row && this._row.path_data){
-      attr._mixin(JSON.parse(this._row.path_data));
-      if(attr.elm1){
-        attr.elm1 = this.project.getItem({elm: attr.elm1});
-      }
-      if(attr.elm2){
-        attr.elm2 = this.project.getItem({elm: attr.elm2});
-      }
-    }
-    if(!attr.elm2) {
-      attr.elm2 = attr.elm1;
-    }
-    if(!attr.p1) {
-      attr.p1 = 'b';
-    }
-    if(!attr.p2) {
-      attr.p2 = 'e';
-    }
-    Object.assign(_attr, attr);
-
-    if(attr.contour){
-      _attr.contour = true;
-    }
-
-    if(!_attr.pos && (!_attr.elm1 || !_attr.elm2)){
-      this.remove();
-      return;
-    }
-
-    new paper.Path({parent: this, name: 'callout1', strokeColor: 'black', guide: true});
-    new paper.Path({parent: this, name: 'callout2', strokeColor: 'black', guide: true});
-    new paper.Path({parent: this, name: 'scale', strokeColor: 'black', guide: true});
-    new paper.PointText({
-      parent: this,
-      name: 'text',
-      justification: 'center',
-      fillColor: 'black',
-      fontFamily: consts.font_family,
-      fontSize: this._font_size()});
-
-    !this.project._attr._from_service && this.on({
-      mouseenter: this._mouseenter,
-      click: this._click
-    });
-
-  }
-
-  _font_size() {
-    const {width, height} = this.project.bounds;
-    const {cutoff, font_size} = consts;
-    const size = Math.max(width - cutoff, height - cutoff) / 60;
-    return font_size + (size > 0 ? size : 0);
-  }
-
-  _metadata() {
-    return $p.dp.builder_size.metadata();
-  }
-
-  get _manager() {
-    return $p.dp.builder_size;
-  }
-
-  _mouseenter() {
-    this.project._scope.canvas_cursor('cursor-arrow-ruler');
-  }
-
-  _click(event) {
-    event.stop();
-    if(typeof RulerWnd === 'function') {
-      this.wnd = new RulerWnd(null, this);
-      this.wnd.size = this.size;
-    }
-  }
-
-  _move_points(event, xy) {
-
-    let _bounds, delta;
-
-    const {_attr} = this;
-
-    if(_attr.elm1){
-
-      _bounds = {};
-
-      const p1 = (_attr.elm1._sub || _attr.elm1)[_attr.p1];
-      const p2 = (_attr.elm2._sub || _attr.elm2)[_attr.p2];
-
-      if(this.pos == "top" || this.pos == "bottom"){
-        const size = Math.abs(p1.x - p2.x);
-        if(event.name == "right"){
-          delta = new paper.Point(event.size - size, 0);
-          _bounds[event.name] = Math.max(p1.x, p2.x);
-        }
-        else{
-          delta = new paper.Point(size - event.size, 0);
-          _bounds[event.name] = Math.min(p1.x, p2.x);
-        }
-      }
-      else{
-        const size = Math.abs(p1.y - p2.y);
-        if(event.name == "bottom"){
-          delta = new paper.Point(0, event.size - size);
-          _bounds[event.name] = Math.max(p1.y, p2.y);
-        }
-        else{
-          delta = new paper.Point(0, size - event.size);
-          _bounds[event.name] = Math.min(p1.y, p2.y);
-        }
-      }
-    }
-    else {
-      _bounds = this.layer.bounds;
-      if(this.pos == "top" || this.pos == "bottom")
-        if(event.name == "right")
-          delta = new paper.Point(event.size - _bounds.width, 0);
-        else
-          delta = new paper.Point(_bounds.width - event.size, 0);
-      else{
-        if(event.name == "bottom")
-          delta = new paper.Point(0, event.size - _bounds.height);
-        else
-          delta = new paper.Point(0, _bounds.height - event.size);
-      }
-    }
-
-    if(delta.length){
-      const {project} = this;
-      project.deselect_all_points();
-      project.getItems({class: ProfileItem})
-        .forEach(({b, e, generatrix, width}) => {
-          width /= 2;
-          if(Math.abs(b[xy] - _bounds[event.name]) < width && Math.abs(e[xy] - _bounds[event.name]) < width){
-            generatrix.segments.forEach((segm) => segm.selected = true)
-          }
-          else if(Math.abs(b[xy] - _bounds[event.name]) < width){
-            generatrix.firstSegment.selected = true;
-          }
-          else if(Math.abs(e[xy] - _bounds[event.name]) < width){
-            generatrix.lastSegment.selected = true;
-          }
-      });
-      project.move_points(delta, false);
-      project.deselect_all_points(true);
-      project.register_update();
-    }
-
-  }
-
-  sizes_wnd(event) {
-
-    if(this.wnd && event.wnd == this.wnd.wnd){
-
-      switch(event.name) {
-        case 'close':
-          if(this.children.text){
-            this.children.text.selected = false;
-          }
-          this.wnd = null;
-          break;
-
-        case 'left':
-        case 'right':
-          if(this.pos == "top" || this.pos == "bottom"){
-            this._move_points(event, "x");
-          }
-          break;
-
-        case 'top':
-        case 'bottom':
-          if(this.pos == "left" || this.pos == "right"){
-            this._move_points(event, "y");
-          }
-          break;
-      }
-    }
-
-  }
-
-  redraw() {
-
-    const {children, path, align, project: {builder_props}} = this;
-    if(!children.length){
-      return;
-    }
-    if(!path){
-      this.visible = false;
-      return;
-    }
-
-    const length = path.length;
-    if(length < 1){
-      this.visible = false;
-      return;
-    }
-    this.visible = true;
-
-    const b = path.firstSegment.point;
-    const e = path.lastSegment.point;
-    const normal = path.getNormalAt(0).multiply(this.offset + path.offset);
-    const nl = normal.length;
-    const ns = nl > 30 ? normal.normalize(nl - 20) : normal;
-    const bs = b.add(ns);
-    const es = e.add(ns);
-
-    if(children.callout1.segments.length){
-      children.callout1.firstSegment.point = b;
-      children.callout1.lastSegment.point = b.add(normal);
-    }
-    else{
-      children.callout1.addSegments([b, b.add(normal)]);
-    }
-
-    if(children.callout2.segments.length){
-      children.callout2.firstSegment.point = e;
-      children.callout2.lastSegment.point = e.add(normal);
-    }
-    else{
-      children.callout2.addSegments([e, e.add(normal)]);
-    }
-
-    if(children.scale.segments.length){
-      children.scale.firstSegment.point = bs;
-      children.scale.lastSegment.point = es;
-    }
-    else{
-      children.scale.addSegments([bs, es]);
-    }
-
-    children.callout1.visible = !this.hide_c1;
-    children.callout2.visible = !this.hide_c2;
-    children.scale.visible = !this.hide_line;
-
-    children.text.content = length.round(builder_props.rounding).toString();
-    children.text.rotation = e.subtract(b).angle;
-    children.text.justification = align.ref;
-
-    const font_size = this._font_size();
-    const {isNode} = $p.wsql.alasql.utils;
-    children.text.fontSize = font_size;
-    if(align == $p.enm.text_aligns.left) {
-      children.text.position = bs
-        .add(path.getTangentAt(0).multiply(font_size))
-        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.9 : 2)));
-    }
-    else if(align == $p.enm.text_aligns.right) {
-      children.text.position = es
-        .add(path.getTangentAt(0).multiply(-font_size))
-        .add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.9 : 2)));
-    }
-    else {
-      children.text.position = bs.add(es).divide(2).add(path.getNormalAt(0).multiply(font_size / (isNode ? 1.9 : 2)));
-      if(length < 20) {
-        children.text.position = children.text.position.add(path.getTangentAt(0).multiply(font_size / 3));
-      }
-    }
-  }
-
-  get path() {
-
-    const {parent, project, children, _attr, pos} = this;
-    if(!children.length){
-      return;
-    }
-    const {owner_bounds, dimension_bounds} = parent;
-    let offset = 0, b, e;
-
-    if(!pos){
-      b = typeof _attr.p1 == "number" ? _attr.elm1.corns(_attr.p1) : _attr.elm1[_attr.p1];
-      e = typeof _attr.p2 == "number" ? _attr.elm2.corns(_attr.p2) : _attr.elm2[_attr.p2];
-    }
-    else if(pos == "top"){
-      b = owner_bounds.topLeft;
-      e = owner_bounds.topRight;
-      offset = owner_bounds[pos] - dimension_bounds[pos];
-    }
-    else if(pos == "left"){
-      b = owner_bounds.bottomLeft;
-      e = owner_bounds.topLeft;
-      offset = owner_bounds[pos] - dimension_bounds[pos];
-    }
-    else if(pos == "bottom"){
-      b = owner_bounds.bottomLeft;
-      e = owner_bounds.bottomRight;
-      offset = owner_bounds[pos] - dimension_bounds[pos];
-    }
-    else if(pos == "right"){
-      b = owner_bounds.bottomRight;
-      e = owner_bounds.topRight;
-      offset = owner_bounds[pos] - dimension_bounds[pos];
-    }
-
-    if(!b || !e){
-      return;
-    }
-
-    const path = new paper.Path({ insert: false, segments: [b, e] });
-
-    if(_attr.elm1 && pos){
-      b = path.getNearestPoint(_attr.elm1[_attr.p1]);
-      e = path.getNearestPoint(_attr.elm2[_attr.p2]);
-      if(path.getOffsetOf(b) > path.getOffsetOf(e)){
-        [b, e] = [e, b]
-      }
-      path.firstSegment.point = b;
-      path.lastSegment.point = e;
-    }
-    if(_attr.faltz) {
-      b = path.getPointAt(_attr.faltz);
-      e = path.getPointAt(path.length - _attr.faltz);
-      path.firstSegment.point = b;
-      path.lastSegment.point = e;
-    }
-    path.offset = offset;
-
-    return path;
-  }
-
-  get eve() {
-    return this.project._scope.eve;
-  }
-
-  get size() {
-    return (this.children.text && parseFloat(this.children.text.content)) || 0;
-  }
-  set size(v) {
-    this.children.text.content = parseFloat(v).round(1);
-  }
-
-  get pos() {
-    return this._attr.pos || "";
-  }
-  set pos(v) {
-    this._attr.pos = v;
-    this.redraw();
-  }
-
-  get offset() {
-    return this._attr.offset || 90;
-  }
-  set offset(v) {
-    const offset = (parseInt(v) || 90).round();
-    if(this._attr.offset != offset){
-      this._attr.offset = offset;
-      this.project.register_change(true);
-    }
-  }
-
-  get align() {
-    return (!this._attr.align || this._attr.align == '_') ? $p.enm.text_aligns.center : this._attr.align;
-  }
-  set align(v) {
-    this._attr.align = v;
-    this.redraw();
-  }
-
-  get hide_c1() {
-    return !!this._attr.hide_c1;
-  }
-  set hide_c1(v) {
-    const {children, hide_c1, _attr} = this
-    _attr.hide_c1 = v;
-    v && children.callout1.setSelection(false);
-    this.redraw();
-  }
-
-  get hide_c2() {
-    return !!this._attr.hide_c2;
-  }
-  set hide_c2(v) {
-    const {children, hide_c2, _attr} = this
-    _attr.hide_c2 = v;
-    v && children.callout2.setSelection(false);
-    this.redraw();
-  }
-
-  get hide_line() {
-    return !!this._attr.hide_line;
-  }
-  set hide_line(v) {
-    const {children, hide_line, _attr} = this
-    _attr.hide_line = v;
-    v && children.scale.setSelection(false);
-    this.redraw();
-  }
-
-  remove() {
-    if(this._row){
-      this._row._owner.del(this._row);
-      this._row = null;
-      this.project.register_change();
-    }
-    super.remove();
-  }
-}
-
-
-class DimensionLineCustom extends DimensionLine {
-
-  constructor(attr) {
-
-    if(!attr.row){
-      attr.row = attr.parent.project.ox.coordinates.add();
-    }
-
-    if(!attr.row.cnstr){
-      attr.row.cnstr = attr.parent.layer.cnstr;
-    }
-
-    if(!attr.row.elm){
-      attr.row.elm = attr.parent.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
-    }
-
-    super(attr);
-
-  }
-
-  get elm_type() {
-    return $p.enm.elm_types.Размер;
-  }
-
-  save_coordinates() {
-    const {_row, _attr, elm_type, pos, offset, size, align} = this;
-
-    _row.len = size;
-
-    _row.elm_type = elm_type;
-
-    const path_data = {
-      pos: pos,
-      elm1: _attr.elm1.elm,
-      elm2: _attr.elm2.elm,
-      p1: _attr.p1,
-      p2: _attr.p2,
-      offset: offset
-    };
-    if(_attr.fix_angle) {
-      path_data.fix_angle = true;
-      path_data.angle = _attr.angle;
-    }
-    if(align == $p.enm.text_aligns.left || align == $p.enm.text_aligns.right) {
-      path_data.align = align.ref || align;
-    }
-    if(_attr.hide_c1) {
-      path_data.hide_c1 = true;
-    }
-    if(_attr.hide_c2) {
-      path_data.hide_c2 = true;
-    }
-    if(_attr.hide_line) {
-      path_data.hide_line = true;
-    }
-    if(_attr.by_curve) {
-      path_data.by_curve = true;
-    }
-    _row.path_data = JSON.stringify(path_data);
-  }
-
-  setSelection(selection) {
-    super.setSelection(selection);
-    const {project, children, hide_c1, hide_c2, hide_line} = this
-    const {tool} = project._scope;
-    if(selection) {
-      hide_c1 && children.callout1.setSelection(false);
-      hide_c2 && children.callout2.setSelection(false);
-      hide_line && children.scale.setSelection(false);
-    }
-    typeof ToolRuler === 'function' && tool instanceof ToolRuler && tool.wnd.attach(this);
-  }
-
-  _click(event) {
-    event.stop();
-    const {tool} = this.project._scope;
-    if(tool && typeof ToolRuler === 'function' && tool instanceof ToolRuler){
-      this.selected = true;
-    }
-  }
-
-  _mouseenter() {
-    const {_scope} = this.project;
-    const {tool} = _scope;
-    if(tool && typeof ToolRuler === 'function' && tool instanceof ToolRuler){
-      _scope.canvas_cursor('cursor-arrow-ruler');
-    }
-    else{
-      _scope.canvas_cursor('cursor-arrow-ruler-dis');
-    }
-  }
-
-  get angle() {
-    if(this.fix_angle) {
-      return this._attr.angle || 0;
-    }
-    const {firstSegment, lastSegment} = this.path;
-    return lastSegment.point.subtract(firstSegment.point).angle.round(1);
-  }
-  set angle(v) {
-    this._attr.angle = parseFloat(v).round(1);
-    this.project.register_change(true);
-  }
-
-  get fix_angle() {
-    return !!this._attr.fix_angle;
-  }
-  set fix_angle(v) {
-    this._attr.fix_angle = v;
-    this.project.register_change(true);
-  }
-
-  get path() {
-    if(this.fix_angle) {
-
-      const {children, _attr} = this;
-      if(!children.length){
-        return;
-      }
-      let b = typeof _attr.p1 == "number" ? _attr.elm1.corns(_attr.p1) : _attr.elm1[_attr.p1];
-      let e = typeof _attr.p2 == "number" ? _attr.elm2.corns(_attr.p2) : _attr.elm2[_attr.p2];
-      if(!b || !e){
-        return;
-      }
-
-      const d = e.subtract(b);
-      const t = d.clone();
-      t.angle = this.angle;
-      const path = new paper.Path({insert: false, segments: [b, b.add(t)]});
-      path.lastSegment.point.add(t.multiply(10000));
-      path.lastSegment.point = path.getNearestPoint(e);
-      path.offset = 0;
-      return path;
-    }
-    else {
-      return super.path;
-    }
-  }
-}
-
-EditorInvisible.DimensionLine = DimensionLine;
-EditorInvisible.DimensionLineCustom = DimensionLineCustom;
-
-
-
-class DimensionLineImpost extends DimensionLineCustom {
-
-  constructor(attr) {
-
-    attr.row = {
-      cnstr: 1,
-      elm: 1,
-      _owner: {
-        del() {}
-      }
-    }
-
-    super(attr);
-
-    new paper.PointText({
-      parent: this,
-      name: 'dx1',
-      justification: 'center',
-      fontFamily: consts.font_family,
-      fillColor: 'black',
-      fontSize: consts.font_size});
-
-    new paper.PointText({
-      parent: this,
-      name: 'dx2',
-      justification: 'center',
-      fontFamily: consts.font_family,
-      fillColor: 'black',
-      fontSize: consts.font_size});
-
-  }
-
-  get path() {
-
-
-    const {children, _attr: {elm1: {generatrix}, p1, p2, dx1, dx2}} = this;
-    if(!children.length){
-      return;
-    }
-
-    let b = generatrix.getPointAt(typeof p1 == 'number' ? dx2 : dx1);
-    let e = generatrix.getPointAt(typeof p1 == 'number' ? dx1 : dx2);
-    if(!b || !e){
-      return;
-    }
-    const path = new paper.Path({insert: false, segments: [b, e]});
-    path.offset = 0;
-    return path;
-  }
-
-  redraw() {
-
-    const {children, path, offset, _attr: {elm1, p1, p2, dx1, dx2, outer}} = this;
-    if(!children.length){
-      return;
-    }
-    if(!path){
-      this.visible = false;
-      return;
-    }
-
-    this.visible = true;
-
-    const b = path.firstSegment.point;
-    const e = path.lastSegment.point;
-    const normal = path.getNormalAt(0).multiply((outer ? -1 : 1) * (offset + path.offset));
-    const tangent = path.getTangentAt(0);
-    const ns = normal.normalize(normal.length - 20);
-    const bs = b.add(ns);
-    const es = e.add(ns);
-    let offsetB = 0;
-    const elmB = elm1.cnn_point('b').profile;
-    if(elmB) {
-      const gen = elm1.generatrix.clone({insert: false}).elongation(200);
-      const po = elmB.rays.outer.intersect_point(gen, elm1.b);
-      const pi = elmB.rays.inner.intersect_point(gen, elm1.b);
-      if(po && pi) {
-        const ob = gen.getOffsetOf(elm1.b);
-        const oo = gen.getOffsetOf(po);
-        const oi = gen.getOffsetOf(pi);
-        offsetB = Math.min(oo - ob, oi - ob);
-      }
-    }
-
-    if(children.callout1.segments.length){
-      children.callout1.firstSegment.point = b;
-      children.callout1.lastSegment.point = b.add(normal);
-    }
-    else{
-      children.callout1.addSegments([b, b.add(normal)]);
-    }
-
-    if(children.callout2.segments.length){
-      children.callout2.firstSegment.point = e;
-      children.callout2.lastSegment.point = e.add(normal);
-    }
-    else{
-      children.callout2.addSegments([e, e.add(normal)]);
-    }
-
-    if(children.scale.segments.length){
-      children.scale.firstSegment.point = bs;
-      children.scale.lastSegment.point = es;
-    }
-    else{
-      children.scale.addSegments([bs, es]);
-    }
-    children.scale.elongation(200);
-
-    children.text.rotation = children.dx1.rotation = children.dx2.rotation = 0;
-    children.text.content = ((typeof p1 == 'number' ? p1 : p2) - offsetB).toFixed(0);
-    children.dx1.content = (dx1 - offsetB).toFixed(0);
-    children.dx2.content = (dx2 - offsetB).toFixed(0);
-    const bdx1 = children.dx1.bounds;
-    const bdx2 = children.dx2.bounds;
-    if(offset > 0) {
-      children.dx1.justification = 'left';
-      children.dx2.justification = 'right';
-      children.dx1.position = bs
-        .add(tangent.normalize(-Math.sign(offset) * ((consts.font_size + bdx1.width) / 2)))
-        .add(normal.normalize(-consts.font_size * 0.6));
-      children.dx2.position = es
-        .add(tangent.normalize(Math.sign(offset) * ((consts.font_size + bdx1.width) / 2)))
-        .add(normal.normalize(-consts.font_size * 0.6));
-    }
-    else {
-      children.dx1.justification = 'right';
-      children.dx2.justification = 'left';
-      children.dx1.position = es
-        .add(tangent.normalize(-Math.sign(offset) * ((consts.font_size + bdx1.width) / 2)))
-        .add(normal.normalize(-consts.font_size * 0.6));
-      children.dx2.position = bs
-        .add(tangent.normalize(Math.sign(offset) * ((consts.font_size + bdx1.width) / 2)))
-        .add(normal.normalize(-consts.font_size * 0.6));
-    }
-    children.text.rotation = children.dx1.rotation = children.dx2.rotation = e.subtract(b).angle;
-
-    children.text.position = bs.add(es).divide(2).add(normal.normalize(consts.font_size * 0.8));
-  }
-
-}
-
-
-class DimensionRadius extends DimensionLineCustom {
-
-  get elm_type() {
-    return $p.enm.elm_types.Радиус;
-  }
-
-  get path() {
-
-    const {children, _attr} = this;
-    if(!children.length){
-      return;
-    }
-    const {path} = _attr.elm1;
-    if(!path){
-      return;
-    }
-
-    let b = path.getPointAt(_attr.p1);
-    const n = path.getNormalAt(_attr.p1).normalize(100);
-    const res = new paper.Path({insert: false, segments: [b, b.add(n)]});
-    res.offset = 0;
-    return res;
-  }
-
-  redraw() {
-    const {children, _attr, path, align} = this;
-    if(!path){
-      this.visible = false;
-      return;
-    }
-    this.visible = true;
-
-    const b = path.firstSegment.point;
-    const e = path.lastSegment.point;
-    const c = path.getPointAt(50);
-    const n = path.getNormalAt(0).multiply(10);
-    const c1 = c.add(n);
-    const c2 = c.subtract(n);
-
-    if(children.callout1.segments.length){
-      children.callout1.firstSegment.point = b;
-      children.callout1.lastSegment.point = c1;
-    }
-    else{
-      children.callout1.addSegments([b, c1]);
-    }
-
-    if(children.callout2.segments.length){
-      children.callout2.firstSegment.point = b;
-      children.callout2.lastSegment.point = c2;
-    }
-    else{
-      children.callout2.addSegments([b, c2]);
-    }
-
-    if(children.scale.segments.length){
-      children.scale.firstSegment.point = b;
-      children.scale.lastSegment.point = e;
-    }
-    else{
-      children.scale.addSegments([b, e]);
-    }
-
-    children.text.rotation = e.subtract(b).angle;
-    children.text.justification = 'left';
-    if(_attr.by_curve) {
-      const curv = Math.abs(_attr.elm1.path.getCurvatureAt(_attr.p1));
-      if(curv) {
-        children.text.content = `R${(1 / curv).round(0)}`;
-      }
-    }
-    else {
-      const {path, _attr: {_corns}} = _attr.elm1;
-      const sub = _attr.p1 > _attr.elm1.length ? path.get_subpath(_corns[3], _corns[4]) : path.get_subpath(_corns[1], _corns[2])
-      children.text.content = `R${sub.ravg().round(0)}`;
-    }
-
-    children.text.position = e.add(path.getTangentAt(0).multiply(consts.font_size * 1.4));
-  }
-
-}
-
-EditorInvisible.DimensionRadius = DimensionRadius;
-
-
-
-
-
-class BuilderElement extends paper.Group {
-
-  constructor(attr) {
-
-    super(attr);
-
-    if(!attr.row){
-      attr.row = this.project.ox.coordinates.add();
-    }
-
-    this._row = attr.row;
-
-    this._attr = {};
-
-    if(!this._row.elm){
-      this._row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
-    }
-
-    if(attr.proto){
-
-      if(attr.proto.inset){
-        this.inset = attr.proto.inset;
-      }
-
-      if(attr.parent){
-        this.parent = attr.parent;
-      }
-      else if(attr.proto.parent){
-        this.parent = attr.proto.parent;
-      }
-
-      if(attr.proto instanceof Profile){
-        this.insertBelow(attr.proto);
-      }
-
-      this.clr = attr.proto.clr;
-
-    }
-    else if(attr.parent){
-      this.parent = attr.parent;
-    }
-
-    if(!this._row.cnstr && this.layer.cnstr){
-      this._row.cnstr = this.layer.cnstr;
-    }
-
-    if(this._row.elm_type.empty() && !this.inset.empty()){
-      this._row.elm_type = this.nom.elm_type;
-    }
-
-    this.project.register_change();
-
-  }
-
-
-  get owner() {
-    return this._attr.owner;
-  }
-  set owner(v) {
-    this._attr.owner = v;
-  }
-
-
-  get generatrix() {
-    return this._attr.generatrix;
-  }
-  set generatrix(attr) {
-
-    const {_attr} = this;
-    const {generatrix} = _attr;
-    generatrix.removeSegments();
-
-    this.rays && this.rays.clear();
-
-    if(attr instanceof paper.Path){
-      generatrix.addSegments(attr.segments);
-    }
-    if(Array.isArray(attr)){
-      generatrix.addSegments(attr);
-    }
-    else if(attr.proto &&  attr.p1 &&  attr.p2){
-
-      let tpath = attr.proto;
-      if(tpath.getDirectedAngle(attr.ipoint) < 0){
-        tpath.reverse();
-      }
-
-      let d1 = tpath.getOffsetOf(attr.p1);
-      let d2 = tpath.getOffsetOf(attr.p2), d3;
-      if(d1 > d2){
-        d3 = d2;
-        d2 = d1;
-        d1 = d3;
-      }
-      if(d1 > 0){
-        tpath = tpath.split(d1);
-        d2 = tpath.getOffsetOf(attr.p2);
-      }
-      if(d2 < tpath.length){
-        tpath.split(d2);
-      }
-
-      generatrix.remove();
-      _attr.generatrix = tpath;
-      _attr.generatrix.parent = this;
-
-      if(this.layer.parent){
-        _attr.generatrix.guide = true;
-      }
-    }
-  }
-
-
-  get path() {
-    return this._attr.path;
-  }
-  set path(attr) {
-    if(attr instanceof paper.Path){
-      const {_attr} = this;
-      _attr.path.removeSegments();
-      _attr.path.addSegments(attr.segments);
-      if(!_attr.path.closed){
-        _attr.path.closePath(true);
-      }
-    }
-  }
-
-  get _metadata() {
-    const {fields, tabular_sections} = this.project.ox._metadata();
-    const t = this,
-      _xfields = tabular_sections.coordinates.fields, 
-      inset = Object.assign({}, _xfields.inset),
-      arc_h = Object.assign({}, _xfields.r, {synonym: "Высота дуги"}),
-      info = Object.assign({}, fields.note, {synonym: "Элемент"}),
-      cnn1 = Object.assign({}, tabular_sections.cnn_elmnts.fields.cnn),
-      cnn2 = Object.assign({}, cnn1),
-      cnn3 = Object.assign({}, cnn1);
-
-    function cnn_choice_links(o, cnn_point){
-
-      const nom_cnns = $p.cat.cnns.nom_cnn(t, cnn_point.profile, cnn_point.cnn_types);
-
-      if($p.utils.is_data_obj(o)){
-        return nom_cnns.some((cnn) => o == cnn);
-      }
-      else{
-        let refs = "";
-        nom_cnns.forEach((cnn) => {
-          if(refs){
-            refs += ", ";
-          }
-          refs += "'" + cnn.ref + "'";
-        });
-        return "_t_.ref in (" + refs + ")";
-      }
-    }
-
-
-    const {_inserts_types_filling} = $p.cat.inserts;
-    inset.choice_links = [{
-      name: ["selection",	"ref"],
-      path: [(o, f) => {
-        const {sys} = this.project._dp;
-
-          let selection;
-
-          if(this instanceof Filling){
-            if($p.utils.is_data_obj(o)){
-              const {thickness, insert_type, insert_glass_type} = o;
-              return _inserts_types_filling.indexOf(insert_type) != -1 &&
-                thickness >= sys.tmin && thickness <= sys.tmax &&
-                (insert_glass_type.empty() || insert_glass_type == $p.enm.inserts_glass_types.Заполнение);
-            }
-            else{
-              let refs = "";
-              $p.cat.inserts.by_thickness(sys.tmin, sys.tmax).forEach((o) => {
-                if(o.insert_glass_type.empty() || o.insert_glass_type == $p.enm.inserts_glass_types.Заполнение){
-                  if(refs){
-                    refs += ", ";
-                  }
-                  refs += "'" + o.ref + "'";
-                }
-              });
-              return "_t_.ref in (" + refs + ")";
-            }
-          }
-          else if(this instanceof Profile){
-            if(this.nearest()){
-              selection = {elm_type: {in: [$p.enm.elm_types.Створка, $p.enm.elm_types.Добор]}};
-            }
-            else{
-              selection = {elm_type: {in: [$p.enm.elm_types.Рама, $p.enm.elm_types.Импост, $p.enm.elm_types.Добор]}};
-            }
-          }
-          else{
-            selection = {elm_type: this.nom.elm_type};
-          }
-
-          if($p.utils.is_data_obj(o)){
-            let ok = false;
-            selection.nom = o;
-            sys.elmnts.find_rows(selection, (row) => {
-              ok = true;
-              return false;
-            });
-            return ok;
-          }
-          else{
-            let refs = "";
-            sys.elmnts.find_rows(selection, (row) => {
-              if(refs){
-                refs += ", ";
-              }
-              refs += "'" + row.nom.ref + "'";
-            });
-            return "_t_.ref in (" + refs + ")";
-          }
-        }]}
-    ];
-
-    cnn1.choice_links = [{
-      name: ["selection",	"ref"],
-      path: [(o, f) => cnn_choice_links(o, this.rays.b)]
-    }];
-
-    cnn2.choice_links = [{
-      name: ["selection",	"ref"],
-      path: [(o, f) => cnn_choice_links(o, this.rays.e)]
-    }];
-
-    cnn3.choice_links = [{
-      name: ["selection",	"ref"],
-      path: [(o) => {
-        const cnn_ii = this.selected_cnn_ii();
-        let nom_cnns = [$p.utils.blank.guid];
-
-        if(cnn_ii){
-          if (cnn_ii.elm instanceof Filling) {
-            nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, this, $p.enm.cnn_types.acn.ii);
-          }
-          else if (cnn_ii.elm.elm_type == $p.enm.elm_types.Створка && this.elm_type != $p.enm.elm_types.Створка) {
-            nom_cnns = $p.cat.cnns.nom_cnn(cnn_ii.elm, this, $p.enm.cnn_types.acn.ii);
-          }
-          else {
-            nom_cnns = $p.cat.cnns.nom_cnn(this, cnn_ii.elm, $p.enm.cnn_types.acn.ii);
-          }
-        }
-
-        if ($p.utils.is_data_obj(o)) {
-          return nom_cnns.some((cnn) => o == cnn);
-        }
-        else {
-          var refs = "";
-          nom_cnns.forEach((cnn) => {
-            if (refs) {
-              refs += ", ";
-            }
-            refs += "'" + cnn.ref + "'";
-          });
-          return "_t_.ref in (" + refs + ")";
-        }
-      }]
-    }];
-
-    $p.cat.clrs.selection_exclude_service(_xfields.clr, this);
-
-    const mfields = {
-      info: info,
-      inset: inset,
-      clr: _xfields.clr,
-      x1: _xfields.x1,
-      x2: _xfields.x2,
-      y1: _xfields.y1,
-      y2: _xfields.y2,
-      cnn1: cnn1,
-      cnn2: cnn2,
-      cnn3: cnn3,
-      arc_h: arc_h,
-      r: _xfields.r,
-      arc_ccw: _xfields.arc_ccw,
-      a1: Object.assign({}, _xfields.x1, {synonym: "Угол1"}),
-      a2: Object.assign({}, _xfields.x1, {synonym: "Угол2"}),
-      offset: Object.assign({}, _xfields.x1, {synonym: "Смещение"}),
-    };
-
-    return {
-      fields: new Proxy(mfields, {
-        get(target, prop) {
-          if(target[prop]) {
-            return target[prop];
-          }
-          const param = $p.cch.properties.get(prop);
-          if(param) {
-            const mf = {
-              type: param.type,
-              synonym: param.name,
-            };
-            if(param.type.types.includes('cat.property_values')) {
-              mf.choice_params = [{
-                name: 'owner',
-                path: param.ref,
-              }];
-            }
-            return mf;
-          }
-        }
-      }),
-    };
-  }
-
-  get _manager() {
-    return this.project._dp._manager;
-  }
-
-
-  get nom() {
-    return this.inset.nom(this);
-  }
-
-  get elm() {
-    return this._row ? this._row.elm : 0;
-  }
-
-  get info() {
-    return "№" + this.elm;
-  }
-
-  get ref() {
-    const {nom} = this;
-    return nom && !nom.empty() ? nom.ref : this.inset.ref;
-  }
-
-  get width() {
-    return this.nom.width || 80;
-  }
-
-  get thickness() {
-    return this.inset.thickness;
-  }
-
-  get sizeb() {
-    return this.inset.sizeb || 0;
-  }
-
-  get sizefurn() {
-    return this.nom.sizefurn || 20;
-  }
-
-
-  get cnn3(){
-    const cnn_ii = this.selected_cnn_ii();
-    return cnn_ii ? cnn_ii.row.cnn : $p.cat.cnns.get();
-  }
-  set cnn3(v) {
-    const cnn_ii = this.selected_cnn_ii();
-    if(cnn_ii && cnn_ii.row.cnn != v){
-      cnn_ii.row.cnn = v;
-      if(this._attr._nearest_cnn){
-        this._attr._nearest_cnn = cnn_ii.row.cnn;
-      }
-      if(this.rays){
-        this.rays.clear();
-      }
-      this.project.register_change();
-    }
-  }
-
-  get inset() {
-    return (this._row ? this._row.inset : null) || $p.cat.inserts.get();
-  }
-  set inset(v) {
-    this.set_inset(v);
-  }
-
-  get clr() {
-    return this._row.clr;
-  }
-  set clr(v) {
-    this.set_clr(v);
-  }
-
-
-  set_inset(v, ignore_select) {
-    const {_row, _attr, project} = this;
-    if(_row.inset != v){
-      _row.inset = v;
-      if(_attr && _attr._rays){
-        _attr._rays.clear(true);
-      }
-      project.register_change();
-    }
-  }
-
-
-  set_clr(v, ignore_select) {
-    if(this._row.clr != v) {
-      this._row.clr = v;
-      this.project.register_change();
-    }
-    if(this.path instanceof paper.Path){
-      this.path.fillColor = BuilderElement.clr_by_clr.call(this, this._row.clr, false);
-    }
-  }
-
-
-  t_parent(be) {
-    return this;
-  }
-
-
-  attache_wnd(cell) {
-    if(!this._attr._grid || !this._attr._grid.cell){
-
-      this._attr._grid = cell.attachHeadFields({
-        obj: this,
-        oxml: this.oxml
-      });
-      this._attr._grid.attachEvent('onRowSelect', function (id) {
-        if(['x1', 'y1', 'a1', 'cnn1'].indexOf(id) != -1) {
-          this._obj.select_node('b');
-        }
-        else if(['x2', 'y2', 'a2', 'cnn2'].indexOf(id) != -1) {
-          this._obj.select_node('e');
-        }
-      });
-    }
-    else if(this._attr._grid._obj != this){
-      this._attr._grid.attach({
-        obj: this,
-        oxml: this.oxml
-      });
-    }
-  }
-
-
-  detache_wnd() {
-    const {_grid} = this._attr;
-    if(_grid && _grid.destructor && _grid._owner_cell){
-      _grid._owner_cell.detachObject(true);
-      delete this._attr._grid;
-    }
-  }
-
-
-  selected_cnn_ii() {
-    const {project, elm} = this;
-    const sel = project.getSelectedItems();
-    const {cnns} = project;
-    const items = [];
-    let res;
-
-    sel.forEach((item) => {
-      if(item.parent instanceof ProfileItem || item.parent instanceof Filling)
-        items.push(item.parent);
-      else if(item instanceof Filling)
-        items.push(item);
-    });
-
-    if(items.length > 1 &&
-      items.some((item) => item == this) &&
-      items.some((item) => {
-        if(item != this){
-          cnns.forEach((row) => {
-            if(!row.node1 && !row.node2 &&
-              ((row.elm1 == elm && row.elm2 == item.elm) || (row.elm1 == item.elm && row.elm2 == elm))){
-              res = {elm: item, row: row};
-              return false;
-            }
-          });
-          if(res){
-            return true;
-          }
-        }
-      })){
-      return res;
-    }
-  }
-
-
-  remove() {
-    this.detache_wnd();
-    const {parent, project, observer, _row} = this;
-
-    parent && parent.on_remove_elm && parent.on_remove_elm(this);
-
-    if (observer){
-      project._scope.eve.off(consts.move_points, observer);
-      delete this.observer;
-    }
-
-    if(_row && _row._owner && project.ox === _row._owner._owner){
-      _row._owner.del(_row);
-    }
-
-    project.register_change();
-
-    super.remove();
-  }
-
-
-  err_spec_row(nom, text) {
-    if(!nom){
-      nom = $p.job_prm.nom.info_error;
-    }
-    const {ox} = this.project;
-    if(!ox.specification.find_rows({elm: this.elm, nom}).length){
-      $p.ProductsBuilding.new_spec_row({
-        elm: this,
-        row_base: {clr: $p.cat.clrs.get(), nom},
-        spec: ox.specification,
-        ox,
-      });
-    };
-    if(text){
-
-    }
-  }
-
-
-  static clr_by_clr(clr, view_out) {
-    let {clr_str, clr_in, clr_out} = clr;
-
-    if(!view_out){
-      if(!clr_in.empty() && clr_in.clr_str)
-        clr_str = clr_in.clr_str;
-    }else{
-      if(!clr_out.empty() && clr_out.clr_str)
-        clr_str = clr_out.clr_str;
-    }
-
-    if(!clr_str){
-      clr_str = this.default_clr_str ? this.default_clr_str : "fff";
-    }
-
-    if(clr_str){
-      clr = clr_str.split(",");
-      if(clr.length == 1){
-        if(clr_str[0] != "#")
-          clr_str = "#" + clr_str;
-        clr = new paper.Color(clr_str);
-        clr.alpha = 0.96;
-      }
-      else if(clr.length == 4){
-        clr = new paper.Color(clr[0], clr[1], clr[2], clr[3]);
-      }
-      else if(clr.length == 3){
-        if(this.path && this.path.bounds)
-          clr = new paper.Color({
-            stops: [clr[0], clr[1], clr[2]],
-            origin: this.path.bounds.bottomLeft,
-            destination: this.path.bounds.topRight
-          });
-        else
-          clr = new paper.Color(clr[0]);
-      }
-      return clr;
-    }
-  }
-}
-
-
-EditorInvisible.BuilderElement = BuilderElement;
-
-
-
-
-
-class Filling extends AbstractFilling(BuilderElement) {
-
-  constructor(attr) {
-
-    const {path} = attr;
-    if(path){
-      delete attr.path;
-    }
-
-    super(attr);
-
-    if(path){
-      attr.path = path;
-    }
-
-    this.initialize(attr);
-
-  }
-
-  initialize(attr) {
-
-    const _row = attr.row;
-    const {_attr, project} = this;
-    const h = project.bounds.height + project.bounds.y;
-
-    if(_row.path_data){
-      _attr.path = new paper.Path(_row.path_data);
-    }
-
-    else if(attr.path){
-      _attr.path = new paper.Path();
-      this.path = attr.path;
-    }
-    else{
-      _attr.path = new paper.Path([
-        [_row.x1, h - _row.y1],
-        [_row.x1, h - _row.y2],
-        [_row.x2, h - _row.y2],
-        [_row.x2, h - _row.y1]
-      ]);
-    }
-
-    _attr.path.closePath(true);
-    _attr.path.reduce();
-    _attr.path.strokeWidth = 0;
-
-    if(_row.inset.empty()){
-      _row.inset = project.default_inset({elm_type: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]});
-    }
-
-    if(_row.clr.empty()){
-      project._dp.sys.elmnts.find_rows({nom: _row.inset}, (row) => {
-        _row.clr = row.clr;
-        return false;
-      });
-    }
-    if(_row.clr.empty()){
-      project._dp.sys.elmnts.find_rows({elm_type: {in: [$p.enm.elm_types.Стекло, $p.enm.elm_types.Заполнение]}}, (row) => {
-        _row.clr = row.clr;
-        return false;
-      });
-    }
-    this.clr = _row.clr;
-
-    if(_row.elm_type.empty()){
-      _row.elm_type = $p.enm.elm_types.Стекло;
-    }
-
-    _attr.path.visible = false;
-
-    this.addChild(_attr.path);
-
-    project.ox.coordinates.find_rows({
-      cnstr: this.layer.cnstr,
-      parent: this.elm,
-      elm_type: $p.enm.elm_types.Раскладка
-    }, (row) => new Onlay({row, parent: this}));
-
-    if (attr.proto) {
-      const tmp = [];
-      project.ox.glass_specification.find_rows({elm: attr.proto.elm}, (row) => {
-        tmp.push({
-          clr: row.clr,
-          elm: this.elm,
-          gno: row.gno,
-          inset: row.inset
-        });
-      });
-      tmp.forEach((row) => project.ox.glass_specification.add(row));
-    }
-
-  }
-
-  save_coordinates() {
-
-    const {_row, project, profiles, bounds, imposts, nom} = this;
-    const h = project.bounds.height + project.bounds.y;
-    const {cnns} = project;
-    const {length} = profiles;
-
-    project.ox.glasses.add({
-      elm: _row.elm,
-      nom: nom,
-      formula: this.formula(),
-      width: bounds.width,
-      height: bounds.height,
-      s: this.area,
-      is_rectangular: this.is_rectangular,
-      is_sandwich: nom.elm_type == $p.enm.elm_types.Заполнение,
-      thickness: this.thickness,
-    });
-
-    let curr, prev,	next
-
-    _row.x1 = (bounds.bottomLeft.x - project.bounds.x).round(3);
-    _row.y1 = (h - bounds.bottomLeft.y).round(3);
-    _row.x2 = (bounds.topRight.x - project.bounds.x).round(3);
-    _row.y2 = (h - bounds.topRight.y).round(3);
-    _row.path_data = this.path.pathData;
-
-    for(let i=0; i<length; i++ ){
-
-      curr = profiles[i];
-
-      if(!curr.profile || !curr.profile._row || !curr.cnn){
-        if($p.job_prm.debug) {
-          throw new ReferenceError('Не найдено ребро заполнения');
-        }
-        else {
-          return;
-        }
-      }
-
-      curr.aperture_path = curr.profile.generatrix.get_subpath(curr.b, curr.e)._reversed ?
-        curr.profile.rays.outer : curr.profile.rays.inner;
-    }
-
-    for(let i=0; i<length; i++ ){
-
-      prev = i === 0 ? profiles[length-1] : profiles[i-1];
-      curr = profiles[i];
-      next = i === length-1 ? profiles[0] : profiles[i+1];
-
-      const pb = curr.aperture_path.intersect_point(prev.aperture_path, curr.b, true);
-      const pe = curr.aperture_path.intersect_point(next.aperture_path, curr.e, true);
-
-      if(!pb || !pe) {
-        if($p.job_prm.debug) {
-          throw 'Filling:path';
-        }
-        else {
-          return;
-        }
-      }
-
-      cnns.add({
-        elm1: _row.elm,
-        elm2: curr.profile._row.elm,
-        node1: '',
-        node2: '',
-        cnn: curr.cnn.ref,
-        aperture_len: curr.aperture_path.get_subpath(pb, pe).length.round(1)
-      });
-
-    }
-
-    for(let i=0; i<length; i++ ){
-      delete profiles[i].aperture_path;
-    }
-
-    imposts.forEach((curr) => curr.save_coordinates());
-  }
-
-  create_leaf(furn, direction) {
-
-    const {project} = this;
-
-    project.cnns.clear({elm1: this.elm});
-
-    const contour = new Contour( {parent: this.parent});
-
-    contour.path = this.profiles;
-
-    this.parent = contour;
-    this._row.cnstr = contour.cnstr;
-
-    if(direction) {
-      contour.direction = direction;
-    }
-    contour.furn = furn || project.default_furn;
-
-    project.notify(contour, 'rows', {constructions: true});
-
-    contour.activate();
-    return contour;
-  }
-
-  cnn_side() {
-    return $p.enm.cnn_sides.Изнутри;
-  }
-
-  nearest() {
-    return null;
-  }
-
-  select_node(v) {
-    let point, segm, delta = Infinity;
-    if(v === "b"){
-      point = this.bounds.bottomLeft;
-    }else{
-      point = this.bounds.topRight;
-    }
-    this._attr.path.segments.forEach((curr) => {
-      curr.selected = false;
-      if(point.getDistance(curr.point) < delta){
-        delta = point.getDistance(curr.point);
-        segm = curr;
-      }
-    });
-    if(segm){
-      segm.selected = true;
-      this.view.update();
-    }
-  }
-
-  setSelection(selection) {
-    super.setSelection(selection);
-    if(selection){
-      const {path} = this;
-      for(let elm of this.children){
-        if(elm != path){
-          elm.selected = false;
-        }
-      }
-    }
-  }
-
-  redraw() {
-
-    this.sendToBack();
-
-    const {path, imposts, _attr, is_rectangular} = this;
-    const {elm_font_size, font_family} = consts;
-    const fontSize = elm_font_size * (2 / 3);
-    const maxTextWidth = 600;
-    path.visible = true;
-    imposts.forEach((elm) => elm.redraw());
-
-    this.purge_paths();
-
-    if(!_attr._text){
-      _attr._text = new paper.PointText({
-        parent: this,
-        fillColor: 'black',
-        fontFamily: font_family,
-        fontSize,
-        guide: true,
-        visible: true,
-      });
-    }
-
-    const {bounds} = path;
-    _attr._text.content = this.formula();
-
-    const textBounds = bounds.scale(0.88);
-    textBounds.width = textBounds.width > maxTextWidth ? maxTextWidth : textBounds.width;
-    textBounds.height = textBounds.height > maxTextWidth ? maxTextWidth : textBounds.height;
-
-    if(is_rectangular){
-      const turn = textBounds.width * 1.5 < textBounds.height;
-      if(turn){
-        textBounds.width = elm_font_size;
-        _attr._text.rotation = 270;
-      }
-      else{
-        textBounds.height = elm_font_size;
-        _attr._text.rotation = 0;
-      }
-      _attr._text.fitBounds(textBounds);
-      _attr._text.point = turn
-        ? bounds.bottomRight.add([-fontSize, -fontSize * 0.6])
-        : bounds.bottomLeft.add([fontSize * 0.6, -fontSize]);
-    }
-    else{
-      textBounds.height = elm_font_size;
-      _attr._text.rotation = 0;
-      _attr._text.fitBounds(textBounds);
-      const maxCurve = path.curves.reduce((curv, item) => item.length > curv.length ? item : curv, path.curves[0]);
-      const {angle, angleInRadians} = maxCurve.line.vector;
-      const {PI} = Math;
-      _attr._text.rotation = angle;
-      const biasPoint = new paper.Point(Math.cos(angleInRadians + PI / 4), Math.sin(angleInRadians + PI / 4)).multiply(3 * elm_font_size);
-      _attr._text.point = maxCurve.point1.add(biasPoint);
-      if(Math.abs(angle) >= 85 && Math.abs(angle) <= 185){
-        _attr._text.point = _attr._text.bounds.rightCenter;
-        _attr._text.rotation += 180;
-      }
-    }
-  }
-
-  draw_fragment() {
-    const {l_dimensions, layer, path} = this;
-    this.visible = true;
-    path.set({
-      strokeColor: 'black',
-      strokeWidth: 1,
-      strokeScaling: false,
-      opacity: 0.6,
-    });
-    l_dimensions.redraw(true);
-    layer.draw_visualization();
-    const {l_visualization: lv} = layer;
-    lv._by_insets && lv._by_insets.removeChildren();
-    lv._cnn && lv._cnn.removeChildren();
-    lv._opening && lv._opening.removeChildren();
-    lv.visible = true;
-    layer.zoom_fit();
-  }
-
-  set_inset(v, ignore_select) {
-
-    const inset = $p.cat.inserts.get(v);
-
-    if(!ignore_select){
-      const {project, elm} = this;
-      const {glass_specification} = project.ox;
-
-      inset.clr_group.default_clr(this);
-
-      glass_specification.clear({elm});
-
-      project.selected_glasses().forEach((selm) => {
-        if(selm !== this){
-          selm.set_inset(inset, true);
-          glass_specification.clear({elm: selm.elm});
-          selm.clr = this.clr;
-        }
-      });
-    }
-
-    super.set_inset(inset);
-  }
-
-  set_clr(v, ignore_select) {
-    if(!ignore_select && this.project.selectedItems.length > 1){
-      this.project.selected_glasses().forEach((elm) => {
-        if(elm !== this){
-          elm.set_clr(v, true);
-        }
-      });
-    }
-    super.set_clr(v);
-  }
-
-  purge_paths() {
-    const paths = this.children.filter((child) => child instanceof paper.Path);
-    const {path} = this;
-    paths.forEach((p) => p !== path && p.remove());
-  }
-
-  fill_error() {
-    const {path} = this;
-    path.fillColor = new paper.Color({
-      stops: ["#fee", "#fcc", "#fdd"],
-      origin: path.bounds.bottomLeft,
-      destination: path.bounds.topRight
-    });
-  }
-
-  formula(by_art) {
-    let res;
-    this.project.ox.glass_specification.find_rows({elm: this.elm, inset: {not: $p.utils.blank.guid}}, ({inset}) => {
-      let {name, article} = inset;
-      const aname = name.split(' ');
-      if(by_art && article){
-        name = article;
-      }
-      else if(aname.length){
-        name = aname[0];
-      }
-      if(!res){
-        res = name;
-      }
-      else{
-        res += (by_art ? '*' : 'x') + name;
-      }
-    });
-    return res || (by_art ? this.inset.article || this.inset.name : this.inset.name);
-  }
-
-  deselect_onlay_points() {
-    for(const {generatrix} of this.imposts) {
-      generatrix.segments.forEach((segm) => {
-        if(segm.selected) {
-          segm.selected = false;
-        }
-      });
-      if(generatrix.selected) {
-        generatrix.selected = false;
-      }
-    }
-  }
-
-  get imposts() {
-    return this.getItems({class: Onlay});
-  }
-
-  get profiles() {
-    return this._attr._profiles || [];
-  }
-
-  remove_onlays() {
-    for(let onlay of this.imposts){
-      onlay.remove();
-    }
-  }
-
-  remove() {
-    this.remove_onlays();
-
-    super.remove();
-  }
-
-
-  get area() {
-    return (this.bounds.area / 1e6).round(5);
-  }
-
-  get form_area() {
-    return (this.path.area/1e6).round(5);
-  }
-
-  interiorPoint() {
-    return this.path.interiorPoint;
-  }
-
-  get is_rectangular() {
-    const {profiles, path} = this;
-    return profiles.length === 4 && !path.hasHandles() && !profiles.some(({profile}) => !(Math.abs(profile.angle_hor % 90) < 0.2));
-  }
-
-  get generatrix() {
-    return this.path;
-  }
-
-  get path() {
-    return this._attr.path;
-  }
-  set path(attr) {
-    let {_attr, path} = this;
-
-    if(path){
-      path.removeSegments();
-    }
-    else{
-      path = _attr.path = new paper.Path({parent: this});
-    }
-
-    if(Array.isArray(_attr._profiles)){
-      _attr._profiles.length = 0;
-    }
-    else{
-      _attr._profiles = [];
-    }
-
-    if(attr instanceof paper.Path){
-      path.addSegments(attr.segments);
-    }
-    else if(Array.isArray(attr)){
-      let {length} = attr;
-      let prev, curr, next, sub_path;
-      for(let i=0; i<length; i++ ){
-        curr = attr[i];
-        next = i === length-1 ? attr[0] : attr[i+1];
-        sub_path = curr.profile.generatrix.get_subpath(curr.b, curr.e);
-
-        curr.cnn = $p.cat.cnns.elm_cnn(this, curr.profile, $p.enm.cnn_types.acn.ii,
-          curr.cnn || this.project.elm_cnn(this, curr.profile), false, curr.outer);
-
-        curr.sub_path = sub_path.equidistant(
-          (sub_path._reversed ? -curr.profile.d1 : curr.profile.d2) + (curr.cnn ? curr.cnn.size(this) : 20), consts.sticking);
-
-      }
-      for (let i = 0; i < length; i++) {
-        prev = i === 0 ? attr[length-1] : attr[i-1];
-        curr = attr[i];
-        next = i === length-1 ? attr[0] : attr[i+1];
-        if(!curr.pb)
-          curr.pb = prev.pe = curr.sub_path.intersect_point(prev.sub_path, curr.b, true);
-        if(!curr.pe)
-          curr.pe = next.pb = curr.sub_path.intersect_point(next.sub_path, curr.e, true);
-        if(!curr.pb || !curr.pe){
-          if($p.job_prm.debug)
-            throw "Filling:path";
-          else
-            continue;
-        }
-        curr.sub_path = curr.sub_path.get_subpath(curr.pb, curr.pe);
-      }
-
-      const remove = [];
-      for (let i = 0; i < length; i++) {
-        prev = i === 0 ? attr[length-1] : attr[i-1];
-        next = i === length-1 ? attr[0] : attr[i+1];
-        const crossings =  prev.sub_path.getCrossings(next.sub_path);
-        if(crossings.length){
-          if((prev.e.getDistance(crossings[0].point) < prev.profile.width * 2) ||  (next.b.getDistance(crossings[0].point) < next.profile.width * 2)) {
-            remove.push(attr[i]);
-            prev.sub_path.splitAt(crossings[0]);
-            const nloc = next.sub_path.getLocationOf(crossings[0].point);
-            next.sub_path = next.sub_path.splitAt(nloc);
-          }
-        }
-      }
-      for(const segm of remove) {
-        attr.splice(attr.indexOf(segm), 1);
-        length--;
-      }
-
-      for (let i = 0; i < length; i++) {
-        curr = attr[i];
-        path.addSegments(curr.sub_path.segments);
-        ["anext","pb","pe"].forEach((prop) => { delete curr[prop] });
-        _attr._profiles.push(curr);
-      }
-    }
-
-    if(path.segments.length && !path.closed){
-      path.closePath(true);
-    }
-
-    const intersections = path.self_intersections();
-    if(intersections.length) {
-
-      const {curves, segments} = path;
-      const purge = new Set();
-      for(const {point} of intersections) {
-        for(const rib of attr) {
-          rib._sub.b.is_nearest(point, true) && rib._sub.e.is_nearest(point, true) && purge.add(rib);
-        }
-      }
-      if(purge.size) {
-        purge.forEach((rib) => {
-          const ind = attr.indexOf(rib);
-          attr.splice(ind, 1);
-        });
-
-        return this.path = attr;
-      }
-    }
-    path.reduce();
-
-  }
-
-  get nodes() {
-    let res = this.profiles.map((curr) => curr.b);
-    if(!res.length){
-      const {path, parent} = this;
-      if(path){
-        res = parent.glass_nodes(path);
-      }
-    }
-    return res;
-  }
-
-  get outer_profiles() {
-    return this.profiles;
-  }
-
-  get perimeter() {
-    const res = [];
-    this.profiles.forEach((curr) => {
-      const tmp = {
-        len: curr.sub_path.length,
-        angle: curr.e.subtract(curr.b).angle,
-        profile: curr.profile
-      }
-      res.push(tmp);
-      if(tmp.angle < 0){
-        tmp.angle += 360;
-      }
-    });
-    return res;
-  }
-
-  get bounds() {
-    const {path} = this;
-    return path ? path.bounds : new paper.Rectangle();
-  }
-
-  perimeter_inner(size = 0) {
-    const {center} = this.bounds;
-    const res = this.outer_profiles.map((curr) => {
-      const profile = curr.profile || curr.elm;
-      const {inner, outer} = profile.rays;
-      const sub_path = inner.getNearestPoint(center).getDistance(center, true) < outer.getNearestPoint(center).getDistance(center, true) ?
-        inner.get_subpath(inner.getNearestPoint(curr.b), inner.getNearestPoint(curr.e)) :
-        outer.get_subpath(outer.getNearestPoint(curr.b), outer.getNearestPoint(curr.e));
-      let angle = curr.e.subtract(curr.b).angle.round(1);
-      if(angle < 0) angle += 360;
-      return {
-        profile,
-        sub_path,
-        angle,
-        b: curr.b,
-        e: curr.e,
-      };
-    });
-    const ubound = res.length - 1;
-    return res.map((curr, index) => {
-      let sub_path = curr.sub_path.equidistant(size);
-      const prev = !index ? res[ubound] : res[index - 1];
-      const next = (index == ubound) ? res[0] : res[index + 1];
-      const b = sub_path.intersect_point(prev.sub_path.equidistant(size), curr.b, true);
-      const e = sub_path.intersect_point(next.sub_path.equidistant(size), curr.e, true);
-      if (b && e) {
-        sub_path = sub_path.get_subpath(b, e);
-      }
-      return {
-        profile: curr.profile,
-        angle: curr.angle,
-        len: sub_path.length,
-        sub_path,
-      };
-    });
-  }
-
-  bounds_light(size = 0) {
-    const path = new paper.Path({insert: false});
-    for (const {sub_path} of this.perimeter_inner(size)) {
-      path.addSegments(sub_path.segments);
-    }
-    if (path.segments.length && !path.closed) {
-      path.closePath(true);
-    }
-    path.reduce();
-    return path.bounds;
-  }
-
-  get x1() {
-    return (this.bounds.left - this.project.bounds.x).round(1);
-  }
-
-  get x2() {
-    return (this.bounds.right - this.project.bounds.x).round(1);
-  }
-
-  get y1() {
-    return (this.project.bounds.height + this.project.bounds.y - this.bounds.bottom).round(1);
-  }
-
-  get y2() {
-    return (this.project.bounds.height + this.project.bounds.y - this.bounds.top).round(1);
-  }
-
-  get info() {
-    const {elm, bounds, thickness} = this;
-    return "№" + elm + " w:" + bounds.width.toFixed(0) + " h:" + bounds.height.toFixed(0) + " z:" + thickness.toFixed(0);
-  }
-
-  get oxml() {
-    const oxml = {
-      " ": [
-        {id: "info", path: "o.info", type: "ro"},
-        "inset",
-        "clr"
-      ],
-      "Начало": [
-        {id: "x1", path: "o.x1", synonym: "X1", type: "ro"},
-        {id: "y1", path: "o.y1", synonym: "Y1", type: "ro"}
-      ],
-      "Конец": [
-        {id: "x2", path: "o.x2", synonym: "X2", type: "ro"},
-        {id: "y2", path: "o.y2", synonym: "Y2", type: "ro"}
-      ]
-    };
-    if(this.selected_cnn_ii()){
-      oxml["Примыкание"] = ["cnn3"];
-    }
-    return oxml;
-  }
-
-  get default_clr_str() {
-    return "#def,#d0ddff,#eff";
-  }
-
-  get ref() {
-    return this.thickness.toFixed();
-  }
-
-  get inset() {
-    const {_attr, _row} = this;
-    if(!_attr._ins_proxy || _attr._ins_proxy.ref != _row.inset){
-      _attr._ins_proxy = new Proxy(_row.inset, {
-        get: (target, prop) => {
-          switch (prop){
-            case 'presentation':
-              return this.formula();
-
-            case 'thickness':
-              let res = 0;
-              this.project.ox.glass_specification.find_rows({elm: this.elm}, (row) => {
-                res += row.inset.thickness;
-              });
-              return res || _row.inset.thickness;
-
-            default:
-              return target[prop];
-          }
-        }
-      });
-    }
-    return _attr._ins_proxy;
-  }
-  set inset(v) {
-    this.set_inset(v);
-  }
-
-}
-
-EditorInvisible.Filling = Filling;
-
-
-class FreeText extends paper.PointText {
-
-  constructor(attr) {
-
-    if(!attr.fontSize){
-      attr.fontSize = consts.font_size;
-      if(attr.parent) {
-        const {width, height} = attr.parent.project.bounds;
-        const {cutoff, font_size} = consts;
-        const size = Math.max(width - cutoff, height - cutoff) / 60;
-        attr.fontSize += (size > 0 ? size : 0).round();
-      }
-    }
-    attr.fontFamily = consts.font_family;
-
-    super(attr);
-
-    if(attr.row){
-      this._row = attr.row;
-    }
-    else{
-      this._row = attr.row = this.project.ox.coordinates.add();
-    }
-
-    const {_row} = this;
-
-    if(!_row.cnstr){
-      _row.cnstr = attr.parent.layer.cnstr;
-    }
-
-    if(!_row.elm){
-      _row.elm = this.project.ox.coordinates.aggregate([], ["elm"], "max") + 1;
-    }
-
-    if(attr.point){
-      if(attr.point instanceof paper.Point)
-        this.point = attr.point;
-      else
-        this.point = new paper.Point(attr.point);
-    }
-    else{
-
-      this.clr = _row.clr;
-      this.angle = _row.angle_hor;
-
-      if(_row.path_data){
-        var path_data = JSON.parse(_row.path_data);
-        this.x = _row.x1 + path_data.bounds_x || 0;
-        this.y = _row.y1 - path_data.bounds_y || 0;
-        this._mixin(path_data, null, ["bounds_x","bounds_y"]);
-      }else{
-        this.x = _row.x1;
-        this.y = _row.y1;
-      }
-    }
-
-    this.bringToFront();
-
-  }
-
-  remove() {
-    this._row._owner.del(this._row);
-    this._row = null;
-    paper.PointText.prototype.remove.call(this);
-  }
-
-  save_coordinates() {
-    const {_row} = this;
-
-    _row.x1 = this.x;
-    _row.y1 = this.y;
-    _row.angle_hor = this.angle;
-
-    _row.elm_type = this.elm_type;
-
-    _row.path_data = JSON.stringify({
-      text: this.text,
-      font_family: this.font_family,
-      font_size: this.font_size,
-      bold: this.bold,
-      align: this.align.ref,
-      bounds_x: this.project.bounds.x,
-      bounds_y: this.project.bounds.y
-    });
-  }
-
-  move_points(point) {
-    this.point = point;
-    this.project.notify(this, 'update', {x: true, y: true});
-  }
-
-  get elm_type() {
-    return $p.enm.elm_types.Текст;
-  }
-
-  _metadata() {
-    return $p.dp.builder_text.metadata();
-  }
-
-  get _manager() {
-    return $p.dp.builder_text;
-  }
-
-  get clr() {
-    return this._row ? this._row.clr : $p.cat.clrs.get();
-  }
-  set clr(v) {
-    this._row.clr = v;
-    if(this._row.clr.clr_str.length == 6)
-      this.fillColor = "#" + this._row.clr.clr_str;
-    this.project.register_update();
-  }
-
-  get font_family() {
-    return this.fontFamily || "";
-  }
-  set font_family(v) {
-    this.fontFamily = v;
-    this.project.register_update();
-  }
-
-  get font_size() {
-    return this.fontSize || consts.font_size;
-  }
-  set font_size(v) {
-    this.fontSize = v;
-    this.project.register_update();
-  }
-
-  get bold() {
-    return this.fontWeight != 'normal';
-  }
-  set bold(v) {
-    this.fontWeight = v ? 'bold' : 'normal';
-  }
-
-  get x() {
-    return (this.point.x - this.project.bounds.x).round(1);
-  }
-  set x(v) {
-    this.point.x = parseFloat(v) + this.project.bounds.x;
-    this.project.register_update();
-  }
-
-  get y() {
-    const {bounds} = this.project;
-    return (bounds.height + bounds.y - this.point.y).round(1);
-  }
-  set y(v) {
-    const {bounds} = this.project;
-    this.point.y = bounds.height + bounds.y - parseFloat(v);
-  }
-
-  get text() {
-    return this.content;
-  }
-  set text(v) {
-    const {project} = this;
-    if(v){
-      this.content = v;
-      project.register_update();
-    }
-    else{
-      project.notify(this, 'unload');
-      setTimeout(this.remove.bind(this), 50);
-    }
-  }
-
-  get angle() {
-    return Math.round(this.rotation);
-  }
-  set angle(v) {
-    this.rotation = v;
-    this.project.register_update();
-  }
-
-  get align() {
-    return $p.enm.text_aligns.get(this.justification);
-  }
-  set align(v) {
-    this.justification = $p.utils.is_data_obj(v) ? v.ref : v;
-    this.project.register_update();
-  }
-
-}
-
-
-class GeneratrixElement extends BuilderElement {
-
-  constructor(attr = {}) {
-    const {generatrix} = attr;
-    if (generatrix) {
-      delete attr.generatrix;
-    }
-    super(attr);
-    if (generatrix) {
-      attr.generatrix = generatrix;
-    }
-    this.initialize(attr);
-  }
-
-  get b() {
-    const {generatrix} = this._attr;
-    return generatrix && generatrix.firstSegment.point;
-  }
-  set b(v) {
-    const {_rays, generatrix} = this._attr;
-    _rays.clear();
-    if(generatrix) generatrix.firstSegment.point = v;
-  }
-
-  get e() {
-    const {generatrix} = this._attr;
-    return generatrix && generatrix.lastSegment.point;
-  }
-  set e(v) {
-    const {_rays, generatrix} = this._attr;
-    _rays.clear();
-    if(generatrix) generatrix.lastSegment.point = v;
-  }
-
-  get x1() {
-    const {bounds} = this.project;
-    return bounds ? (this.b.x - bounds.x).round(1) : 0;
-  }
-  set x1(v) {
-    const {bounds} = this.project;
-    if(bounds && (v = parseFloat(v) + bounds.x - this.b.x)){
-      this.select_node("b");
-      this.move_points(new paper.Point(v, 0));
-    }
-  }
-
-  get y1() {
-    const {bounds} = this.project;
-    return bounds ? (bounds.height + bounds.y - this.b.y).round(1) : 0;
-  }
-  set y1(v) {
-    const {bounds} = this.project;
-    if(bounds && (v = bounds.height + bounds.y - parseFloat(v) - this.b.y)){
-      this.select_node("b");
-      this.move_points(new paper.Point(0, v));
-    }
-  }
-
-  get x2() {
-    const {bounds} = this.project;
-    return bounds ? (this.e.x - bounds.x).round(1) : 0;
-  }
-  set x2(v) {
-    const {bounds} = this.project;
-    if(bounds && (v = parseFloat(v) + bounds.x - this.e.x)){
-      this.select_node("e");
-      this.move_points(new paper.Point(v, 0));
-    }
-  }
-
-  get y2() {
-    const {bounds} = this.project;
-    return bounds ? (bounds.height + bounds.y - this.e.y).round(1) : 0;
-  }
-  set y2(v) {
-    const {bounds} = this.project;
-    if(bounds && (v = bounds.height + bounds.y - parseFloat(v) - this.e.y)){
-      this.select_node("e");
-      this.move_points(new paper.Point(0, v));
-    }
-  }
-
-  select_node(node) {
-    const {generatrix, project, _attr, view} = this;
-    project.deselect_all_points();
-    if(_attr.path){
-      _attr.path.selected = false;
-    }
-    if(node == "b"){
-      generatrix.firstSegment.selected = true;
-    }
-    else{
-      generatrix.lastSegment.selected = true;
-    }
-    view.update();
-  }
-
-  move_points(delta, all_points, start_point) {
-
-    if(!delta.length){
-      return;
-    }
-
-    const	other = [];
-    const noti = {type: consts.move_points, profiles: [this], points: []};
-
-    let changed;
-
-    if(!all_points){
-      all_points = !this.generatrix.segments.some((segm) => {
-        if (segm.selected)
-          return true;
-      });
-    }
-
-    const imposts = this.joined_imposts ? this.joined_imposts() : {inner: [], outer: []};
-    const isegments = [];
-    imposts.inner.concat(imposts.outer).forEach(({profile}) => {
-      const {b, e} = profile.rays;
-      if(b.profile === this) {
-        isegments.push({profile, node: 'b'});
-      }
-      if(e.profile === this) {
-        isegments.push({profile, node: 'e'});
-      }
-    });
-
-    this.generatrix.segments.forEach((segm) => {
-
-      let cnn_point;
-
-      if (segm.selected || all_points){
-
-        const noti_points = {old: segm.point.clone(), delta: delta};
-
-        const free_point = segm.point.add(delta);
-
-        if(segm.point == this.b){
-          cnn_point = this.rays.b;
-          if(!cnn_point.profile_point || paper.Key.isDown('control')){
-            cnn_point = this.cnn_point("b", free_point);
-          }
-        }
-        else if(segm.point == this.e){
-          cnn_point = this.rays.e;
-          if(!cnn_point.profile_point || paper.Key.isDown('control')){
-            cnn_point = this.cnn_point("e", free_point);
-          }
-        }
-
-        let {profile, profile_point} = cnn_point || {};
-
-        if(cnn_point && cnn_point.cnn_types == $p.enm.cnn_types.acn.t && (segm.point == this.b || segm.point == this.e)){
-          if(cnn_point.point.is_nearest(free_point, 0)){
-            segm.point = cnn_point.point;
-          }
-          else{
-            const ppath = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).clone({insert: false});
-            const {bounds} = ppath;
-            if(Math.abs(delta.y) < consts.epsilon){
-              const ray = new paper.Path({
-                insert: false,
-                segments: [[free_point.x, bounds.top], [free_point.x, bounds.bottom]]
-              });
-              segm.point = ppath.intersect_point(ray, free_point, true) || free_point;
-            }
-            else if(Math.abs(delta.x) < consts.epsilon){
-              const ray = new paper.Path({
-                insert: false,
-                segments: [[bounds.left, free_point.y], [bounds.right, free_point.y]]
-              });
-              segm.point = ppath.intersect_point(ray, free_point, true) || free_point;
-            }
-            else {
-              segm.point = free_point;
-            }
-          }
-        }
-        else{
-          segm.point = free_point;
-          if(cnn_point && !paper.Key.isDown('control')){
-
-            if(profile && profile_point && !profile[profile_point].is_nearest(free_point)){
-              if(this instanceof Onlay){
-                this.move_nodes(noti_points.old, free_point);
-              }
-              else{
-                other.push(profile_point == 'b' ? profile.generatrix.firstSegment : profile.generatrix.lastSegment);
-                noti.profiles.push(profile);
-                if(cnn_point.is_cut) {
-                  this.layer.profiles.some((p) => {
-                    if(p !== profile && p !== this) {
-                      if(profile[profile_point].is_nearest(p.b)) {
-                        p.b = free_point;
-                        other.push(p.generatrix.firstSegment);
-                        noti.profiles.push(p);
-                        return true;
-                      }
-                      else if(profile[profile_point].is_nearest(p.e)) {
-                        p.e = free_point;
-                        other.push(p.generatrix.lastSegment);
-                        noti.profiles.push(p);
-                        return true;
-                      }
-                    }
-                  });
-                }
-                profile[profile_point] = free_point;
-              }
-            }
-          }
-        }
-
-        noti_points.new = segm.point;
-        if(start_point){
-          noti_points.start = start_point;
-        }
-        noti.points.push(noti_points);
-
-        changed = true;
-      }
-
-    });
-
-
-    if(changed){
-      const {_attr: {_rays}, layer, project} = this;
-
-      _rays.clear();
-      isegments.forEach(({profile, node}) => {
-        profile.do_sub_bind(this, node);
-        profile.rays.clear();
-        other.push(profile.generatrix[node === 'b' ? 'firstSegment' : 'lastSegment']);
-        !noti.profiles.includes(profile) && noti.profiles.push(profile);
-      });
-      _rays.clear();
-
-      layer && layer.notify && layer.notify(noti);
-      project.notify(this, 'update', {x1: true, x2: true, y1: true, y2: true});
-    }
-
-    return other;
-  }
-
-  do_sub_bind(profile, node) {
-    const ppath = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).clone({insert: false});
-    let mpoint = ppath.getNearestPoint(this[node]);
-    if(!mpoint.is_nearest(this[node], 0)) {
-      const gen = this.generatrix.clone({insert: false}).elongation(3000);
-      mpoint = ppath.intersect_point(gen, mpoint, true);
-      this[node] = mpoint;
-      return true;
-    }
-  }
-
-}
-
-EditorInvisible.GeneratrixElement = GeneratrixElement;
-
-
-class GridCoordinates extends paper.Group {
-
-  constructor(attr) {
-    super();
-    this.parent = this.project.l_dimensions;
-
-    const points_color = new paper.Color(0, 0.7, 0, 0.8);
-    const sel_color = new paper.Color(0.1, 0.4, 0, 0.9);
-    const lines_color = new paper.Color(0, 0, 0.7, 0.8);
-
-    this._attr = {
-      lines_color,
-      points_color,
-      sel_color,
-      step: attr.step,
-      offset: attr.offset,
-      angle: attr.angle,
-      bind: attr.bind,
-      line: new paper.Path({
-        parent: this,
-        strokeColor: new paper.Color(0, 0, 0.7),
-        strokeWidth: 2,
-        strokeScaling: false,
-      }),
-      point: new paper.Path.Circle({
-        parent: this,
-        guide: true,
-        radius: 22,
-        fillColor: points_color,
-      }),
-      lines: new paper.Group({
-        parent: this,
-        guide: true,
-        strokeColor: lines_color,
-        strokeScaling: false
-      }),
-    };
-
-  }
-
-  get path() {
-    return this._attr.path;
-  }
-  set path(v) {
-    this._attr.path = v;
-    this._attr.angle = 0;
-    this.set_bind();
-    this.set_line();
-  }
-
-  set_line() {
-    const {bind, offset, path, line, angle} = this._attr;
-    let {firstSegment: {point: b}, lastSegment: {point: e}} = path;
-    if(bind === 'e') {
-      [b, e] = [e, b];
-    }
-    if(line.segments.length) {
-      line.segments[0].point = b;
-      line.segments[1].point = e;
-    }
-    else {
-      line.addSegments([b, e]);
-    }
-
-    const langle = e.subtract(b).angle.round(2);
-    let dangle = Infinity;
-    if(angle) {
-      for(const a of [angle, angle - 180, angle + 180]) {
-        if(Math.abs(a - langle) < Math.abs(dangle)) {
-          dangle = a - langle;
-        }
-      }
-    }
-    else {
-      for(let a = -180; a <= 180; a += 45) {
-        if(Math.abs(a - langle) < Math.abs(dangle)) {
-          dangle = a - langle;
-        }
-      }
-    }
-    if(dangle) {
-      line.rotate(dangle);
-      line.elongation(3000);
-      line.firstSegment.point = line.getNearestPoint(b);
-      line.lastSegment.point = line.getNearestPoint(e);
-    }
-
-    const n0 = line.getNormalAt(0).multiply(offset);
-    line.firstSegment.point = line.firstSegment.point.subtract(n0);
-    line.lastSegment.point = line.lastSegment.point.subtract(n0);
-  }
-
-  set_bind() {
-    const {point, path, bind} = this._attr;
-    switch (bind) {
-    case 'b':
-      point.position = path.firstSegment.point;
-      break;
-    case 'e':
-      point.position = path.lastSegment.point;
-      break;
-    case 'product':
-      point.position = this.project.bounds.bottomLeft;
-      break;
-    case 'contour':
-      point.position = path.layer.bounds.bottomLeft;
-      break;
-    }
-  }
-
-  get bind() {
-    return this._attr.bind;
-  }
-  set bind(v) {
-    this._attr.bind = v;
-    this.set_bind();
-    this.set_line();
-  }
-
-  get step() {
-    return this._attr.step;
-  }
-  set step(v) {
-    this._attr.step = v;
-    this.set_line();
-  }
-
-  get angle() {
-    return this._attr.angle;
-  }
-  set angle(v) {
-    if(this._attr.angle !== v) {
-      this._attr.angle = v;
-      this.set_line();
-    }
-  }
-
-  get offset() {
-    return this._attr.offset;
-  }
-  set offset(v) {
-    this._attr.offset = v;
-    this.set_line();
-  }
-
-  grid_points(sel_x) {
-    const {path, line, lines, lines_color, sel_color, step, bind, point: {position}} = this._attr;
-    const res = [];
-    const n0 = line.getNormalAt(0).multiply(10000);
-    let do_break;
-    let prev;
-
-    function add(tpath, x, tpoint, point) {
-
-      let pt;
-
-      if(position.getDistance(point) > 20) {
-        pt = new paper.Path.Circle({
-          parent: lines,
-          guide: true,
-          radius: 22,
-          center: point,
-          fillColor: lines_color,
-        });
-      }
-
-      const pth = new paper.Path({
-        parent: lines,
-        guide: true,
-        strokeColor: lines_color,
-        strokeScaling: false,
-        segments: [tpoint, point],
-      })
-
-      const d1 = tpath.getOffsetOf(tpoint);
-      const d2 = tpath.getOffsetOf(point);
-      res.push({x: x.round(1), y: (d2 - d1).round(1)});
-
-      if(Math.abs(x - sel_x) < 10) {
-        if(pt) {
-          pt.fillColor = sel_color;
-        }
-        pth.strokeColor = sel_color;
-      }
-    }
-
-    lines.removeChildren();
-
-    for (let x = 0; x < line.length + step; x += step) {
-      if(x >= line.length) {
-        if(do_break) {
-          break;
-        }
-        do_break = true;
-        x = line.length;
-      }
-      if(prev && (x - prev) < (step / 4)) {
-        break;
-      }
-      prev = x;
-      const tpoint = x < line.length ? line.getPointAt(x) : line.lastSegment.point;
-      const tpath = new paper.Path({
-        segments: [tpoint.subtract(n0), tpoint.add(n0)],
-        insert: false
-      });
-      const intersections = path.getIntersections(tpath);
-      if(intersections.length) {
-        add(tpath, x, tpoint, intersections[0].point);
-      }
-      else if(x < step / 2) {
-        add(tpath, x, tpoint, bind === 'e' ? path.lastSegment.point : path.firstSegment.point);
-      }
-      else if(x > line.length - step / 2) {
-        add(tpath, x, tpoint, bind === 'e' ? path.firstSegment.point : path.lastSegment.point);
-      }
-    }
-
-    return res;
-  }
-
-}
-
-
-class Magnetism {
-
-  constructor(scheme) {
-    this.scheme = scheme;
-  }
-
-  get selected() {
-    const {profiles} = this.scheme.activeLayer;
-    const selected = {profiles};
-    for(const {generatrix} of profiles) {
-      if(generatrix.firstSegment.selected) {
-        if(selected.profile) {
-          selected.break = true;
-          break;
-        }
-        selected.profile = generatrix.parent;
-        selected.point = 'b';
-      };
-      if(generatrix.lastSegment.selected) {
-        if(selected.profile) {
-          selected.break = true;
-          break;
-        }
-        selected.profile = generatrix.parent;
-        selected.point = 'e';
-      };
-    }
-    return selected;
-  }
-
-  filter(selected) {
-    const point = selected.profile[selected.point];
-    const nodes = [selected];
-
-    for(const profile of selected.profiles) {
-      if(profile !== selected.profile) {
-        let pushed;
-        if(profile.b.is_nearest(point, true)) {
-          nodes.push({profile, point: 'b'});
-          pushed = true;
-        }
-        if(profile.e.is_nearest(point, true)) {
-          nodes.push({profile, point: 'e'});
-          pushed = true;
-        }
-        if(!pushed) {
-          const px = (profile.nearest(true) ? profile.rays.outer : profile.generatrix).getNearestPoint(point);
-          if(px.is_nearest(point, true)) {
-            nodes.push({profile, point: 't'});
-          }
-        }
-      }
-    }
-    return nodes;
-  }
-
-  short_glass(point) {
-    for(const glass of this.scheme.activeLayer.glasses(false, true)){
-      const len = glass.outer_profiles.length - 1;
-      for(let i = 0; i <= len; i++) {
-        const segm = glass.outer_profiles[i];
-        if((segm.b.is_nearest(point) || segm.e.is_nearest(point)) &&
-          segm.sub_path && segm.sub_path.length < consts.sticking) {
-          const prev = i === 0 ? glass.outer_profiles[len] : glass.outer_profiles[i - 1];
-          const next = i === len ? glass.outer_profiles[0] : glass.outer_profiles[i + 1];
-          return {segm, prev, next, glass};
-        }
-      }
-    };
-  }
-
-  m1() {
-
-    const {tb_left} = this.scheme._scope;
-    const previous = tb_left && tb_left.get_selected();
-
-    Promise.resolve().then(() => {
-
-      const {selected} = this;
-
-      if(selected.break) {
-        $p.msg.show_msg({
-          type: 'alert-info',
-          text: `Выделено более одного узла`,
-          title: 'Магнит 0-штапик'
-        });
-      }
-      else if(!selected.profile) {
-        $p.msg.show_msg({
-          type: 'alert-info',
-          text: `Не выделено ни одного узла профиля`,
-          title: 'Магнит 0-штапик'
-        });
-      }
-      else {
-        const spoint = selected.profile[selected.point];
-        const res = this.short_glass(spoint);
-        if(res) {
-          const {segm, prev, next, glass} = res;
-
-          let cl, negate;
-          this.scheme.cnns.find_rows({elm1: glass.elm, elm2: segm.profile.elm}, (row) => {
-            cl = row.aperture_len;
-          });
-
-          if(!cl) {
-            return $p.msg.show_msg({
-              type: 'alert-info',
-              text: `Не найдена строка соединения короткого ребра заполнения с профилем`,
-              title: 'Магнит 0-штапик'
-            });
-          }
-
-          let pNext, pOur;
-          if(prev.profile === selected.profile){
-            pNext = next;
-            pOur = prev;
-          }
-          else if(next.profile === selected.profile) {
-            pNext = prev;
-            pOur = next;
-          }
-          else {
-            return $p.msg.show_msg({
-              type: 'alert-info',
-              text: `Выделен неподходящий сегмент профиля`,
-              title: 'Магнит 0-штапик'
-            });
-          }
-
-          if(!pNext.profile.nom.sizefaltz || !segm.profile.nom.sizefaltz || !pOur.profile.nom.sizefaltz) {
-            return $p.msg.show_msg({
-              type: 'alert-info',
-              text: `Не задан размер фальца примыкающих профилей`,
-              title: 'Магнит 0-штапик'
-            });
-          }
-
-          const rSegm = (segm.outer ? segm.profile.rays.outer : segm.profile.rays.inner).equidistant(-segm.profile.nom.sizefaltz);
-          const rNext = (pNext.outer ? pNext.profile.rays.outer : pNext.profile.rays.inner).equidistant(-pNext.profile.nom.sizefaltz);
-          const rOur = (pOur.outer ? pOur.profile.rays.outer : pOur.profile.rays.inner).equidistant(-pOur.profile.nom.sizefaltz);
-
-          const ps = rSegm.intersect_point(rOur, spoint);
-          const be = ps.getDistance(segm.profile.b) > ps.getDistance(segm.profile.e) ? 'e' : 'b';
-          const da = rSegm.angle_to(rNext, segm.profile[be]);
-
-          let p0 = rSegm.intersect_point(rNext, ps);
-          if(!p0 || da < 4) {
-            p0 = rNext.getNearestPoint(segm.profile[be]);
-          }
-          const delta = p0.subtract(ps);
-          selected.profile.move_points(delta, true);
-
-        }
-        else {
-          $p.msg.show_msg({
-            type: 'alert-info',
-            text: `Не найдено коротких сегментов заполнений<br />в окрестности выделенной точки`,
-            title: 'Магнит 0-штапик'
-          });
-        }
-      }
-    });
-
-    if(previous) {
-      return this.scheme._scope.select_tool(previous.replace('left_', ''));
-    }
-  }
-
-}
-
-
-Object.defineProperties(paper.Path.prototype, {
-
-  getDirectedAngle: {
-    value(point) {
-      if(!point) {
-        point = this.interiorPoint;
-      }
-      const np = this.getNearestPoint(point);
-      const offset = this.getOffsetOf(np);
-      return this.getTangentAt(offset).getDirectedAngle(point.add(np.negate()));
-    }
-  },
-
-  self_intersections: {
-    value(first) {
-      const {curves} = this;
-      const res = [];
-      curves.some((crv1, i1) => {
-        return curves.some((crv2, i2) => {
-          if(i2 <= i1) {
-            return;
-          }
-          const intersections = crv1.getIntersections(crv2);
-          if(intersections.length) {
-            const {point} = intersections[0];
-            if(intersections.length > 1) {
-              res.push({crv1, crv2, point});
-              if(first) {
-                return true;
-              }
-            }
-            if(crv2.point1.is_nearest(crv1.point2, 0) && point.is_nearest(crv1.point2, 0)) {
-              return;
-            }
-            if(crv1.point1.is_nearest(crv2.point2, 0) && point.is_nearest(crv1.point1, 0)) {
-              return;
-            }
-            res.push({crv1, crv2, point});
-            if(first) {
-              return true;
-            }
-          }
-        });
-      });
-      return res;
-    }
-  },
-
-  is_self_intersected: {
-    value() {
-      return this.self_intersections(true).length > 0;
-    }
-  },
-
-  angle_to: {
-      value : function(other, point, interior, round){
-        const p1 = this.getNearestPoint(point),
-          p2 = other.getNearestPoint(point),
-          t1 = this.getTangentAt(this.getOffsetOf(p1)),
-          t2 = other.getTangentAt(other.getOffsetOf(p2));
-        let res = t2.angle - t1.angle;
-        if(res < 0){
-          res += 360;
-        }
-        if(interior && res > 180){
-          res = 180 - (res - 180);
-        }
-        return round ? res.round(round) : res.round(1);
-      },
-      enumerable : false
-    },
-
-  is_linear: {
-    value() {
-      const {curves, firstCurve} = this;
-      if(curves.length === 1 && firstCurve.isLinear()) {
-        return true;
-      }
-      else if(this.hasHandles()) {
-        return false;
-      }
-      else {
-        const da = firstCurve.point1.getDirectedAngle(firstCurve.point2);
-        for (let i = 1; i < curves.length; i++) {
-          const dc = curves[i].point1.getDirectedAngle(curves[i].point2);
-          if(Math.abs(dc - da) > consts.epsilon) {
-            return false;
-          }
-        }
-      }
-      return true;
-    }
-  },
-
-  is_nearest: {
-    value(point, sticking) {
-      return point.is_nearest(this.getNearestPoint(point), sticking);
-    }
-  },
-
-  get_subpath: {
-      value(point1, point2) {
-        let tmp;
-
-        if(!this.length || (point1.is_nearest(this.firstSegment.point) && point2.is_nearest(this.lastSegment.point))){
-          tmp = this.clone(false);
-        }
-        else if(point2.is_nearest(this.firstSegment.point) && point1.is_nearest(this.lastSegment.point)){
-          tmp = this.clone(false);
-          tmp.reverse();
-          tmp._reversed = true;
-        }
-        else{
-          const loc1 = this.getLocationOf(point1) || this.getNearestLocation(point1);
-          const loc2 = this.getLocationOf(point2) || this.getNearestLocation(point2);
-          const offset1 = loc1.offset;
-          const offset2 = loc2.offset;
-
-          if(this.is_linear()){
-            tmp = new paper.Path({
-              segments: [loc1.point, loc2.point],
-              insert: false
-            });
-          }
-          else{
-            const step = (offset2 - offset1) * 0.02;
-
-            tmp = new paper.Path({
-              segments: [loc1.point],
-              insert: false
-            });
-
-            if(step < 0){
-              tmp._reversed = true;
-              for(let i = offset1 + step; i > offset2; i+= step){
-                tmp.add(this.getPointAt(i));
-              }
-            }
-            else if(step > 0){
-              for(let i = offset1 + step; i < offset2; i+= step){
-                tmp.add(this.getPointAt(i));
-              }
-            }
-            tmp.add(loc2.point);
-            tmp.simplify(0.8);
-          }
-
-          if(offset1 > offset2){
-            tmp._reversed = true;
-          }
-        }
-
-        return tmp;
-      }
-    },
-
-  equidistant: {
-      value(delta, elong) {
-
-        let normal = this.getNormalAt(0);
-        const res = new paper.Path({
-            segments: [this.firstSegment.point.add(normal.multiply(delta))],
-            insert: false
-          });
-
-        if(this.is_linear()) {
-          res.add(this.lastSegment.point.add(normal.multiply(delta)));
-        }
-        else{
-
-          if(this.firstSegment.handleIn.length){
-            res.firstSegment.handleIn = this.firstSegment.handleIn.clone();
-          }
-          if(this.firstSegment.handleOut.length){
-            res.firstSegment.handleOut = this.firstSegment.handleOut.clone();
-          }
-
-          let len = this.length, step = len * 0.02, point;
-
-          for(let i = step; i < len; i += step) {
-            point = this.getPointAt(i);
-            if(!point)
-              continue;
-            normal = this.getNormalAt(i);
-            res.add(point.add(normal.multiply(delta)));
-          }
-
-          normal = this.getNormalAt(len);
-          res.add(this.lastSegment.point.add(normal.multiply(delta)));
-
-          if(this.lastSegment.handleIn.length){
-            res.lastSegment.handleIn = this.lastSegment.handleIn.clone();
-          }
-          if(this.lastSegment.handleOut.length){
-            res.lastSegment.handleOut = this.lastSegment.handleOut.clone();
-          }
-
-          res.simplify(0.8);
-        }
-
-        return res.elongation(elong);
-      }
-    },
-
-  elongation: {
-      value(delta) {
-
-        if(delta){
-          if(this.is_linear()) {
-            let tangent = this.getTangentAt(0);
-            this.firstSegment.point = this.firstSegment.point.add(tangent.multiply(-delta));
-            this.lastSegment.point = this.lastSegment.point.add(tangent.multiply(delta));
-          }else{
-            const {length} = this;
-            let tangent = this.getTangentAt(length * 0.01);
-            this.insert(0, this.firstSegment.point.add(tangent.multiply(-delta)));
-            tangent = this.getTangentAt(length * 0.99);
-            this.add(this.lastSegment.point.add(tangent.multiply(delta)));
-          }
-        }
-        return this;
-      }
-    },
-
-  intersect_point: {
-      value(path, point, elongate) {
-        const intersections = this.getIntersections(path);
-        let delta = Infinity, tdelta, tpoint;
-
-        if(intersections.length === 1){
-          return intersections[0].point;
-        }
-        else if(intersections.length > 1){
-
-          if(typeof point === 'string' && this.parent) {
-            point = this.parent[point];
-          }
-
-          if(!point){
-            point = this.getPointAt(this.length /2);
-          }
-
-          intersections.forEach((o) => {
-            tdelta = o.point.getDistance(point, true);
-            if(tdelta < delta){
-              delta = tdelta;
-              tpoint = o.point;
-            }
-          });
-          return tpoint;
-        }
-        else if(elongate == "nearest"){
-
-          return this.getNearestPoint(path.getNearestPoint(point));
-
-        }
-        else if(elongate){
-
-          let p1 = this.getNearestPoint(point),
-            p2 = path.getNearestPoint(point),
-            p1last = this.firstSegment.point.getDistance(p1, true) > this.lastSegment.point.getDistance(p1, true),
-            p2last = path.firstSegment.point.getDistance(p2, true) > path.lastSegment.point.getDistance(p2, true),
-            tg;
-
-          if(!this.closed) {
-            tg = (p1last ? this.getTangentAt(this.length) : this.getTangentAt(0).negate()).multiply(typeof elongate === 'number' ? elongate : 100);
-            if(this.is_linear){
-              if(p1last) {
-                this.lastSegment.point = this.lastSegment.point.add(tg);
-              }
-              else {
-                this.firstSegment.point = this.firstSegment.point.add(tg);
-              }
-            }
-          }
-
-          if(!path.closed) {
-            tg = (p2last ? path.getTangentAt(path.length) : path.getTangentAt(0).negate()).multiply(typeof elongate === 'number' ? elongate : 100);
-            if(path.is_linear){
-              if(p2last) {
-                path.lastSegment.point = path.lastSegment.point.add(tg);
-              }
-              else {
-                path.firstSegment.point = path.firstSegment.point.add(tg);
-              }
-            }
-          }
-
-          return this.intersect_point(path, point);
-
-        }
-      }
-    },
-
-  point_pos: {
-    value(point, interior) {
-      const np = this.getNearestPoint(interior);
-      const offset = this.getOffsetOf(np);
-      const line = new paper.Line(np, np.add(this.getTangentAt(offset)));
-      return line.getSide(point, true);
-    }
-  },
-
-  rmin: {
-    value() {
-      if(!this.hasHandles()){
-        return 0;
-      }
-      const {length} = this;
-      const step = length / 9;
-      let max = 0;
-      for(let pos = 0; pos < length; pos += step){
-        const curv = Math.abs(this.getCurvatureAt(pos));
-        if(curv > max){
-          max = curv;
-        }
-      }
-      return max === 0 ? 0 : 1 / max;
-    }
-  },
-
-  rmax: {
-    value() {
-      if(!this.hasHandles()){
-        return 0;
-      }
-      const {length} = this;
-      const step = length / 9;
-      let min = Infinity;
-      for(let pos = 0; pos < length; pos += step){
-        const curv = Math.abs(this.getCurvatureAt(pos));
-        if(curv < min){
-          min = curv;
-        }
-      }
-      return min === 0 ? 0 : 1 / min;
-    }
-  },
-
-  ravg: {
-    value() {
-      if(!this.hasHandles()){
-        return 0;
-      }
-      const b = this.firstSegment.point;
-      const e = this.lastSegment.point;
-      const ph0 = b.add(e).divide(2);
-      const ph1 = this.getPointAt(this.length / 2);
-      return ph0.arc_r(b.x, b.y, e.x, e.y, ph0.getDistance(ph1));
-    }
-  }
-
-});
-
-
-Object.defineProperties(paper.Point.prototype, {
-
-	is_nearest: {
-		value(point, sticking) {
-		  if(sticking === 0){
-        return Math.abs(this.x - point.x) < consts.epsilon && Math.abs(this.y - point.y) < consts.epsilon;
-      }
-			return this.getDistance(point, true) < (sticking ? consts.sticking2 : 16);
-		}
-	},
-
-	point_pos: {
-		value(x1,y1, x2,y2){
-			if (Math.abs(x1-x2) < 0.2){
-				return (this.x-x1)*(y1-y2);
-			}
-			if (Math.abs(y1-y2) < 0.2){
-				return (this.y-y1)*(x2-x1);
-			}
-			return (this.y-y1)*(x2-x1)-(y2-y1)*(this.x-x1);
-		}
-	},
-
-	arc_cntr: {
-    value(x1, y1, x2, y2, r0, ccw) {
-      let a, b, p, r, q, yy1, xx1, yy2, xx2;
-      if(ccw) {
-        const tmpx = x1, tmpy = y1;
-        x1 = x2;
-        y1 = y2;
-        x2 = tmpx;
-        y2 = tmpy;
-      }
-      if(x1 != x2) {
-        a = (x1 * x1 - x2 * x2 - y2 * y2 + y1 * y1) / (2 * (x1 - x2));
-        b = ((y2 - y1) / (x1 - x2));
-        p = b * b + 1;
-        r = -2 * ((x1 - a) * b + y1);
-        q = (x1 - a) * (x1 - a) - r0 * r0 + y1 * y1;
-        yy1 = (-r + Math.sqrt(r * r - 4 * p * q)) / (2 * p);
-        xx1 = a + b * yy1;
-        yy2 = (-r - Math.sqrt(r * r - 4 * p * q)) / (2 * p);
-        xx2 = a + b * yy2;
-      }
-      else {
-        a = (y1 * y1 - y2 * y2 - x2 * x2 + x1 * x1) / (2 * (y1 - y2));
-        b = ((x2 - x1) / (y1 - y2));
-        p = b * b + 1;
-        r = -2 * ((y1 - a) * b + x1);
-        q = (y1 - a) * (y1 - a) - r0 * r0 + x1 * x1;
-        xx1 = (-r - Math.sqrt(r * r - 4 * p * q)) / (2 * p);
-        yy1 = a + b * xx1;
-        xx2 = (-r + Math.sqrt(r * r - 4 * p * q)) / (2 * p);
-        yy2 = a + b * xx2;
-      }
-
-      if(new paper.Point(xx1, yy1).point_pos(x1, y1, x2, y2) > 0) {
-        return {x: xx1, y: yy1};
-      }
-      else {
-        return {x: xx2, y: yy2};
-      }
-    }
-  },
-
-	arc_point: {
-    value(x1, y1, x2, y2, r, arc_ccw, more_180) {
-      const point = {x: (x1 + x2) / 2, y: (y1 + y2) / 2};
-      if(r > 0) {
-        let dx = x1 - x2, dy = y1 - y2, dr = r * r - (dx * dx + dy * dy) / 4, l, h;
-        if(dr >= 0) {
-          const centr = this.arc_cntr(x1, y1, x2, y2, r, arc_ccw);
-          dx = point.x - centr.x;
-          dy = point.y - centr.y;	
-          l = Math.sqrt(dx * dx + dy * dy);
-
-          if(more_180) {
-            h = r + Math.sqrt(dr);
-          }
-          else {
-            h = r - Math.sqrt(dr);
-          }
-
-          point.x += dx * h / l;
-          point.y += dy * h / l;
-        }
-      }
-      return point;
-    }
-	},
-
-  arc_r: {
-    value(x1, y1, x2, y2, h) {
-      if(!h) {
-        return 0;
-      }
-      const [dx, dy] = [(x1 - x2), (y1 - y2)];
-      return (h / 2 + (dx * dx + dy * dy) / (8 * h)).round(3);
-    }
-  },
-
-	snap_to_angle: {
-		value(snapAngle) {
-
-			if(!snapAngle){
-        snapAngle = Math.PI*2/8;
-      }
-
-			let angle = Math.atan2(this.y, this.x);
-			angle = Math.round(angle/snapAngle) * snapAngle;
-
-			const dirx = Math.cos(angle),
-				diry = Math.sin(angle),
-				d = dirx*this.x + diry*this.y;
-
-			return new paper.Point(dirx*d, diry*d);
-		}
-	},
-
-  bind_to_nodes: {
-	  value(sticking, {activeLayer}) {
-      return activeLayer && activeLayer.nodes.some((point) => {
-        if(point.is_nearest(this, sticking)){
-          this.x = point.x;
-          this.y = point.y;
-          return true;
-        }
-      });
-    }
-  },
-
-});
-
-
-
-
-
-
-
-class CnnPoint {
-
-  constructor(parent, node) {
-
-    this._parent = parent;
-    this._node = node;
-
-    this.initialize();
-  }
-
-  get is_t() {
-    const {cnn, parent, profile, profile_point} = this;
-    const {cnn_types, orientations} = $p.enm;
-
-    if(profile && !profile_point) {
-      return true;
-    }
-
-    if(!cnn || cnn.cnn_type == cnn_types.ad) {
-      return false;
-    }
-
-    if(cnn.cnn_type == cnn_types.t) {
-      return true;
-    }
-
-    if(cnn.cnn_type == cnn_types.av && parent.orientation != orientations.vert) {
-      return true;
-    }
-    if(cnn.cnn_type == cnn_types.ah && parent.orientation != orientations.hor) {
-      return true;
-    }
-
-    return false;
-  }
-
-  get is_tt() {
-    return !(this.is_i || this.profile_point == 'b' || this.profile_point == 'e' || this.profile == this.parent);
-  }
-
-  get is_l() {
-    const {cnn} = this;
-    const {cnn_types} = $p.enm;
-    return this.is_t || !!(cnn && (cnn.cnn_type === cnn_types.av || cnn.cnn_type === cnn_types.ah));
-  }
-
-  get is_i() {
-    return !this.profile && !this.is_cut;
-  }
-
-  get is_x() {
-    const {cnn} = this;
-    return cnn && cnn.cnn_type === $p.enm.cnn_types.xx;
-  }
-
-  get parent() {
-    return this._parent;
-  }
-
-  get node() {
-    return this._node;
-  }
-
-  clear() {
-    if(this.profile_point) {
-      this.profile_point = '';
-    }
-    if(this.is_cut) {
-      this.is_cut = false;
-    }
-    this.profile = null;
-    this.err = null;
-    this.distance = Infinity;
-    this.cnn_types = $p.enm.cnn_types.acn.i;
-    if(this.cnn && this.cnn.cnn_type != $p.enm.cnn_types.i) {
-      this.cnn = null;
-    }
-    const {_corns} = this._parent._attr;
-    if(_corns.length > 5) {
-      _corns.length = 5;
-    };
-  }
-
-  get err() {
-    return this._err;
-  }
-
-  set err(v) {
-    if(!v) {
-      this._err.length = 0;
-    }
-    else if(this._err.indexOf(v) == -1) {
-      this._err.push(v);
-    }
-  }
-
-  check_err(style) {
-    const {_node, _parent} = this;
-    const {_corns, _rays} = _parent._attr;
-    const len = _node == 'b' ? _corns[1].getDistance(_corns[4]) : _corns[2].getDistance(_corns[3]);
-    const angle = _parent.angle_at(_node);
-    const {cnn} = this;
-    if(!cnn ||
-      (cnn.lmin && cnn.lmin > len) ||
-      (cnn.lmax && cnn.lmax < len) ||
-      (cnn.amin && cnn.amin > angle) ||
-      (cnn.amax && cnn.amax < angle)
-    ) {
-      if(style) {
-        Object.assign(new paper.Path.Circle({
-          center: _node == 'b' ? _corns[4].add(_corns[1]).divide(2) : _corns[2].add(_corns[3]).divide(2),
-          radius: style.radius || 70,
-        }), style);
-      }
-      else {
-        _parent.err_spec_row($p.job_prm.nom.critical_error, cnn ? $p.msg.err_seam_len : $p.msg.err_no_cnn);
-      }
-    }
-  }
-
-  get profile() {
-    if(this._profile === undefined && this._row && this._row.elm2) {
-      this._profile = this.parent.layer.getItem({elm: this._row.elm2});
-      delete this._row;
-    }
-    return this._profile;
-  }
-
-  set profile(v) {
-    this._profile = v;
-  }
-
-  get npoint() {
-    const point = this.point || this.parent[this.node];
-    if(!this.is_tt) {
-      return point;
-    }
-    const {profile} = this;
-    if(!profile || !profile.nearest(true)) {
-      return point;
-    }
-    return profile.nearest(true).generatrix.getNearestPoint(point) || point;
-  }
-
-  initialize() {
-
-    const {_parent, _node} = this;
-
-    this._err = [];
-
-    this._row = _parent.project.cnns.find({elm1: _parent.elm, node1: _node});
-
-    this._profile;
-
-    if(this._row) {
-
-      this.cnn = this._row.cnn;
-
-      if($p.enm.cnn_types.acn.a.indexOf(this.cnn.cnn_type) != -1) {
-        this.cnn_types = $p.enm.cnn_types.acn.a;
-      }
-      else if($p.enm.cnn_types.acn.t.indexOf(this.cnn.cnn_type) != -1) {
-        this.cnn_types = $p.enm.cnn_types.acn.t;
-      }
-      else {
-        this.cnn_types = $p.enm.cnn_types.acn.i;
-      }
-    }
-    else {
-      this.cnn = null;
-      this.cnn_types = $p.enm.cnn_types.acn.i;
-    }
-
-    this.distance = Infinity;
-
-    this.point = null;
-
-    this.profile_point = '';
-
-  }
-}
-
-class ProfileRays {
-
-  constructor(parent) {
-    this.parent = parent;
-    this.b = new CnnPoint(this.parent, 'b');
-    this.e = new CnnPoint(this.parent, 'e');
-    this.inner = new paper.Path({insert: false});
-    this.outer = new paper.Path({insert: false});
-  }
-
-  clear_segments() {
-    if(this.inner.segments.length) {
-      this.inner.removeSegments();
-    }
-    if(this.outer.segments.length) {
-      this.outer.removeSegments();
-    }
-  }
-
-  clear(with_cnn) {
-    this.clear_segments();
-    if(with_cnn) {
-      this.b.clear();
-      this.e.clear();
-    }
-  }
-
-  recalc() {
-
-    const {parent} = this;
-    const gen = parent.generatrix;
-    const len = gen.length;
-
-    this.clear();
-
-    if(!len) {
-      return;
-    }
-
-    const {d1, d2, width} = parent;
-    const ds = 3 * width;
-    const step = len * 0.02;
-
-    let point_b = gen.firstSegment.point,
-      tangent_b = gen.getTangentAt(0),
-      normal_b = gen.getNormalAt(0),
-      point_e = gen.lastSegment.point,
-      tangent_e, normal_e;
-
-    this.outer.add(point_b.add(normal_b.multiply(d1)).add(tangent_b.multiply(-ds)));
-    this.inner.add(point_b.add(normal_b.multiply(d2)).add(tangent_b.multiply(-ds)));
-
-    if(gen.is_linear()) {
-      this.outer.add(point_e.add(normal_b.multiply(d1)).add(tangent_b.multiply(ds)));
-      this.inner.add(point_e.add(normal_b.multiply(d2)).add(tangent_b.multiply(ds)));
-    }
-    else {
-
-      this.outer.add(point_b.add(normal_b.multiply(d1)));
-      this.inner.add(point_b.add(normal_b.multiply(d2)));
-
-      for (let i = step; i < len; i += step) {
-        point_b = gen.getPointAt(i);
-        normal_b = gen.getNormalAt(i);
-        this.outer.add(point_b.add(normal_b.normalize(d1)));
-        this.inner.add(point_b.add(normal_b.normalize(d2)));
-      }
-
-      normal_e = gen.getNormalAt(len);
-      this.outer.add(point_e.add(normal_e.multiply(d1)));
-      this.inner.add(point_e.add(normal_e.multiply(d2)));
-
-      tangent_e = gen.getTangentAt(len);
-      this.outer.add(point_e.add(normal_e.multiply(d1)).add(tangent_e.multiply(ds)));
-      this.inner.add(point_e.add(normal_e.multiply(d2)).add(tangent_e.multiply(ds)));
-
-    }
-
-    this.inner.reverse();
-  }
-
-}
-
-
-class ProfileItem extends GeneratrixElement {
-
-  get d1() {
-    return -(this.d0 - this.sizeb);
-  }
-
-  get d2() {
-    return this.d1 - this.width;
-  }
-
-  get offset() {
-    const {_row} = this;
-    return (_row && _row.offset) || 0;
-  }
-
-  set offset(v) {
-    const {_row, _attr, selected} = this;
-    v = parseFloat(v) || 0;
-    if(_row && _row.offset !== v) {
-      _row.offset = v;
-      if(selected) {
-        this.selected = false;
-      }
-      const nearests = this.joined_nearests ? this.joined_nearests() : [];
-      if(this.joined_imposts) {
-        const imposts = this.joined_imposts();
-        nearests.push.apply(nearests, imposts.inner.map((v) => v.profile).concat(imposts.outer.map((v) => v.profile)));
-      }
-      for(const profile of nearests) {
-        profile._attr._rays && profile._attr._rays.clear();
-      }
-      _attr._rays && _attr._rays.clear();
-      this.project.register_change(true);
-      if(selected) {
-        this.selected = true;
-      }
-    }
-  }
-
-  hhpoint(side) {
-    const {layer, rays} = this;
-    const {h_ruch, furn} = layer;
-    const {furn_set, handle_side} = furn;
-    if(!h_ruch || !handle_side || furn_set.empty()) {
-      return;
-    }
-    if(layer.profile_by_furn_side(handle_side) == this) {
-      return rays[side].intersect_point(layer.handle_line(this));
-    }
-  }
-
-  get hhi() {
-    return this.hhpoint('inner');
-  }
-
-  get hho() {
-    return this.hhpoint('outer');
-  }
-
-  get cnn1() {
-    return this.cnn_point('b').cnn || $p.cat.cnns.get();
-  }
-
-  set cnn1(v) {
-    const {rays} = this;
-    const cnn = $p.cat.cnns.get(v);
-    if(rays.b.cnn != cnn) {
-      rays.b.cnn = cnn;
-      this.project.register_change();
-    }
-  }
-
-  get cnn2() {
-    return this.cnn_point('e').cnn || $p.cat.cnns.get();
-  }
-
-  set cnn2(v) {
-    const {rays} = this;
-    const cnn = $p.cat.cnns.get(v);
-    if(rays.e.cnn != cnn) {
-      rays.e.cnn = cnn;
-      this.project.register_change();
-    }
-  }
-
-  angle_at(p) {
-    const {profile, point} = this.cnn_point(p);
-    if(!profile || !point) {
-      return 90;
-    }
-    const g1 = this.generatrix;
-    const g2 = profile.generatrix;
-    let offset1 = g1.getOffsetOf(g1.getNearestPoint(point)),
-      offset2 = g2.getOffsetOf(g2.getNearestPoint(point));
-    if(offset1 < 10){
-      offset1 = 10;
-    }
-    else if(Math.abs(offset1 - g1.length) < 10){
-      offset1 = g1.length - 10;
-    }
-    if(offset2 < 10){
-      offset2 = 10;
-    }
-    else if(Math.abs(offset2 - g2.length) < 10){
-      offset2 = g2.length - 10;
-    }
-    const t1 = g1.getTangentAt(offset1) || new paper.Point();
-    const t2 = g2.getTangentAt(offset2) || new paper.Point();
-    const a = t2.negate().getDirectedAngle(t1).round(1);
-    return a > 180 ? a - 180 : (a < 0 ? -a : a);
-  }
-
-  get a1() {
-    return this.angle_at('b');
-  }
-
-  get a2() {
-    return this.angle_at('e');
-  }
-
-  get info() {
-    return '№' + this.elm + ' α:' + this.angle_hor.toFixed(0) + '° l:' + this.length.toFixed(0);
-  }
-
-  get r() {
-    return this._row.r;
-  }
-
-  set r(v) {
-    const {_row, _attr} = this;
-    if(_row.r != v) {
-      _attr._rays.clear();
-      _row.r = v;
-      this.set_generatrix_radius();
-      this.project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
-    }
-  }
-
-  get rmin() {
-    return this.generatrix.rmin();
-  }
-
-  get rmax() {
-    return this.generatrix.rmax();
-  }
-
-  get ravg() {
-    return this.generatrix.ravg();
-  }
-
-  get arc_ccw() {
-    return this._row.arc_ccw;
-  }
-
-  set arc_ccw(v) {
-    const {_row, _attr} = this;
-    if(_row.arc_ccw != v) {
-      _attr._rays.clear();
-      _row.arc_ccw = v;
-      this.set_generatrix_radius();
-      this.project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
-    }
-  }
-
-  get arc_h() {
-    const {_row, b, e, generatrix} = this;
-    if(_row.r) {
-      const p = generatrix.getPointAt(generatrix.length / 2);
-      return paper.Line.getSignedDistance(b.x, b.y, e.x, e.y, p.x, p.y).round(1);
-    }
-    return 0;
-  }
-
-  set arc_h(v) {
-    const {_row, _attr, b, e, arc_h} = this;
-    v = parseFloat(v);
-    if(arc_h != v) {
-      _attr._rays.clear();
-      if(v < 0) {
-        v = -v;
-        _row.arc_ccw = true;
-      }
-      else {
-        _row.arc_ccw = false;
-      }
-      _row.r = b.arc_r(b.x, b.y, e.x, e.y, v);
-      this.set_generatrix_radius(v);
-      this.project.notify(this, 'update', {r: true, arc_h: true, arc_ccw: true});
-    }
-  }
-
-  get angle_hor() {
-    const {b, e} = this;
-    const res = (new paper.Point(e.x - b.x, b.y - e.y)).angle.round(2);
-    return res < 0 ? res + 360 : res;
-  }
-
-  get length() {
-    const {b, e, outer} = this.rays;
-    const gen = this.elm_type == $p.enm.elm_types.Импост ? this.generatrix : outer;
-    const ppoints = {};
-
-    for (let i = 1; i <= 4; i++) {
-      ppoints[i] = gen.getNearestPoint(this.corns(i));
-    }
-
-    ppoints.b = gen.getOffsetOf(ppoints[1]) < gen.getOffsetOf(ppoints[4]) ? ppoints[1] : ppoints[4];
-    ppoints.e = gen.getOffsetOf(ppoints[2]) > gen.getOffsetOf(ppoints[3]) ? ppoints[2] : ppoints[3];
-
-    const sub_gen = gen.get_subpath(ppoints.b, ppoints.e);
-    const res = sub_gen.length + (b.cnn ? b.cnn.size(this) : 0) + (e.cnn ? e.cnn.size(this) : 0);
-    sub_gen.remove();
-
-    return res;
-  }
-
-  get orientation() {
-    let {angle_hor} = this;
-    if(angle_hor > 180) {
-      angle_hor -= 180;
-    }
-    if((angle_hor > -consts.orientation_delta && angle_hor < consts.orientation_delta) ||
-      (angle_hor > 180 - consts.orientation_delta && angle_hor < 180 + consts.orientation_delta)) {
-      return $p.enm.orientations.hor;
-    }
-    if((angle_hor > 90 - consts.orientation_delta && angle_hor < 90 + consts.orientation_delta) ||
-      (angle_hor > 270 - consts.orientation_delta && angle_hor < 270 + consts.orientation_delta)) {
-      return $p.enm.orientations.vert;
-    }
-    return $p.enm.orientations.incline;
-  }
-
-  get rays() {
-    const {_rays} = this._attr;
-    if(!_rays.inner.segments.length || !_rays.outer.segments.length) {
-      _rays.recalc();
-    }
-    return _rays;
-  }
-
-  get addls() {
-    return this.children.filter((elm) => elm instanceof ProfileAddl);
-  }
-
-  elm_props() {
-    const {_attr, _row, project} = this;
-    const props = [];
-    project._dp.sys.product_params.find_rows({elm: true}, ({param}) => {
-      props.push(param);
-    });
-    _attr.props && _attr.props.forEach((prop) => {
-      if(!props.includes(prop)) {
-        delete this[prop.ref];
-      }
-    });
-    _attr.props = props;
-    props.forEach((prop) => {
-      if(!this.hasOwnProperty(prop.ref)) {
-        Object.defineProperty(this, prop.ref, {
-          get() {
-            let prow;
-            project.ox.params.find_rows({
-              param: prop,
-              cnstr: {in: [0, -_row.row]},
-              inset: $p.utils.blank.guid
-            }, (row) => {
-              if(!prow || row.cnstr) {
-                prow = row;
-              }
-            });
-            return prow && prow.value;
-          },
-          set(v) {
-            let prow, prow0;
-            project.ox.params.find_rows({
-              param: prop,
-              cnstr: {in: [0, -_row.row]},
-              inset: $p.utils.blank.guid
-            }, (row) => {
-              if(row.cnstr) {
-                prow = row;
-              }
-              else {
-                prow0 = row;
-              }
-            });
-            if(prow0 && prow0.value == v) {
-              prow && prow._owner.del(prow);
-            }
-            else if(prow) {
-              prow.value = v;
-            }
-            else {
-              project.ox.params.add({
-                param: prop,
-                cnstr: -_row.row,
-                inset: $p.utils.blank.guid,
-                value: v,
-              });
-            }
-          },
-          configurable: true,
-        });
-      }
-    });
-
-    return props;
-  }
-
-  get oxml() {
-    const oxml = {
-      ' ': [
-        {id: 'info', path: 'o.info', type: 'ro'},
-        'inset',
-        'clr',
-        'offset'
-      ],
-      'Начало': ['x1','y1','a1','cnn1'],
-      'Конец': ['x2','y2','a2','cnn2']
-    };
-    if(this.selected_cnn_ii()) {
-      oxml.Примыкание = ['cnn3'];
-    }
-    const props = this.elm_props();
-    if(props.length) {
-      oxml.Свойства = props.map(({ref}) => ref);
-    }
-    return oxml;
-  }
-
-  get default_clr_str() {
-    return 'FEFEFE';
-  }
-
-  get opacity() {
-    return this.path ? this.path.opacity : 1;
-  }
-
-  set opacity(v) {
-    this.path && (this.path.opacity = v);
-  }
-
-  get dx0() {
-    const {cnn} = this.rays.b;
-    const main_row = cnn && cnn.main_row(this);
-    return main_row && main_row.angle_calc_method == $p.enm.angle_calculating_ways.СварнойШов ? -main_row.sz : 0;
-  }
-
-  setSelection(selection) {
-    super.setSelection(selection);
-
-    const {generatrix, path} = this._attr;
-
-    generatrix.setSelection(selection);
-    this.ruler_line_select(false);
-
-    if(selection) {
-
-      const {inner, outer} = this.rays;
-
-      if(this._hatching) {
-        this._hatching.removeChildren();
-      }
-      else {
-        this._hatching = new paper.CompoundPath({
-          parent: this,
-          guide: true,
-          strokeColor: 'grey',
-          strokeScaling: false
-        });
-      }
-
-      path.setSelection(0);
-
-      for (let t = 0; t < inner.length; t += 50) {
-        const ip = inner.getPointAt(t);
-        const np = inner.getNormalAt(t).multiply(400).rotate(-35).negate();
-        const fp = new paper.Path({
-          insert: false,
-          segments: [ip, ip.add(np)]
-        });
-        const op = fp.intersect_point(outer, ip);
-
-        if(ip && op) {
-          const cip = path.getNearestPoint(ip);
-          const cop = path.getNearestPoint(op);
-          const nip = cip.is_nearest(ip);
-          const nop = cop.is_nearest(op);
-          if(nip && nop) {
-            this._hatching.moveTo(cip);
-            this._hatching.lineTo(cop);
-          }
-          else if(nip && !nop) {
-            const pp = fp.intersect_point(path, op);
-            if(pp) {
-              this._hatching.moveTo(cip);
-              this._hatching.lineTo(pp);
-            }
-          }
-          else if(!nip && nop) {
-            const pp = fp.intersect_point(path, ip);
-            if(pp) {
-              this._hatching.moveTo(pp);
-              this._hatching.lineTo(cop);
-            }
-          }
-        }
-      }
-
-    }
-    else {
-      if(this._hatching) {
-        this._hatching.remove();
-        this._hatching = null;
-      }
-    }
-  }
-
-  ruler_line_select(mode) {
-
-    const {_attr} = this;
-
-    if(_attr.ruler_line_path) {
-      _attr.ruler_line_path.remove();
-      delete _attr.ruler_line_path;
-    }
-
-    if(mode) {
-      switch (_attr.ruler_line = mode) {
-
-      case 'inner':
-        _attr.ruler_line_path = this.path.get_subpath(this.corns(3), this.corns(4));
-        _attr.ruler_line_path.parent = this;
-        _attr.ruler_line_path.selected = true;
-        break;
-
-      case 'outer':
-        _attr.ruler_line_path = this.path.get_subpath(this.corns(1), this.corns(2));
-        _attr.ruler_line_path.parent = this;
-        _attr.ruler_line_path.selected = true;
-        break;
-
-      default:
-        this.generatrix.selected = true;
-        break;
-      }
-    }
-    else if(_attr.ruler_line) {
-      delete _attr.ruler_line;
-    }
-  }
-
-  ruler_line_coordin(xy) {
-    switch (this._attr.ruler_line) {
-    case 'inner':
-      return (this.corns(3)[xy] + this.corns(4)[xy]) / 2;
-    case 'outer':
-      return (this.corns(1)[xy] + this.corns(2)[xy]) / 2;
-    default:
-      return (this.b[xy] + this.e[xy]) / 2;
-    }
-  }
-
-  save_coordinates() {
-
-    const {_attr, _row, rays, generatrix, project: {cnns}} = this;
-
-    if(!generatrix) {
-      return;
-    }
-
-    const b = rays.b;
-    const e = rays.e;
-    const row_b = cnns.add({
-      elm1: _row.elm,
-      node1: 'b',
-      cnn: b.cnn,
-      aperture_len: this.corns(1).getDistance(this.corns(4)).round(1)
-    });
-    const row_e = cnns.add({
-      elm1: _row.elm,
-      node1: 'e',
-      cnn: e.cnn,
-      aperture_len: this.corns(2).getDistance(this.corns(3)).round(1)
-    });
-
-    _row.x1 = this.x1;
-    _row.y1 = this.y1;
-    _row.x2 = this.x2;
-    _row.y2 = this.y2;
-    _row.path_data = generatrix.pathData;
-    _row.nom = this.nom;
-
-    if(generatrix.is_linear()) {
-      _row.r = 0;
-    }
-    else {
-      const {path} = this;
-      const r1 = path.get_subpath(_attr._corns[1], _attr._corns[2]).ravg();
-      const r2 = path.get_subpath(_attr._corns[3], _attr._corns[4]).ravg();
-      _row.r = Math.max(r1, r2);
-    }
-
-    _row.len = this.length.round(1);
-
-    if(b.profile) {
-      row_b.elm2 = b.profile.elm;
-      if(b.profile.e.is_nearest(b.point)) {
-        row_b.node2 = 'e';
-      }
-      else if(b.profile.b.is_nearest(b.point)) {
-        row_b.node2 = 'b';
-      }
-      else {
-        row_b.node2 = 't';
-      }
-    }
-    if(e.profile) {
-      row_e.elm2 = e.profile.elm;
-      if(e.profile.b.is_nearest(e.point)) {
-        row_e.node2 = 'b';
-      }
-      else if(e.profile.e.is_nearest(e.point)) {
-        row_e.node2 = 'b';
-      }
-      else {
-        row_e.node2 = 't';
-      }
-    }
-
-    const nrst = this.nearest();
-    if(nrst) {
-      cnns.add({
-        elm1: _row.elm,
-        elm2: nrst.elm,
-        cnn: _attr._nearest_cnn,
-        aperture_len: _row.len
-      });
-    }
-
-    _row.angle_hor = this.angle_hor;
-
-    _row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - generatrix.getTangentAt(0).angle) * 10) / 10;
-    if(_row.alp1 < 0) {
-      _row.alp1 = _row.alp1 + 360;
-    }
-
-    _row.alp2 = Math.round((generatrix.getTangentAt(generatrix.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
-    if(_row.alp2 < 0) {
-      _row.alp2 = _row.alp2 + 360;
-    }
-
-    _row.elm_type = this.elm_type;
-
-    _row.orientation = this.orientation;
-    _row.pos = this.pos;
-
-    this.addls.forEach((addl) => addl.save_coordinates());
-  }
-
-  initialize(attr) {
-
-    const {project, _attr, _row} = this;
-    const h = project.bounds.height + project.bounds.y;
-
-    if(attr.r) {
-      _row.r = attr.r;
-    }
-
-    if(attr.generatrix) {
-      _attr.generatrix = attr.generatrix;
-      if(_attr.generatrix._reversed) {
-        delete _attr.generatrix._reversed;
-      }
-    }
-    else {
-      if(_row.path_data) {
-        _attr.generatrix = new paper.Path(_row.path_data);
-      }
-      else {
-        const first_point = new paper.Point([_row.x1, h - _row.y1]);
-        _attr.generatrix = new paper.Path(first_point);
-        if(_row.r) {
-          _attr.generatrix.arcTo(
-            first_point.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2, _row.r + 0.001, _row.arc_ccw, false), [_row.x2, h - _row.y2]);
-        }
-        else {
-          _attr.generatrix.lineTo([_row.x2, h - _row.y2]);
-        }
-      }
-    }
-
-    _attr._corns = [];
-
-    _attr._rays = new ProfileRays(this);
-
-    _attr.generatrix.strokeColor = 'gray';
-
-    _attr.path = new paper.Path();
-    _attr.path.strokeColor = 'black';
-    _attr.path.strokeWidth = 1;
-    _attr.path.strokeScaling = false;
-    this.clr = _row.clr.empty() ? $p.job_prm.builder.base_clr : _row.clr;
-
-    this.addChild(_attr.path);
-    this.addChild(_attr.generatrix);
-
-  }
-
-  observer(an) {
-    const {profiles} = an;
-    if(profiles) {
-      let binded;
-      if(!profiles.includes(this)) {
-        for(const profile of profiles) {
-          if(profile instanceof Onlay && !(this instanceof Onlay)) {
-            continue;
-          }
-          binded = true;
-          this.do_bind(profile, this.cnn_point('b'), this.cnn_point('e'), an);
-        }
-        binded && profiles.push(this);
-      }
-    }
-    else if(an instanceof Profile || an instanceof ProfileConnective) {
-      this.do_bind(an, this.cnn_point('b'), this.cnn_point('e'));
-    }
-  }
-
-  do_bind(profile, bcnn, ecnn, moved) {
-
-    const {acn, ad} = $p.enm.cnn_types;
-    let moved_fact;
-
-    if(profile instanceof ProfileConnective) {
-      const gen = profile.generatrix.clone({insert: false}).elongation(3000);
-      this._attr._rays.clear();
-      const b = gen.getNearestPoint(this.b);
-      const e = gen.getNearestPoint(this.e);
-      const db = b.subtract(this.b);
-      const de = e.subtract(this.e);
-      if(db.length || de.length) {
-        const selected = this.project.deselect_all_points(true);
-        if(db.subtract(de).length < consts.epsilon) {
-          this.move_points(de, true);
-        }
-        else {
-          this.select_node('b');
-          this.move_points(db);
-          this.project.deselectAll();
-          this.select_node('e');
-          this.move_points(de);
-        }
-        this.project.deselectAll();
-        for(const el of selected) {
-          el.selected = true;
-        }
-      }
-    }
-    else {
-      if(bcnn.cnn && bcnn.profile == profile) {
-        if(bcnn.profile_point && !bcnn.is_x) {
-          const pp = profile[bcnn.profile_point];
-          if(!this.b.is_nearest(pp, 0)) {
-            if(bcnn.is_t || bcnn.cnn.cnn_type == ad) {
-              if(paper.Key.isDown('control')) {
-                console.log('control');
-              }
-              else {
-                if(this.b.getDistance(pp, true) < consts.sticking2) {
-                  this.b = pp;
-                }
-                moved_fact = true;
-              }
-            }
-            else {
-              bcnn.clear();
-              this._attr._rays.clear();
-            }
-          }
-        }
-        else if(acn.t.indexOf(bcnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'b')) {
-          moved_fact = true;
-        }
-      }
-
-      if(ecnn.cnn && ecnn.profile == profile) {
-        if(ecnn.profile_point && !ecnn.is_x) {
-          const pp = profile[ecnn.profile_point];
-          if(!this.e.is_nearest(pp, 0)) {
-            if(ecnn.is_t || ecnn.cnn.cnn_type == ad) {
-              if(paper.Key.isDown('control')) {
-                console.log('control');
-              }
-              else {
-                if(this.e.getDistance(pp, true) < consts.sticking2) {
-                  this.e = pp;
-                }
-                moved_fact = true;
-              }
-            }
-            else {
-              ecnn.clear();
-              this._attr._rays.clear();
-            }
-          }
-        }
-        else if(acn.t.indexOf(ecnn.cnn.cnn_type) != -1 && this.do_sub_bind(profile, 'e')) {
-          moved_fact = true;
-        }
-      }
-    }
-
-    if(moved && moved_fact) {
-      const imposts = this.joined_imposts();
-      imposts.inner.concat(imposts.outer).forEach((impost) => {
-        if(moved.profiles.indexOf(impost) == -1) {
-          impost.profile.observer(this);
-        }
-      });
-    }
-  }
-
-  cnn_side(profile, interior, rays) {
-    if(!interior) {
-      interior = profile.interiorPoint();
-    }
-    if(!rays) {
-      rays = this.rays;
-    }
-    if(!rays || !interior || !rays.inner.length || ! rays.outer.length) {
-      return $p.enm.cnn_sides.Изнутри;
-    }
-    return rays.inner.getNearestPoint(interior).getDistance(interior, true) <
-    rays.outer.getNearestPoint(interior).getDistance(interior, true) ? $p.enm.cnn_sides.Изнутри : $p.enm.cnn_sides.Снаружи;
-  }
-
-  set_generatrix_radius(height) {
-    const {generatrix, _row, layer, selected} = this;
-    const b = generatrix.firstSegment.point.clone();
-    const e = generatrix.lastSegment.point.clone();
-    const min_radius = b.getDistance(e) / 2;
-
-    generatrix.removeSegments(1);
-    generatrix.firstSegment.handleIn = null;
-    generatrix.firstSegment.handleOut = null;
-
-    let full;
-    if(_row.r && _row.r <= min_radius) {
-      _row.r = min_radius + 0.0001;
-      full = true;
-    }
-
-    if(selected) {
-      this.selected = false;
-    }
-
-    if(_row.r) {
-      let p = new paper.Point(b.arc_point(b.x, b.y, e.x, e.y, _row.r, _row.arc_ccw, false));
-      if(p.point_pos(b.x, b.y, e.x, e.y) > 0 && !_row.arc_ccw || p.point_pos(b.x, b.y, e.x, e.y) < 0 && _row.arc_ccw) {
-        p = new paper.Point(b.arc_point(b.x, b.y, e.x, e.y, _row.r, !_row.arc_ccw, false));
-      }
-      if(full || height) {
-        const start = b.add(e).divide(2);
-        const vector = p.subtract(start);
-        vector.length = (height || min_radius);
-        p = start.add(vector);
-      }
-      generatrix.arcTo(p, e);
-    }
-    else {
-      generatrix.lineTo(e);
-    }
-
-    layer.notify({
-      type: consts.move_points,
-      profiles: [this],
-      points: []
-    });
-
-    if(selected) {
-      setTimeout(() => this.selected = selected, 100);
-    }
-  }
-
-  set_inset(v, ignore_select) {
-
-    const {_row, _attr, project} = this;
-
-    if(!ignore_select && project.selectedItems.length > 1) {
-      project.selected_profiles(true).forEach((elm) => {
-        if(elm != this && elm.elm_type == this.elm_type) {
-          elm.set_inset(v, true);
-        }
-      });
-    }
-
-    if(_row.inset != v) {
-
-      _row.inset = v;
-
-      if(_attr && _attr._rays) {
-
-        _attr._rays.clear(true);
-        delete _attr.d0;
-
-        const b = this.cnn_point('b');
-        const e = this.cnn_point('e');
-        const {cnns} = project;
-
-        if(b.profile && b.profile_point == 'e') {
-          const {_rays} = b.profile._attr;
-          if(_rays) {
-            _rays.clear();
-            _rays.e.cnn = null;
-          }
-        }
-        if(e.profile && e.profile_point == 'b') {
-          const {_rays} = e.profile._attr;
-          if(_rays) {
-            _rays.clear();
-            _rays.b.cnn = null;
-          }
-        }
-
-        const {inner, outer} = this.joined_imposts();
-        const elm2 = this.elm;
-        for (const {profile} of inner.concat(outer)) {
-          const {b, e} = profile.rays;
-          b.profile == this && b.clear(true);
-          e.profile == this && e.clear(true);
-        }
-
-        for (const {_attr, elm} of this.joined_nearests()) {
-          _attr._rays && _attr._rays.clear(true);
-          _attr._nearest_cnn = null;
-          cnns.clear({elm1: elm, elm2});
-        }
-
-        this.layer.glasses(false, true).forEach((glass) => {
-          cnns.clear({elm1: glass.elm, elm2});
-        });
-      }
-
-      project.register_change();
-    }
-  }
-
-  set_clr(v, ignore_select) {
-    if(!ignore_select && this.project.selectedItems.length > 1) {
-      this.project.selected_profiles(true).forEach((elm) => {
-        if(elm != this) {
-          elm.set_clr(v, true);
-        }
-      });
-    }
-    BuilderElement.prototype.set_clr.call(this, v);
-  }
-
-  postcalc_cnn(node) {
-    const cnn_point = this.cnn_point(node);
-
-    cnn_point.cnn = $p.cat.cnns.elm_cnn(this, cnn_point.profile, cnn_point.cnn_types, cnn_point.cnn);
-
-    if(!cnn_point.point) {
-      cnn_point.point = this[node];
-    }
-
-    return cnn_point;
-  }
-
-  postcalc_inset() {
-    this.set_inset(this.project.check_inset({elm: this}), true);
-    return this;
-  }
-
-  default_inset(all) {
-    const {orientation, project, _attr, elm_type} = this;
-    const nearest = this.nearest(true);
-
-    if(nearest || all) {
-      let pos = nearest && project._dp.sys.flap_pos_by_impost && elm_type == $p.enm.elm_types.Створка ? nearest.pos : this.pos;
-      if(pos == $p.enm.positions.Центр) {
-        if(orientation == $p.enm.orientations.vert) {
-          pos = [pos, $p.enm.positions.ЦентрВертикаль];
-        }
-        if(orientation == $p.enm.orientations.hor) {
-          pos = [pos, $p.enm.positions.ЦентрГоризонталь];
-        }
-      }
-      this.set_inset(this.project.default_inset({
-        elm_type: elm_type,
-        pos: pos,
-        inset: this.inset
-      }), true);
-    }
-    if(nearest) {
-      _attr._nearest_cnn = $p.cat.cnns.elm_cnn(this, _attr._nearest, $p.enm.cnn_types.acn.ii, _attr._nearest_cnn);
-    }
-  }
-
-  path_points(cnn_point, profile_point) {
-
-    const {_attr, rays, generatrix} = this;
-    if(!generatrix.curves.length) {
-      return cnn_point;
-    }
-    const _profile = this;
-    const {_corns} = _attr;
-
-
-    function intersect_point(path1, path2, index, ipoint = cnn_point.point) {
-      const intersections = path1.getIntersections(path2);
-      let delta = Infinity, tdelta, point, tpoint;
-
-      if(intersections.length == 1) {
-        if(index) {
-          _corns[index] = intersections[0].point;
-        }
-        else {
-          return intersections[0].point.getDistance(ipoint, true);
-        }
-      }
-      else if(intersections.length > 1) {
-        intersections.forEach((o) => {
-          tdelta = o.point.getDistance(ipoint, true);
-          if(tdelta < delta) {
-            delta = tdelta;
-            point = o.point;
-          }
-        });
-        if(index) {
-          _corns[index] = point;
-        }
-        else {
-          return delta;
-        }
-      }
-    }
-
-    const prays = cnn_point.profile instanceof ProfileItem ?
-      cnn_point.profile.rays :
-      (cnn_point.profile instanceof Filling ? {inner: cnn_point.profile.path, outer: cnn_point.profile.path} : undefined);
-
-    const {cnn_type} = cnn_point.cnn || {};
-    const {cnn_types} = $p.enm;
-    if(cnn_point.is_t || (cnn_type == cnn_types.xx && !cnn_point.profile_point)) {
-
-      if(!cnn_point.profile.path.segments.length) {
-        const {_attr, row} = cnn_point.profile;
-        if(_attr.force_redraw) {
-          if(cnn_point.profile.generatrix && cnn_point.profile.generatrix.segments.length) {
-            cnn_point.profile.path.addSegments(cnn_point.profile.generatrix.segments);
-            _attr.force_redraw = false;
-          }
-          else if(cnn_point.profile.row && cnn_point.profile.row.path_data) {
-            cnn_point.profile.path.pathData = cnn_point.profile.row.path_data;
-            _attr.force_redraw = false;
-          }
-          else {
-            throw new Error('cycle redraw');
-          }
-        }
-        else {
-          _attr.force_redraw = true;
-          cnn_point.profile.redraw();
-          _attr.force_redraw = false;
-        }
-      }
-
-      const nodes = new Set();
-      let profile2;
-      cnn_point.point && !(this instanceof Onlay) && this.layer.profiles.forEach((profile) => {
-        if(profile !== this){
-          if(cnn_point.point.is_nearest(profile.b, true)) {
-            const cp = profile.cnn_point('b').profile;
-            if(cp !== this) {
-              if(cp !== cnn_point.profile || cnn_point.profile.cnn_side(this) === cnn_point.profile.cnn_side(profile)) {
-                nodes.add(profile);
-              }
-            }
-          }
-          else if(cnn_point.point.is_nearest(profile.e, true)) {
-            const cp = profile.cnn_point('e').profile;
-            if(cp !== this) {
-              if(cp !== cnn_point.profile || cnn_point.profile.cnn_side(this) === cnn_point.profile.cnn_side(profile)) {
-                nodes.add(profile);
-              }
-            }
-          }
-          else if(profile.generatrix.is_nearest(cnn_point.point, true)) {
-            nodes.add(profile);
-          }
-        }
-      });
-      nodes.forEach((p2) => {
-        if(p2 !== cnn_point.profile) {
-          profile2 = p2;
-        }
-      });
-
-      const side = cnn_point.profile.cnn_side(this, null, prays) === $p.enm.cnn_sides.Снаружи ? 'outer' : 'inner';
-
-      if(profile2) {
-        const interior = generatrix.getPointAt(generatrix.length/2)
-        const prays2 = profile2 && profile2.rays;
-        const side2 = profile2.cnn_side(this, null, prays2) === $p.enm.cnn_sides.Снаружи ? 'outer' : 'inner';
-        const pt1 = intersect_point(prays[side], rays.outer, 0, interior);
-        const pt2 = intersect_point(prays[side], rays.inner, 0, interior);
-        const pt3 = intersect_point(prays2[side2], rays.outer, 0, interior);
-        const pt4 = intersect_point(prays2[side2], rays.inner, 0, interior);
-
-        if(profile_point == 'b') {
-          pt1 < pt3 ? intersect_point(prays[side], rays.outer, 1) : intersect_point(prays2[side2], rays.outer, 1);
-          pt2 < pt4 ? intersect_point(prays[side], rays.inner, 4) : intersect_point(prays2[side2], rays.inner, 4);
-          intersect_point(prays2[side2], prays[side], 5);
-          if(rays.inner.point_pos(_corns[5]) >= 0 || rays.outer.point_pos(_corns[5]) >= 0) {
-            delete _corns[5];
-          }
-        }
-        else if(profile_point == 'e') {
-          pt1 < pt3 ? intersect_point(prays[side], rays.outer, 2) : intersect_point(prays2[side2], rays.outer, 2);
-          pt2 < pt4 ? intersect_point(prays[side], rays.inner, 3) : intersect_point(prays2[side2], rays.inner, 3);
-          intersect_point(prays2[side2], prays[side], 6);
-          if(rays.inner.point_pos(_corns[6]) >= 0 || rays.outer.point_pos(_corns[6]) >= 0) {
-            delete _corns[6];
-          }
-        }
-      }
-      else {
-        if(profile_point == 'b') {
-          intersect_point(prays[side], rays.outer, 1);
-          intersect_point(prays[side], rays.inner, 4);
-          delete _corns[5];
-        }
-        else if(profile_point == 'e') {
-          intersect_point(prays[side], rays.outer, 2);
-          intersect_point(prays[side], rays.inner, 3);
-          delete _corns[6];
-        }
-      }
-
-    }
-    else if(cnn_type == cnn_types.xx) {
-
-      if(cnn_point.profile instanceof Onlay) {
-        const width = this.width * 0.7;
-        const l = profile_point == 'b' ? width : generatrix.length - width;
-        const p = generatrix.getPointAt(l);
-        const n = generatrix.getNormalAt(l).normalize(width);
-        const np = new paper.Path({
-          insert: false,
-          segments: [p.subtract(n), p.add(n)],
-        });
-        if(profile_point == 'b') {
-          intersect_point(np, rays.outer, 1);
-          intersect_point(np, rays.inner, 4);
-        }
-        else if(profile_point == 'e') {
-          intersect_point(np, rays.outer, 2);
-          intersect_point(np, rays.inner, 3);
-        }
-      }
-      else {
-        const cnn_point2 = cnn_point.profile.cnn_point(cnn_point.profile_point);
-        const profile2 = cnn_point2 && cnn_point2.profile;
-        if(profile2) {
-          const prays2 = profile2 && profile2.rays;
-          const pt1 = intersect_point(prays.inner, rays.outer);
-          const pt2 = intersect_point(prays.inner, rays.inner);
-          const pt3 = intersect_point(prays2.inner, rays.outer);
-          const pt4 = intersect_point(prays2.inner, rays.inner);
-
-          if(profile_point == 'b') {
-            intersect_point(prays2.inner, prays.inner, 5);
-            pt1 > pt3 ? intersect_point(prays.inner, rays.outer, 1) : intersect_point(prays2.inner, rays.outer, 1);
-            pt2 > pt4 ? intersect_point(prays.inner, rays.inner, 4) : intersect_point(prays2.inner, rays.inner, 4);
-          }
-          else if(profile_point == 'e') {
-            pt1 > pt3 ? intersect_point(prays.inner, rays.outer, 2) : intersect_point(prays2.inner, rays.outer, 2);
-            pt2 > pt4 ? intersect_point(prays.inner, rays.inner, 3) : intersect_point(prays2.inner, rays.inner, 3);
-            intersect_point(prays2.inner, prays.inner, 6);
-          }
-        }
-        else{
-          if(profile_point == 'b') {
-            delete _corns[1];
-            delete _corns[4];
-          }
-          else if(profile_point == 'e') {
-            delete _corns[2];
-            delete _corns[3];
-          }
-        }
-      }
-
-    }
-    else if(!cnn_point.profile_point || !cnn_point.cnn || cnn_type == cnn_types.i) {
-      if(profile_point == 'b') {
-        delete _corns[1];
-        delete _corns[4];
-      }
-      else if(profile_point == 'e') {
-        delete _corns[2];
-        delete _corns[3];
-      }
-    }
-    else if(cnn_type == cnn_types.ad) {
-      if(profile_point == 'b') {
-        intersect_point(prays.outer, rays.outer, 1);
-        intersect_point(prays.inner, rays.inner, 4);
-      }
-      else if(profile_point == 'e') {
-        intersect_point(prays.outer, rays.outer, 2);
-        intersect_point(prays.inner, rays.inner, 3);
-      }
-
-    }
-    else if(cnn_type == cnn_types.av) {
-      if(this.orientation == $p.enm.orientations.vert) {
-        if(profile_point == 'b') {
-          intersect_point(prays.outer, rays.outer, 1);
-          intersect_point(prays.outer, rays.inner, 4);
-        }
-        else if(profile_point == 'e') {
-          intersect_point(prays.outer, rays.outer, 2);
-          intersect_point(prays.outer, rays.inner, 3);
-        }
-      }
-      else if(this.orientation == $p.enm.orientations.hor) {
-        if(profile_point == 'b') {
-          intersect_point(prays.inner, rays.outer, 1);
-          intersect_point(prays.inner, rays.inner, 4);
-        }
-        else if(profile_point == 'e') {
-          intersect_point(prays.inner, rays.outer, 2);
-          intersect_point(prays.inner, rays.inner, 3);
-        }
-      }
-      else {
-        cnn_point.err = 'orientation';
-      }
-    }
-    else if(cnn_type == cnn_types.ah) {
-      if(this.orientation == $p.enm.orientations.vert) {
-        if(profile_point == 'b') {
-          intersect_point(prays.inner, rays.outer, 1);
-          intersect_point(prays.inner, rays.inner, 4);
-        }
-        else if(profile_point == 'e') {
-          intersect_point(prays.inner, rays.outer, 2);
-          intersect_point(prays.inner, rays.inner, 3);
-        }
-      }
-      else if(this.orientation == $p.enm.orientations.hor) {
-        if(profile_point == 'b') {
-          intersect_point(prays.outer, rays.outer, 1);
-          intersect_point(prays.outer, rays.inner, 4);
-        }
-        else if(profile_point == 'e') {
-          intersect_point(prays.outer, rays.outer, 2);
-          intersect_point(prays.outer, rays.inner, 3);
-        }
-      }
-      else {
-        cnn_point.err = 'orientation';
-      }
-    }
-
-    if(profile_point == 'b') {
-      if(!_corns[1]) {
-        _corns[1] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d1));
-      }
-      if(!_corns[4]) {
-        _corns[4] = this.b.add(this.generatrix.firstCurve.getNormalAt(0, true).normalize(this.d2));
-      }
-    }
-    else if(profile_point == 'e') {
-      if(!_corns[2]) {
-        _corns[2] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d1));
-      }
-      if(!_corns[3]) {
-        _corns[3] = this.e.add(this.generatrix.lastCurve.getNormalAt(1, true).normalize(this.d2));
-      }
-    }
-
-    return cnn_point;
-  }
-
-  interiorPoint() {
-    const {generatrix, d1, d2} = this;
-    const igen = generatrix.curves.length == 1 ? generatrix.firstCurve.getPointAt(0.5, true) : (
-      generatrix.curves.length == 2 ? generatrix.firstCurve.point2 : generatrix.curves[1].point2
-    );
-    const normal = generatrix.getNormalAt(generatrix.getOffsetOf(igen));
-    return igen.add(normal.multiply(d1).add(normal.multiply(d2)).divide(2));
-  }
-
-
-  select_corn(point) {
-
-    const res = this.corns(point);
-
-    this.path.segments.forEach((segm) => {
-      if(segm.point.is_nearest(res.point)) {
-        res.segm = segm;
-      }
-    });
-
-    if(!res.segm && res.point == this.b) {
-      res.segm = this.generatrix.firstSegment;
-    }
-
-    if(!res.segm && res.point == this.e) {
-      res.segm = this.generatrix.lastSegment;
-    }
-
-    if(res.segm && res.dist < consts.sticking0) {
-      this.project.deselectAll();
-      res.segm.selected = true;
-    }
-
-    return res;
-  }
-
-  is_linear() {
-    return this.generatrix.is_linear();
-  }
-
-  is_nearest(p) {
-    return (this.b.is_nearest(p.b, true) || this.generatrix.is_nearest(p.b)) &&
-      (this.e.is_nearest(p.e, true) || this.generatrix.is_nearest(p.e));
-  }
-
-  is_collinear(p) {
-    let angl = p.e.subtract(p.b).getDirectedAngle(this.e.subtract(this.b));
-    if(angl < -180) {
-      angl += 180;
-    }
-    return Math.abs(angl) < consts.orientation_delta;
-  }
-
-  joined_nearests() {
-    return [];
-  }
-
-  redraw() {
-    const bcnn = this.postcalc_cnn('b');
-    const ecnn = this.postcalc_cnn('e');
-    const {path, generatrix, rays, project} = this;
-
-    this.path_points(bcnn, 'b');
-    this.path_points(ecnn, 'e');
-
-    path.removeSegments();
-
-    this.corns(5) && path.add(this.corns(5));
-    path.add(this.corns(1));
-
-    if(generatrix.is_linear()) {
-      path.add(this.corns(2));
-      this.corns(6) && path.add(this.corns(6));
-      path.add(this.corns(3));
-    }
-    else {
-
-      let tpath = new paper.Path({insert: false});
-      let offset1 = rays.outer.getNearestLocation(this.corns(1)).offset;
-      let offset2 = rays.outer.getNearestLocation(this.corns(2)).offset;
-      let step = (offset2 - offset1) / 50;
-
-      for (let i = offset1 + step; i < offset2; i += step) {
-        tpath.add(rays.outer.getPointAt(i));
-      }
-      tpath.simplify(0.8);
-      path.join(tpath);
-      path.add(this.corns(2));
-      this.corns(6) && path.add(this.corns(6));
-      path.add(this.corns(3));
-
-      tpath = new paper.Path({insert: false});
-      offset1 = rays.inner.getNearestLocation(this.corns(3)).offset;
-      offset2 = rays.inner.getNearestLocation(this.corns(4)).offset;
-      step = (offset2 - offset1) / 50;
-      for (let i = offset1 + step; i < offset2; i += step) {
-        tpath.add(rays.inner.getPointAt(i));
-      }
-      tpath.simplify(0.8);
-      path.join(tpath);
-
-    }
-
-    path.add(this.corns(4));
-    path.closePath();
-    path.reduce();
-
-    this.children.forEach((elm) => {
-      if(elm instanceof ProfileAddl) {
-        elm.observer(elm.parent);
-        elm.redraw();
-      }
-    });
-
-    return this;
-  }
-
-  mark_direction() {
-    const {generatrix, rays: {inner, outer}} = this;
-    const gb = generatrix.getPointAt(130);
-    const ge = generatrix.getPointAt(230);
-    const ib = inner.getNearestPoint(gb);
-    const ie = inner.getNearestPoint(ge);
-    const ob = outer.getNearestPoint(gb);
-    const oe = outer.getNearestPoint(ge);
-
-    const b = ib.add(ob).divide(2);
-    const e = ie.add(oe).divide(2);
-    const c = b.add(e).divide(2);
-    const n = e.subtract(b).rotate(90).normalize(10);
-    const c1 = c.add(n);
-    const c2 = c.subtract(n);
-
-    const path = new paper.Path({
-      parent: this,
-      segments: [b, e, c1, c2, e],
-      strokeColor: 'darkblue',
-      strokeCap: 'round',
-      strokeWidth: 2,
-      strokeScaling: false,
-    })
-  }
-
-  corns(corn) {
-    const {_corns} = this._attr;
-    if(typeof corn == 'number') {
-      return corn < 10 ? _corns[corn] : this.generatrix.getPointAt(corn);
-    }
-    else if(corn instanceof paper.Point) {
-
-      const res = {dist: Infinity, profile: this};
-      let dist;
-
-      for (let i = 1; i < 5; i++) {
-        dist = _corns[i].getDistance(corn);
-        if(dist < res.dist) {
-          res.dist = dist;
-          res.point = _corns[i];
-          res.point_name = i;
-        }
-      }
-
-      const {hhi} = this;
-      if(hhi) {
-        dist = hhi.getDistance(corn);
-        if(dist <= res.dist) {
-          res.dist = hhi.getDistance(corn);
-          res.point = hhi;
-          res.point_name = 'hhi';
-        }
-        const {hho} = this;
-        dist = hho.getDistance(corn);
-        if(dist <= res.dist) {
-          res.dist = hho.getDistance(corn);
-          res.point = hho;
-          res.point_name = 'hho';
-        }
-      }
-
-      dist = this.b.getDistance(corn);
-      if(dist <= res.dist) {
-        res.dist = this.b.getDistance(corn);
-        res.point = this.b;
-        res.point_name = 'b';
-      }
-      else {
-        dist = this.e.getDistance(corn);
-        if(dist <= res.dist) {
-          res.dist = this.e.getDistance(corn);
-          res.point = this.e;
-          res.point_name = 'e';
-        }
-      }
-
-      return res;
-    }
-    else {
-      const index = corn.substr(corn.length - 1, 1);
-      const axis = corn.substr(corn.length - 2, 1);
-      return _corns[index][axis];
-    }
-  }
-
-  has_cnn(profile, point) {
-
-    let t = this;
-    while (t.parent instanceof ProfileItem) {
-      t = t.parent;
-    }
-    while (profile.parent instanceof ProfileItem) {
-      profile = profile.parent;
-    }
-
-    if(
-      (t.b.is_nearest(point, true) && t.cnn_point('b').profile == profile) ||
-      (t.e.is_nearest(point, true) && t.cnn_point('e').profile == profile) ||
-      (profile.b.is_nearest(point, true) && profile.cnn_point('b').profile == t) ||
-      (profile.e.is_nearest(point, true) && profile.cnn_point('e').profile == t)
-    ) {
-      return true;
-    }
-
-    return false;
-  }
-
-  check_distance(element, res, point, check_only) {
-    return this.project.check_distance(element, this, res, point, check_only);
-  }
-
-  max_right_angle(ares) {
-    const {generatrix} = this;
-    let has_a = true;
-    ares.forEach((res) => {
-      res._angle = generatrix.angle_to(res.profile.generatrix, res.point);
-      if(res._angle > 180) {
-        res._angle = 360 - res._angle;
-      }
-    });
-    ares.sort((a, b) => {
-      const aa = Math.abs(a._angle - 90);
-      const ab = Math.abs(b._angle - 90);
-      return aa - ab;
-    });
-    return has_a;
-  }
-
-  show_number(show = true) {
-    let {elm_number} = this.children;
-    if(!show) {
-      return elm_number && elm_number.remove();
-    }
-    if(elm_number) {
-      elm_number.position = this.path.interiorPoint;
-    }
-    else {
-      elm_number = new paper.PointText({
-        parent: this,
-        guide: true,
-        name: 'elm_number',
-        justification: 'center',
-        fillColor: 'darkblue',
-        fontFamily: consts.font_family,
-        fontSize: consts.font_size * 1.1,
-        fontWeight: 'bold',
-        content: this.elm,
-        position: this.interiorPoint().add(this.generatrix.getTangentAt(this.generatrix.length / 1).multiply(consts.font_size * 2)),
-      });
-    }
-
-  }
-
-}
-
-
-class Profile extends ProfileItem {
-
-  constructor(attr) {
-
-    const fromCoordinates = !!attr.row;
-
-    super(attr);
-
-    if(this.parent) {
-      const {project: {_scope, ox}, observer} = this;
-
-      this.observer = observer.bind(this);
-      _scope.eve.on(consts.move_points, this.observer);
-
-      this.layer.on_insert_elm(this);
-
-      if(fromCoordinates){
-        const {cnstr, elm} = attr.row;
-        ox.coordinates.find_rows({cnstr, parent: {in: [elm, -elm]}, elm_type: $p.enm.elm_types.Добор}, (row) => new ProfileAddl({row, parent: this}));
-      }
-    }
-
-  }
-
-  get d0() {
-    const {_attr} = this;
-    if(!_attr.hasOwnProperty('d0')) {
-      _attr.d0 = this.offset;
-      const nearest = this.nearest();
-      if(nearest) {
-        _attr.d0 -= nearest.d2 + (_attr._nearest_cnn ? _attr._nearest_cnn.size(this) : 20);
-      }
-    }
-    return _attr.d0;
-  }
-
-  get elm_type() {
-    const {_rays, _nearest} = this._attr;
-
-    if(_rays && !_nearest && (_rays.b.is_tt || _rays.e.is_tt)) {
-      return $p.enm.elm_types.Импост;
-    }
-
-    if(this.layer.parent instanceof Contour) {
-      return $p.enm.elm_types.Створка;
-    }
-
-    return $p.enm.elm_types.Рама;
-  }
-
-  get pos() {
-    const by_side = this.layer.profiles_by_side();
-    if(by_side.top == this) {
-      return $p.enm.positions.Верх;
-    }
-    if(by_side.bottom == this) {
-      return $p.enm.positions.Низ;
-    }
-    if(by_side.left == this) {
-      return $p.enm.positions.Лев;
-    }
-    if(by_side.right == this) {
-      return $p.enm.positions.Прав;
-    }
-    return $p.enm.positions.Центр;
-  }
-
-  nearest(ign_cnn) {
-
-    const {b, e, _attr, layer, project} = this;
-    let {_nearest, _nearest_cnn} = _attr;
-
-    if(!ign_cnn && this.inset.empty()) {
-      ign_cnn = true;
-    }
-
-    const check_nearest = (elm) => {
-      if(!(elm instanceof Profile || elm instanceof ProfileConnective) || !elm.isInserted()) {
-        return;
-      }
-      let {generatrix} = elm;
-      if(elm.elm_type === $p.enm.elm_types.Импост) {
-        const pb = elm.cnn_point('b').profile;
-        const pe = elm.cnn_point('e').profile;
-        if(pb && pb.nearest(true) || pe && pe.nearest(true)) {
-          generatrix = generatrix.clone({insert: false}).elongation(100);
-        }
-      }
-      let is_nearest = [];
-      if(generatrix.is_nearest(b)) {
-        is_nearest.push(b);
-      }
-      if(generatrix.is_nearest(e)) {
-        is_nearest.push(e);
-      }
-      if(is_nearest.length < 2 && elm instanceof ProfileConnective) {
-        if(this.generatrix.is_nearest(elm.b)) {
-          if(is_nearest.every((point) => !point.is_nearest(elm.b))) {
-            is_nearest.push(elm.b);
-          }
-        }
-        if(this.generatrix.is_nearest(elm.e)) {
-          if(is_nearest.every((point) => !point.is_nearest(elm.e))) {
-            is_nearest.push(elm.e);
-          }
-        }
-      }
-
-      if(is_nearest.length > 1) {
-        if(!ign_cnn) {
-          if(!_nearest_cnn) {
-            _nearest_cnn = project.elm_cnn(this, elm);
-          }
-          let outer;
-          if(elm.is_linear()) {
-            outer = Math.abs(elm.angle_hor - this.angle_hor) > 60;
-          }
-          else {
-            const ob = generatrix.getOffsetOf(generatrix.getNearestPoint(b));
-            const oe = generatrix.getOffsetOf(generatrix.getNearestPoint(e));
-            outer = ob > oe;
-          }
-          _attr._nearest_cnn = $p.cat.cnns.elm_cnn(this, elm, $p.enm.cnn_types.acn.ii, _nearest_cnn, false, outer);
-        }
-        _attr._nearest = elm;
-        return true;
-      }
-
-      _attr._nearest = null;
-      _attr._nearest_cnn = null;
-    };
-
-    const find_nearest = (children) => children.some((elm) => {
-      if(_nearest == elm || !elm.generatrix) {
-        return;
-      }
-      if(check_nearest(elm)) {
-        return true;
-      }
-      else {
-        _attr._nearest = null;
-      }
-    });
-
-    if(layer && !check_nearest(_attr._nearest)) {
-      if(layer.parent) {
-        find_nearest(layer.parent.profiles);
-      }
-      else {
-        find_nearest(project.l_connective.children);
-      }
-    }
-
-    return _attr._nearest;
-  }
-
-  joined_imposts(check_only) {
-
-    const {rays, generatrix, layer} = this;
-    const tinner = [];
-    const touter = [];
-
-    const candidates = {b: [], e: []};
-
-    const {Снаружи} = $p.enm.cnn_sides;
-    const add_impost = (ip, curr, point) => {
-      const res = {point: generatrix.getNearestPoint(point), profile: curr};
-      if(this.cnn_side(curr, ip, rays) === Снаружи) {
-        touter.push(res);
-      }
-      else {
-        tinner.push(res);
-      }
-    };
-
-    if(layer.profiles.some((curr) => {
-        if(curr != this) {
-          for(const pname of ['b', 'e']) {
-            const cpoint = curr.cnn_point(pname);
-            if(cpoint.profile == this && cpoint.cnn) {
-              if(!cpoint.profile_point) {
-                if(check_only) {
-                  return true;
-                }
-                add_impost(curr.corns(1), curr, cpoint.point);
-              }
-              else {
-                candidates[pname].push(curr.corns(1));
-              }
-            }
-          }
-        }
-      })) {
-      return true;
-    }
-
-    ['b', 'e'].forEach((node) => {
-      if(candidates[node].length > 1) {
-        candidates[node].some((ip) => {
-          if(this.cnn_side(null, ip, rays) === Снаружи) {
-            this.cnn_point(node).is_cut = true;
-            return true;
-          }
-        });
-      }
-    });
-
-    return check_only ? false : {inner: tinner, outer: touter};
-
-  }
-
-  joined_nearests() {
-    const res = [];
-
-    this.layer.contours.forEach((contour) => {
-      contour.profiles.forEach((profile) => {
-        if(profile.nearest(true) == this) {
-          res.push(profile);
-        }
-      });
-    });
-
-    return res;
-  }
-
-  cnn_point(node, point) {
-    const res = this.rays[node];
-    const {cnn, profile, profile_point} = res;
-
-    if(!point) {
-      point = this[node];
-    }
-
-    if(profile && profile.children.length) {
-      if(this.check_distance(profile, res, point, true) === false || res.distance < consts.epsilon) {
-        return res;
-      }
-    }
-
-    res.clear();
-    if(this.parent) {
-      const {allow_open_cnn} = this.project._dp.sys;
-      const ares = [];
-
-      for(const profile of this.parent.profiles) {
-        if(this.check_distance(profile, res, point, false) === false || (res.distance < ((res.is_t || !res.is_l) ? consts.sticking : consts.sticking_l))) {
-          ares.push({
-            profile_point: res.profile_point,
-            profile: profile,
-            cnn_types: res.cnn_types,
-            point: res.point
-          });
-          res.clear();
-        }
-      }
-
-      if(ares.length === 1) {
-        res._mixin(ares[0]);
-      }
-      else if(ares.length >= 2) {
-        if(this.max_right_angle(ares)) {
-          res._mixin(ares[0]);
-          if(cnn && res.cnn_types && res.cnn_types.indexOf(cnn.cnn_type) != -1) {
-            res.cnn = cnn;
-          }
-        }
-        else {
-          res.clear();
-        }
-        res.is_cut = true;
-      }
-    }
-
-    return res;
-  }
-
-  t_parent(be) {
-    if(this.elm_type != $p.enm.elm_types.Импост) {
-      return this;
-    }
-    const {_rays} = this._attr;
-    if(be === 'b') {
-      return _rays && _rays.b.profile;
-    }
-    if(be === 'e') {
-      return _rays && _rays.e.profile;
-    }
-    return _rays && (_rays.b.profile || _rays.e.profile);
-  }
-}
-
-EditorInvisible.Profile = Profile;
-EditorInvisible.ProfileItem = ProfileItem;
-
-
-
-class ProfileAddl extends ProfileItem {
-
-  constructor(attr) {
-
-    const fromCoordinates = !!attr.row;
-
-    super(attr);
-
-    const {project, _attr, _row} = this;
-
-    _attr.generatrix.strokeWidth = 0;
-
-    if(!attr.side && _row.parent < 0){
-      attr.side = "outer";
-    }
-
-    _attr.side = attr.side || "inner";
-
-    if(!_row.parent){
-      _row.parent = this.parent.elm;
-      if(this.outer){
-        _row.parent = -_row.parent;
-      }
-    }
-
-    if(fromCoordinates){
-      const {cnstr, elm} = attr.row;
-      project.ox.coordinates.find_rows({cnstr, parent: {in: [elm, -elm]}, elm_type: $p.enm.elm_types.Добор}, (row) => new ProfileAddl({row, parent: this}));
-    }
-
-  }
-
-  get d0() {
-    this.nearest();
-    return this._attr._nearest_cnn ? -this._attr._nearest_cnn.size(this) : 0;
-  }
-
-  get outer() {
-    return this._attr.side == "outer";
-  }
-
-  get elm_type() {
-    return $p.enm.elm_types.Добор;
-  }
-
-  nearest() {
-    const {_attr, parent, project} = this;
-    const _nearest_cnn = _attr._nearest_cnn || project.elm_cnn(this, parent);
-    _attr._nearest_cnn = $p.cat.cnns.elm_cnn(this, parent, $p.enm.cnn_types.acn.ii, _nearest_cnn, true);
-    return parent;
-  }
-
-  cnn_point(node, point) {
-
-    const res = this.rays[node];
-
-    const check_distance = (elm, with_addl) => {
-
-        if(elm == this || elm == this.parent){
-          return;
-        }
-
-        const gp = elm.generatrix.getNearestPoint(point);
-        let distance;
-
-        if(gp && (distance = gp.getDistance(point)) < consts.sticking){
-          if(distance <= res.distance){
-            res.point = gp;
-            res.distance = distance;
-            res.profile = elm;
-          }
-        }
-
-        if(with_addl){
-          elm.getItems({class: ProfileAddl, parent: elm}).forEach((addl) => {
-            check_distance(addl, with_addl);
-          });
-        }
-
-      };
-
-    if(!point){
-      point = this[node];
-    }
-
-    if(res.profile && res.profile.children.length){
-      check_distance(res.profile);
-      if(res.distance < consts.sticking){
-        return res;
-      }
-    }
-
-    res.clear();
-    res.cnn_types = $p.enm.cnn_types.acn.t;
-
-    this.layer.profiles.forEach((addl) => check_distance(addl, true));
-
-    return res;
-  }
-
-  path_points(cnn_point, profile_point) {
-
-    const {generatrix, rays} = this;
-    const interior = generatrix.getPointAt(generatrix.length/2);
-
-    const _profile = this;
-    const _corns = this._attr._corns;
-
-    if(!generatrix.curves.length){
-      return cnn_point;
-    }
-
-    function intersect_point(path1, path2, index){
-      var intersections = path1.getIntersections(path2),
-        delta = Infinity, tdelta, point, tpoint;
-
-      if(intersections.length == 1)
-        if(index)
-          _corns[index] = intersections[0].point;
-        else
-          return intersections[0].point.getDistance(cnn_point.point, true);
-
-      else if(intersections.length > 1){
-        intersections.forEach((o) => {
-          tdelta = o.point.getDistance(cnn_point.point, true);
-          if(tdelta < delta){
-            delta = tdelta;
-            point = o.point;
-          }
-        });
-        if(index)
-          _corns[index] = point;
-        else
-          return delta;
-      }
-    }
-
-    const {profile} = cnn_point;
-    if(profile){
-      const prays = profile.rays;
-
-      if(!profile.path.segments.length){
-        profile.redraw();
-      }
-
-      if(profile_point == "b"){
-        if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
-          intersect_point(prays.outer, rays.outer, 1);
-          intersect_point(prays.outer, rays.inner, 4);
-        }
-        else{
-          intersect_point(prays.inner, rays.outer, 1);
-          intersect_point(prays.inner, rays.inner, 4);
-        }
-      }
-      else if(profile_point == "e"){
-        if(profile.cnn_side(this, interior, prays) == $p.enm.cnn_sides.Снаружи){
-          intersect_point(prays.outer, rays.outer, 2);
-          intersect_point(prays.outer, rays.inner, 3);
-        }
-        else{
-          intersect_point(prays.inner, rays.outer, 2);
-          intersect_point(prays.inner, rays.inner, 3);
-        }
-      }
-    }
-
-    if(profile_point == "b"){
-      if(!_corns[1]){
-        _corns[1] = this.b.add(generatrix.firstCurve.getNormalAt(0, true).normalize(this.d1));
-      }
-      if(!_corns[4]){
-        _corns[4] = this.b.add(generatrix.firstCurve.getNormalAt(0, true).normalize(this.d2));
-      }
-    }
-    else if(profile_point == "e"){
-      if(!_corns[2]){
-        _corns[2] = this.e.add(generatrix.lastCurve.getNormalAt(1, true).normalize(this.d1));
-      }
-      if(!_corns[3]){
-        _corns[3] = this.e.add(generatrix.lastCurve.getNormalAt(1, true).normalize(this.d2));
-      }
-    }
-    return cnn_point;
-  }
-
-  do_bind(p, bcnn, ecnn, moved) {
-
-    let imposts, moved_fact;
-
-    const bind_node = (node, cnn) => {
-
-        if(!cnn.profile){
-          return;
-        }
-
-        const gen = this.outer ? this.parent.rays.outer : this.parent.rays.inner;
-        const mpoint = cnn.profile.generatrix.intersect_point(gen, cnn.point, "nearest");
-        if(!mpoint.is_nearest(this[node])){
-          this[node] = mpoint;
-          moved_fact = true;
-        }
-
-      };
-
-    if(this.parent == p){
-      bind_node("b", bcnn);
-      bind_node("e", ecnn);
-    }
-
-    if(bcnn.cnn && bcnn.profile == p){
-
-      bind_node("b", bcnn);
-
-    }
-    if(ecnn.cnn && ecnn.profile == p){
-
-      bind_node("e", ecnn);
-
-    }
-
-    if(moved && moved_fact){
-    }
-  }
-
-  glass_segment() {
-
-  }
-
-}
-
-EditorInvisible.ProfileAddl = ProfileAddl;
-
-
-
-class ProfileConnective extends ProfileItem {
-
-  constructor(attr) {
-    super(attr);
-    this.parent = this.project.l_connective;
-  }
-
-  get d0() {
-    return 0;
-  }
-
-  get elm_type() {
-    return $p.enm.elm_types.Соединитель;
-  }
-
-  cnn_point(node) {
-    return this.rays[node];
-  }
-
-  move_points(delta, all_points, start_point) {
-
-    const nearests = this.joined_nearests();
-    const moved = {profiles: []};
-
-    super.move_points(delta, all_points, start_point);
-
-    if(all_points !== false && !paper.Key.isDown('control')){
-      nearests.forEach((np) => {
-        np.do_bind(this, null, null, moved);
-        ['b', 'e'].forEach((node) => {
-          const cp = np.cnn_point(node);
-          if(cp.profile){
-            cp.profile.do_bind(np, cp.profile.cnn_point("b"), cp.profile.cnn_point("e"), moved);
-          }
-        });
-      });
-    }
-
-    this.project.register_change();
-  }
-
-  joined_nearests() {
-
-    const res = [];
-
-    this.project.contours.forEach((contour) => {
-      contour.profiles.forEach((profile) => {
-        if(profile.nearest(true) === this){
-          res.push(profile);
-        }
-      });
-    });
-
-    return res;
-
-  }
-
-  nearest() {
-    return null;
-  }
-
-  save_coordinates() {
-
-    if(!this._attr.generatrix){
-      return;
-    }
-
-    const {_row, generatrix} = this;
-
-    _row.x1 = this.x1;
-    _row.y1 = this.y1;
-    _row.x2 = this.x2;
-    _row.y2 = this.y2;
-    _row.nom = this.nom;
-    _row.path_data = generatrix.pathData;
-    _row.parent = 0;
-
-    _row.len = this.length;
-
-    _row.angle_hor = this.angle_hor;
-
-    _row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - generatrix.getTangentAt(0).angle) * 10) / 10;
-    if(_row.alp1 < 0){
-      _row.alp1 = _row.alp1 + 360;
-    }
-
-    _row.alp2 = Math.round((generatrix.getTangentAt(generatrix.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
-    if(_row.alp2 < 0){
-      _row.alp2 = _row.alp2 + 360;
-    }
-
-    _row.elm_type = this.elm_type;
-
-  }
-
-  remove() {
-    this.joined_nearests().forEach((rama) => {
-
-      const {inner, outer} = rama.joined_imposts();
-      for (const {profile} of inner.concat(outer)) {
-        profile.rays.clear();
-      }
-      for (const {_attr, elm} of rama.joined_nearests()) {
-        _attr._rays && _attr._rays.clear();
-      }
-
-      const {_attr, layer} = rama;
-      _attr._rays && _attr._rays.clear();
-      if(_attr._nearest){
-        _attr._nearest = null;
-      }
-      if(_attr._nearest_cnn){
-        _attr._nearest_cnn = null;
-      }
-
-      layer && layer.notify && layer.notify({profiles: [rama], points: []}, consts.move_points);
-
-    });
-    super.remove();
-  }
-
-}
-
-
-class ConnectiveLayer extends paper.Layer {
-
-  redraw() {
-    this.children.forEach((elm) => elm.redraw());
-  }
-
-  save_coordinates() {
-    this.children.forEach((elm) => elm.save_coordinates && elm.save_coordinates());
-  }
-
-  glasses() {
-    return [];
-  }
-
-  notify(obj, type = 'update') {
-  }
-}
-
-EditorInvisible.ProfileConnective = ProfileConnective;
-
-
-class BaseLine extends ProfileItem {
-
-  constructor(attr) {
-    super(attr);
-    this.parent = this.project.l_connective;
-    Object.assign(this.generatrix, {
-      strokeColor: 'brown',
-      fillColor: new paper.Color(1, 0.1),
-      strokeScaling: false,
-      strokeWidth: 2,
-      dashOffset: 4,
-      dashArray: [4, 4],
-    })
-  }
-
-  get d0() {
-    return 0;
-  }
-
-  get d1() {
-    return 0;
-  }
-
-  get d2() {
-    return 0;
-  }
-
-  get path() {
-    return this.generatrix;
-  }
-  set path(v) {
-  }
-
-  setSelection(selection) {
-    paper.Item.prototype.setSelection.call(this, selection);
-  }
-
-  get oxml() {
-    return BaseLine.oxml;
-  }
-
-  get elm_type() {
-    return $p.enm.elm_types.Линия;
-  }
-
-  get length() {
-    return this.generatrix.length;
-  }
-
-  nearest() {
-    return null;
-  }
-
-  joined_nearests() {
-
-    const res = [];
-
-    this.project.contours.forEach((contour) => {
-      contour.profiles.forEach((profile) => {
-        if(profile.nearest(true) === this){
-          res.push(profile);
-        }
-      });
-    });
-
-    return res;
-
-  }
-
-  joined_imposts(check_only) {
-    const tinner = [];
-    const touter = [];
-    return check_only ? false : {inner: tinner, outer: touter};
-  }
-
-  save_coordinates() {
-
-    if(!this._attr.generatrix){
-      return;
-    }
-
-    const {_row} = this;
-
-    _row.x1 = this.x1;
-    _row.y1 = this.y1;
-    _row.x2 = this.x2;
-    _row.y2 = this.y2;
-    _row.path_data = this.generatrix.pathData;
-    _row.parent = this.parent.elm;
-    _row.len = this.length;
-    _row.angle_hor = this.angle_hor;
-    _row.elm_type = this.elm_type;
-  }
-
-  cnn_point(node) {
-    return this.rays[node];
-  }
-
-  redraw() {
-
-  }
-
-}
-
-BaseLine.oxml = {
-  ' ': [
-    {id: 'info', path: 'o.info', type: 'ro'},
-  ],
-  'Начало': ['x1', 'y1'],
-  'Конец': ['x2', 'y2']
-};
-
-
-
-class Onlay extends ProfileItem {
-
-  constructor(attr) {
-    super(attr);
-    if(this.parent) {
-      const {project: {_scope}, observer} = this;
-      this.observer = observer.bind(this);
-      _scope.eve.on(consts.move_points, this.observer);
-    }
-  }
-
-  get d0() {
-    return 0;
-  }
-
-  get elm_type() {
-    return $p.enm.elm_types.Раскладка;
-  }
-
-  nearest() {
-
-  }
-
-  joined_imposts(check_only) {
-
-    const {rays, generatrix, parent} = this;
-    const tinner = [];
-    const touter = [];
-
-    const candidates = {b: [], e: []};
-
-    const add_impost = (ip, curr, point) => {
-      const res = {point: generatrix.getNearestPoint(point), profile: curr};
-      if(this.cnn_side(curr, ip, rays) === $p.enm.cnn_sides.Снаружи) {
-        touter.push(res);
-      }
-      else {
-        tinner.push(res);
-      }
-    };
-
-    if(parent.imposts.some((curr) => {
-        if(curr != this) {
-          for(const pn of ['b', 'e']) {
-            const p = curr.cnn_point(pn);
-            if(p.profile == this && p.cnn) {
-
-              if(p.cnn.cnn_type == $p.enm.cnn_types.t) {
-                if(check_only) {
-                  return true;
-                }
-                add_impost(curr.corns(1), curr, p.point);
-              }
-              else {
-                candidates[pn].push(curr.corns(1));
-              }
-            }
-          }
-        }
-      })) {
-      return true;
-    }
-
-    ['b', 'e'].forEach((node) => {
-      if(candidates[node].length > 1) {
-        candidates[node].some((ip) => {
-          if(this.cnn_side(null, ip, rays) == $p.enm.cnn_sides.Снаружи) {
-            this.cnn_point(node).is_cut = true;
-            return true;
-          }
-        });
-      }
-    });
-
-    return check_only ? false : {inner: tinner, outer: touter};
-
-  }
-
-  save_coordinates() {
-
-    if(!this._attr.generatrix){
-      return;
-    }
-
-    const {_row, project, rays, generatrix} = this;
-    const {cnns} = project;
-    const {b, e} = rays;
-    const row_b = cnns.add({
-      elm1: _row.elm,
-      node1: "b",
-      cnn: b.cnn ? b.cnn.ref : "",
-      aperture_len: this.corns(1).getDistance(this.corns(4))
-    });
-    const row_e = cnns.add({
-      elm1: _row.elm,
-      node1: "e",
-      cnn: e.cnn ? e.cnn.ref : "",
-      aperture_len: this.corns(2).getDistance(this.corns(3))
-    });
-
-    _row.x1 = this.x1;
-    _row.y1 = this.y1;
-    _row.x2 = this.x2;
-    _row.y2 = this.y2;
-    _row.path_data = generatrix.pathData;
-    _row.nom = this.nom;
-    _row.parent = this.parent.elm;
-
-
-    _row.len = this.length;
-
-    if(b.profile){
-      row_b.elm2 = b.profile.elm;
-      if(b.profile instanceof Filling)
-        row_b.node2 = "t";
-      else if(b.profile.e.is_nearest(b.point))
-        row_b.node2 = "e";
-      else if(b.profile.b.is_nearest(b.point))
-        row_b.node2 = "b";
-      else
-        row_b.node2 = "t";
-    }
-    if(e.profile){
-      row_e.elm2 = e.profile.elm;
-      if(e.profile instanceof Filling)
-        row_e.node2 = "t";
-      else if(e.profile.b.is_nearest(e.point))
-        row_e.node2 = "b";
-      else if(e.profile.e.is_nearest(e.point))
-        row_e.node2 = "b";
-      else
-        row_e.node2 = "t";
-    }
-
-    _row.angle_hor = this.angle_hor;
-
-    _row.alp1 = Math.round((this.corns(4).subtract(this.corns(1)).angle - generatrix.getTangentAt(0).angle) * 10) / 10;
-    if(_row.alp1 < 0)
-      _row.alp1 = _row.alp1 + 360;
-
-    _row.alp2 = Math.round((generatrix.getTangentAt(generatrix.length).angle - this.corns(2).subtract(this.corns(3)).angle) * 10) / 10;
-    if(_row.alp2 < 0)
-      _row.alp2 = _row.alp2 + 360;
-
-    _row.elm_type = this.elm_type;
-  }
-
-  cnn_point(node, point) {
-
-    const res = this.rays[node];
-
-    if(!point){
-      point = this[node];
-    }
-
-    if(res.profile && res.profile.children.length){
-
-      if(res.profile instanceof Filling){
-        const np = res.profile.path.getNearestPoint(point);
-        if(np.getDistance(point) < consts.sticking_l){
-          res.point = np;
-          return res;
-        }
-      }
-      else{
-        if(this.check_distance(res.profile, res, point, true) === false || res.distance < consts.epsilon){
-          return res;
-        }
-      }
-    }
-
-    res.clear();
-    if(this.parent){
-      const res_bind = this.bind_node(point);
-      if(res_bind.binded){
-        res._mixin(res_bind, ["point","profile","cnn_types","profile_point"]);
-      }
-    }
-    return res;
-  }
-
-  bind_node(point, glasses) {
-
-    if(!glasses){
-      glasses = [this.parent];
-    }
-
-    let res = {distance: Infinity, is_l: true};
-
-    glasses.some((glass) => {
-      const np = glass.path.getNearestPoint(point);
-      let distance = np.getDistance(point);
-
-      if(distance < res.distance){
-        res.distance = distance;
-        res.point = np;
-        res.profile = glass;
-        res.cnn_types = $p.enm.cnn_types.acn.t;
-      }
-
-      if(distance < consts.sticking_l){
-        res.binded = true;
-        return true;
-      }
-
-      res.cnn_types = $p.enm.cnn_types.acn.t;
-      const ares = [];
-      for(let elm of glass.imposts){
-        if (elm !== this && elm.project.check_distance(elm, null, res, point, "node_generatrix") === false ){
-          ares.push({
-            profile_point: res.profile_point,
-            profile: res.profile,
-            cnn_types: res.cnn_types,
-            point: res.point});
-        }
-      }
-
-      if(ares.length == 1){
-        res._mixin(ares[0]);
-      }
-      else if(ares.length >= 2){
-        if(this.max_right_angle(ares)){
-          res._mixin(ares[0]);
-        }
-        res.is_cut = true;
-      }
-
-    });
-
-    if(!res.binded && res.point && res.distance < consts.sticking){
-      res.binded = true;
-    }
-
-    return res;
-  }
-
-  move_nodes(from, to) {
-    for(let elm of this.parent.imposts){
-      if(elm == this){
-        continue;
-      }
-      if(elm.b.is_nearest(from)){
-        elm.b = to;
-      }
-      if(elm.e.is_nearest(from)){
-        elm.e = to;
-      }
-    }
-  }
-
-}
-
-
-
-
-class Scheme extends paper.Project {
-
-  constructor(_canvas, _editor, _silent) {
-
-    super(_canvas);
-
-    const _scheme = _editor.project = this;
-
-    const _attr = this._attr = {
-      _silent,
-      _bounds: null,
-      _calc_order_row: null,
-      _update_timer: 0,
-      _vis_timer: 0,
-    };
-
-    const _changes = this._ch = [];
-
-    this._dp = $p.dp.buyers_order.create();
-
-    this.magnetism = new Magnetism(this);
-
-    const isBrowser = typeof requestAnimationFrame === 'function';
-
-    this.redraw = () => {
-
-      _attr._opened && !_attr._silent && _scheme._scope && isBrowser && requestAnimationFrame(_scheme.redraw);
-
-      if(!_attr._opened || _attr._saving || !_changes.length) {
-        return;
-      }
-
-      _changes.length = 0;
-      const {contours} = _scheme;
-
-      if(contours.length) {
-
-        _scheme.l_connective.redraw();
-
-        isBrowser && !_attr._silent && contours[0].refresh_prm_links(true);
-
-        for (let contour of contours) {
-          contour.redraw();
-          if(_changes.length) {
-            return;
-          }
-        }
-
-        _attr._bounds = null;
-        contours.forEach((contour) => {
-          const {contours, l_dimensions} = contour;
-          contours.forEach((l) => {
-            l.save_coordinates(true);
-            isBrowser && l.refresh_prm_links();
-          });
-          l_dimensions.redraw();
-        });
-
-        _scheme.draw_sizes();
-
-        _scheme.view.update();
-
-      }
-      else {
-        _scheme.draw_sizes();
-      }
-
-    };
-
-    if(!_attr._silent) {
-      this._dp_listener = this._dp_listener.bind(this);
-      this._dp._manager.on('update', this._dp_listener);
-    }
-
-    _editor.eve.on('contour_redrawed', () => {
-      clearTimeout(_attr._vis_timer);
-      _attr._vis_timer = setTimeout(this.draw_visualization.bind(this), 300);
-    });
-
-  }
-
-  _dp_listener(obj, fields) {
-
-    const {_attr, ox} = this;
-
-    if(_attr._loading || _attr._snapshot || obj != this._dp) {
-      return;
-    }
-
-    const scheme_changed_names = ['clr', 'sys'];
-    const row_changed_names = ['quantity', 'discount_percent', 'discount_percent_internal'];
-
-    if(fields.hasOwnProperty('clr') || fields.hasOwnProperty('sys')) {
-      this.notify(this, 'scheme_changed');
-    }
-
-    if(fields.hasOwnProperty('clr')) {
-      ox.clr = obj.clr;
-      this.getItems({class: BuilderElement}).forEach((elm) => {
-        if(!(elm instanceof Onlay) && !(elm instanceof Filling)) {
-          elm.clr = obj.clr;
-        }
-      });
-    }
-
-    if(fields.hasOwnProperty('sys') && !obj.sys.empty()) {
-
-      obj.sys.refill_prm(ox, 0, true);
-
-      obj._manager.emit_async('rows', obj, {extra_fields: true});
-
-      for (const contour of this.contours) {
-        contour.on_sys_changed();
-      }
-
-      if(obj.sys != $p.wsql.get_user_param('editor_last_sys')) {
-        $p.wsql.set_user_param('editor_last_sys', obj.sys.ref);
-      }
-
-      if(ox.clr.empty()) {
-        ox.clr = obj.sys.default_clr;
-      }
-
-      this.register_change(true);
-    }
-
-    for (const name of row_changed_names) {
-      if(_attr._calc_order_row && fields.hasOwnProperty(name)) {
-        _attr._calc_order_row[name] = obj[name];
-        this.register_change(true);
-      }
-    }
-
-  }
-
-  set_sys(sys) {
-
-    const {_dp, ox} = this;
-
-    if(_dp.sys === sys) {
-      return;
-    }
-
-    _dp.sys = sys;
-    ox.sys = sys;
-
-    _dp.sys.refill_prm(ox, 0, true);
-
-    for (const contour of this.contours) {
-      contour.on_sys_changed();
-    }
-
-    if(ox.clr.empty()) {
-      ox.clr = _dp.sys.default_clr;
-    }
-
-  }
-
-  set_glasses(inset) {
-    for(const glass of this.getItems({class: Filling})) {
-      glass.set_inset(inset, true);
-    }
-  }
-
-  set_furn(furn) {
-    for (const rama of this.contours) {
-      for (const contour of rama.contours) {
-        if(!contour.furn.empty()) {
-          contour.furn = furn;
-        }
-      }
-    }
-  }
-
-  _papam_listener(obj, fields) {
-    const {_attr, ox} = this;
-    if(_attr._loading || _attr._snapshot) {
-      return;
-    }
-    if(obj._owner === ox.params || (obj === ox && fields.hasOwnProperty('params'))) {
-      this.register_change();
-    }
-  }
-
-  elm_cnn(elm1, elm2) {
-    let res;
-    this.cnns.find_rows({
-      elm1: elm1.elm,
-      elm2: elm2.elm
-    }, (row) => {
-      res = row.cnn;
-      return false;
-    });
-    return res;
-  }
-
-  get cnns() {
-    return this.ox.cnn_elmnts;
-  }
-
-  get ox() {
-    return this._dp.characteristic;
-  }
-
-  set ox(v) {
-    const {_dp, _attr, _scope} = this;
-    let setted;
-
-    if(!_attr._silent) {
-      if(!this.hasOwnProperty('_papam_listener')){
-        this._papam_listener = this._papam_listener.bind(this);
-      }
-      _dp.characteristic._manager.off('update', this._papam_listener);
-      _dp.characteristic._manager.off('rows', this._papam_listener);
-    }
-
-    _dp.characteristic = v;
-
-    const ox = _dp.characteristic;
-
-    _dp.len = ox.x;
-    _dp.height = ox.y;
-    _dp.s = ox.s;
-    _dp.sys = ox.sys;
-    _dp.clr = ox.clr;
-
-    _attr._calc_order_row = ox.calc_order_row;
-
-    if(_attr._calc_order_row) {
-      'quantity,price_internal,discount_percent_internal,discount_percent,price,amount,note'.split(',').forEach((fld) => _dp[fld] = _attr._calc_order_row[fld]);
-    }
-    else {
-    }
-
-
-    if(_dp.sys.empty()) {
-      if(ox.owner.empty()) {
-        _dp.sys = $p.wsql.get_user_param('editor_last_sys');
-        setted = !_dp.sys.empty();
-      }
-      else {
-        $p.cat.production_params.find_rows({is_folder: false}, (o) => {
-          if(setted) {
-            return false;
-          }
-          o.production.find_rows({nom: ox.owner}, () => {
-            _dp.sys = o;
-            setted = true;
-            return false;
-          });
-        });
-      }
-    }
-
-    if(setted) {
-      _dp.sys.refill_prm(ox, 0, true);
-    }
-
-    if(_dp.clr.empty()) {
-      _dp.clr = _dp.sys.default_clr;
-    }
-
-    if(!_attr._silent) {
-      _scope.eve.emit_async('rows', ox, {constructions: true});
-      _dp._manager.emit_async('rows', _dp, {extra_fields: true});
-
-      _dp.characteristic._manager.on({
-        update: this._papam_listener,
-        rows: this._papam_listener,
-      });
-    }
-
-  }
-
-  get builder_props() {
-    const {ox, _attr} = this;
-    return _attr._builder_props || ox.builder_props;
-  }
-
-  load_dimension_lines() {
-    const {Размер, Радиус} = $p.enm.elm_types;
-    this.ox.coordinates.find_rows({elm_type: {in: [Размер, Радиус]}}, (row) => {
-      const layer = this.getItem({cnstr: row.cnstr});
-      const Constructor = row.elm_type === Размер ? DimensionLineCustom : DimensionRadius;
-      layer && new Constructor({
-        parent: layer.l_dimensions,
-        row: row
-      });
-    });
-  }
-
-  load_contour(parent) {
-    this.ox.constructions.find_rows({parent: parent ? parent.cnstr : 0}, (row) => {
-      this.load_contour(new Contour({parent: parent, row: row}));
-    });
-  }
-
-  load(id, from_service) {
-    const {_attr} = this;
-    const _scheme = this;
-
-    function load_object(o) {
-
-      if(!_scheme._scope) {
-        return Promise.resolve();
-      }
-      _scheme.ox = o;
-
-      _attr._opened = true;
-      _attr._bounds = new paper.Rectangle({
-        point: [0, 0],
-        size: [o.x, o.y]
-      });
-
-      o.coordinates.forEach((row) => {
-        if(row.elm_type === $p.enm.elm_types.Соединитель) {
-          new ProfileConnective({row});
-        }
-        else if(row.elm_type === $p.enm.elm_types.Линия) {
-          new BaseLine({row});
-        }
-      });
-
-      if(typeof from_service === 'object') {
-        _attr._builder_props = Object.assign({}, o.constructor.builder_props_defaults, from_service);
-      }
-      else {
-        delete _attr._builder_props;
-      }
-
-      o = null;
-
-      _scheme.load_contour(null);
-
-      _scheme.redraw(from_service);
-
-      return new Promise((resolve, reject) => {
-
-        _attr._bounds = null;
-
-        _scheme.load_dimension_lines();
-
-        setTimeout(() => {
-
-          _attr._bounds = null;
-          _scheme.zoom_fit();
-
-          const {_scope} = _scheme;
-
-          if(!_attr._snapshot) {
-            _scope._undo.clear();
-            _scope._undo.save_snapshot(_scheme);
-            _scope.set_text();
-          }
-
-          _scheme.register_change(true);
-
-          if(_scheme.contours.length) {
-            _scheme.notify(_scheme.contours[0], 'layer_activated', true);
-          }
-
-          delete _attr._loading;
-
-          ((_scheme.ox.base_block.empty() || !_scheme.ox.base_block.is_new()) ? Promise.resolve() : _scheme.ox.base_block.load())
-            .then(() => {
-              if(_scheme.ox.coordinates.count()) {
-                if(_scheme.ox.specification.count() || from_service) {
-                  Promise.resolve().then(() => {
-                    if(from_service){
-                      _scheme.draw_visualization();
-                      _scheme.zoom_fit();
-                      resolve();
-                    }
-                    else {
-                      setTimeout(_scheme.draw_visualization.bind(_scheme), 100);
-                    }
-                  });
-                }
-                else {
-                  $p.products_building.recalc(_scheme, {});
-                }
-              }
-              else {
-                if(from_service){
-                  resolve();
-                }
-                else{
-                  _scope.load_stamp && _scope.load_stamp();
-                }
-              }
-              delete _attr._snapshot;
-
-              (!from_service || !_scheme.ox.specification.count()) && resolve();
-            });
-        });
-      })
-        .then(() => {
-          if(_scheme.ox._data.refill_props) {
-            _scheme._dp.sys.refill_prm(_scheme.ox, 0, true, _scheme);
-            _scheme._scope._acc && _scheme._scope._acc.props.reload();
-            delete _scheme.ox._data.refill_props;
-          }
-        });
-    }
-
-    _attr._loading = true;
-
-    if(from_service) {
-      _attr._from_service = true;
-    }
-
-    this.ox = null;
-    this.clear();
-
-    if($p.utils.is_data_obj(id) && id.calc_order && !id.calc_order.is_new()) {
-      return load_object(id);
-    }
-    else if($p.utils.is_guid(id) || $p.utils.is_data_obj(id)) {
-      return $p.cat.characteristics.get(id, true, true)
-        .then((ox) =>
-          $p.doc.calc_order.get(ox.calc_order, true, true)
-            .then(() => load_object(ox))
-        );
-    }
-  }
-
-  draw_fragment(attr) {
-
-    const {l_dimensions, l_connective} = this;
-
-    const contours = this.getItems({class: Contour});
-    contours.forEach((l) => l.hidden = true);
-    l_dimensions.visible = false;
-    l_connective.visible = false;
-
-    let elm;
-    if(attr.elm > 0) {
-      elm = this.getItem({class: BuilderElement, elm: attr.elm});
-      elm && elm.draw_fragment && elm.draw_fragment();
-    }
-    else if(attr.elm < 0) {
-      const cnstr = -attr.elm;
-      contours.some((l) => {
-        if(l.cnstr == cnstr) {
-          l.hidden = false;
-          l.hide_generatrix();
-          l.l_dimensions.redraw(attr.faltz || true);
-          l.zoom_fit();
-          return true;
-        }
-      });
-    }
-    this.view.update();
-    return elm;
-  }
-
-  has_changes() {
-    return this._ch.length > 0;
-  }
-
-  register_update() {
-    const {_attr} = this;
-    if(_attr._update_timer) {
-      clearTimeout(_attr._update_timer);
-    }
-    _attr._update_timer = setTimeout(() => {
-      this.view && this.view.update();
-      _attr._update_timer = 0;
-    }, 100);
-  }
-
-  register_change(with_update) {
-
-    const {_attr, _ch} = this;
-
-    if(!_attr._loading) {
-
-      _attr._bounds = null;
-
-      this.getItems({class: Profile}).forEach((p) => {
-        delete p._attr.d0;
-      });
-
-      this.ox._data._modified = true;
-      this.notify(this, 'scheme_changed');
-    }
-    _ch.push(Date.now());
-
-    if(with_update) {
-      this.register_update();
-    }
-  }
-
-  get bounds() {
-    const {_attr} = this;
-    if(!_attr._bounds) {
-      this.contours.forEach((l) => {
-        if(!_attr._bounds) {
-          _attr._bounds = l.bounds;
-        }
-        else {
-          _attr._bounds = _attr._bounds.unite(l.bounds);
-        }
-      });
-    }
-    return _attr._bounds;
-  }
-
-  get dimension_bounds() {
-    let {bounds} = this;
-    this.getItems({class: DimensionLine}).forEach((dl) => {
-      if(dl instanceof DimensionLineCustom || dl._attr.impost || dl._attr.contour) {
-        bounds = bounds.unite(dl.bounds);
-      }
-    });
-    this.contours.forEach(({l_visualization}) => {
-      const ib = l_visualization._by_insets.bounds;
-      if(ib.height && ib.bottom > bounds.bottom) {
-        const delta = ib.bottom - bounds.bottom + 10;
-        bounds = bounds.unite(
-          new paper.Rectangle(bounds.bottomLeft, bounds.bottomRight.add([0, delta < 250 ? delta * 1.1 : delta * 1.2]))
-        );
-      }
-    });
-    return bounds;
-  }
-
-  get strokeBounds() {
-    let bounds = this.l_dimensions.strokeBounds;
-    this.contours.forEach((l) => bounds = bounds.unite(l.strokeBounds));
-    return bounds;
-  }
-
-  get _calc_order_row() {
-    const {_attr, ox} = this;
-    if(!_attr._calc_order_row && !ox.empty()) {
-      _attr._calc_order_row = ox.calc_order_row;
-    }
-    return _attr._calc_order_row;
-  }
-
-  notify(obj, type = 'update', fields) {
-    if(obj.type) {
-      type = obj.type;
-    }
-    this._scope.eve.emit_async(type, obj, fields);
-  }
-
-  clear() {
-    const {_attr} = this;
-    const pnames = '_bounds,_update_timer,_loading,_snapshot,_silent,_from_service';
-    for (let fld in _attr) {
-      if(!pnames.match(fld)) {
-        delete _attr[fld];
-      }
-    }
-
-    super.clear();
-  }
-
-  unload() {
-    const {_dp, _attr, _calc_order_row} = this;
-    const pnames = '_loading,_saving';
-    for (let fld in _attr) {
-      if(pnames.match(fld)) {
-        _attr[fld] = true;
-      }
-      else {
-        delete _attr[fld];
-      }
-    }
-
-    if(this.hasOwnProperty('_dp_listener')){
-      _dp._manager.off('update', this._dp_listener);
-      this._dp_listener = null;
-    }
-
-    const ox = _dp.characteristic;
-    if(this.hasOwnProperty('_papam_listener')){
-      ox._manager.off('update', this._papam_listener);
-      ox._manager.off('rows', this._papam_listener);
-      this._papam_listener = null;
-    }
-    if(ox && ox._modified) {
-      if(ox.is_new()) {
-        if(_calc_order_row) {
-          ox.calc_order.production.del(_calc_order_row);
-        }
-        ox.unload();
-      }
-      else {
-        setTimeout(ox.load.bind(ox), 100);
-      }
-    }
-
-    this.remove();
-  }
-
-  move_points(delta, all_points) {
-
-    const other = [];
-    const layers = [];
-    const profiles = new Set;
-
-    const {auto_align, _dp} = this;
-
-    for (const item of this.selectedItems) {
-      const {parent, layer} = item;
-
-      if(item instanceof paper.Path && parent instanceof GeneratrixElement && !profiles.has(parent)) {
-
-        profiles.add(parent);
-
-        if(parent._hatching) {
-          parent._hatching.remove();
-          parent._hatching = null;
-        }
-
-        if(layer instanceof ConnectiveLayer) {
-          other.push.apply(other, parent.move_points(delta, all_points));
-        }
-        else if(!parent.nearest || !parent.nearest()) {
-
-          if(auto_align && parent.elm_type === $p.enm.elm_types.Импост && !parent.layer.layer && Math.abs(delta.x) > 1) {
-            continue;
-          }
-
-          let check_selected;
-          item.segments.forEach((segm) => {
-            if(segm.selected && other.indexOf(segm) != -1) {
-              check_selected = !(segm.selected = false);
-            }
-          });
-
-          if(check_selected && !item.segments.some((segm) => segm.selected)) {
-            continue;
-          }
-
-          other.push.apply(other, parent.move_points(delta, all_points));
-
-          if(layers.indexOf(layer) == -1) {
-            layers.push(layer);
-            layer.l_dimensions.clear();
-          }
-        }
-      }
-      else if(item instanceof Filling) {
-        item.purge_paths();
-      }
-    }
-
-    if(other.length && Math.abs(delta.x) > 1) {
-      this.do_align(auto_align, profiles);
-    }
-    else if(!this._attr._from_service) {
-      setTimeout(() => this.contours.forEach(l => l.redraw()), 70);
-    }
-
-    _dp._manager.emit_async('update', {}, {x1: true, x2: true, y1: true, y2: true, a1: true, a2: true, cnn1: true, cnn2: true, info: true});
-
-  }
-
-  save_coordinates(attr) {
-
-    const {_attr, bounds, ox} = this;
-
-    if(!bounds) {
-      return;
-    }
-
-    _attr._saving = true;
-    ox._data._loading = true;
-
-    ox.x = bounds.width.round(1);
-    ox.y = bounds.height.round(1);
-    ox.s = this.area;
-
-    ox.cnn_elmnts.clear();
-    ox.glasses.clear();
-
-    this.contours.forEach((contour) => contour.save_coordinates());
-
-    this.l_connective.save_coordinates();
-
-    return $p.products_building.recalc(this, attr);
-
-  }
-
-  zoom_fit(bounds, isNode) {
-
-    if(!bounds) {
-      bounds = this.strokeBounds;
-    }
-
-    if (bounds) {
-      if(!isNode) {
-        isNode = $p.wsql.alasql.utils.isNode;
-      }
-      const space = isNode ? 160 : 320;
-      const min = 900;
-      let {width, height, center} = bounds;
-      if (width < min) {
-        width = min;
-      }
-      if (height < min) {
-        height = min;
-      }
-      width += space;
-      height += space;
-      const {view} = this;
-      view.zoom = Math.min(view.viewSize.height / height, view.viewSize.width / width);
-      const dx = view.viewSize.width - width * view.zoom;
-      if(isNode) {
-        const dy = view.viewSize.height - height * view.zoom;
-        view.center = center.add([dx, -dy]);
-      }
-      else {
-        view.center = center.add([dx / 2, 50]);
-      }
-    }
-  }
-
-  get_svg(attr = {}) {
-    this.deselectAll();
-    const options = attr.export_options || {};
-    if(!options.precision) {
-      options.precision = 1;
-    }
-    const hidden = new Set();
-    if(this.ox.calc_order.obj_delivery_state == 'Шаблон') {
-      for(const el of this.getItems({class: DimensionLine})) {
-        el.visible = false;
-        hidden.add(el);
-      }
-      for(const el of this.getItems({class: paper.PointText})) {
-        el.visible = false;
-        hidden.add(el);
-      }
-      for(const el of this.getItems({class: Contour})) {
-        if(el.l_visualization._opening) {
-          el.l_visualization._opening.strokeScaling = false;
-          el.l_visualization._opening.opacity = 0.8;
-          el.l_visualization._by_spec.opacity = 0.5;
-        }
-      }
-      this.zoom_fit();
-
-      const {ownerDocument} = this.view.element;
-      if(ownerDocument) {
-        options.onExport = function (item, node, options) {
-          if(!item.visible) {
-            return ownerDocument.createElement('g');
-          }
-        }
-      }
-    }
-    const svg = this.exportSVG(options);
-    const bounds = this.strokeBounds.unite(this.l_dimensions.strokeBounds);
-
-    svg.setAttribute('x', bounds.x);
-    svg.setAttribute('y', bounds.y);
-    svg.setAttribute('width', bounds.width + 40);
-    svg.setAttribute('height', bounds.height);
-    svg.querySelector('g').removeAttribute('transform');
-
-    options.onExport = null;
-    if(hidden.size) {
-      for(const el of hidden) {
-        el.visible = true;
-      }
-      for(const el of this.getItems({class: Contour})) {
-        if(el.l_visualization._opening) {
-          el.l_visualization._opening.strokeScaling = true;
-          el.l_visualization._opening.opacity = 1;
-          el.l_visualization._by_spec.opacity = 1;
-        }
-      }
-      this.zoom_fit();
-    }
-
-    return svg.outerHTML;
-  }
-
-  load_stamp(obx, is_snapshot) {
-
-    const do_load = (obx) => {
-
-      const {ox} = this;
-
-      this.clear();
-
-      const src = Object.assign({_not_set_loaded: true}, is_snapshot ? obx : obx._obj);
-      ox._mixin(src, null,
-        'ref,name,calc_order,product,leading_product,leading_elm,origin,base_block,note,partner,_not_set_loaded,_rev'.split(','), true);
-
-      if(!is_snapshot) {
-        ox.base_block = (obx.base_block.empty() || obx.base_block.obj_delivery_state === $p.enm.obj_delivery_states.Шаблон) ? obx : obx.base_block;
-        if(obx.calc_order.refill_props) {
-          ox._data.refill_props = true;
-        }
-      }
-
-      return this.load(ox)
-        .then(() => ox._data._modified = true);
-
-    };
-
-    this._attr._loading = true;
-
-    if(is_snapshot) {
-      this._attr._snapshot = true;
-      return do_load(obx);
-    }
-    else {
-      return $p.cat.characteristics.get(obx, true, true)
-        .then(do_load);
-    }
-  }
-
-  get auto_align() {
-    const {calc_order, base_block} = this.ox;
-    const {Шаблон} = $p.enm.obj_delivery_states;
-    if(base_block.empty() || calc_order.obj_delivery_state == Шаблон || base_block.calc_order.obj_delivery_state != Шаблон) {
-      return false;
-    }
-    const {auto_align} = $p.job_prm.properties;
-    let align;
-    if(auto_align) {
-      base_block.params.find_rows({param: auto_align}, (row) => {
-        align = row.value;
-        return false;
-      });
-      return align && align != '_' && align;
-    }
-  }
-
-  do_align(auto_align, profiles) {
-
-    if(!auto_align || !profiles.size) {
-      return;
-    }
-
-    const layers = new Set();
-    for (const profile of profiles) {
-      profile.layer.fillings && layers.add(profile.layer);
-    }
-
-    if(this._attr._align_timer) {
-      clearTimeout(this._attr._align_timer);
-    }
-
-    this._attr._align_timer = setTimeout(() => {
-
-      this._attr._align_timer = 0;
-
-      const glasses = [];
-      for (const layer of layers) {
-        for(const filling of layer.fillings){
-          glasses.indexOf(filling) == -1 && glasses.push(filling);
-        }
-      }
-      this._scope.glass_align('width', glasses);
-
-    }, 100);
-
-  }
-
-  resize_canvas(w, h) {
-    const {viewSize} = this.view;
-    viewSize.width = w;
-    viewSize.height = h;
-  }
-
-  get contours() {
-    return this.layers.filter((l) => l instanceof Contour);
-  }
-
-  get area() {
-    return this.contours.reduce((sum, {area}) => sum + area, 0).round(3);
-  }
-
-  get form_area() {
-    return this.contours.reduce((sum, {form_area}) => sum + form_area, 0).round(3);
-  }
-
-  get clr() {
-    return this.ox.clr;
-  }
-
-  set clr(v) {
-    this.ox.clr = v;
-  }
-
-  get l_dimensions() {
-    const {activeLayer, _attr} = this;
-
-    if(!_attr.l_dimensions) {
-      _attr.l_dimensions = new DimensionLayer();
-    }
-    if(!_attr.l_dimensions.isInserted()) {
-      this.addLayer(_attr.l_dimensions);
-    }
-    if(activeLayer) {
-      this._activeLayer = activeLayer;
-    }
-
-    return _attr.l_dimensions;
-  }
-
-  get l_connective() {
-    const {activeLayer, _attr} = this;
-
-    if(!_attr.l_connective) {
-      _attr.l_connective = new ConnectiveLayer();
-    }
-    if(!_attr.l_connective.isInserted()) {
-      this.addLayer(_attr.l_connective);
-    }
-    if(activeLayer) {
-      this._activeLayer = activeLayer;
-    }
-
-    return _attr.l_connective;
-  }
-
-  draw_sizes() {
-
-    const {bounds, l_dimensions, builder_props} = this;
-
-    if(bounds && builder_props.auto_lines) {
-
-      if(!l_dimensions.bottom) {
-        l_dimensions.bottom = new DimensionLine({
-          pos: 'bottom',
-          parent: l_dimensions,
-          offset: -120
-        });
-      }
-      else {
-        l_dimensions.bottom.offset = -120;
-      }
-
-      if(!l_dimensions.right) {
-        l_dimensions.right = new DimensionLine({
-          pos: 'right',
-          parent: l_dimensions,
-          offset: -120
-        });
-      }
-      else {
-        l_dimensions.right.offset = -120;
-      }
-
-
-
-      if(this.contours.some((l) => l.l_dimensions.children.some((dl) =>
-          dl.pos == 'right' && Math.abs(dl.size - bounds.height) < consts.sticking_l))) {
-        l_dimensions.right.visible = false;
-      }
-      else {
-        l_dimensions.right.redraw();
-      }
-
-      if(this.contours.some((l) => l.l_dimensions.children.some((dl) =>
-          dl.pos == 'bottom' && Math.abs(dl.size - bounds.width) < consts.sticking_l))) {
-        l_dimensions.bottom.visible = false;
-      }
-      else {
-        l_dimensions.bottom.redraw();
-      }
-    }
-    else {
-      if(l_dimensions.bottom) {
-        l_dimensions.bottom.visible = false;
-      }
-      if(l_dimensions.right) {
-        l_dimensions.right.visible = false;
-      }
-    }
-  }
-
-  draw_visualization() {
-    if(this.view){
-      for (let contour of this.contours) {
-        contour.draw_visualization();
-      }
-      this.view.update();
-    }
-  }
-
-  default_inset(attr) {
-
-    let rows;
-
-    if(!attr.pos) {
-      rows = this._dp.sys.inserts(attr.elm_type, true);
-      if(attr.inset && rows.some((row) => attr.inset == row)) {
-        return attr.inset;
-      }
-      return rows[0];
-    }
-
-    rows = this._dp.sys.inserts(attr.elm_type, 'rows');
-
-    if(rows.length == 1) {
-      return rows[0].nom;
-    }
-
-    const pos_array = Array.isArray(attr.pos);
-
-    function check_pos(pos) {
-      if(pos_array) {
-        return attr.pos.some((v) => v == pos);
-      }
-      return attr.pos == pos;
-    }
-
-    if(attr.inset && rows.some((row) => attr.inset == row.nom && (check_pos(row.pos) || row.pos == $p.enm.positions.Любое))) {
-      return attr.inset;
-    }
-
-    let inset;
-    rows.some((row) => {
-      if(check_pos(row.pos) && row.by_default) {
-        return inset = row.nom;
-      }
-    });
-    if(!inset) {
-      rows.some((row) => {
-        if(check_pos(row.pos)) {
-          return inset = row.nom;
-        }
-      });
-    }
-    if(!inset) {
-      rows.some((row) => {
-        if(row.pos == $p.enm.positions.Любое && row.by_default) {
-          return inset = row.nom;
-        }
-      });
-    }
-    if(!inset) {
-      rows.some((row) => {
-        if(row.pos == $p.enm.positions.Любое) {
-          return inset = row.nom;
-        }
-      });
-    }
-
-    return inset;
-  }
-
-  check_inset(attr) {
-    const inset = attr.inset ? attr.inset : attr.elm.inset;
-    const elm_type = attr.elm ? attr.elm.elm_type : attr.elm_type;
-    const rows = [];
-
-    let finded;
-    this._dp.sys.elmnts.forEach((row) => {
-      if((elm_type ? row.elm_type == elm_type : true)) {
-        if(row.nom === inset) {
-          finded = true;
-          return false;
-        }
-        rows.push(row);
-      }
-    });
-
-
-    if(finded) {
-      return inset;
-    }
-    if(rows.length) {
-      return rows[0].nom;
-    }
-
-  }
-
-  check_distance(element, profile, res, point, check_only) {
-    const {acn} = $p.enm.cnn_types;
-
-    let distance, cnns, addls,
-      bind_node = typeof check_only == 'string' && check_only.indexOf('node') != -1,
-      bind_generatrix = typeof check_only == 'string' ? check_only.indexOf('generatrix') != -1 : check_only,
-      node_distance;
-
-    function check_node_distance(node) {
-      distance = element[node].getDistance(point)
-      if(distance < parseFloat(consts.sticking_l)) {
-
-        if(typeof res.distance == 'number' && res.distance < distance) {
-          res.profile = element;
-          res.profile_point = node;
-          return 1;
-        }
-
-        if(check_only === true && res.profile === element && res.cnn && acn.a.includes(res.cnn.cnn_type)) {
-          if(res.distance > distance) {
-            res.distance = distance;
-          }
-          res.profile_point = node;
-          res.point = point;
-          return 2;
-        }
-
-        if(profile && (!res.cnn || res.cnn.empty())) {
-
-          cnns = $p.cat.cnns.nom_cnn(element, profile, acn.a);
-          if(!cnns || !cnns.length) {
-            return 1;
-          }
-
-
-
-        }
-        else if(res.cnn && acn.t.includes(res.cnn.cnn_type)) {
-          return 1;
-        }
-
-        res.point = bind_node ? element[node] : point;
-        res.distance = distance;
-        res.profile = element;
-        res.profile_point = node;
-        res.cnn_types = acn.a;
-        if(cnns && cnns.length && !res.cnn) {
-          res.cnn = cnns[0];
-        }
-
-        return 2;
-      }
-
-    }
-
-    const b = res.profile_point === 'b' ? 'b' : 'e';
-    const e = b === 'b' ? 'e' : 'b';
-
-    if(element === profile) {
-      if(profile.is_linear()) {
-        return;
-      }
-      else {
-      }
-      return;
-    }
-    else if((node_distance = check_node_distance(b)) || (node_distance = check_node_distance(e))) {
-      if(res.cnn_types !== acn.a && res.profile_point){
-        res.cnn_types = acn.a;
-        res.distance = distance;
-      }
-      return node_distance == 2 ? false : void(0);
-    }
-
-    res.profile_point = '';
-
-
-    const gp = element.generatrix.getNearestPoint(point);
-    distance = gp.getDistance(point);
-
-    if(distance < ((res.is_t || !res.is_l) ? consts.sticking : consts.sticking_l)) {
-
-      if(distance < res.distance || bind_generatrix) {
-        if(element.d0 != 0 && element.rays.outer) {
-          res.point = element.rays.outer.getNearestPoint(point);
-          res.distance = 0;
-        }
-        else {
-          res.point = gp;
-          res.distance = distance;
-        }
-        res.profile = element;
-        res.cnn_types = acn.t;
-      }
-      if(bind_generatrix) {
-        return false;
-      }
-    }
-  }
-
-  default_clr(attr) {
-    return this.ox.clr;
-  }
-
-  get default_furn() {
-    var sys = this._dp.sys,
-      res;
-    while (true) {
-      if(res = $p.job_prm.builder.base_furn[sys.ref]) {
-        break;
-      }
-      if(sys.empty()) {
-        break;
-      }
-      sys = sys.parent;
-    }
-    if(!res) {
-      res = $p.job_prm.builder.base_furn.null;
-    }
-    if(!res) {
-      $p.cat.furns.find_rows({is_folder: false, is_set: false, id: {not: ''}}, (row) => {
-        res = row;
-        return false;
-      });
-    }
-    return res;
-  }
-
-  selected_profiles(all) {
-    const res = [];
-    const count = this.selectedItems.length;
-
-    this.selectedItems.forEach((item) => {
-
-      const p = item.parent;
-
-      if(p instanceof ProfileItem) {
-        if(all || !item.layer.parent || !p.nearest || !p.nearest(true)) {
-
-          if(res.indexOf(p) != -1) {
-            return;
-          }
-
-          if(count < 2 || !(p._attr.generatrix.firstSegment.selected ^ p._attr.generatrix.lastSegment.selected)) {
-            res.push(p);
-          }
-
-        }
-      }
-    });
-
-    return res;
-  }
-
-  selected_glasses() {
-    const res = [];
-
-    this.selectedItems.forEach((item) => {
-
-      if(item instanceof Filling && res.indexOf(item) == -1) {
-        res.push(item);
-      }
-      else if(item.parent instanceof Filling && res.indexOf(item.parent) == -1) {
-        res.push(item.parent);
-      }
-    });
-
-    return res;
-  }
-
-  get selected_elm() {
-    let res;
-    this.selectedItems.some((item) => {
-      if(item instanceof BuilderElement) {
-        return res = item;
-
-      }
-      else if(item.parent instanceof BuilderElement) {
-        return res = item.parent;
-      }
-    });
-    return res;
-  }
-
-  hitPoints(point, tolerance, selected_first, with_onlays) {
-    let item, hit;
-    let dist = Infinity;
-
-    function check_corns(elm) {
-      const corn = elm.corns(point);
-      if(corn.dist < dist) {
-        dist = corn.dist;
-        if(corn.dist < consts.sticking) {
-          hit = {
-            item: elm.generatrix,
-            point: corn.point
-          };
-        }
-      }
-    }
-
-    if(selected_first) {
-      this.selectedItems.some((item) => hit = item.hitTest(point, {segments: true, tolerance: tolerance || 8}));
-      if(!hit) {
-        hit = this.hitTest(point, {segments: true, tolerance: tolerance || 6});
-      }
-    }
-    else {
-      for (let elm of this.activeLayer.profiles) {
-        check_corns(elm);
-        for (let addl of elm.addls) {
-          check_corns(addl);
-        }
-      }
-      if(with_onlays) {
-        for (let elm of this.activeLayer.onlays) {
-          check_corns(elm);
-        }
-      }
-    }
-
-    return hit;
-  }
-
-  rootLayer(layer) {
-    if(!layer) {
-      layer = this.activeLayer;
-    }
-    while (layer.parent) {
-      layer = layer.parent;
-    }
-    return layer;
-  }
-
-  deselect_all_points(with_items) {
-    const res = [];
-    this.getItems({class: paper.Path}).forEach((item) => {
-      item.segments.forEach((segm) => {
-        if(segm.selected) {
-          segm.selected = false;
-          res.push(segm);
-        }
-      });
-      if(with_items && item.selected) {
-        item.selected = false;
-        res.push(item);
-      }
-    });
-    return res;
-  }
-
-  get perimeter() {
-    let res = [],
-      contours = this.contours,
-      tmp;
-
-    if(contours.length == 1) {
-      return contours[0].perimeter;
-    }
-
-
-
-    return res;
-  }
-
-  get glasses() {
-    return this.getItems({class: Filling});
-  }
-
-}
-
-EditorInvisible.Scheme = Scheme;
-
-
-class EditableText extends paper.PointText {
-
-  constructor(props) {
-    props.justification = 'center';
-    props.fontFamily = consts.font_family;
-    super(props);
-    this._edit = null;
-    this._owner = props._owner;
-
-    !this.project._attr._from_service && this.on({
-      mouseenter: this.mouseenter,
-      mouseleave: this.mouseleave,
-      click: this.click,
-    })
-  }
-
-  mouseenter(event) {
-    this.project._scope.canvas_cursor('cursor-arrow-ruler-light');
-  }
-
-  mouseleave(event) {
-    this.project._scope.canvas_cursor('cursor-arrow-white');
-  }
-
-  click(event) {
-    if(!this._edit) {
-      const {view, bounds} = this;
-      const point = view.projectToView(bounds.topLeft);
-      const edit = this._edit = document.createElement('INPUT');
-      view.element.parentNode.appendChild(edit);
-      edit.style = `left: ${(point.x - 4).toFixed()}px; top: ${(point.y).toFixed()}px; width: 60px; border: none; position: absolute;`;
-      edit.onblur = () => setTimeout(() => this.edit_remove());
-      edit.onkeydown = this.edit_keydown.bind(this);
-      edit.value = this.content.replace(/\D$/, '');
-      setTimeout(() => {
-        edit.focus();
-        edit.select();
-      });
-    }
-  }
-
-  edit_keydown(event) {
-    switch (event.code) {
-    case 'Escape':
-    case 'Tab':
-      return this.edit_remove();
-    case 'Enter':
-    case 'NumpadEnter':
-      this.apply(parseFloat(this._edit.value));
-      return this.edit_remove();
-    case 'Digit0':
-    case 'Digit1':
-    case 'Digit2':
-    case 'Digit3':
-    case 'Digit4':
-    case 'Digit5':
-    case 'Digit6':
-    case 'Digit7':
-    case 'Digit8':
-    case 'Digit9':
-    case 'Numpad0':
-    case 'Numpad1':
-    case 'Numpad2':
-    case 'Numpad3':
-    case 'Numpad4':
-    case 'Numpad5':
-    case 'Numpad6':
-    case 'Numpad7':
-    case 'Numpad8':
-    case 'Numpad9':
-    case '.':
-    case 'Period':
-    case 'NumpadDecimal':
-    case 'ArrowRight':
-    case 'ArrowLeft':
-    case 'Delete':
-    case 'Backspace':
-      break;
-    case 'Comma':
-    case ',':
-      event.code = '.';
-      break;
-    default:
-      event.preventDefault();
-      event.stopPropagation();
-      return false;
-    }
-  }
-
-  edit_remove() {
-    if(this._edit){
-      this._edit.parentNode && this._edit.parentNode.removeChild(this._edit);
-      this._edit = null;
-    }
-  }
-
-  remove() {
-    this.edit_remove();
-    super.remove();
-  }
-}
-
-class AngleText extends EditableText {
-
-  constructor(props) {
-    props.fillColor = 'blue';
-    super(props);
-    this._ind = props._ind;
-  }
-
-  apply(value) {
-
-    const {project, generatrix, _attr} = this._owner;
-    const {zoom} = _attr;
-    const {curves, segments} = generatrix;
-    const c1 = curves[this._ind - 1];
-    const c2 = curves[this._ind];
-    const loc1 = c1.getLocationAtTime(0.9);
-    const loc2 = c2.getLocationAtTime(0.1);
-    const center = c1.point2;
-    let angle = loc2.tangent.angle - loc1.tangent.negate().angle;
-    if(angle < 0){
-      angle += 360;
-    }
-    const invert = angle > 180;
-    if(invert){
-      angle = 360 - angle;
-    }
-    const ray0 = new paper.Point([c2.point2.x - c2.point1.x, c2.point2.y - c2.point1.y]);
-    const ray1 = ray0.clone();
-    ray1.angle += invert ? angle - value : value - angle;
-    const delta = ray1.subtract(ray0);
-
-    let start;
-    for(const segment of segments) {
-      if(segment.point.equals(c2.point2)) {
-        start = true;
-      }
-      if(start) {
-        segment.point = segment.point.add(delta);
-      }
-    }
-    project.register_change(true);
-
-  }
-}
-
-class LenText extends EditableText {
-
-  constructor(props) {
-    props.fillColor = 'black';
-    super(props);
-  }
-
-  apply(value) {
-    const {path, segment1, segment2, length} = this._owner;
-    const {parent: {_attr, project}, segments} = path;
-    const {zoom} = _attr;
-    const delta = segment1.curve.getTangentAtTime(1).multiply(value * zoom - length);
-    let start;
-    for(const segment of segments) {
-      if(segment === segment2) {
-        start = true;
-      }
-      if(start) {
-        segment.point = segment.point.add(delta);
-      }
-    }
-    project.register_change(true);
-  }
-}
-
-class Sectional extends GeneratrixElement {
-
-  initialize(attr) {
-
-    const {project, _attr, _row} = this;
-    const h = project.bounds.height + project.bounds.y;
-
-    _attr._rays = {
-      b: {},
-      e: {},
-      clear() {},
-    };
-
-    _attr.children = [];
-
-    _attr.zoom = 5;
-    _attr.radius = 50;
-
-    if(attr.generatrix) {
-      _attr.generatrix = attr.generatrix;
-    }
-    else {
-      if(_row.path_data) {
-        _attr.generatrix = new paper.Path(_row.path_data);
-      }
-      else{
-        const first_point = new paper.Point([_row.x1, h - _row.y1]);
-        _attr.generatrix = new paper.Path(first_point);
-        if(_row.r){
-          _attr.generatrix.arcTo(
-            first_point.arc_point(_row.x1, h - _row.y1, _row.x2, h - _row.y2,
-              _row.r + 0.001, _row.arc_ccw, false), [_row.x2, h - _row.y2]);
-        }
-        else{
-          _attr.generatrix.lineTo([_row.x2, h - _row.y2]);
-        }
-      }
-    }
-
-    _attr.generatrix.strokeColor = 'black';
-    _attr.generatrix.strokeWidth = 1;
-    _attr.generatrix.strokeScaling = false;
-    this.clr = _row.clr.empty() ? $p.job_prm.builder.base_clr : _row.clr;
-
-    this.addChild(_attr.generatrix);
-
-  }
-
-  redraw() {
-    const {layer, generatrix, _attr, radius} = this;
-    const {children, zoom} = _attr;
-    const {segments, curves} = generatrix;
-
-    for(let child of children){
-      child.remove();
-    }
-
-    for(let i = 1; i < segments.length - 1; i++){
-      this.draw_angle(i);
-    }
-
-    for(let curve of curves){
-      const loc = curve.getLocationAtTime(0.5);
-      const normal = loc.normal.normalize(radius);
-      children.push(new LenText({
-        point: loc.point.add(normal).add([0, normal.y < 0 ? 0 : normal.y / 2]),
-        content: (curve.length / zoom).toFixed(0),
-        fontSize: radius * 1.4,
-        parent: layer,
-        _owner: curve
-      }));
-    }
-
-
-    return this;
-  }
-
-  draw_angle(ind) {
-    const {layer, generatrix, _attr, radius} = this;
-    let {children, zoom} = _attr;
-    const {curves} = generatrix;
-    const c1 = curves[ind - 1];
-    const c2 = curves[ind];
-    const loc1 = c1.getLocationAtTime(0.9);
-    const loc2 = c2.getLocationAtTime(0.1);
-    const center = c1.point2;
-    let angle = loc2.tangent.angle - loc1.tangent.negate().angle;
-    if(angle < 0){
-      angle += 360;
-    }
-    if(angle > 180){
-      angle = 360 - angle;
-    }
-
-
-
-    if (c1.length < radius || c2.length < radius || 180 - angle < 1){
-      return;
-    }
-
-    const from = c1.getLocationAt(c1.length - radius).point;
-    const to = c2.getLocationAt(radius).point;
-    const end = center.subtract(from.add(to).divide(2)).normalize(radius).negate();
-    children.push(new paper.Path.Arc({
-      from,
-      through: center.add(end),
-      to,
-      strokeColor: 'grey',
-      guide: true,
-      parent: layer,
-    }));
-
-    children.push(new AngleText({
-      point: center.add(end.multiply(-2.2)), 
-      content: angle.toFixed(0) + '°',
-      fontSize: radius * 1.4,
-      parent: layer,
-      _owner: this,
-      _ind: ind,
-    }));
-
-  }
-
-  save_coordinates() {
-
-    const {_row, generatrix} = this;
-
-    if(!generatrix){
-      return;
-    }
-
-    _row.x1 = this.x1;
-    _row.y1 = this.y1;
-    _row.x2 = this.x2;
-    _row.y2 = this.y2;
-    _row.path_data = generatrix.pathData;
-    _row.nom = this.nom;
-
-
-    _row.len = this.length.round(1);
-
-    _row.elm_type = this.elm_type;
-
-  }
-
-  cnn_point() {
-
-  }
-
-  get length() {
-    const {generatrix, zoom} = this._attr;
-    return generatrix.length / zoom;
-  }
-
-  get rays() {
-    return this._attr._rays;
-  }
-
-  get elm_type() {
-    return $p.enm.elm_types.Водоотлив;
-  }
-
-  get radius() {
-    let {generatrix, radius} = this._attr;
-    const {height, width} = generatrix.bounds;
-    const size = Math.max(width - consts.cutoff, height - consts.cutoff);
-    if(size > 0) {
-      radius += size / 60;
-    }
-    return radius;
-  }
-}
-
-EditorInvisible.Sectional = Sectional;
-EditorInvisible.EditableText = EditableText;
-
-
-class ToolElement extends paper.Tool {
+class ToolElement extends $p.EditorInvisible.ToolElement {
 
   constructor() {
     super();
     this.on_close = this.on_close.bind(this);
   }
 
-  resetHot(type, event, mode) {
-
-  }
-
-  testHot(type, event, mode) {
-    return this.hitTest(event)
+  on_activate(cursor) {
+    super.on_activate(cursor);
+    this._scope.tb_left.select(this.options.name);
   }
 
   detache_wnd() {
@@ -13155,45 +2513,9 @@ class ToolElement extends paper.Tool {
     this.profile = null;
   }
 
-  check_layer() {
-    const {project, eve} = this._scope;
-    if (!project.contours.length) {
-      new Contour({parent: undefined});
-      eve.emit_async('rows', project.ox, {constructions: true});
-    }
-  }
-
-  on_activate(cursor) {
-
-    this._scope.tb_left.select(this.options.name);
-
-    this._scope.canvas_cursor(cursor);
-
-    if (this.options.name != "select_node") {
-
-      this.check_layer();
-
-      if (this.project._dp.sys.empty()) {
-        $p.msg.show_msg({
-          type: "alert-warning",
-          text: $p.msg.bld_not_sys,
-          title: $p.msg.bld_title
-        });
-      }
-    }
-  }
-
   on_close(wnd) {
     wnd && wnd.cell && setTimeout(() => this._scope.tools[1].activate());
     return true;
-  }
-
-  get eve() {
-    return this._scope.eve;
-  }
-
-  get project() {
-    return this._scope.project;
   }
 
 }
@@ -13203,9 +2525,7 @@ class ToolElement extends paper.Tool {
 class ToolArc extends ToolElement{
 
   constructor() {
-
-    super()
-
+    super();
     Object.assign(this, {
       options: {name: 'arc'},
       mouseStartPos: new paper.Point(),
@@ -13213,26 +2533,26 @@ class ToolArc extends ToolElement{
       hitItem: null,
       originalContent: null,
       changed: false,
-    })
+    });
 
     this.on({
 
-      activate: function() {
+      activate() {
         this.on_activate('cursor-arc-arrow');
       },
 
-      deactivate: function() {
+      deactivate() {
         this._scope.hide_selection_bounds();
       },
 
-      mousedown: function(event) {
+      mousedown(event) {
 
-        var b, e, r;
+        let b, e, r;
 
         this.mode = null;
         this.changed = false;
 
-        if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem
+        if (this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem
           && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
 
           this.mode = this.hitItem.item.parent.generatrix;
@@ -13262,7 +2582,7 @@ class ToolArc extends ToolElement{
             r.parent.rays.clear();
             r.parent._row.r = 0;
             r.selected = true;
-            r.layer.notify({profiles: [r.parent], points: []}, consts.move_points);
+            r.layer.notify({profiles: [r.parent], points: []}, this._scope.consts.move_points);
 
           }
           else {
@@ -13287,11 +2607,11 @@ class ToolArc extends ToolElement{
         }
       },
 
-      mouseup: function(event) {
+      mouseup() {
 
-        var item = this.hitItem ? this.hitItem.item : null;
+        let item = this.hitItem ? this.hitItem.item : null;
 
-        if(item instanceof Filling && item.visible){
+        if(item instanceof $p.EditorInvisible.Filling && item.visible){
           item.attache_wnd(this._scope._acc.elm);
           item.selected = true;
 
@@ -13307,7 +2627,7 @@ class ToolArc extends ToolElement{
 
       },
 
-      mousedrag: function(event) {
+      mousedrag(event) {
         if (this.mode) {
 
           this.changed = true;
@@ -13322,7 +2642,7 @@ class ToolArc extends ToolElement{
 
       mousemove: this.hitTest
 
-    })
+    });
 
   }
 
@@ -13343,7 +2663,7 @@ class ToolArc extends ToolElement{
     element.parent.rays.clear();
     element.selected = true;
 
-    element.layer.notify({profiles: [element.parent], points: []}, consts.move_points);
+    element.layer.notify({profiles: [element.parent], points: []}, this._scope.consts.move_points);
   }
 
   hitTest(event) {
@@ -13358,7 +2678,7 @@ class ToolArc extends ToolElement{
       this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: hitSize});
     }
 
-    if(this.hitItem && this.hitItem.item.parent instanceof ProfileItem
+    if(this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem
       && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
       this._scope.canvas_cursor('cursor-arc');
     }
@@ -13378,9 +2698,7 @@ class ToolArc extends ToolElement{
 class ToolCoordinates extends ToolElement{
 
   constructor() {
-
-    super()
-
+    super();
     Object.assign(this, {
       options: {
         name: 'grid',
@@ -13400,7 +2718,7 @@ class ToolCoordinates extends ToolElement{
 
     this.on({
 
-      activate: function() {
+      activate() {
         this.on_activate('cursor-text-select');
         if(!this.dp) {
           this.dp = $p.dp.builder_coordinates.create(ToolCoordinates.defaultProps);
@@ -13411,17 +2729,13 @@ class ToolCoordinates extends ToolElement{
 
       mousedown: this.mousedown,
 
-      mouseup: function(event) {
-
-
+      mouseup() {
         this._scope.canvas_cursor('cursor-text-select');
-
       },
 
       mousemove: this.hitTest
 
-    })
-
+    });
   }
 
   hitTest(event) {
@@ -13436,7 +2750,7 @@ class ToolCoordinates extends ToolElement{
       this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: hitSize});
     }
 
-    if(this.hitItem && this.hitItem.item.parent instanceof ProfileItem
+    if(this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem
       && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
       this._scope.canvas_cursor('cursor-arrow-lay');
     }
@@ -13449,7 +2763,7 @@ class ToolCoordinates extends ToolElement{
   }
 
 
-  mousedown(event) {
+  mousedown() {
     this.project.deselectAll();
 
     if(this.hitItem) {
@@ -13518,7 +2832,7 @@ class ToolCoordinates extends ToolElement{
       this.grid.visible = true;
     }
     else {
-      this.grid = new GridCoordinates({
+      this.grid = new $p.EditorInvisible.GridCoordinates({
         step: this.dp.step,
         offset: this.dp.offset,
         angle: this.dp.angle,
@@ -13542,7 +2856,6 @@ class ToolCoordinates extends ToolElement{
 
     let path = (this.dp.path === path_kind.generatrix ? this.profile.generatrix : this.profile.rays[this.dp.path.valueOf()])
       .clone({insert: false});
-    const {interiorPoint} = path;
     const pts = [];
     for(let i = 1; i < 5; i++) {
       const pt = path.getNearestPoint(this.profile.corns(i));
@@ -13566,7 +2879,7 @@ class ToolCoordinates extends ToolElement{
     const {profile, grid, dp, project} = this;
     const {generatrix} = profile;
 
-    const {bind, offset, path, line, lines, step} = this.grid._attr;
+    const {bind, path, line, step} = grid._attr;
     const segments = [];
     let reverce = path.firstSegment.point.getDistance(generatrix.firstSegment.point) >
       path.firstSegment.point.getDistance(generatrix.lastSegment.point);
@@ -13694,16 +3007,13 @@ ToolCoordinates.defaultProps = {
   path: 'generatrix',
   step: 200,
   offset: 200,
-}
-
+};
 
 
 class ToolCut extends ToolElement{
 
   constructor() {
-
-    super()
-
+    super();
     Object.assign(this, {
       options: {name: 'cut'},
       mouseStartPos: new paper.Point(),
@@ -13712,7 +3022,7 @@ class ToolCut extends ToolElement{
       cont: null,
       square: null,
       profile: null,
-    })
+    });
 
     this.on({
 
@@ -13728,8 +3038,7 @@ class ToolCut extends ToolElement{
 
       mousemove: this.hitTest
 
-    })
-
+    });
   }
 
   keydown(event) {
@@ -13742,7 +3051,7 @@ class ToolCut extends ToolElement{
   mouseup(event) {
 
     const hitItem = this.project.hitTest(event.point, {fill: true, stroke: false, segments: false});
-    if(hitItem && hitItem.item.parent instanceof Profile) {
+    if(hitItem && hitItem.item.parent instanceof $p.EditorInvisible.Profile) {
       let item = hitItem.item.parent;
       if(event.modifiers.shift) {
         item.selected = !item.selected;
@@ -13908,7 +3217,7 @@ class ToolCut extends ToolElement{
     }
 
     const loc = generatrix.getNearestLocation(impost.profile[impost.point]);
-    const rack2 = new Profile({generatrix: generatrix.splitAt(loc), proto: rack.profile});
+    const rack2 = new $p.EditorInvisible.Profile({generatrix: generatrix.splitAt(loc), proto: rack.profile});
 
     cnn = rack2.cnn_point('e');
     if(base && cnn && cnn.profile) {
@@ -13966,8 +3275,7 @@ class ToolCut extends ToolElement{
     rack1.profile.rays[rack1.point].clear(true);
     impost.profile.rays[impost.point].clear(true);
 
-    const p2 = rack2.profile[rack2.point === 'b' ? 'e' : 'b'];
-    rack1.profile[rack1.point] = p2;
+    rack1.profile[rack1.point] = rack2.profile[rack2.point === 'b' ? 'e' : 'b'];
 
     let base;
     let cnn = rack2.profile.cnn_point('b');
@@ -14050,7 +3358,7 @@ class ToolCut extends ToolElement{
       this.hitItem = this.project.hitTest(event.point, { ends: true, tolerance: hitSize });
     }
 
-    if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
+    if (this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem) {
       const {activeLayer, magnetism} = this.project;
       const profile = this.hitItem.item.parent;
       if(profile.parent === activeLayer) {
@@ -14296,13 +3604,13 @@ class ToolLayImpost extends ToolElement {
 
       });
 
-      var wnd_options = tool.wnd.wnd_options;
+      const wnd_options = tool.wnd.wnd_options;
       tool.wnd.wnd_options = function (opt) {
         wnd_options.call(tool.wnd, opt);
 
-        for (var prop in profile._metadata().fields) {
+        for (const prop in profile._metadata().fields) {
           if (prop.indexOf('step') === -1 && prop.indexOf('inset') === -1 && prop != 'clr' && prop != 'w' && prop != 'h') {
-            var val = profile[prop];
+            const val = profile[prop];
             opt[prop] = $p.utils.is_data_obj(val) ? val.ref : val;
           }
         }
@@ -14333,11 +3641,11 @@ class ToolLayImpost extends ToolElement {
     this.detache_wnd();
   }
 
-  mouseup(event) {
+  mouseup() {
 
     this._scope.canvas_cursor('cursor-arrow-lay');
 
-    if(this.profile.elm_type == $p.enm.elm_types.Раскладка && this.hitItem instanceof Filling && this.hitItem.imposts.length) {
+    if(this.profile.elm_type == $p.enm.elm_types.Раскладка && this.hitItem instanceof $p.EditorInvisible.Filling && this.hitItem.imposts.length) {
       this.confirmed = false;
       dhtmlx.confirm({
         type: 'confirm',
@@ -14361,6 +3669,8 @@ class ToolLayImpost extends ToolElement {
       return;
     }
 
+    const {consts} = this._scope;
+
     this.hitTest(event);
 
     this.paths.forEach((p) => p.removeSegments());
@@ -14370,7 +3680,7 @@ class ToolLayImpost extends ToolElement {
       return;
     }
 
-    var bounds, gen, hit = !!this.hitItem;
+    let bounds, gen, hit = !!this.hitItem;
 
     if (hit) {
       bounds = this.hitItem.bounds;
@@ -14389,13 +3699,13 @@ class ToolLayImpost extends ToolElement {
     else
       return;
 
-    var stepy = profile.step_by_y || (profile.elm_by_y && bounds.height / (profile.elm_by_y + ((hit || profile.elm_by_y < 2) ? 1 : -1))),
+    let stepy = profile.step_by_y || (profile.elm_by_y && bounds.height / (profile.elm_by_y + ((hit || profile.elm_by_y < 2) ? 1 : -1))),
       county = profile.elm_by_y > 0 ? profile.elm_by_y.round() : Math.round(bounds.height / stepy) - 1,
       stepx = profile.step_by_x || (profile.elm_by_x && bounds.width / (profile.elm_by_x + ((hit || profile.elm_by_x < 2) ? 1 : -1))),
       countx = profile.elm_by_x > 0 ? profile.elm_by_x.round() : Math.round(bounds.width / stepx) - 1,
       w2x = profile.inset_by_x.nom().width / 2,
       w2y = profile.inset_by_y.nom().width / 2,
-      clr = BuilderElement.clr_by_clr(profile.clr, false),
+      clr = $p.EditorInvisible.BuilderElement.clr_by_clr(profile.clr, false),
       by_x = [], by_y = [], base, pos, path, i, j, pts;
 
     const get_path = (segments, b, e) => {
@@ -14421,11 +3731,11 @@ class ToolLayImpost extends ToolElement {
       path.b = b.clone();
       path.e = e.clone();
       return path;
-    }
+    };
 
     function get_points(p1, p2) {
 
-      var res = {
+      let res = {
           p1: new paper.Point(p1),
           p2: new paper.Point(p2),
         },
@@ -14435,7 +3745,7 @@ class ToolLayImpost extends ToolElement {
       if (c1 && c2)
         return res;
 
-      var intersect = gen.getIntersections(new paper.Path({insert: false, segments: [res.p1, res.p2]}));
+      const intersect = gen.getIntersections(new paper.Path({insert: false, segments: [res.p1, res.p2]}));
 
       if (c1) {
         intersect.reduce((sum, curr) => {
@@ -14490,22 +3800,38 @@ class ToolLayImpost extends ToolElement {
           profile.split == $p.enm.lay_split_types.КрестПересечение) {
 
           if (pts = get_points([by_x[i], bounds.bottom], [by_x[i], bounds.top]))
-            get_path([[pts.p1.x - w2x, pts.p1.y], [pts.p2.x - w2x, pts.p2.y], [pts.p2.x + w2x, pts.p2.y], [pts.p1.x + w2x, pts.p1.y]], pts.p1, pts.p2);
+            get_path([
+              [pts.p1.x - w2x, pts.p1.y],
+              [pts.p2.x - w2x, pts.p2.y],
+              [pts.p2.x + w2x, pts.p2.y],
+              [pts.p1.x + w2x, pts.p1.y]], pts.p1, pts.p2);
         }
         else {
           by_y.sort((a, b) => b - a);
           for (j = 0; j < by_y.length; j++) {
             if (j === 0) {
               if (hit && (pts = get_points([by_x[i], bounds.bottom], [by_x[i], by_y[j]])))
-                get_path([[pts.p1.x - w2x, pts.p1.y], [pts.p2.x - w2x, pts.p2.y + w2x], [pts.p2.x + w2x, pts.p2.y + w2x], [pts.p1.x + w2x, pts.p1.y]], pts.p1, pts.p2);
+                get_path([
+                  [pts.p1.x - w2x, pts.p1.y],
+                  [pts.p2.x - w2x, pts.p2.y + w2x],
+                  [pts.p2.x + w2x, pts.p2.y + w2x],
+                  [pts.p1.x + w2x, pts.p1.y]], pts.p1, pts.p2);
             }
             else {
               if (pts = get_points([by_x[i], by_y[j - 1]], [by_x[i], by_y[j]]))
-                get_path([[pts.p1.x - w2x, pts.p1.y - w2x], [pts.p2.x - w2x, pts.p2.y + w2x], [pts.p2.x + w2x, pts.p2.y + w2x], [pts.p1.x + w2x, pts.p1.y - w2x]], pts.p1, pts.p2);
+                get_path([
+                  [pts.p1.x - w2x, pts.p1.y - w2x],
+                  [pts.p2.x - w2x, pts.p2.y + w2x],
+                  [pts.p2.x + w2x, pts.p2.y + w2x],
+                  [pts.p1.x + w2x, pts.p1.y - w2x]], pts.p1, pts.p2);
             }
             if (j === by_y.length - 1) {
               if (hit && (pts = get_points([by_x[i], by_y[j]], [by_x[i], bounds.top])))
-                get_path([[pts.p1.x - w2x, pts.p1.y - w2x], [pts.p2.x - w2x, pts.p2.y], [pts.p2.x + w2x, pts.p2.y], [pts.p1.x + w2x, pts.p1.y - w2x]], pts.p1, pts.p2);
+                get_path([
+                  [pts.p1.x - w2x, pts.p1.y - w2x],
+                  [pts.p2.x - w2x, pts.p2.y],
+                  [pts.p2.x + w2x, pts.p2.y],
+                  [pts.p1.x + w2x, pts.p1.y - w2x]], pts.p1, pts.p2);
             }
           }
         }
@@ -14520,22 +3846,38 @@ class ToolLayImpost extends ToolElement {
           profile.split == $p.enm.lay_split_types.КрестПересечение) {
 
           if (pts = get_points([bounds.left, by_y[i]], [bounds.right, by_y[i]]))
-            get_path([[pts.p1.x, pts.p1.y - w2y], [pts.p2.x, pts.p2.y - w2y], [pts.p2.x, pts.p2.y + w2y], [pts.p1.x, pts.p1.y + w2y]], pts.p1, pts.p2);
+            get_path([
+              [pts.p1.x, pts.p1.y - w2y],
+              [pts.p2.x, pts.p2.y - w2y],
+              [pts.p2.x, pts.p2.y + w2y],
+              [pts.p1.x, pts.p1.y + w2y]], pts.p1, pts.p2);
         }
         else {
           by_x.sort((a, b) => a - b);
           for (j = 0; j < by_x.length; j++) {
             if (j === 0) {
               if (hit && (pts = get_points([bounds.left, by_y[i]], [by_x[j], by_y[i]])))
-                get_path([[pts.p1.x, pts.p1.y - w2y], [pts.p2.x - w2y, pts.p2.y - w2y], [pts.p2.x - w2y, pts.p2.y + w2y], [pts.p1.x, pts.p1.y + w2y]], pts.p1, pts.p2);
+                get_path([
+                  [pts.p1.x, pts.p1.y - w2y],
+                  [pts.p2.x - w2y, pts.p2.y - w2y],
+                  [pts.p2.x - w2y, pts.p2.y + w2y],
+                  [pts.p1.x, pts.p1.y + w2y]], pts.p1, pts.p2);
             }
             else {
               if (pts = get_points([by_x[j - 1], by_y[i]], [by_x[j], by_y[i]]))
-                get_path([[pts.p1.x + w2y, pts.p1.y - w2y], [pts.p2.x - w2y, pts.p2.y - w2y], [pts.p2.x - w2y, pts.p2.y + w2y], [pts.p1.x + w2y, pts.p1.y + w2y]], pts.p1, pts.p2);
+                get_path([
+                  [pts.p1.x + w2y, pts.p1.y - w2y],
+                  [pts.p2.x - w2y, pts.p2.y - w2y],
+                  [pts.p2.x - w2y, pts.p2.y + w2y],
+                  [pts.p1.x + w2y, pts.p1.y + w2y]], pts.p1, pts.p2);
             }
             if (j === by_x.length - 1) {
               if (hit && (pts = get_points([by_x[j], by_y[i]], [bounds.right, by_y[i]])))
-                get_path([[pts.p1.x + w2y, pts.p1.y - w2y], [pts.p2.x, pts.p2.y - w2y], [pts.p2.x, pts.p2.y + w2y], [pts.p1.x + w2y, pts.p1.y + w2y]], pts.p1, pts.p2);
+                get_path([
+                  [pts.p1.x + w2y, pts.p1.y - w2y],
+                  [pts.p2.x, pts.p2.y - w2y],
+                  [pts.p2.x, pts.p2.y + w2y],
+                  [pts.p1.x + w2y, pts.p1.y + w2y]], pts.p1, pts.p2);
             }
           }
         }
@@ -14682,7 +4024,7 @@ class ToolLayImpost extends ToolElement {
       this.hitItem = this.project.hitTest(event.point, {fill: true, class: paper.Path});
     }
 
-    if(this.hitItem && this.hitItem.item.parent instanceof Filling) {
+    if(this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.Filling) {
       this._scope.canvas_cursor('cursor-lay-impost');
       this.hitItem = this.hitItem.item.parent;
     }
@@ -14709,26 +4051,25 @@ class ToolLayImpost extends ToolElement {
   }
 
   elm_type_clrs(profile, sys) {
+
+    function add_by_clr(clr) {
+      if (clr instanceof $p.CatClrs) {
+        const {ref} = clr;
+        if (clr.is_folder) {
+          $p.cat.clrs.alatable.forEach((row) => row.parent == ref && profile._elm_type_clrs.push(row.ref));
+        }
+        else {
+          profile._elm_type_clrs.push(ref);
+        }
+      }
+      else if (clr instanceof $p.CatColor_price_groups) {
+        clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1));
+      }
+    }
+
     if (!profile._elm_type_clrs) {
       const {inset_by_x, inset_by_y} = profile;
       profile._elm_type_clrs = [];
-
-      let clr_group, elm;
-
-      function add_by_clr(clr) {
-        if (clr instanceof $p.CatClrs) {
-          const {ref} = clr;
-          if (clr.is_folder) {
-            $p.cat.clrs.alatable.forEach((row) => row.parent == ref && profile._elm_type_clrs.push(row.ref));
-          }
-          else {
-            profile._elm_type_clrs.push(ref);
-          }
-        }
-        else if (clr instanceof $p.CatColor_price_groups) {
-          clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1));
-        }
-      }
 
       if (profile.elm_type != $p.enm.elm_types.Раскладка) {
         add_by_clr(profile.clr);
@@ -14778,7 +4119,7 @@ class ToolLayImpost extends ToolElement {
   }
 
   add_profiles() {
-    const {profile, project} = this;
+    const {profile, project, _scope: {consts}} = this;
 
     if (profile.inset_by_y.empty() && profile.inset_by_x.empty()) {
       return;
@@ -14963,7 +4304,7 @@ class ToolLayImpost extends ToolElement {
 
         if (profile.elm_type == $p.enm.elm_types.Раскладка) {
 
-          nprofiles.push(new Onlay({
+          nprofiles.push(new $p.EditorInvisible.Onlay({
             generatrix: new paper.Path({
               segments: [p.b, p.e],
             }),
@@ -15006,7 +4347,7 @@ class ToolLayImpost extends ToolElement {
           }
 
           if (p.e.getDistance(p.b) > proto.inset.nom().width) {
-            nprofiles.push(new Profile({
+            nprofiles.push(new $p.EditorInvisible.Profile({
               generatrix: new paper.Path({
                 segments: [p.b, p.e],
               }),
@@ -15114,7 +4455,7 @@ class ToolM2 extends paper.Tool {
       for (const elm of nodes) {
         if((elm.profile === impost || !elm.profile.nearest(true)) && elm.point !== 't' && !point.equals(elm.profile[elm.point])) {
           elm.profile[elm.point] = point;
-        };
+        }
       }
 
       const {rays, project} = impost.profile;
@@ -15145,7 +4486,7 @@ class ToolM2 extends paper.Tool {
       if(elm !== impost && elm.point !== 't') {
         profile = elm.profile;
         if(profile.nearest(true)) {
-          const {outer} = profile.rays
+          const {outer} = profile.rays;
           const offset = elm.point === 'b' ? outer.getOffsetOf(profile.corns(1)) + 100 : outer.getOffsetOf(profile.corns(2)) - 100;
           point = outer.getPointAt(offset);
         }
@@ -15198,9 +4539,7 @@ class ToolM2 extends paper.Tool {
 class ToolPan extends ToolElement {
 
   constructor() {
-
-    super()
-
+    super();
     Object.assign(this, {
       options: {name: 'pan'},
       distanceThreshold: 10,
@@ -15208,18 +4547,18 @@ class ToolPan extends ToolElement {
       mouseStartPos: new paper.Point(),
       mode: 'pan',
       zoomFactor: 1.1,
-    })
+    });
 
     this.on({
 
-      activate: function() {
+      activate() {
         this.on_activate('cursor-hand');
       },
 
-      deactivate: function() {
+      deactivate() {
       },
 
-      mousedown: function(event) {
+      mousedown(event) {
         if (event.modifiers.shift) {
           this.mouseStartPos = event.point;
         }
@@ -15236,19 +4575,21 @@ class ToolPan extends ToolElement {
         }
       },
 
-      mouseup: function(event) {
+      mouseup(event) {
         const {view} = this._scope;
-        if (this.mode == 'zoom') {
+        if(this.mode == 'zoom') {
           const zoomCenter = event.point.subtract(view.center);
           const moveFactor = this.zoomFactor - 1.0;
-          if (event.modifiers.control) {
+          if(event.modifiers.control) {
             view.zoom *= this.zoomFactor;
             view.center = view.center.add(zoomCenter.multiply(moveFactor / this.zoomFactor));
-          } else if (event.modifiers.option) {
+          }
+          else if(event.modifiers.option) {
             view.zoom /= this.zoomFactor;
             view.center = view.center.subtract(zoomCenter.multiply(moveFactor));
           }
-        } else if (this.mode == 'zoom-rect') {
+        }
+        else if(this.mode == 'zoom-rect') {
           const start = view.center.add(this.mouseStartPos);
           const end = event.point;
           view.center = start.add(end).multiply(0.5);
@@ -15260,7 +4601,7 @@ class ToolPan extends ToolElement {
         this.mode = '';
       },
 
-      mousedrag: function(event) {
+      mousedrag(event) {
         const {view} = this._scope;
         if (this.mode == 'zoom') {
           this.mode = 'zoom-rect';
@@ -15286,7 +4627,7 @@ class ToolPan extends ToolElement {
 
       mousemove: this.hitTest,
 
-      keydown: function(event) {
+      keydown(event) {
         const rootLayer = this._scope.project.rootLayer();
         switch (event.key) {
           case 'left':
@@ -15304,17 +4645,17 @@ class ToolPan extends ToolElement {
         }
       },
 
-      keyup: function(event) {
+      keyup(event) {
         this.hitTest(event);
       }
-    })
-
+    });
   }
 
   testHot(type, event, mode) {
-    var spacePressed = event && event.modifiers.space;
-    if (mode != 'tool-zoompan' && !spacePressed)
+    const spacePressed = event && event.modifiers.space;
+    if(mode != 'tool-zoompan' && !spacePressed) {
       return false;
+    }
     return this.hitTest(event);
   }
 
@@ -15556,11 +4897,11 @@ class ToolPen extends ToolElement {
     });
 
     if((profile.elm_type.empty() || profile.elm_type == $p.enm.elm_types.Рама) &&
-      project.activeLayer instanceof Contour && project.activeLayer.profiles.length) {
+      project.activeLayer instanceof $p.EditorInvisible.Contour && project.activeLayer.profiles.length) {
       profile.elm_type = $p.enm.elm_types.Импост;
     }
     else if((profile.elm_type.empty() || profile.elm_type == $p.enm.elm_types.Импост) &&
-      project.activeLayer instanceof Contour && !project.activeLayer.profiles.length) {
+      project.activeLayer instanceof $p.EditorInvisible.Contour && !project.activeLayer.profiles.length) {
       profile.elm_type = $p.enm.elm_types.Рама;
     }
 
@@ -15649,7 +4990,7 @@ class ToolPen extends ToolElement {
       wnd_options.call(this.wnd, opt);
       opt.bind_generatrix = profile.bind_generatrix;
       opt.bind_node = profile.bind_node;
-    }
+    };
   }
 
   on_activate() {
@@ -15714,7 +5055,7 @@ class ToolPen extends ToolElement {
       }
 
       this.project.selectedItems.forEach((path) => {
-        if(path.parent instanceof ProfileItem){
+        if(path.parent instanceof $p.EditorInvisible.ProfileItem){
           path = path.parent;
           path.removeChildren();
           path.remove();
@@ -15777,7 +5118,7 @@ class ToolPen extends ToolElement {
     if(this.addl_hit){
 
       if(this.addl_hit.glass && this.profile.elm_type == $p.enm.elm_types.Добор && !this.profile.inset.empty()){
-        new ProfileAddl({
+        new $p.EditorInvisible.ProfileAddl({
           generatrix: this.addl_hit.generatrix,
           proto: this.profile,
           parent: this.addl_hit.profile,
@@ -15785,7 +5126,7 @@ class ToolPen extends ToolElement {
         });
       }
       else if(this.profile.elm_type == $p.enm.elm_types.Соединитель && !this.profile.inset.empty()){
-        const connective = new ProfileConnective({
+        const connective = new $p.EditorInvisible.ProfileConnective({
           generatrix: this.addl_hit.generatrix,
           proto: this.profile,
           parent: this.addl_hit.profile,
@@ -15800,13 +5141,13 @@ class ToolPen extends ToolElement {
           }
           const {_attr, layer} = rama;
           _attr._rays && _attr._rays.clear();
-          layer && layer.notify && layer.notify({profiles: [rama], points: []}, consts.move_points);
+          layer && layer.notify && layer.notify({profiles: [rama], points: []}, this._scope.consts.move_points);
         });
       }
     }
     else if(this.mode == 'create' && this.path) {
 
-      if (this.path.length < consts.sticking){
+      if (this.path.length < this._scope.consts.sticking){
         return;
       }
 
@@ -15814,7 +5155,7 @@ class ToolPen extends ToolElement {
       case $p.enm.elm_types.Раскладка:
         this.project.activeLayer.glasses(false, true).some((glass) => {
           if(glass.contains(this.path.firstSegment.point) && glass.contains(this.path.lastSegment.point)){
-            new Onlay({
+            new $p.EditorInvisible.Onlay({
               generatrix: this.path,
               proto: this.profile,
               parent: glass
@@ -15826,15 +5167,15 @@ class ToolPen extends ToolElement {
         break;
 
       case $p.enm.elm_types.Водоотлив:
-        this.last_profile = new Sectional({generatrix: this.path, proto: this.profile});
+        this.last_profile = new $p.EditorInvisible.Sectional({generatrix: this.path, proto: this.profile});
         break;
 
       case $p.enm.elm_types.Линия:
-        this.last_profile = new BaseLine({generatrix: this.path, proto: this.profile});
+        this.last_profile = new $p.EditorInvisible.BaseLine({generatrix: this.path, proto: this.profile});
         break;
 
       default:
-        this.last_profile = new Profile({generatrix: this.path, proto: this.profile});
+        this.last_profile = new $p.EditorInvisible.Profile({generatrix: this.path, proto: this.profile});
       }
 
       this.path = null;
@@ -15864,12 +5205,12 @@ class ToolPen extends ToolElement {
         item.selected = true;
       }
 
-      if(item instanceof ProfileItem && item.isInserted()) {
+      if(item instanceof $p.EditorInvisible.ProfileItem && item.isInserted()) {
         item.attache_wnd(this._scope._acc.elm);
         whas_select = true;
         this._controls.blur();
       }
-      else if(item instanceof Filling && item.visible) {
+      else if(item instanceof $p.EditorInvisible.Filling && item.visible) {
         item.attache_wnd(this._scope._acc.elm);
         whas_select = true;
         this._controls.blur();
@@ -15928,10 +5269,10 @@ class ToolPen extends ToolElement {
       this.path.removeSegments();
 
       if(this.addl_hit.glass){
-        this.draw_addl()
+        this.draw_addl();
       }
       else{
-        this.draw_connective()
+        this.draw_connective();
       }
     }
     else if(this.path){
@@ -15944,7 +5285,7 @@ class ToolPen extends ToolElement {
           invert = false,
           handlePos;
 
-        if (delta.length < consts.sticking){
+        if (delta.length < this._scope.consts.sticking){
           return;
         }
 
@@ -15968,7 +5309,7 @@ class ToolPen extends ToolElement {
         }
 
         if (dragIn || dragOut) {
-          var i, res, element, bind = this.profile.bind_node ? "node_" : "";
+          let res, bind = this.profile.bind_node ? "node_" : "";
 
           if(this.profile.bind_generatrix){
             bind += "generatrix";
@@ -16007,7 +5348,7 @@ class ToolPen extends ToolElement {
 
               if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
-                res = Onlay.prototype.bind_node(this.path.firstSegment.point, project.activeLayer.glasses(false, true));
+                res = $p.EditorInvisible.Onlay.prototype.bind_node(this.path.firstSegment.point, project.activeLayer.glasses(false, true));
                 if(res.binded){
                   this.path.firstSegment.point = this.point1 = res.point;
                 }
@@ -16019,7 +5360,8 @@ class ToolPen extends ToolElement {
                 project.activeLayer.profiles.some((element) => {
 
                   if(element.children.some((addl) => {
-                      if(addl instanceof ProfileAddl && project.check_distance(addl, null, res, this.path.firstSegment.point, bind) === false){
+                      if(addl instanceof $p.EditorInvisible.ProfileAddl &&
+                        project.check_distance(addl, null, res, this.path.firstSegment.point, bind) === false){
                         this.path.firstSegment.point = this.point1 = res.point;
                         return true;
                       }
@@ -16030,7 +5372,7 @@ class ToolPen extends ToolElement {
                     this.path.firstSegment.point = this.point1 = res.point;
                     return true;
                   }
-                })
+                });
 
                 this.start_binded = true;
               }
@@ -16038,7 +5380,7 @@ class ToolPen extends ToolElement {
 
             if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
-              res = Onlay.prototype.bind_node(this.path.lastSegment.point, project.activeLayer.glasses(false, true));
+              res = $p.EditorInvisible.Onlay.prototype.bind_node(this.path.lastSegment.point, project.activeLayer.glasses(false, true));
               if(res.binded)
                 this.path.lastSegment.point = res.point;
 
@@ -16049,7 +5391,8 @@ class ToolPen extends ToolElement {
               project.activeLayer.profiles.some((element) => {
 
                 if(element.children.some((addl) => {
-                    if(addl instanceof ProfileAddl && project.check_distance(addl, null, res, this.path.lastSegment.point, bind) === false){
+                    if(addl instanceof $p.EditorInvisible.ProfileAddl &&
+                      project.check_distance(addl, null, res, this.path.lastSegment.point, bind) === false){
                       this.path.lastSegment.point = res.point;
                       return true;
                     }
@@ -16157,7 +5500,8 @@ class ToolPen extends ToolElement {
 
     if (this.hitItem) {
 
-      if(this.hitItem.item.layer == project.activeLayer &&  this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
+      if(this.hitItem.item.layer == project.activeLayer &&
+        this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem && !(this.hitItem.item.parent instanceof $p.EditorInvisible.Onlay)){
 
         const hit = {
           point: this.hitItem.point,
@@ -16181,7 +5525,7 @@ class ToolPen extends ToolElement {
                 return true;
               }
             }
-          })
+          });
 
         });
 
@@ -16191,7 +5535,7 @@ class ToolPen extends ToolElement {
         }
 
       }
-      else if(this.hitItem.item.parent instanceof Filling){
+      else if(this.hitItem.item.parent instanceof $p.EditorInvisible.Filling){
 
 
       }else{
@@ -16218,7 +5562,7 @@ class ToolPen extends ToolElement {
 
     if (this.hitItem) {
 
-      if(this.hitItem.item.parent instanceof ProfileItem && !(this.hitItem.item.parent instanceof Onlay)){
+      if(this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem && !(this.hitItem.item.parent instanceof $p.EditorInvisible.Onlay)){
 
         const hit = {
           point: this.hitItem.point,
@@ -16273,7 +5617,7 @@ class ToolPen extends ToolElement {
         this.hitItem = this.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
       }
 
-      if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem
+      if (this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem
         && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
         this._scope.canvas_cursor('cursor-pen-adjust');
       }
@@ -16300,7 +5644,7 @@ class ToolPen extends ToolElement {
   add_sequence(points) {
     const profiles = [];
     points.forEach((segments) => {
-      profiles.push(new Profile({
+      profiles.push(new $p.EditorInvisible.Profile({
         generatrix: new paper.Path({
           strokeColor: 'black',
           segments: segments
@@ -16495,7 +5839,7 @@ class ToolPen extends ToolElement {
 
   decorate_layers(reset) {
     const {activeLayer} = this.project;
-    this.project.getItems({class: Contour}).forEach((l) => {
+    this.project.getItems({class: $p.EditorInvisible.Contour}).forEach((l) => {
       l.opacity = (l == activeLayer || reset) ? 1 : 0.5;
     });
   }
@@ -16647,7 +5991,7 @@ class RulerWnd {
 
     this.input = this.table[1].childNodes[1];
     this.input.grid = {
-      editStop: (v) => {
+      editStop: () => {
         tool.sizes_wnd({
           wnd: wnd,
           name: 'size_change',
@@ -16682,7 +6026,7 @@ class RulerWnd {
     const {wnd, tool, size} = this;
 
     if (!tool.project.selectedItems.some((path) => {
-        if (path.parent instanceof DimensionLineCustom) {
+        if (path.parent instanceof $p.EditorInvisible.DimensionLineCustom) {
 
           switch (ev.currentTarget.name) {
 
@@ -16745,7 +6089,7 @@ class RulerWnd {
           }
 
           tool.project.selectedItems.some((path) => {
-            if (path.parent instanceof DimensionLineCustom) {
+            if (path.parent instanceof $p.EditorInvisible.DimensionLineCustom) {
               path.parent.remove();
               return true;
             }
@@ -16753,7 +6097,6 @@ class RulerWnd {
 
           return $p.iface.cancel_bubble(ev);
 
-          break;
       }
       return $p.iface.cancel_bubble(ev);
     }
@@ -16778,7 +6121,7 @@ class RulerWnd {
     });
 
     if (this.options) {
-      if (tool instanceof DimensionLine) {
+      if (tool instanceof $p.EditorInvisible.DimensionLine) {
         delete this.options.wnd.on_close;
         wnd.wnd_options(this.options.wnd);
         $p.wsql.save_options('editor', this.options);
@@ -16822,7 +6165,7 @@ class RulerWnd {
       this.dp.hide_line = line.hide_line;
       this.dp.value_change = function(f, mf, v) {
         line[f] = v;
-      }
+      };
     }
     else {
       delete this.dp.value_change;
@@ -16834,6 +6177,8 @@ class RulerWnd {
     this.grid.setEditable(line.selected);
   }
 }
+
+$p.EditorInvisible.RulerWnd = RulerWnd;
 
 
 class ToolRuler extends ToolElement {
@@ -16865,7 +6210,7 @@ class ToolRuler extends ToolElement {
 
     this.on({
 
-      activate: function () {
+      activate () {
 
         this.selected.a.length = 0;
         this.selected.b.length = 0;
@@ -16876,7 +6221,7 @@ class ToolRuler extends ToolElement {
         this.wnd = new RulerWnd(this.options, this);
       },
 
-      deactivate: function () {
+      deactivate () {
 
         this.remove_path();
 
@@ -16884,7 +6229,7 @@ class ToolRuler extends ToolElement {
 
       },
 
-      mousedown: function (event) {
+      mousedown (event) {
 
         if (this.hitItem) {
 
@@ -16927,7 +6272,7 @@ class ToolRuler extends ToolElement {
               });
             }
             else {
-              new DimensionRadius({
+              new $p.EditorInvisible.DimensionRadius({
                 elm1: parent,
                 p1: this.hitItem.item.getOffsetOf(this.hitPoint).round(),
                 parent: parent.layer.l_dimensions,
@@ -16958,7 +6303,7 @@ class ToolRuler extends ToolElement {
               }
               else {
 
-                new DimensionLineCustom({
+                new $p.EditorInvisible.DimensionLineCustom({
                   elm1: this.selected.a[0].profile,
                   elm2: this.hitPoint.profile,
                   p1: this.selected.a[0].point_name,
@@ -16980,15 +6325,15 @@ class ToolRuler extends ToolElement {
 
       },
 
-      mouseup: function (event) {
+      mouseup () {
 
       },
 
-      mousedrag: function (event) {
+      mousedrag () {
 
       },
 
-      mousemove: function (event) {
+      mousemove (event) {
 
         this.hitTest(event);
 
@@ -17038,7 +6383,7 @@ class ToolRuler extends ToolElement {
 
       },
 
-      keydown: function (event) {
+      keydown (event) {
 
         if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
 
@@ -17046,7 +6391,7 @@ class ToolRuler extends ToolElement {
             return;
 
           this.project.selectedItems.some((path) => {
-            if (path.parent instanceof DimensionLineCustom) {
+            if (path.parent instanceof $p.EditorInvisible.DimensionLineCustom) {
               path.parent.remove();
               return true;
             }
@@ -17076,13 +6421,13 @@ class ToolRuler extends ToolElement {
       }
       else {
         const hit = this.project.hitPoints(event.point, 16, false, true);
-        if (hit && hit.item.parent instanceof ProfileItem) {
+        if (hit && hit.item.parent instanceof $p.EditorInvisible.ProfileItem) {
           this.hitItem = hit;
         }
       }
     }
 
-    if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
+    if (this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem) {
       if (this.mode) {
         this._scope.canvas_cursor('cursor-arrow-white-point');
         if (this.mode === 4) {
@@ -17285,9 +6630,7 @@ class ToolRuler extends ToolElement {
 class ToolSelectNode extends ToolElement {
 
   constructor() {
-
     super();
-
     Object.assign(this, {
       options: {
         name: 'select_node',
@@ -17337,7 +6680,7 @@ class ToolSelectNode extends ToolElement {
 
   mousedown(event) {
 
-    const {project} = this._scope;
+    const {project, consts} = this._scope;
 
     this.mode = null;
     this.changed = false;
@@ -17348,7 +6691,7 @@ class ToolSelectNode extends ToolElement {
     if (this.hitItem && !event.modifiers.alt) {
 
       if(this.hitItem.item instanceof paper.PointText) {
-        return
+        return;
       }
 
 
@@ -17401,7 +6744,7 @@ class ToolSelectNode extends ToolElement {
 
       }
 
-      if(item instanceof ProfileItem || item instanceof Filling){
+      if(item instanceof $p.EditorInvisible.ProfileItem || item instanceof $p.EditorInvisible.Filling){
         item.attache_wnd(this._scope._acc.elm);
         this.profile = item;
       }
@@ -17422,7 +6765,7 @@ class ToolSelectNode extends ToolElement {
 
   mouseup(event) {
 
-    const {project} = this._scope;
+    const {project, consts} = this._scope;
 
     if (this.mode == consts.move_shapes) {
       if (this.changed) {
@@ -17441,7 +6784,7 @@ class ToolSelectNode extends ToolElement {
     }
     else if (this.mode == 'box-select') {
 
-      var box = new paper.Rectangle(this.mouseStartPos, event.point);
+      const box = new paper.Rectangle(this.mouseStartPos, event.point);
 
       if (!event.modifiers.shift){
         project.deselectAll();
@@ -17451,7 +6794,7 @@ class ToolSelectNode extends ToolElement {
 
         const profiles = [];
         this._scope.paths_intersecting_rect(box).forEach((path) => {
-          if(path.parent instanceof ProfileItem){
+          if(path.parent instanceof $p.EditorInvisible.ProfileItem){
             if(profiles.indexOf(path.parent) == -1){
               profiles.push(path.parent);
               path.parent.selected = !path.parent.selected;
@@ -17460,8 +6803,7 @@ class ToolSelectNode extends ToolElement {
           else{
             path.selected = !path.selected;
           }
-        })
-
+        });
       }
       else {
 
@@ -17474,7 +6816,7 @@ class ToolSelectNode extends ToolElement {
         else {
           const profiles = [];
           this._scope.paths_intersecting_rect(box).forEach((path) => {
-            if(path.parent instanceof ProfileItem){
+            if(path.parent instanceof $p.EditorInvisible.ProfileItem){
               if(profiles.indexOf(path.parent) == -1){
                 profiles.push(path.parent);
                 path.parent.selected = !path.parent.selected;
@@ -17483,7 +6825,7 @@ class ToolSelectNode extends ToolElement {
             else{
               path.selected = !path.selected;
             }
-          })
+          });
         }
       }
     }
@@ -17502,7 +6844,7 @@ class ToolSelectNode extends ToolElement {
 
   mousedrag(event) {
 
-    const {project} = this;
+    const {project, consts} = this._scope;
 
     this.changed = true;
 
@@ -17565,13 +6907,13 @@ class ToolSelectNode extends ToolElement {
     const {project} = this._scope;
     const {key, modifiers} = event;
     const step = modifiers.shift ? 1 : 10;
-    let j, path, segment, index, point, handle;
+    let j, segment, index, point, handle;
 
     if (key == '+' || key == 'insert') {
 
       for(let path of project.selectedItems){
         if (modifiers.space) {
-          if(path.parent instanceof Profile){
+          if(path.parent instanceof $p.EditorInvisible.Profile){
 
             const cnn_point = path.parent.cnn_point('e');
             cnn_point && cnn_point.profile && cnn_point.profile.rays.clear(true);
@@ -17584,12 +6926,12 @@ class ToolSelectNode extends ToolElement {
             const newpath = path.split(path.length * 0.5);
             path.lastSegment.point = path.lastSegment.point.add(newpath.getNormalAt(0));
             newpath.firstSegment.point = path.lastSegment.point;
-            new Profile({generatrix: newpath, proto: path.parent});
+            new $p.EditorInvisible.Profile({generatrix: newpath, proto: path.parent});
           }
         }
         else{
           let do_select = false;
-          if(path.parent instanceof GeneratrixElement && !(path instanceof ProfileAddl)){
+          if(path.parent instanceof $p.EditorInvisible.GeneratrixElement && !(path instanceof $p.EditorInvisible.ProfileAddl)){
             for (let j = 0; j < path.segments.length; j++) {
               segment = path.segments[j];
               if (segment.selected){
@@ -17606,7 +6948,7 @@ class ToolSelectNode extends ToolElement {
           if(do_select){
             index = (j < (path.segments.length - 1) ? j + 1 : j);
             point = segment.curve.getPointAt(0.5, true);
-            if(path.parent instanceof Sectional){
+            if(path.parent instanceof $p.EditorInvisible.Sectional){
               paper.Path.prototype.insert.call(path, index, new paper.Segment(point));
             }
             else{
@@ -17631,12 +6973,12 @@ class ToolSelectNode extends ToolElement {
 
         let do_select = false;
 
-        if(path.parent instanceof DimensionLineCustom){
+        if(path.parent instanceof $p.EditorInvisible.DimensionLineCustom){
           path.parent.remove();
           return true;
         }
-        else if(path.parent instanceof GeneratrixElement){
-          if(path instanceof ProfileAddl){
+        else if(path.parent instanceof $p.EditorInvisible.GeneratrixElement){
+          if(path instanceof $p.EditorInvisible.ProfileAddl){
             path.removeChildren();
             path.remove();
           }
@@ -17658,7 +7000,7 @@ class ToolSelectNode extends ToolElement {
             }
           }
         }
-        else if(path instanceof Filling){
+        else if(path instanceof $p.EditorInvisible.Filling){
           path.remove_onlays();
         }
       });
@@ -17709,7 +7051,7 @@ class ToolSelectNode extends ToolElement {
       hit = project.hitPoints(point, 16, true);
 
       if (hit) {
-        if (hit.item.parent instanceof ProfileItem) {
+        if (hit.item.parent instanceof $p.EditorInvisible.ProfileItem) {
           if (hit.item.parent.generatrix === hit.item){
             this.hitItem = hit;
           }
@@ -17724,10 +7066,10 @@ class ToolSelectNode extends ToolElement {
     if (hitItem) {
       if (hitItem.type == 'fill' || hitItem.type == 'stroke') {
 
-        if (hitItem.item.parent instanceof DimensionLine) {
+        if (hitItem.item.parent instanceof $p.EditorInvisible.DimensionLine) {
         }
         else if (hitItem.item instanceof paper.PointText) {
-          !(hitItem.item instanceof EditableText) && this._scope.canvas_cursor('cursor-text');     
+          !(hitItem.item instanceof $p.EditorInvisible.EditableText) && this._scope.canvas_cursor('cursor-text');     
         }
         else if (hitItem.item.selected) {
           this._scope.canvas_cursor('cursor-arrow-small');
@@ -17747,7 +7089,7 @@ class ToolSelectNode extends ToolElement {
     }
     else {
       const hit = project.hitTest(point, {stroke: true, visible: true, tolerance: 16});
-      if (hit && hit.item.parent instanceof Sectional){
+      if (hit && hit.item.parent instanceof $p.EditorInvisible.Sectional){
         this.hitItem = hit;
         this._scope.canvas_cursor('cursor-arrow-white-shape');
       }
@@ -17765,9 +7107,7 @@ class ToolSelectNode extends ToolElement {
 class ToolText extends ToolElement {
 
   constructor() {
-
-    super()
-
+    super();
     Object.assign(this, {
       options: {
         name: 'text',
@@ -17782,20 +7122,20 @@ class ToolText extends ToolElement {
       hitItem: null,
       originalContent: null,
       changed: false
-    })
+    });
 
     this.on({
 
-      activate: function() {
+      activate() {
         this.on_activate('cursor-text-select');
       },
 
-      deactivate: function() {
+      deactivate() {
         this._scope.hide_selection_bounds();
         this.detache_wnd();
       },
 
-      mousedown: function(event) {
+      mousedown(event) {
         this.text = null;
         this.changed = false;
 
@@ -17810,7 +7150,7 @@ class ToolText extends ToolElement {
 
           }
           else {
-            this.text = new FreeText({
+            this.text = new $p.EditorInvisible.FreeText({
               parent: this.hitItem.item.layer.l_text,
               point: this.mouseStartPos,
               content: '...',
@@ -17838,7 +7178,7 @@ class ToolText extends ToolElement {
 
       },
 
-      mouseup: function(event) {
+      mouseup() {
 
         if (this.mode && this.changed) {
         }
@@ -17847,22 +7187,20 @@ class ToolText extends ToolElement {
 
       },
 
-      mousedrag: function(event) {
+      mousedrag(event) {
 
         if (this.text) {
-          var delta = event.point.subtract(this.mouseStartPos);
-          if (event.modifiers.shift)
+          let delta = event.point.subtract(this.mouseStartPos);
+          if(event.modifiers.shift) {
             delta = delta.snap_to_angle();
-
+          }
           this.text.move_points(this.textStartPos.add(delta));
-
         }
-
       },
 
       mousemove: this.hitTest,
 
-      keydown: function(event) {
+      keydown(event) {
 
         if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
 
@@ -17871,7 +7209,7 @@ class ToolText extends ToolElement {
           }
 
           for (const text of  this.project.selectedItems) {
-            if(text instanceof FreeText){
+            if(text instanceof $p.EditorInvisible.FreeText){
               text.text = "";
               setTimeout(() => this._scope.view.update(), 100);
             }
@@ -17881,8 +7219,7 @@ class ToolText extends ToolElement {
           return false;
         }
       }
-    })
-
+    });
   }
 
   hitTest(event) {
@@ -17895,7 +7232,7 @@ class ToolText extends ToolElement {
     }
     if(!this.hitItem) {
       const hit = project.hitTest(event.point, {fill: false, stroke: true, tolerance: hitSize});
-      if(hit && hit.item.parent instanceof Sectional) {
+      if(hit && hit.item.parent instanceof $p.EditorInvisible.Sectional) {
         this.hitItem = hit;
       }
     }

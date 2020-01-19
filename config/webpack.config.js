@@ -377,7 +377,6 @@ module.exports = function(webpackEnv) {
             {
               test: /\.(js|mjs|jsx|ts|tsx)$/,
               include: paths.appSrc,
-              exclude: path.resolve(paths.appSrc, './metadata/init.js'),
               loader: require.resolve('babel-loader'),
               options: {
                 customize: require.resolve(

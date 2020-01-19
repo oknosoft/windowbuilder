@@ -130,10 +130,10 @@ class AdditionalInserts {
           cnstr,
           inset: row.obj.inset,
           hide: {not: true},
-        }
+        };
       }
     }
-    return {cnstr, inset: $p.utils.generate_guid()}
+    return {cnstr, inset: $p.utils.generate_guid()};
   }
 
   refill_prms(){

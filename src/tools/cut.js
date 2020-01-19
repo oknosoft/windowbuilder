@@ -17,9 +17,7 @@
 class ToolCut extends ToolElement{
 
   constructor() {
-
-    super()
-
+    super();
     Object.assign(this, {
       options: {name: 'cut'},
       mouseStartPos: new paper.Point(),
@@ -28,7 +26,7 @@ class ToolCut extends ToolElement{
       cont: null,
       square: null,
       profile: null,
-    })
+    });
 
     this.on({
 
@@ -44,8 +42,7 @@ class ToolCut extends ToolElement{
 
       mousemove: this.hitTest
 
-    })
-
+    });
   }
 
   keydown(event) {
@@ -58,7 +55,7 @@ class ToolCut extends ToolElement{
   mouseup(event) {
 
     const hitItem = this.project.hitTest(event.point, {fill: true, stroke: false, segments: false});
-    if(hitItem && hitItem.item.parent instanceof Profile) {
+    if(hitItem && hitItem.item.parent instanceof $p.EditorInvisible.Profile) {
       let item = hitItem.item.parent;
       if(event.modifiers.shift) {
         item.selected = !item.selected;
@@ -231,7 +228,7 @@ class ToolCut extends ToolElement{
     }
 
     const loc = generatrix.getNearestLocation(impost.profile[impost.point]);
-    const rack2 = new Profile({generatrix: generatrix.splitAt(loc), proto: rack.profile});
+    const rack2 = new $p.EditorInvisible.Profile({generatrix: generatrix.splitAt(loc), proto: rack.profile});
 
     cnn = rack2.cnn_point('e');
     if(base && cnn && cnn.profile) {
@@ -292,8 +289,7 @@ class ToolCut extends ToolElement{
     impost.profile.rays[impost.point].clear(true);
 
     // двигаем конец рамы
-    const p2 = rack2.profile[rack2.point === 'b' ? 'e' : 'b'];
-    rack1.profile[rack1.point] = p2;
+    rack1.profile[rack1.point] = rack2.profile[rack2.point === 'b' ? 'e' : 'b'];
 
     // удаляем rack2
     let base;
@@ -377,7 +373,7 @@ class ToolCut extends ToolElement{
       this.hitItem = this.project.hitTest(event.point, { ends: true, tolerance: hitSize });
     }
 
-    if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem) {
+    if (this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem) {
       const {activeLayer, magnetism} = this.project;
       const profile = this.hitItem.item.parent;
       if(profile.parent === activeLayer) {

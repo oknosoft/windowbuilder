@@ -21,9 +21,7 @@
 class ToolCoordinates extends ToolElement{
 
   constructor() {
-
-    super()
-
+    super();
     Object.assign(this, {
       options: {
         name: 'grid',
@@ -43,7 +41,7 @@ class ToolCoordinates extends ToolElement{
 
     this.on({
 
-      activate: function() {
+      activate() {
         this.on_activate('cursor-text-select');
         if(!this.dp) {
           this.dp = $p.dp.builder_coordinates.create(ToolCoordinates.defaultProps);
@@ -54,17 +52,13 @@ class ToolCoordinates extends ToolElement{
 
       mousedown: this.mousedown,
 
-      mouseup: function(event) {
-
-
+      mouseup() {
         this._scope.canvas_cursor('cursor-text-select');
-
       },
 
       mousemove: this.hitTest
 
-    })
-
+    });
   }
 
   hitTest(event) {
@@ -79,7 +73,7 @@ class ToolCoordinates extends ToolElement{
       this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: hitSize});
     }
 
-    if(this.hitItem && this.hitItem.item.parent instanceof ProfileItem
+    if(this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem
       && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
       this._scope.canvas_cursor('cursor-arrow-lay');
     }
@@ -92,7 +86,7 @@ class ToolCoordinates extends ToolElement{
   }
 
 
-  mousedown(event) {
+  mousedown() {
     this.project.deselectAll();
 
     if(this.hitItem) {
@@ -162,7 +156,7 @@ class ToolCoordinates extends ToolElement{
       this.grid.visible = true;
     }
     else {
-      this.grid = new GridCoordinates({
+      this.grid = new $p.EditorInvisible.GridCoordinates({
         step: this.dp.step,
         offset: this.dp.offset,
         angle: this.dp.angle,
@@ -189,7 +183,6 @@ class ToolCoordinates extends ToolElement{
     let path = (this.dp.path === path_kind.generatrix ? this.profile.generatrix : this.profile.rays[this.dp.path.valueOf()])
       .clone({insert: false});
     // находим проекции точек профиля на путь, ищем наиболее удаленные
-    const {interiorPoint} = path;
     const pts = [];
     for(let i = 1; i < 5; i++) {
       const pt = path.getNearestPoint(this.profile.corns(i));
@@ -215,7 +208,7 @@ class ToolCoordinates extends ToolElement{
     const {generatrix} = profile;
 
     // строим таблицу новых точек образующей через дельты от текущего пути
-    const {bind, offset, path, line, lines, step} = this.grid._attr;
+    const {bind, path, line, step} = grid._attr;
     const segments = [];
     let reverce = path.firstSegment.point.getDistance(generatrix.firstSegment.point) >
       path.firstSegment.point.getDistance(generatrix.lastSegment.point);
@@ -348,5 +341,4 @@ ToolCoordinates.defaultProps = {
   path: 'generatrix',
   step: 200,
   offset: 200,
-}
-
+};

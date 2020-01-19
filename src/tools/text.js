@@ -18,9 +18,7 @@
 class ToolText extends ToolElement {
 
   constructor() {
-
-    super()
-
+    super();
     Object.assign(this, {
       options: {
         name: 'text',
@@ -35,20 +33,20 @@ class ToolText extends ToolElement {
       hitItem: null,
       originalContent: null,
       changed: false
-    })
+    });
 
     this.on({
 
-      activate: function() {
+      activate() {
         this.on_activate('cursor-text-select');
       },
 
-      deactivate: function() {
+      deactivate() {
         this._scope.hide_selection_bounds();
         this.detache_wnd();
       },
 
-      mousedown: function(event) {
+      mousedown(event) {
         this.text = null;
         this.changed = false;
 
@@ -63,7 +61,7 @@ class ToolText extends ToolElement {
 
           }
           else {
-            this.text = new FreeText({
+            this.text = new $p.EditorInvisible.FreeText({
               parent: this.hitItem.item.layer.l_text,
               point: this.mouseStartPos,
               content: '...',
@@ -92,7 +90,7 @@ class ToolText extends ToolElement {
 
       },
 
-      mouseup: function(event) {
+      mouseup() {
 
         if (this.mode && this.changed) {
           //undo.snapshot("Move Shapes");
@@ -102,22 +100,20 @@ class ToolText extends ToolElement {
 
       },
 
-      mousedrag: function(event) {
+      mousedrag(event) {
 
         if (this.text) {
-          var delta = event.point.subtract(this.mouseStartPos);
-          if (event.modifiers.shift)
+          let delta = event.point.subtract(this.mouseStartPos);
+          if(event.modifiers.shift) {
             delta = delta.snap_to_angle();
-
+          }
           this.text.move_points(this.textStartPos.add(delta));
-
         }
-
       },
 
       mousemove: this.hitTest,
 
-      keydown: function(event) {
+      keydown(event) {
 
         if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
 
@@ -126,7 +122,7 @@ class ToolText extends ToolElement {
           }
 
           for (const text of  this.project.selectedItems) {
-            if(text instanceof FreeText){
+            if(text instanceof $p.EditorInvisible.FreeText){
               text.text = "";
               setTimeout(() => this._scope.view.update(), 100);
             }
@@ -136,8 +132,7 @@ class ToolText extends ToolElement {
           return false;
         }
       }
-    })
-
+    });
   }
 
   hitTest(event) {
@@ -151,7 +146,7 @@ class ToolText extends ToolElement {
     }
     if(!this.hitItem) {
       const hit = project.hitTest(event.point, {fill: false, stroke: true, tolerance: hitSize});
-      if(hit && hit.item.parent instanceof Sectional) {
+      if(hit && hit.item.parent instanceof $p.EditorInvisible.Sectional) {
         this.hitItem = hit;
       }
     }

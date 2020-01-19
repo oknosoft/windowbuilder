@@ -228,13 +228,13 @@ class ToolLayImpost extends ToolElement {
 
       });
 
-      var wnd_options = tool.wnd.wnd_options;
+      const wnd_options = tool.wnd.wnd_options;
       tool.wnd.wnd_options = function (opt) {
         wnd_options.call(tool.wnd, opt);
 
-        for (var prop in profile._metadata().fields) {
+        for (const prop in profile._metadata().fields) {
           if (prop.indexOf('step') === -1 && prop.indexOf('inset') === -1 && prop != 'clr' && prop != 'w' && prop != 'h') {
-            var val = profile[prop];
+            const val = profile[prop];
             opt[prop] = $p.utils.is_data_obj(val) ? val.ref : val;
           }
         }
@@ -265,12 +265,12 @@ class ToolLayImpost extends ToolElement {
     this.detache_wnd();
   }
 
-  mouseup(event) {
+  mouseup() {
 
     this._scope.canvas_cursor('cursor-arrow-lay');
 
     // проверяем существование раскладки
-    if(this.profile.elm_type == $p.enm.elm_types.Раскладка && this.hitItem instanceof Filling && this.hitItem.imposts.length) {
+    if(this.profile.elm_type == $p.enm.elm_types.Раскладка && this.hitItem instanceof $p.EditorInvisible.Filling && this.hitItem.imposts.length) {
       // если существует, выводим подтверждающее сообщение на добавление
       this.confirmed = false;
       dhtmlx.confirm({
@@ -297,6 +297,8 @@ class ToolLayImpost extends ToolElement {
       return;
     }
 
+    const {consts} = this._scope;
+
     this.hitTest(event);
 
     this.paths.forEach((p) => p.removeSegments());
@@ -306,7 +308,7 @@ class ToolLayImpost extends ToolElement {
       return;
     }
 
-    var bounds, gen, hit = !!this.hitItem;
+    let bounds, gen, hit = !!this.hitItem;
 
     if (hit) {
       bounds = this.hitItem.bounds;
@@ -325,13 +327,13 @@ class ToolLayImpost extends ToolElement {
     else
       return;
 
-    var stepy = profile.step_by_y || (profile.elm_by_y && bounds.height / (profile.elm_by_y + ((hit || profile.elm_by_y < 2) ? 1 : -1))),
+    let stepy = profile.step_by_y || (profile.elm_by_y && bounds.height / (profile.elm_by_y + ((hit || profile.elm_by_y < 2) ? 1 : -1))),
       county = profile.elm_by_y > 0 ? profile.elm_by_y.round() : Math.round(bounds.height / stepy) - 1,
       stepx = profile.step_by_x || (profile.elm_by_x && bounds.width / (profile.elm_by_x + ((hit || profile.elm_by_x < 2) ? 1 : -1))),
       countx = profile.elm_by_x > 0 ? profile.elm_by_x.round() : Math.round(bounds.width / stepx) - 1,
       w2x = profile.inset_by_x.nom().width / 2,
       w2y = profile.inset_by_y.nom().width / 2,
-      clr = BuilderElement.clr_by_clr(profile.clr, false),
+      clr = $p.EditorInvisible.BuilderElement.clr_by_clr(profile.clr, false),
       by_x = [], by_y = [], base, pos, path, i, j, pts;
 
     const get_path = (segments, b, e) => {
@@ -357,11 +359,11 @@ class ToolLayImpost extends ToolElement {
       path.b = b.clone();
       path.e = e.clone();
       return path;
-    }
+    };
 
     function get_points(p1, p2) {
 
-      var res = {
+      let res = {
           p1: new paper.Point(p1),
           p2: new paper.Point(p2),
         },
@@ -371,7 +373,7 @@ class ToolLayImpost extends ToolElement {
       if (c1 && c2)
         return res;
 
-      var intersect = gen.getIntersections(new paper.Path({insert: false, segments: [res.p1, res.p2]}));
+      const intersect = gen.getIntersections(new paper.Path({insert: false, segments: [res.p1, res.p2]}));
 
       if (c1) {
         intersect.reduce((sum, curr) => {
@@ -427,22 +429,38 @@ class ToolLayImpost extends ToolElement {
           profile.split == $p.enm.lay_split_types.КрестПересечение) {
 
           if (pts = get_points([by_x[i], bounds.bottom], [by_x[i], bounds.top]))
-            get_path([[pts.p1.x - w2x, pts.p1.y], [pts.p2.x - w2x, pts.p2.y], [pts.p2.x + w2x, pts.p2.y], [pts.p1.x + w2x, pts.p1.y]], pts.p1, pts.p2);
+            get_path([
+              [pts.p1.x - w2x, pts.p1.y],
+              [pts.p2.x - w2x, pts.p2.y],
+              [pts.p2.x + w2x, pts.p2.y],
+              [pts.p1.x + w2x, pts.p1.y]], pts.p1, pts.p2);
         }
         else {
           by_y.sort((a, b) => b - a);
           for (j = 0; j < by_y.length; j++) {
             if (j === 0) {
               if (hit && (pts = get_points([by_x[i], bounds.bottom], [by_x[i], by_y[j]])))
-                get_path([[pts.p1.x - w2x, pts.p1.y], [pts.p2.x - w2x, pts.p2.y + w2x], [pts.p2.x + w2x, pts.p2.y + w2x], [pts.p1.x + w2x, pts.p1.y]], pts.p1, pts.p2);
+                get_path([
+                  [pts.p1.x - w2x, pts.p1.y],
+                  [pts.p2.x - w2x, pts.p2.y + w2x],
+                  [pts.p2.x + w2x, pts.p2.y + w2x],
+                  [pts.p1.x + w2x, pts.p1.y]], pts.p1, pts.p2);
             }
             else {
               if (pts = get_points([by_x[i], by_y[j - 1]], [by_x[i], by_y[j]]))
-                get_path([[pts.p1.x - w2x, pts.p1.y - w2x], [pts.p2.x - w2x, pts.p2.y + w2x], [pts.p2.x + w2x, pts.p2.y + w2x], [pts.p1.x + w2x, pts.p1.y - w2x]], pts.p1, pts.p2);
+                get_path([
+                  [pts.p1.x - w2x, pts.p1.y - w2x],
+                  [pts.p2.x - w2x, pts.p2.y + w2x],
+                  [pts.p2.x + w2x, pts.p2.y + w2x],
+                  [pts.p1.x + w2x, pts.p1.y - w2x]], pts.p1, pts.p2);
             }
             if (j === by_y.length - 1) {
               if (hit && (pts = get_points([by_x[i], by_y[j]], [by_x[i], bounds.top])))
-                get_path([[pts.p1.x - w2x, pts.p1.y - w2x], [pts.p2.x - w2x, pts.p2.y], [pts.p2.x + w2x, pts.p2.y], [pts.p1.x + w2x, pts.p1.y - w2x]], pts.p1, pts.p2);
+                get_path([
+                  [pts.p1.x - w2x, pts.p1.y - w2x],
+                  [pts.p2.x - w2x, pts.p2.y],
+                  [pts.p2.x + w2x, pts.p2.y],
+                  [pts.p1.x + w2x, pts.p1.y - w2x]], pts.p1, pts.p2);
             }
           }
         }
@@ -458,22 +476,38 @@ class ToolLayImpost extends ToolElement {
           profile.split == $p.enm.lay_split_types.КрестПересечение) {
 
           if (pts = get_points([bounds.left, by_y[i]], [bounds.right, by_y[i]]))
-            get_path([[pts.p1.x, pts.p1.y - w2y], [pts.p2.x, pts.p2.y - w2y], [pts.p2.x, pts.p2.y + w2y], [pts.p1.x, pts.p1.y + w2y]], pts.p1, pts.p2);
+            get_path([
+              [pts.p1.x, pts.p1.y - w2y],
+              [pts.p2.x, pts.p2.y - w2y],
+              [pts.p2.x, pts.p2.y + w2y],
+              [pts.p1.x, pts.p1.y + w2y]], pts.p1, pts.p2);
         }
         else {
           by_x.sort((a, b) => a - b);
           for (j = 0; j < by_x.length; j++) {
             if (j === 0) {
               if (hit && (pts = get_points([bounds.left, by_y[i]], [by_x[j], by_y[i]])))
-                get_path([[pts.p1.x, pts.p1.y - w2y], [pts.p2.x - w2y, pts.p2.y - w2y], [pts.p2.x - w2y, pts.p2.y + w2y], [pts.p1.x, pts.p1.y + w2y]], pts.p1, pts.p2);
+                get_path([
+                  [pts.p1.x, pts.p1.y - w2y],
+                  [pts.p2.x - w2y, pts.p2.y - w2y],
+                  [pts.p2.x - w2y, pts.p2.y + w2y],
+                  [pts.p1.x, pts.p1.y + w2y]], pts.p1, pts.p2);
             }
             else {
               if (pts = get_points([by_x[j - 1], by_y[i]], [by_x[j], by_y[i]]))
-                get_path([[pts.p1.x + w2y, pts.p1.y - w2y], [pts.p2.x - w2y, pts.p2.y - w2y], [pts.p2.x - w2y, pts.p2.y + w2y], [pts.p1.x + w2y, pts.p1.y + w2y]], pts.p1, pts.p2);
+                get_path([
+                  [pts.p1.x + w2y, pts.p1.y - w2y],
+                  [pts.p2.x - w2y, pts.p2.y - w2y],
+                  [pts.p2.x - w2y, pts.p2.y + w2y],
+                  [pts.p1.x + w2y, pts.p1.y + w2y]], pts.p1, pts.p2);
             }
             if (j === by_x.length - 1) {
               if (hit && (pts = get_points([by_x[j], by_y[i]], [bounds.right, by_y[i]])))
-                get_path([[pts.p1.x + w2y, pts.p1.y - w2y], [pts.p2.x, pts.p2.y - w2y], [pts.p2.x, pts.p2.y + w2y], [pts.p1.x + w2y, pts.p1.y + w2y]], pts.p1, pts.p2);
+                get_path([
+                  [pts.p1.x + w2y, pts.p1.y - w2y],
+                  [pts.p2.x, pts.p2.y - w2y],
+                  [pts.p2.x, pts.p2.y + w2y],
+                  [pts.p1.x + w2y, pts.p1.y + w2y]], pts.p1, pts.p2);
             }
           }
         }
@@ -621,7 +655,7 @@ class ToolLayImpost extends ToolElement {
       this.hitItem = this.project.hitTest(event.point, {fill: true, class: paper.Path});
     }
 
-    if(this.hitItem && this.hitItem.item.parent instanceof Filling) {
+    if(this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.Filling) {
       this._scope.canvas_cursor('cursor-lay-impost');
       this.hitItem = this.hitItem.item.parent;
     }
@@ -649,26 +683,25 @@ class ToolLayImpost extends ToolElement {
 
   // возвращает конкатенацию ограничений цвета всех вставок текущего типа
   elm_type_clrs(profile, sys) {
+
+    function add_by_clr(clr) {
+      if (clr instanceof $p.CatClrs) {
+        const {ref} = clr;
+        if (clr.is_folder) {
+          $p.cat.clrs.alatable.forEach((row) => row.parent == ref && profile._elm_type_clrs.push(row.ref));
+        }
+        else {
+          profile._elm_type_clrs.push(ref);
+        }
+      }
+      else if (clr instanceof $p.CatColor_price_groups) {
+        clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1));
+      }
+    }
+
     if (!profile._elm_type_clrs) {
       const {inset_by_x, inset_by_y} = profile;
       profile._elm_type_clrs = [];
-
-      let clr_group, elm;
-
-      function add_by_clr(clr) {
-        if (clr instanceof $p.CatClrs) {
-          const {ref} = clr;
-          if (clr.is_folder) {
-            $p.cat.clrs.alatable.forEach((row) => row.parent == ref && profile._elm_type_clrs.push(row.ref));
-          }
-          else {
-            profile._elm_type_clrs.push(ref);
-          }
-        }
-        else if (clr instanceof $p.CatColor_price_groups) {
-          clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1));
-        }
-      }
 
       // цвет по умолчанию
       if (profile.elm_type != $p.enm.elm_types.Раскладка) {
@@ -721,7 +754,7 @@ class ToolLayImpost extends ToolElement {
   }
 
   add_profiles() {
-    const {profile, project} = this;
+    const {profile, project, _scope: {consts}} = this;
 
     if (profile.inset_by_y.empty() && profile.inset_by_x.empty()) {
       return;
@@ -911,7 +944,7 @@ class ToolLayImpost extends ToolElement {
 
         if (profile.elm_type == $p.enm.elm_types.Раскладка) {
 
-          nprofiles.push(new Onlay({
+          nprofiles.push(new $p.EditorInvisible.Onlay({
             generatrix: new paper.Path({
               segments: [p.b, p.e],
             }),
@@ -955,7 +988,7 @@ class ToolLayImpost extends ToolElement {
 
           // создаём новые профили
           if (p.e.getDistance(p.b) > proto.inset.nom().width) {
-            nprofiles.push(new Profile({
+            nprofiles.push(new $p.EditorInvisible.Profile({
               generatrix: new paper.Path({
                 segments: [p.b, p.e],
               }),

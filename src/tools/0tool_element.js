@@ -16,19 +16,16 @@
  * @extends paper.Tool
  * @constructor
  */
-class ToolElement extends paper.Tool {
+class ToolElement extends $p.EditorInvisible.ToolElement {
 
   constructor() {
     super();
     this.on_close = this.on_close.bind(this);
   }
 
-  resetHot(type, event, mode) {
-
-  }
-
-  testHot(type, event, mode) {
-    return this.hitTest(event)
+  on_activate(cursor) {
+    super.on_activate(cursor);
+    this._scope.tb_left.select(this.options.name);
   }
 
   /**
@@ -61,60 +58,9 @@ class ToolElement extends paper.Tool {
     this.profile = null;
   }
 
-  /**
-   * ### Проверяет, есть ли в проекте слои, при необходимости добавляет
-   * @method detache_wnd
-   * @for ToolElement
-   */
-  check_layer() {
-    const {project, eve} = this._scope;
-    if (!project.contours.length) {
-      // создаём пустой новый слой
-      new Contour({parent: undefined});
-      // оповещаем мир о новых слоях
-      eve.emit_async('rows', project.ox, {constructions: true});
-    }
-  }
-
-  /**
-   * ### Общие действия при активизации инструмента
-   *
-   * @method on_activate
-   * @for ToolElement
-   */
-  on_activate(cursor) {
-
-    this._scope.tb_left.select(this.options.name);
-
-    this._scope.canvas_cursor(cursor);
-
-    // для всех инструментов, кроме select_node...
-    if (this.options.name != "select_node") {
-
-      this.check_layer();
-
-      // проверяем заполненность системы
-      if (this.project._dp.sys.empty()) {
-        $p.msg.show_msg({
-          type: "alert-warning",
-          text: $p.msg.bld_not_sys,
-          title: $p.msg.bld_title
-        });
-      }
-    }
-  }
-
   on_close(wnd) {
     wnd && wnd.cell && setTimeout(() => this._scope.tools[1].activate());
     return true;
-  }
-
-  get eve() {
-    return this._scope.eve;
-  }
-
-  get project() {
-    return this._scope.project;
   }
 
 }

@@ -83,7 +83,7 @@ class SchemeLayers {
       const layers = [];
       const {project} = this.editor;
       for(const elm of project.getSelectedItems()) {
-        elm.layer instanceof Contour && layers.indexOf(elm.layer) === -1 && layers.push(elm.layer);
+        elm.layer instanceof $p.EditorInvisible.Contour && layers.indexOf(elm.layer) === -1 && layers.push(elm.layer);
       }
       if(layers.length > 1) {
         const parents = [];
@@ -104,7 +104,7 @@ class SchemeLayers {
         tree.selectItem(contour.cnstr);
         this._set_text(this.layer_text(contour));
       }
-    };
+    }
   }
 
   contour_redrawed(contour, bounds) {
@@ -114,7 +114,7 @@ class SchemeLayers {
       tree.setItemText(contour.cnstr, text);
       if(contour.project.activeLayer == contour){
         this._set_text(text);
-      };
+      }
     }
   }
 
@@ -379,7 +379,7 @@ class SchemeProps {
   }
 
   scheme_snapshot(scheme, attr) {
-    const {_obj, _reflect_id, editor: {project}} = this;
+    const {_obj, editor: {project}} = this;
     const {_calc_order_row} = scheme._attr;
     if(_obj && scheme === project && !attr.clipboard && _calc_order_row){
       ["price_internal","amount_internal","price","amount"].forEach((fld) => {
@@ -551,7 +551,7 @@ class EditorAccordion {
           case 'delete':
             _editor.project.selectedItems.forEach((path) => {
               const {parent} = path;
-              if(parent instanceof ProfileItem){
+              if(parent instanceof $p.EditorInvisible.ProfileItem){
                 parent.removeChildren();
                 parent.remove();
               }
@@ -559,7 +559,7 @@ class EditorAccordion {
             break;
 
           default:
-            _editor.profile_align(name)
+            _editor.profile_align(name);
         }
       }
     });
@@ -590,7 +590,7 @@ class EditorAccordion {
         switch(name) {
 
           case 'new_stv':
-            const fillings = _editor.project.getItems({class: Filling, selected: true});
+            const fillings = _editor.project.getItems({class: $p.EditorInvisible.Filling, selected: true});
             if(fillings.length){
               fillings[0].create_leaf();
             }
@@ -610,7 +610,7 @@ class EditorAccordion {
           case 'new_layer':
 
             // создаём пустой новый слой
-            new Contour({parent: undefined});
+            new $p.EditorInvisible.Contour({parent: undefined});
 
             // оповещаем мир о новых слоях
             _editor.eve.emit_async('rows', _editor.project.ox, {constructions: true});
@@ -746,6 +746,6 @@ class EditorAccordion {
     }
   }
 
-};
+}
 
 

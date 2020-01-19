@@ -97,7 +97,7 @@ class ToolM2 extends paper.Tool {
       for (const elm of nodes) {
         if((elm.profile === impost || !elm.profile.nearest(true)) && elm.point !== 't' && !point.equals(elm.profile[elm.point])) {
           elm.profile[elm.point] = point;
-        };
+        }
       }
 
       // изменяем тип соединения
@@ -131,7 +131,7 @@ class ToolM2 extends paper.Tool {
       if(elm !== impost && elm.point !== 't') {
         profile = elm.profile;
         if(profile.nearest(true)) {
-          const {outer} = profile.rays
+          const {outer} = profile.rays;
           const offset = elm.point === 'b' ? outer.getOffsetOf(profile.corns(1)) + 100 : outer.getOffsetOf(profile.corns(2)) - 100;
           point = outer.getPointAt(offset);
         }

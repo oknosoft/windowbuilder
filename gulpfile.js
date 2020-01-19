@@ -29,43 +29,6 @@ gulp.task('build-iface', function(){
 				return undefined;
 			}
 		}))
-    .pipe(gulp.dest('./public/dist'))
-    // .pipe(rename('wnd_debug.min.js'))
-    // .pipe(uglify())
-    // .pipe(gulp.dest('./dist'))
-});
-
-// Cборка библиотеки для использования снаружи
-gulp.task('build-drawer', function () {
-  return gulp.src([
-    './src/editor/consts.js',
-    './src/editor/editor_base.js',
-    './src/geometry/*.js',
-    './src/modifiers/common/*.js',
-    './src/modifiers/enums/*.js',
-    './src/modifiers/catalogs/cat_characteristics.js',
-    './src/modifiers/catalogs/cat_clrs.js',
-    './src/modifiers/catalogs/cat_cnns.js',
-    './src/modifiers/catalogs/cat_contracts.js',
-    './src/modifiers/catalogs/cat_elm_visualization.js',
-    './src/modifiers/catalogs/cat_furns.js',
-    './src/modifiers/catalogs/cat_insert_bind.js',
-    './src/modifiers/catalogs/cat_inserts.js',
-    './src/modifiers/catalogs/cat_nom.js',
-    './src/modifiers/catalogs/cat_partners.js',
-    './src/modifiers/catalogs/cat_production_params.js',
-    './src/modifiers/documents/doc_calc_order.js',
-    './src/modifiers/documents/doc_calc_order_templates.js',
-    './src/modifiers/documents/doc_calc_order_predefined_props.js',
-  ])
-    .pipe(concat('drawer.js'))
-    .pipe(strip())
-    .pipe(umd({
-      // exports: function (file) {
-      //   return 'EditorInvisible';
-      // },
-      templateSource: 'module.exports = function({$p, paper}) {<%= contents %> \nreturn EditorInvisible;\n}',
-    }))
     .pipe(gulp.dest('./public/dist'));
 });
 
@@ -73,7 +36,6 @@ gulp.task('build-drawer', function () {
 gulp.task('build-lib', function(){
 	return gulp.src([
 		'./src/editor/*.js',
-    './src/geometry/*.js',
 		'./src/tools/*.js',
 		'./data/merged_wb_tips.js'
 	])
@@ -84,11 +46,7 @@ gulp.task('build-lib', function(){
 				return 'Editor';
 			}
 		}))
-		.pipe(gulp.dest('./public/dist'))
-    // .pipe(rename('windowbuilder.min.js'))
-    // .pipe(uglify())
-    // .pipe(gulp.dest('./dist'))
-
+		.pipe(gulp.dest('./public/dist'));
 });
 
 
@@ -100,7 +58,7 @@ gulp.task('injected-tips', function(){
 		.pipe(resources('merged_wb_tips.js', function (data) {
 			return new Buffer('$p.injected_data._mixin(' + JSON.stringify(data) + ');');
 		}))
-		.pipe(gulp.dest('./data'))
+		.pipe(gulp.dest('./data'));
 });
 
 // Сборка ресурсов интерфейса
@@ -120,7 +78,7 @@ gulp.task('injected-templates', function(){
 		.pipe(resources('merged_wb_templates.js', function (data) {
 			return new Buffer('$p.injected_data._mixin(' + JSON.stringify(data) + ');');
 		}))
-		.pipe(gulp.dest('./data'))
+		.pipe(gulp.dest('./data'));
 });
 
 // Сборка css
@@ -132,7 +90,7 @@ gulp.task('css-base64', function () {
 	])
 		.pipe(base64())
 		.pipe(concat('windowbuilder.css'))
-		.pipe(gulp.dest('./src/styles'))
+		.pipe(gulp.dest('./src/styles'));
 });
 
 

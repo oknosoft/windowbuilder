@@ -30,7 +30,7 @@
  * @menuorder 10
  * @tooltip Графический редактор
  */
-class Editor extends EditorInvisible {
+class Editor extends $p.EditorInvisible {
 
   constructor(pwnd, handlers){
 
@@ -75,7 +75,7 @@ class Editor extends EditorInvisible {
         width: (pwnd.getWidth ? pwnd.getWidth() : pwnd.cell.offsetWidth) > 1200 ? 440 : 260
       }],
       offsets: {top: 28, right: 0, bottom: 0, left: 0}
-    })
+    });
 
     /**
      * ### Контейнер канваса
@@ -236,7 +236,7 @@ class Editor extends EditorInvisible {
           break;
 
         case 'new_stv':
-          var fillings = _editor.project.getItems({class: Filling, selected: true});
+          var fillings = _editor.project.getItems({class: $p.EditorInvisible.Filling, selected: true});
           if(fillings.length) {
             fillings[0].create_leaf();
           }
@@ -278,7 +278,7 @@ class Editor extends EditorInvisible {
           $p.msg.show_msg(name);
           break;
 
-        case 'triangle3':
+        case 'triangle2':
           $p.msg.show_msg(name);
           break;
 
@@ -415,14 +415,14 @@ class Editor extends EditorInvisible {
       });
 
       // проверяем ортогональность
-      if(project.getItems({class: Profile}).some((p) => {
+      if(project.getItems({class: $p.EditorInvisible.Profile}).some((p) => {
         return (p.angle_hor % 90) > 0.02;
       })){
         this._ortpos.style.display = '';
       }
       else {
         this._ortpos.style.display = 'none';
-      };
+      }
 
       // проверяем ошибки в спецификации
       const {ОшибкаКритическая, ОшибкаИнфо} = $p.enm.elm_types;
@@ -438,10 +438,10 @@ class Editor extends EditorInvisible {
   }
 
   show_ortpos(hide) {
-    for (const elm of this.project.getItems({class: Profile})) {
+    for (const elm of this.project.getItems({class: $p.EditorInvisible.Profile})) {
       if((elm.angle_hor % 90) > 0.02) {
         if(hide) {
-          elm.path.fillColor = BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+          elm.path.fillColor = $p.EditorInvisible.BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
         }
         else {
           elm.path.fillColor = '#fcc';
@@ -517,7 +517,7 @@ class Editor extends EditorInvisible {
     _editor._wrapper.appendChild(_canvas);
     _canvas.style.backgroundColor = "#f9fbfa";
 
-    const _scheme = new Scheme(_canvas, _editor);
+    const _scheme = new $p.EditorInvisible.Scheme(_canvas, _editor);
     const pwnd_resize_finish = () => {
       _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
     };
@@ -693,7 +693,7 @@ class Editor extends EditorInvisible {
 
   purge_selection(){
     let selected = this.project.selectedItems;
-    const deselect = selected.filter((path) => path.parent instanceof ProfileItem && path != path.parent.generatrix);
+    const deselect = selected.filter((path) => path.parent instanceof $p.EditorInvisible.ProfileItem && path != path.parent.generatrix);
     while(selected = deselect.pop()){
       selected.selected = false;
     }
@@ -729,7 +729,7 @@ class Editor extends EditorInvisible {
         item.importJSON(orig.json);
         item._id = id;
       }
-    })
+    });
   }
 
   /**
@@ -781,7 +781,7 @@ class Editor extends EditorInvisible {
    * @param [cnstr] {Number} - номер элемента или контура
    */
   additional_inserts(cnstr, cell){
-    new AdditionalInserts(cnstr, this.project, cell)
+    new AdditionalInserts(cnstr, this.project, cell);
   }
 
   /**
@@ -791,7 +791,7 @@ class Editor extends EditorInvisible {
 
     const elm = this.project.selected_elm;
 
-    if(elm instanceof ProfileItem){
+    if(elm instanceof $p.EditorInvisible.ProfileItem){
 
       // модальный диалог
       const options = {
@@ -855,13 +855,13 @@ class Editor extends EditorInvisible {
 
         if(bcnn.profile){
           const d = bcnn.profile.e.getDistance(b);
-          if(d && d < consts.sticking_l){
+          if(d && d < this.consts.sticking_l){
             bcnn.profile.e = b;
           }
         }
         if(ecnn.profile){
           const d = ecnn.profile.b.getDistance(e);
-          if(d && d < consts.sticking_l){
+          if(d && d < this.consts.sticking_l){
             ecnn.profile.b = e;
           }
         }
@@ -999,7 +999,7 @@ class Editor extends EditorInvisible {
     }
 
     if(!profiles.length){
-      return
+      return;
     }
 
     profiles.forEach(function (p) {
@@ -1055,13 +1055,13 @@ class Editor extends EditorInvisible {
    */
   do_glass_align(name = 'auto', glasses) {
 
-    const {project, Point, Key} = this;
+    const {project, Point, Key, consts} = this;
 
     if(!glasses){
       glasses = project.selected_glasses();
     }
     if(glasses.length < 2){
-      return
+      return;
     }
 
     // получаем текущий внешний контур
@@ -1096,13 +1096,13 @@ class Editor extends EditorInvisible {
 
     // выясняем направление, в котром уравнивать
     if(name == 'auto'){
-      name = 'width'
+      name = 'width';
     }
 
     // собираем в массиве shift все импосты подходящего направления
     const orientation = name == 'width' ? $p.enm.orientations.vert : $p.enm.orientations.hor;
    // parent_layer.profiles
-    const shift = parent_layer.getItems({class: Profile}).filter((impost) => {
+    const shift = parent_layer.getItems({class: $p.EditorInvisible.Profile}).filter((impost) => {
       const {b, e} = impost.rays;
       // отрезаем плохую ориентацию и неимпосты
       return impost.orientation == orientation && (b.is_tt || e.is_tt || b.is_i || e.is_i);
@@ -1120,7 +1120,8 @@ class Editor extends EditorInvisible {
         glass,
         width: bounds.width,
         height: bounds.height,
-      }
+      };
+
       if(galign){
         // находим левый-правый-верхний-нижний профили
         const by_side = glass.profiles_by_side(null, profiles);
@@ -1153,19 +1154,19 @@ class Editor extends EditorInvisible {
           if(name == 'width'){
             gl.dx.add(res);
             if(point.x < bounds.center.x){
-              res.left = profile
+              res.left = profile;
             }
             else{
-              res.right = profile
+              res.right = profile;
             }
           }
           else{
             gl.dy.add(res);
             if(point.y < bounds.center.y){
-              res.top = profile
+              res.top = profile;
             }
             else{
-              res.bottom = profile
+              res.bottom = profile;
             }
           }
         }
@@ -1228,7 +1229,7 @@ class Editor extends EditorInvisible {
         impost.move_points(delta, true);
         res.push(delta);
       }
-    })
+    });
 
     return res;
   }
@@ -1241,7 +1242,7 @@ class Editor extends EditorInvisible {
 
     const shift = this.do_glass_align(name, glasses);
     if(!shift){
-      return
+      return;
     }
 
     const {_attr} = this.project;
@@ -1250,7 +1251,7 @@ class Editor extends EditorInvisible {
     }
     if(_attr._align_counter > 24){
       _attr._align_counter = 0;
-      return
+      return;
     }
 
     if(shift.some((delta) => delta.length > 0.3)){
@@ -1285,7 +1286,7 @@ class Editor extends EditorInvisible {
     }
 
     // проверяем наличие раскладки у заполнения
-    if (!(glass instanceof Filling)
+    if (!(glass instanceof $p.EditorInvisible.Filling)
       || !glass.imposts.length
       || glass.imposts.some(impost => impost.elm_type != $p.enm.elm_types.Раскладка)) {
         return;

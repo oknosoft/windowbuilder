@@ -21,9 +21,7 @@
 class ToolSelectNode extends ToolElement {
 
   constructor() {
-
     super();
-
     Object.assign(this, {
       options: {
         name: 'select_node',
@@ -73,7 +71,7 @@ class ToolSelectNode extends ToolElement {
 
   mousedown(event) {
 
-    const {project} = this._scope;
+    const {project, consts} = this._scope;
 
     this.mode = null;
     this.changed = false;
@@ -85,7 +83,7 @@ class ToolSelectNode extends ToolElement {
     if (this.hitItem && !event.modifiers.alt) {
 
       if(this.hitItem.item instanceof paper.PointText) {
-        return
+        return;
       }
 
 
@@ -148,7 +146,7 @@ class ToolSelectNode extends ToolElement {
       }
 
       // подключаем диадог свойств элемента
-      if(item instanceof ProfileItem || item instanceof Filling){
+      if(item instanceof $p.EditorInvisible.ProfileItem || item instanceof $p.EditorInvisible.Filling){
         item.attache_wnd(this._scope._acc.elm);
         this.profile = item;
       }
@@ -170,7 +168,7 @@ class ToolSelectNode extends ToolElement {
 
   mouseup(event) {
 
-    const {project} = this._scope;
+    const {project, consts} = this._scope;
 
     if (this.mode == consts.move_shapes) {
       if (this.changed) {
@@ -192,7 +190,7 @@ class ToolSelectNode extends ToolElement {
     }
     else if (this.mode == 'box-select') {
 
-      var box = new paper.Rectangle(this.mouseStartPos, event.point);
+      const box = new paper.Rectangle(this.mouseStartPos, event.point);
 
       if (!event.modifiers.shift){
         project.deselectAll();
@@ -203,7 +201,7 @@ class ToolSelectNode extends ToolElement {
 
         const profiles = [];
         this._scope.paths_intersecting_rect(box).forEach((path) => {
-          if(path.parent instanceof ProfileItem){
+          if(path.parent instanceof $p.EditorInvisible.ProfileItem){
             if(profiles.indexOf(path.parent) == -1){
               profiles.push(path.parent);
               path.parent.selected = !path.parent.selected;
@@ -212,8 +210,7 @@ class ToolSelectNode extends ToolElement {
           else{
             path.selected = !path.selected;
           }
-        })
-
+        });
       }
       else {
 
@@ -226,7 +223,7 @@ class ToolSelectNode extends ToolElement {
         else {
           const profiles = [];
           this._scope.paths_intersecting_rect(box).forEach((path) => {
-            if(path.parent instanceof ProfileItem){
+            if(path.parent instanceof $p.EditorInvisible.ProfileItem){
               if(profiles.indexOf(path.parent) == -1){
                 profiles.push(path.parent);
                 path.parent.selected = !path.parent.selected;
@@ -235,7 +232,7 @@ class ToolSelectNode extends ToolElement {
             else{
               path.selected = !path.selected;
             }
-          })
+          });
         }
       }
     }
@@ -254,7 +251,7 @@ class ToolSelectNode extends ToolElement {
 
   mousedrag(event) {
 
-    const {project} = this;
+    const {project, consts} = this._scope;
 
     this.changed = true;
 
@@ -317,14 +314,14 @@ class ToolSelectNode extends ToolElement {
     const {project} = this._scope;
     const {key, modifiers} = event;
     const step = modifiers.shift ? 1 : 10;
-    let j, path, segment, index, point, handle;
+    let j, segment, index, point, handle;
 
     if (key == '+' || key == 'insert') {
 
       for(let path of project.selectedItems){
         // при зажатом space добавляем элемент иначе - узел
         if (modifiers.space) {
-          if(path.parent instanceof Profile){
+          if(path.parent instanceof $p.EditorInvisible.Profile){
 
             const cnn_point = path.parent.cnn_point('e');
             cnn_point && cnn_point.profile && cnn_point.profile.rays.clear(true);
@@ -337,12 +334,12 @@ class ToolSelectNode extends ToolElement {
             const newpath = path.split(path.length * 0.5);
             path.lastSegment.point = path.lastSegment.point.add(newpath.getNormalAt(0));
             newpath.firstSegment.point = path.lastSegment.point;
-            new Profile({generatrix: newpath, proto: path.parent});
+            new $p.EditorInvisible.Profile({generatrix: newpath, proto: path.parent});
           }
         }
         else{
           let do_select = false;
-          if(path.parent instanceof GeneratrixElement && !(path instanceof ProfileAddl)){
+          if(path.parent instanceof $p.EditorInvisible.GeneratrixElement && !(path instanceof $p.EditorInvisible.ProfileAddl)){
             for (let j = 0; j < path.segments.length; j++) {
               segment = path.segments[j];
               if (segment.selected){
@@ -359,7 +356,7 @@ class ToolSelectNode extends ToolElement {
           if(do_select){
             index = (j < (path.segments.length - 1) ? j + 1 : j);
             point = segment.curve.getPointAt(0.5, true);
-            if(path.parent instanceof Sectional){
+            if(path.parent instanceof $p.EditorInvisible.Sectional){
               paper.Path.prototype.insert.call(path, index, new paper.Segment(point));
             }
             else{
@@ -385,12 +382,12 @@ class ToolSelectNode extends ToolElement {
 
         let do_select = false;
 
-        if(path.parent instanceof DimensionLineCustom){
+        if(path.parent instanceof $p.EditorInvisible.DimensionLineCustom){
           path.parent.remove();
           return true;
         }
-        else if(path.parent instanceof GeneratrixElement){
-          if(path instanceof ProfileAddl){
+        else if(path.parent instanceof $p.EditorInvisible.GeneratrixElement){
+          if(path instanceof $p.EditorInvisible.ProfileAddl){
             path.removeChildren();
             path.remove();
           }
@@ -414,7 +411,7 @@ class ToolSelectNode extends ToolElement {
             }
           }
         }
-        else if(path instanceof Filling){
+        else if(path instanceof $p.EditorInvisible.Filling){
           path.remove_onlays();
         }
       });
@@ -470,7 +467,7 @@ class ToolSelectNode extends ToolElement {
       hit = project.hitPoints(point, 16, true);
 
       if (hit) {
-        if (hit.item.parent instanceof ProfileItem) {
+        if (hit.item.parent instanceof $p.EditorInvisible.ProfileItem) {
           if (hit.item.parent.generatrix === hit.item){
             this.hitItem = hit;
           }
@@ -485,11 +482,11 @@ class ToolSelectNode extends ToolElement {
     if (hitItem) {
       if (hitItem.type == 'fill' || hitItem.type == 'stroke') {
 
-        if (hitItem.item.parent instanceof DimensionLine) {
+        if (hitItem.item.parent instanceof $p.EditorInvisible.DimensionLine) {
           // размерные линии сами разберутся со своими курсорами
         }
         else if (hitItem.item instanceof paper.PointText) {
-          !(hitItem.item instanceof EditableText) && this._scope.canvas_cursor('cursor-text');     // указатель с черным Т
+          !(hitItem.item instanceof $p.EditorInvisible.EditableText) && this._scope.canvas_cursor('cursor-text');     // указатель с черным Т
         }
         else if (hitItem.item.selected) {
           this._scope.canvas_cursor('cursor-arrow-small');
@@ -510,7 +507,7 @@ class ToolSelectNode extends ToolElement {
     else {
       // возможно, выделен разрез
       const hit = project.hitTest(point, {stroke: true, visible: true, tolerance: 16});
-      if (hit && hit.item.parent instanceof Sectional){
+      if (hit && hit.item.parent instanceof $p.EditorInvisible.Sectional){
         this.hitItem = hit;
         this._scope.canvas_cursor('cursor-arrow-white-shape');
       }

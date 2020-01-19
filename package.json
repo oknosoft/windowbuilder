@@ -39,7 +39,8 @@
     "metadata-redux": "2.0.22-beta.1",
     "metadata-superlogin": "2.0.22-beta.1",
     "paper-jsdom-canvas": "^0.12.4",
-    "react-highlight-words": "^0.16.0"
+    "react-highlight-words": "^0.16.0",
+    "windowbuilder": "github:oknosoft/windowbuilder-core#d76bd4357cef56caafd8075e7fb9965bde087c01"
   },
   "devDependencies": {
     "@babel/core": "7.6.0",
@@ -121,7 +122,6 @@
     "run": "serve -l 3000 -s build",
     "build": "node scripts/build.js && node scripts/appcache.js",
     "test": "node scripts/test.js",
-    "meta:prebuild": "node scripts/meta.prebuild.js",
     "meta:link": "node scripts/meta.link.js"
   },
   "eslintConfig": {

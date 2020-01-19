@@ -20,9 +20,7 @@
 class ToolArc extends ToolElement{
 
   constructor() {
-
-    super()
-
+    super();
     Object.assign(this, {
       options: {name: 'arc'},
       mouseStartPos: new paper.Point(),
@@ -30,26 +28,26 @@ class ToolArc extends ToolElement{
       hitItem: null,
       originalContent: null,
       changed: false,
-    })
+    });
 
     this.on({
 
-      activate: function() {
+      activate() {
         this.on_activate('cursor-arc-arrow');
       },
 
-      deactivate: function() {
+      deactivate() {
         this._scope.hide_selection_bounds();
       },
 
-      mousedown: function(event) {
+      mousedown(event) {
 
-        var b, e, r;
+        let b, e, r;
 
         this.mode = null;
         this.changed = false;
 
-        if (this.hitItem && this.hitItem.item.parent instanceof ProfileItem
+        if (this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem
           && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
 
           this.mode = this.hitItem.item.parent.generatrix;
@@ -82,7 +80,7 @@ class ToolArc extends ToolElement{
             r.parent.rays.clear();
             r.parent._row.r = 0;
             r.selected = true;
-            r.layer.notify({profiles: [r.parent], points: []}, consts.move_points);
+            r.layer.notify({profiles: [r.parent], points: []}, this._scope.consts.move_points);
 
           }
           else {
@@ -108,11 +106,11 @@ class ToolArc extends ToolElement{
         }
       },
 
-      mouseup: function(event) {
+      mouseup() {
 
-        var item = this.hitItem ? this.hitItem.item : null;
+        let item = this.hitItem ? this.hitItem.item : null;
 
-        if(item instanceof Filling && item.visible){
+        if(item instanceof $p.EditorInvisible.Filling && item.visible){
           item.attache_wnd(this._scope._acc.elm);
           item.selected = true;
 
@@ -130,7 +128,7 @@ class ToolArc extends ToolElement{
 
       },
 
-      mousedrag: function(event) {
+      mousedrag(event) {
         if (this.mode) {
 
           this.changed = true;
@@ -146,7 +144,7 @@ class ToolArc extends ToolElement{
 
       mousemove: this.hitTest
 
-    })
+    });
 
   }
 
@@ -167,7 +165,7 @@ class ToolArc extends ToolElement{
     element.parent.rays.clear();
     element.selected = true;
 
-    element.layer.notify({profiles: [element.parent], points: []}, consts.move_points);
+    element.layer.notify({profiles: [element.parent], points: []}, this._scope.consts.move_points);
   }
 
   hitTest(event) {
@@ -182,7 +180,7 @@ class ToolArc extends ToolElement{
       this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: hitSize});
     }
 
-    if(this.hitItem && this.hitItem.item.parent instanceof ProfileItem
+    if(this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem
       && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
       this._scope.canvas_cursor('cursor-arc');
     }
