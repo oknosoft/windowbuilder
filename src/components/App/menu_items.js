@@ -232,7 +232,7 @@ const items = [
     //   this.props.handleClose();
     //   window.open('https://github.com/oknosoft/windowbuilder/wiki');
     // },
-    navigate: '/help',
+    navigate: '/help/',
     need_meta: true,
     icon: <IconHelp/>
   },
