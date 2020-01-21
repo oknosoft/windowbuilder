@@ -38,7 +38,10 @@ module.exports = function settings(prm = {}) {
     couch_local: process.env.COUCHLOCAL || 'http://cou221:5984/wb_',
 
     // расположение адаптера postgres
-    pg_path: process.env.PGPATH || "/r/postgres/wb_",
+    pg_path: process.env.PGPATH || '/r/postgres/wb_',
+
+    // расположение файлов руководства пользователя
+    docs_root: 'https://raw.githubusercontent.com/oknosoft/windowbuilder/master/doc/',
 
     // фильтр для репликации с CouchDB не используем
     pouch_filter: {

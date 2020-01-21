@@ -1,8 +1,0 @@
--editor_closed
-scheme_changed
--layer_activated
--coordinates_calculated
--save_coordinates
--furn_changed
--contour_redrawed
--refresh_links

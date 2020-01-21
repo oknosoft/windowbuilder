@@ -228,10 +228,12 @@ const items = [
   },
   {
     text: 'Справка',
-    navigate: function () {
-      this.props.handleClose();
-      window.open('https://github.com/oknosoft/windowbuilder/wiki');
-    },
+    // navigate: function () {
+    //   this.props.handleClose();
+    //   window.open('https://github.com/oknosoft/windowbuilder/wiki');
+    // },
+    navigate: '/help',
+    need_meta: true,
     icon: <IconHelp/>
   },
   {

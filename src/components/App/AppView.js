@@ -9,8 +9,9 @@ import Login, {FrmLogin} from 'metadata-react/FrmLogin/Proxy';  // логин и
 import NeedAuth from 'metadata-react/App/NeedAuth'; // страница "необхлдима авторизация"
 import Header from 'metadata-react/Header';         // навигация
 import DumbScreen from '../DumbScreen';             // заставка "загрузка занных"
-import DataRoute from './DataRoute';               // вложенный маршрутизатор страниц с данными
+import DataRoute from './DataRoute';                // вложенный маршрутизатор страниц с данными
 import AboutPage from '../About';                   // информация о программе
+import HelpPage from '../Help';                     // руководство пользователя
 import Settings from '../Settings';                 // настройки
 import NotFoundPage from '../NotFoundPage';         // 404
 import {lazy} from './lazy';                        // конструкторы для контекста
@@ -113,6 +114,7 @@ class AppRoot extends Component {
               <Route path="/builder/:ref([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})" component={Builder} />
               <Route path="/:area(doc|cat|ireg|cch|rep).:name" component={DataRoute} />
               <Route path="/about" component={AboutPage} />
+              <Route path="/help" component={HelpPage} />
               <Route path="/login" component={(tprops) => <Login {...tprops} {...auth_props} />} />
               <Route path="/settings" component={Settings} />
               <Route path="/waiting" component={(tprops) => <DumbScreen {...tprops} repl={props.repl} />} />
