@@ -24,6 +24,10 @@ export default function MarkdownRoute(props) {
   return <MarkdownDocs markdown={value}  />;
 }
 
+MarkdownRoute.propTypes = {
+  history: PropTypes.object.isRequired,
+};
+
 
 
 

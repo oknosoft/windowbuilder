@@ -1300,7 +1300,9 @@ class Editor extends $p.EditorInvisible {
         if(cnn && cnn.cnn_type !== cnn.cnn_type._manager.i) {
           continue;
         }
-        const point = impost.generatrix.clone({insert: false}).elongation(1500).intersect_point(glass.path, impost[node]);
+        const point = impost.generatrix.clone({insert: false})
+          .elongation(1500)
+          .intersect_point(glass.path, impost[node], false, node === 'b' ? impost.e : impost.b);
         if(point && !impost[node].is_nearest(point, 0)) {
           impost[node] = point;
           restored = true;
