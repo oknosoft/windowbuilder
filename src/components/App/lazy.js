@@ -31,4 +31,5 @@ import('metadata-react/DynList')
   .then(module => {
     lazy.FrmReport = module.default;
     import('metadata-react/styles/react-data-grid.css');
+    import('metadata-react/styles/indicator/index.css');
   });

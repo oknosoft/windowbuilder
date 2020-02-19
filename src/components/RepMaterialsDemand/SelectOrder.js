@@ -5,7 +5,7 @@ import IconButton from '@material-ui/core/IconButton';
 import IconWork from '@material-ui/icons/Work';
 //import Dialog from 'metadata-react/DnR/Dialog';
 import Dialog from 'metadata-react/App/Dialog';
-import DataList from 'metadata-react/DataList';
+import DataList from 'metadata-react/DynList/DynList';
 
 class SelectOrder extends Component {
 
