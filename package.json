@@ -40,13 +40,13 @@
     "metadata-superlogin": "2.0.22-beta.3",
     "paper-jsdom-canvas": "^0.12.4",
     "react-highlight-words": "^0.16.0",
-    "windowbuilder": "github:oknosoft/windowbuilder-core#3a4c42345261be02be6e5520331938a55e7669cc"
+    "windowbuilder": "github:oknosoft/windowbuilder-core#f487c1b0f04b0d8eaaff7b4adaa05f1eb72f518f"
   },
   "devDependencies": {
     "@babel/core": "7.8.4",
     "@svgr/webpack": "4.3.3",
     "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.4.0",
+    "@testing-library/react": "^9.4.1",
     "@testing-library/user-event": "^7.2.1",
     "@typescript-eslint/eslint-plugin": "^2.20.0",
     "@typescript-eslint/parser": "^2.20.0",
