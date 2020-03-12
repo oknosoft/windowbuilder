@@ -33,10 +33,10 @@ export function fill_data(ref, items) {
   dp._data._loading = true;
   dp.calc_order.production.find_rows({ordn: $p.utils.blank.guid}, (row) => {
     const {characteristic} = row;
-    const {insert_type} = characteristic.origin;
-    const cmp = components.get(insert_type);
+    const {origin} = characteristic;
     // фильтруем по типу вставки
-    if(!characteristic.empty() && !characteristic.origin.empty() && items.indexOf(insert_type) != -1) {
+    if(!characteristic.empty() && origin && !origin.empty() && items.indexOf(origin.insert_type) != -1) {
+      const cmp = components.get(origin.insert_type);
       // добавляем параметры
       const elm = production.count() + 1;
       characteristic.params.forEach(({param, value}) => {
@@ -45,7 +45,7 @@ export function fill_data(ref, items) {
       // добавляем строку продукции
       production.add({
         characteristic,
-        inset: characteristic.origin,
+        inset: origin,
         clr: characteristic.clr,
         len: row.len,
         height: row.width,
