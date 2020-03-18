@@ -9,11 +9,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import TabularSection from 'metadata-react/TabularSection';
-import Toolbar from '@material-ui/core/Toolbar';
-import IconButton from '@material-ui/core/IconButton';
-import AddIcon from '@material-ui/icons/AddCircleOutline';
-import RemoveIcon from '@material-ui/icons/Delete';
 import {handleAdd, handleRemove} from '../CalcOrderAdditions/connect';
+import CustomToolbar from './CustomToolbar';
 
 class Production extends React.Component {
 
@@ -49,11 +46,8 @@ class Production extends React.Component {
       minHeight += (33 * ((count < 8 ? count : 8) - 1));
     }
 
-    const CustomToolbar = () => {
-      return <Toolbar disableGutters>
-        <IconButton title="Добавить строку" onClick={this.handleAdd}><AddIcon/></IconButton>
-        <IconButton title="Удалить строку" disabled={!count} onClick={this.handleRemove}><RemoveIcon/></IconButton>
-      </Toolbar>;
+    const Toolbar = () => {
+      return <CustomToolbar handleAdd={this.handleAdd} handleRemove={this.handleRemove} count={count}/>;
     };
 
     return <div style={{height: minHeight + 35}}>
@@ -66,7 +60,7 @@ class Production extends React.Component {
         onCellSelected={this.cellSelect}
         onCellDeSelected={this.cellDeSelect}
         minHeight={minHeight}
-        Toolbar={CustomToolbar}
+        Toolbar={Toolbar}
       />
     </div>;
   }

@@ -40,7 +40,7 @@
     "metadata-superlogin": "2.0.22-beta.4",
     "paper-jsdom-canvas": "^0.12.4",
     "react-highlight-words": "^0.16.0",
-    "windowbuilder": "github:oknosoft/windowbuilder-core#22e0b394bf69a0c39e42b88f892b9fb1065dba8b"
+    "windowbuilder": "github:oknosoft/windowbuilder-core#abc9a02b61e5a5c24978c39e78510b9eb6cfde0b"
   },
   "devDependencies": {
     "@babel/core": "7.8.4",
@@ -48,8 +48,8 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
-    "@typescript-eslint/eslint-plugin": "^2.23.0",
-    "@typescript-eslint/parser": "^2.23.0",
+    "@typescript-eslint/eslint-plugin": "^2.24.0",
+    "@typescript-eslint/parser": "^2.24.0",
     "babel-eslint": "10.0.3",
     "babel-jest": "^24.9.0",
     "babel-loader": "8.0.6",

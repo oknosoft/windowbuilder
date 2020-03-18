@@ -28,7 +28,7 @@ class Additions extends React.Component {
     if(Object.prototype.hasOwnProperty.call(fields, 'inset')) {
       this.setState({inset: obj.inset});
     }
-  }
+  };
 
   setProduct = (row) => {
     const {inset} = row || {};
@@ -36,7 +36,7 @@ class Additions extends React.Component {
       row.value_change('inset', '', inset);
     }
     this.setState({row, inset});
-  }
+  };
 
   render() {
     const {state: {schemas, row, inset}, props, dp, components, group} = this;
