@@ -1,9 +1,9 @@
 import React from 'react';
 // import PropTypes from 'prop-types';
-import DhtmlxCell from '../DhtmlxCell';
+import DhtmlxCell from '../../DhtmlxCell';
 import WindowSizer from 'metadata-react/WindowSize';
 import {withIface} from 'metadata-redux';
-import {set_state_and_title} from '../App/menu_items';
+import {set_state_and_title} from '../../App/menu_items';
 
 class CalcOrderList extends DhtmlxCell {
 

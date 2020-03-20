@@ -12,9 +12,6 @@ import {compose} from 'redux';
 import AdditionsItem from './AdditionsItem';
 const {ItemData} = $p.cat.inserts;
 
-// компилированный запрос для поиска настроек в ОЗУ
-export const alasql_schemas = $p.wsql.alasql.compile('select * from cat_scheme_settings where obj="dp.buyers_order.production" and user=""');
-
 
 // заполняет компонент данными
 export function fill_data(ref, items) {
@@ -62,11 +59,10 @@ export function fill_data(ref, items) {
 // заполняет соответствие схем и типов вставок в state компонента
 export function fill_schemas(docs = []) {
   const schemas = new Map();
-  const {scheme_settings} = $p.cat;
   for (const doc of docs) {
     for (const item of this.items) {
       if(item && doc.name == item.name) {
-        schemas.set(item, scheme_settings.get(doc));
+        schemas.set(item, doc);
         break;
       }
     }
@@ -159,8 +155,9 @@ export function find_inset(insert_type) {
 function mapStateToProps(state, props) {
   return {
     handleCalck() {
-      const {dp} = this.additions;
-      return dp.calc_order.process_add_product_list(dp)
+      const {additions} = this;
+      const {dp} = additions;
+      return (dp ? dp.calc_order.process_add_product_list(dp) : additions.handleCalck())
         .then(() => {
           dp.calc_order.production.sync_grid(props.dialog.wnd.elmnts.grids.production);
         });

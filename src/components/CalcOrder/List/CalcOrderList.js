@@ -15,7 +15,7 @@ import WindowSizer from 'metadata-react/WindowSize';
 import {withObj} from 'metadata-redux';
 import qs from 'qs';
 import handleSchemeChange from './scheme_change';
-import Svgs from '../Svgs';
+import Svgs from '../../Svgs';
 
 const heights = new Map();
 heights.set(true, 24);

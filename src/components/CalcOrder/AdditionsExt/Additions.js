@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Production from './Production';
 import Params from './Params';
 import FormGroup from '@material-ui/core/FormGroup';
-import {alasql_schemas, fill_data, fill_schemas} from '../CalcOrderAdditions/connect';
+import {fill_data, fill_schemas} from '../Additions/connect';
 
 class Additions extends React.Component {
 
@@ -16,8 +16,9 @@ class Additions extends React.Component {
 
   componentDidMount() {
     fill_data.call(this, this.props.dialog.ref, [this.group]);
-    fill_schemas.call(this, alasql_schemas());
-    $p.dp.buyers_order.on('update', this.inset_change);
+    const {cat, dp} = $p;
+    fill_schemas.call(this, cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', user: ''}));
+    dp.buyers_order.on('update', this.inset_change);
   }
 
   componentWillUnmount() {

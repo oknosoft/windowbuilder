@@ -378,11 +378,15 @@
 
       case 'btn_add_product':
         //$p.dp.buyers_order.open_product_list(wnd, o);
-        $p.dp.buyers_order.open_component(wnd, o, handlers, 'CalcOrderAdditionsExt');
+        $p.dp.buyers_order.open_component(wnd, o, handlers, 'AdditionsExt');
         break;
 
       case 'btn_additions':
-        $p.dp.buyers_order.open_component(wnd, o, handlers, 'CalcOrderAdditions');
+        $p.dp.buyers_order.open_component(wnd, o, handlers, 'Additions');
+        break;
+
+      case 'btn_jalousie':
+        $p.dp.buyers_order.open_component(wnd, o, handlers, 'Jalousie');
         break;
 
       case 'btn_share':

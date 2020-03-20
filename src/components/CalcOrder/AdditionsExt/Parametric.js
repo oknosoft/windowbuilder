@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import Frame from '../CalcOrderAdditions/Frame';
+import Frame from '../Additions/Frame';
 import Additions from './Additions';
 
 export default function Parametric(props) {

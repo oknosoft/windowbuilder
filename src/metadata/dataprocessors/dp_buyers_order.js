@@ -155,19 +155,22 @@ export default function ($p) {
     let imodule;
     switch (component){
     case 'ClientOfDealer':
-      imodule = import('../../components/ClientOfDealer');
+      imodule = import('../../components/CalcOrder/ClientOfDealer');
       break;
     case 'ClientOfDealerSearch':
-      imodule = import('../../components/ClientOfDealerSearch');
+      imodule = import('../../components/CalcOrder/ClientOfDealerSearch');
       break;
     case 'PushUtils':
       imodule = import('../../components/PushUtils');
       break;
-    case 'CalcOrderAdditions':
-      imodule = import('../../components/CalcOrderAdditions');
+    case 'Additions':
+      imodule = import('../../components/CalcOrder/Additions');
       break;
-    case 'CalcOrderAdditionsExt':
-      imodule = import('../../components/CalcOrderAdditionsExt');
+    case 'AdditionsExt':
+      imodule = import('../../components/CalcOrder/AdditionsExt');
+      break;
+    case 'Jalousie':
+      imodule = import('../../components/CalcOrder/Jalousie');
       break;
     case 'DeliveryAddr':
       imodule = import('../../components/DeliveryAddr');

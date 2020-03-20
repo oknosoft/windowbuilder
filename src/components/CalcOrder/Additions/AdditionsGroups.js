@@ -12,7 +12,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import AdditionsGroup from './AdditionsGroup';
-import {alasql_schemas, fill_data, fill_schemas, find_inset} from './connect';
+import {fill_data, fill_schemas, find_inset} from './connect';
 
 
 export default class AdditionsGroups extends React.Component {
@@ -26,8 +26,9 @@ export default class AdditionsGroups extends React.Component {
 
   componentDidMount() {
     fill_data.call(this, this.props.dialog.ref);
-    fill_schemas.call(this, alasql_schemas());
-    $p.dp.buyers_order.on('update', this.inset_change);
+    const {cat, dp} = $p;
+    fill_schemas.call(this, cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', user: ''}));
+    dp.buyers_order.on('update', this.inset_change);
   }
 
   componentWillUnmount() {

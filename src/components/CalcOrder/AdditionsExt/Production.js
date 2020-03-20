@@ -9,7 +9,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import TabularSection from 'metadata-react/TabularSection';
-import {handleAdd, handleRemove} from '../CalcOrderAdditions/connect';
+import {handleAdd, handleRemove} from '../Additions/connect';
 import CustomToolbar from './CustomToolbar';
 
 class Production extends React.Component {
