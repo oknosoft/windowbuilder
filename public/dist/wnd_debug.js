@@ -898,7 +898,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         break;
 
       case 'btn_jalousie':
-        $p.dp.buyers_order.open_component(wnd, o, handlers, 'Jalousie');
+        open_jalousie(true);
         break;
 
       case 'btn_share':
@@ -1335,6 +1335,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           const row = o.production.get(selId);
           if(row) {
             const {owner, calc_order} = row.characteristic;
+            if(owner === $p.job_prm.nom.foroom) {
+              return open_jalousie();
+            }
             if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
               not_production();
             }
@@ -1350,6 +1353,32 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }
       }
 
+    }
+
+    function open_jalousie(create_new) {
+      const {dp, job_prm: {nom}} = $p;
+      if(create_new) {
+        return o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
+          .then((row) => {
+            row.nom = nom.foroom;
+            row.characteristic.owner = row.nom;
+            row.unit = row.nom.storage_unit;
+            dp.buyers_order.open_component(wnd, {ref: o.ref, cmd: row, _mgr}, handlers, 'Jalousie');
+          });
+      }
+      else {
+        const selId = production_get_sel_index();
+        if(selId != undefined) {
+          const row = o.production.get(selId);
+          const {owner} = row.characteristic;
+          if(owner === nom.foroom) {
+            row.nom = nom.foroom;
+            row.unit = row.nom.storage_unit;
+            return dp.buyers_order.open_component(wnd, {ref: o.ref, cmd: row, _mgr}, handlers, 'Jalousie');
+          }
+        }
+        not_production();
+      }
     }
 
     function open_spec() {

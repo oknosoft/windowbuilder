@@ -9,8 +9,8 @@ import FieldNumber from 'metadata-react/DataField/FieldNumber';
 
 function Prop({classes, prop, props, setProp}) {
   const ext = extClasses(classes);
-  if(prop.typ === 'radio') {
-    return <FormControl classes={ext.control} fullWidth>
+  if(prop.typ.startsWith('radio')) {
+    return <FormControl classes={ext.control} fullWidth disabled={prop.typ.includes('disabled')}>
       <InputLabel classes={ext.label}>{prop.name}</InputLabel>
       <Select
         native

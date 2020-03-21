@@ -386,7 +386,7 @@
         break;
 
       case 'btn_jalousie':
-        $p.dp.buyers_order.open_component(wnd, o, handlers, 'Jalousie');
+        open_jalousie(true);
         break;
 
       case 'btn_share':
@@ -871,24 +871,53 @@
           const row = o.production.get(selId);
           if(row) {
             const {owner, calc_order} = row.characteristic;
+            // если стоим на строке жалюзи, открываем конструктор жалюзи
+            if(owner === $p.job_prm.nom.foroom) {
+              return open_jalousie();
+            }
             if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
               not_production();
             }
             else if(row.characteristic.coordinates.count() == 0) {
               // возможно, это заготовка - проверим номенклатуру системы
               if(row.characteristic.leading_product.calc_order == calc_order) {
-                //$p.iface.set_hash("cat.characteristics", row.characteristic.leading_product.ref, "builder");
                 handlers.handleNavigate(`/builder/${row.characteristic.leading_product.ref}`);
               }
             }
             else {
-              //$p.iface.set_hash("cat.characteristics", row.characteristic.ref, "builder");
               handlers.handleNavigate(`/builder/${row.characteristic.ref}`);
             }
           }
         }
       }
 
+    }
+
+    function open_jalousie(create_new) {
+      const {dp, job_prm: {nom}} = $p;
+      if(create_new) {
+        return o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
+          .then((row) => {
+            row.nom = nom.foroom;
+            row.characteristic.owner = row.nom;
+            row.unit = row.nom.storage_unit;
+            dp.buyers_order.open_component(wnd, {ref: o.ref, cmd: row, _mgr}, handlers, 'Jalousie');
+          });
+      }
+      else {
+        const selId = production_get_sel_index();
+        if(selId != undefined) {
+          const row = o.production.get(selId);
+          const {owner} = row.characteristic;
+          // если стоим на строке жалюзи, открываем конструктор жалюзи
+          if(owner === nom.foroom) {
+            row.nom = nom.foroom;
+            row.unit = row.nom.storage_unit;
+            return dp.buyers_order.open_component(wnd, {ref: o.ref, cmd: row, _mgr}, handlers, 'Jalousie');
+          }
+        }
+        not_production();
+      }
     }
 
     /**

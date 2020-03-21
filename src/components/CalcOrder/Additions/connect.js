@@ -157,10 +157,13 @@ function mapStateToProps(state, props) {
     handleCalck() {
       const {additions} = this;
       const {dp} = additions;
-      return (dp ? dp.calc_order.process_add_product_list(dp) : additions.handleCalck())
-        .then(() => {
-          dp.calc_order.production.sync_grid(props.dialog.wnd.elmnts.grids.production);
-        });
+      return dp ?
+        dp.calc_order.process_add_product_list(dp)
+          .then(() => {
+            dp.calc_order.production.sync_grid(props.dialog.wnd.elmnts.grids.production);
+          })
+        :
+        additions.handleCalck();
     },
     handleCancel() {
       props.handlers.handleIfaceState({

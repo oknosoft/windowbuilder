@@ -32,7 +32,7 @@ export default function SelectMaterial({foroomApi, product, value, setProp}) {
     setProp(event.target.value);
   };
 
-  const {init_data, foroom_pics_url} = foroomApi.params;
+  const {foroom_pics_url} = foroomApi.params;
 
   return <FormControl className={classes.formControl} fullWidth>
     <InputLabel>Материал</InputLabel>
