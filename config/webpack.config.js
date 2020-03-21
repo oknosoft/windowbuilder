@@ -36,6 +36,8 @@ const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 // makes for a smoother build process.
 const shouldInlineRuntimeChunk = process.env.INLINE_RUNTIME_CHUNK !== 'false';
 
+const isExtendingEslintConfig = process.env.EXTEND_ESLINT === 'true';
+
 const imageInlineSizeLimit = parseInt(
   process.env.IMAGE_INLINE_SIZE_LIMIT || '10000'
 );
@@ -621,7 +623,7 @@ module.exports = function(webpackEnv) {
           navigateFallback: paths.publicUrlOrPath + 'index.html',
           navigateFallbackBlacklist: [
             // Exclude URLs starting with /_, as they're likely an API call
-            new RegExp('^(/_|/index|/auth/|/adm/|/user/|/couchdb/|/r/)'),
+            new RegExp('^(/_|/index|/auth/|/adm/|/user/|/couchdb/|/help/|/r/)'),
             // Exclude any URLs whose last part seems to be a file extension
             // as they're likely a resource and not a SPA route.
             // URLs containing a "?" character won't be blacklisted as they're likely
