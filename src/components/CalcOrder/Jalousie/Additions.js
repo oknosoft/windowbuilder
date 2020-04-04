@@ -163,9 +163,7 @@ class Additions extends React.Component {
       .then(() => {
         this.setOrder();
       })
-      .catch((err) => {
-        err = null;
-      });
+      .catch((err) => null); /* eslint-disable-line */
   }
 
   handleCalck() {

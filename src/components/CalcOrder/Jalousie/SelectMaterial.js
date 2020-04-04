@@ -53,7 +53,7 @@ export default function SelectMaterial({foroomApi, product, value, setProp}) {
       }
     </Select>
   </FormControl>;
-};
+}
 
 SelectMaterial.propTypes = {
   foroomApi: PropTypes.object,

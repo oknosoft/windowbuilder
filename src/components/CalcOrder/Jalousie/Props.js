@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Prop from './Prop';
 
@@ -9,8 +8,6 @@ function ProductProps({foroomApi, product, props, setProp}) {
   if(!product) {
     return <Typography variant="subtitle1" color="secondary">Не выбрано изделие</Typography>;
   }
-
-  const {params} = product;
 
   return <div>
     <Typography variant="subtitle1">Параметры</Typography>

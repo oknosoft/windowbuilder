@@ -62,7 +62,7 @@ export default function SelectProduct({foroomApi, product, setProduct}) {
       }
     </Select>
   </FormControl>;
-};
+}
 
 SelectProduct.propTypes = {
   foroomApi: PropTypes.object,

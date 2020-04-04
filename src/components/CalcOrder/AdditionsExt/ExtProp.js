@@ -61,6 +61,7 @@ PropField.propTypes = {
   row: PropTypes.object,
   param: PropTypes.object,
   meta: PropTypes.object,
+  id: PropTypes.string,
 };
 
 export default PropField;
