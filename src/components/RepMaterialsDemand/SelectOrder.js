@@ -89,7 +89,7 @@ class SelectOrder extends Component {
             _mgr={$p.doc.calc_order}
             _acl={props._acl}
             handlers={{handleSelect}}
-            find_rows={this.find_rows}
+            //find_rows={this.find_rows}
             selectionMode
             denyAddDel
             //show_variants

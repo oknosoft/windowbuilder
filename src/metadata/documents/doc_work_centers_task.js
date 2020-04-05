@@ -188,7 +188,7 @@ export default function ({
      */
     optimize(opts) {
       return import('genetic-cutting')
-        .then((Cutting) => {
+        .then(({default: Cutting}) => {
           const fragments = this.fragments();
 
           let queue = Promise.resolve();

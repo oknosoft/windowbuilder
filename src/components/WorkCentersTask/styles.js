@@ -31,7 +31,7 @@ const styles = theme => ({
     marginBottom: theme.spacing(2),
   },
   canvas: {
-    width: "100%",
+    width: '100%',
   }
 });
 

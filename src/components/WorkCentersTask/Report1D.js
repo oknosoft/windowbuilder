@@ -156,8 +156,8 @@ class V1D extends paper.Project {
 function Visualization({status, classes}) {
   return <canvas className={classes.canvas} ref={(canvas) => {
     if(canvas) {
-      const scheme = new V1D(canvas);
       canvas.height = status.cuts_in.length * 27 * canvas.width / 1530;
+      const scheme = new V1D(canvas);
       scheme.redraw(status);
     }
   }}/>;
