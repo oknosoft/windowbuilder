@@ -172,6 +172,9 @@ export default function ($p) {
     case 'Jalousie':
       imodule = import('../../components/CalcOrder/Jalousie');
       break;
+    case 'CutEvaluation':
+      imodule = import('../../components/CalcOrder/CutEvaluation');
+      break;
     case 'DeliveryAddr':
       imodule = import('../../components/DeliveryAddr');
       break;

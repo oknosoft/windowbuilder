@@ -30,7 +30,7 @@
     "@jscad/openjscad": "^1.6.1",
     "@turf/points-within-polygon": "^5.1.5",
     "dxf-writer": "^1.6.0",
-    "genetic-cutting": "github:oknosoft/genetic-cutting",
+    "genetic-cutting": "github:oknosoft/genetic-cutting#917ccb931f8d221aeef083d2d7294751ec2603d2",
     "md5-file": "^4.0.0",
     "metadata-abstract-ui": "2.0.22-beta.5",
     "metadata-core": "2.0.22-beta.5",

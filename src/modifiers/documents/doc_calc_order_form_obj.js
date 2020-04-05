@@ -389,6 +389,10 @@
         open_jalousie(true);
         break;
 
+      case 'cut_evaluation':
+        cut_evaluation();
+        break;
+
       case 'btn_share':
         $p.dp.buyers_order.open_component(wnd, {ref: o.ref, cmd: btn_id}, handlers, 'PushUtils');
         break;
@@ -891,6 +895,10 @@
         }
       }
 
+    }
+
+    function cut_evaluation() {
+      $p.dp.buyers_order.open_component(wnd, {ref: o.ref, _mgr}, handlers, 'CutEvaluation');
     }
 
     function open_jalousie(create_new) {

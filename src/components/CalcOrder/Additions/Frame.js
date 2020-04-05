@@ -47,7 +47,7 @@ class ParametricFrame extends React.Component {
 
   render() {
 
-    const {handleCancel, handleErrClose, props: {dialog, title, Content}, state: {msg, queryClose}} = this;
+    const {handleCancel, handleErrClose, props: {dialog, title, actions, Content}, state: {msg, queryClose}} = this;
 
     return <Dialog
       open
@@ -56,8 +56,10 @@ class ParametricFrame extends React.Component {
       title={title}
       onClose={this.queryClose}
       actions={[
-        <Button key="ok" onClick={this.handleOk} color="primary">Рассчитать и закрыть</Button>,
-        <Button key="calck" onClick={this.handleCalck} color="primary">Рассчитать</Button>,
+        !actions && <Button key="ok" onClick={this.handleOk} color="primary">Рассчитать и закрыть</Button>,
+        actions && actions.ok && <Button key="ok" onClick={this.handleOk} color="primary">{actions.ok}</Button>,
+        !actions && <Button key="calck" onClick={this.handleCalck} color="primary">Рассчитать</Button>,
+        actions && actions.calck && <Button key="calck" onClick={this.handleCalck} color="primary">{actions.calck}</Button>,
         <Button key="cancel" onClick={handleCancel} color="primary">Закрыть</Button>
       ]}
     >
@@ -90,9 +92,10 @@ class ParametricFrame extends React.Component {
 }
 
 ParametricFrame.propTypes = {
-  Content: PropTypes.func.isRequired,
+  Content: PropTypes.oneOfType([PropTypes.object, PropTypes.func]).isRequired,
   title: PropTypes.string.isRequired,
   dialog: PropTypes.object.isRequired,
+  actions: PropTypes.object,
   handlers: PropTypes.object.isRequired,
   handleCalck: PropTypes.func.isRequired,
   handleCancel: PropTypes.func.isRequired,
