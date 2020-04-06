@@ -11,9 +11,9 @@ import withStyles from './styles';
 import {stat} from './Progress';
 
 
-function Report1D(props) {
+function Report1D({hide_head, ...props}) {
   return <div className={props.classes.root}>
-    <Head key="head" {...props}/>
+    {!hide_head && <Head key="head" {...props}/>}
     <div className={props.classes.data} key="table"><NomTable {...props}/></div>
   </div>;
 }
@@ -165,6 +165,8 @@ function Visualization({status, classes}) {
 
 Report1D.propTypes = {
   classes: PropTypes.object.isRequired,
+  _obj: PropTypes.object.isRequired,
+  hide_head: PropTypes.bool,
 };
 
 NomTable.propTypes = {

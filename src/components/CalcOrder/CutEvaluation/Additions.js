@@ -10,6 +10,7 @@ import List from '@material-ui/core/List';
 
 import SelectMode from './Mode';
 import Progress from '../../WorkCentersTask/Progress';
+import Report1D from '../../WorkCentersTask/Report1D';
 
 const styles = theme => ({
   root: {
@@ -53,7 +54,30 @@ class Additions extends React.Component {
     this.doc && this.doc.unload();
   }
 
+  // закидываем обрезки в заказ
   handleCalck() {
+    const {props: {dialog}, doc} = this;
+    const calc_order = $p.doc.calc_order.get(dialog.ref);
+    const {production} = dialog.wnd ? dialog.wnd.elmnts.grids : {};
+    doc.cuts.clear({record_kind: "Расход"});
+    doc.cuts.group_by(['nom', 'characteristic'], ['quantity']);
+    doc.cuts.forEach((row) => {
+      if(!row.quantity) {
+        return;
+      }
+      const order_row = calc_order.production.add({
+        nom: row.nom,
+        characteristic: row.characteristic,
+        quantity: row.quantity,
+        qty: row.quantity,
+        len: 0,
+        width: 0,
+      });
+      order_row.s = 0;
+      if(production) {
+        production.refresh_row(order_row);
+      }
+    });
     return Promise.resolve();
   }
 
@@ -124,7 +148,7 @@ class Additions extends React.Component {
   }
 
   getStepContent() {
-    const {state: {mode, activeStep, statuses}, setMode} = this;
+    const {state: {mode, activeStep, statuses}, setMode, doc} = this;
     switch (activeStep) {
     case 0:
       return <SelectMode mode={mode} setMode={setMode}/>;
@@ -133,14 +157,14 @@ class Additions extends React.Component {
         {statuses.map((status, index) => <Progress key={`p-${index}`} status={status}/>)}
       </List>;
     case 2:
-      return 'This is the bit I really care about!';
+      return doc ? <Report1D _obj={doc} hide_head/> : 'Документ пуст';
     default:
-      return 'Unknown stepIndex';
+      return 'Ошибка шага';
     }
   }
 
   render() {
-    const {props: {classes}, state: {activeStep, evaluating}} = this;
+    const {props: {classes}, state: {activeStep, evaluating}, doc} = this;
 
     return (
       <div className={classes.root}>
@@ -153,6 +177,7 @@ class Additions extends React.Component {
         </Stepper>
         <div>
           <div className={classes.instructions}>{this.getStepContent()}</div>
+          {!doc && <div>Подготовка данных</div>}
           <div>
             <Button
               disabled={(activeStep === 0) || (activeStep === steps.length - 1) || evaluating}
