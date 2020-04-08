@@ -59,7 +59,7 @@ class Additions extends React.Component {
     const {props: {dialog}, doc} = this;
     const calc_order = $p.doc.calc_order.get(dialog.ref);
     const {production} = dialog.wnd ? dialog.wnd.elmnts.grids : {};
-    doc.cuts.clear({record_kind: "Расход"});
+    doc.cuts.clear({record_kind: 'Расход'});
     doc.cuts.group_by(['nom', 'characteristic'], ['quantity']);
     doc.cuts.forEach((row) => {
       if(!row.quantity) {

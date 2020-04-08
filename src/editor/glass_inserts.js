@@ -5,11 +5,21 @@ class GlassInserts {
 
     const elm = glasses.length && glasses[0];
 
-    if(!(elm instanceof $p.EditorInvisible.Filling)){
-      return $p.msg.show_msg({
-        type: "alert-info",
-        text: $p.msg.glass_invalid_elm,
-        title: $p.msg.glass_spec
+    const {EditorInvisible, msg, enm, iface, injected_data} = $p;
+
+    if(!(elm instanceof EditorInvisible.Filling)) {
+      return msg.show_msg({
+        type: 'alert-info',
+        text: msg.glass_invalid_elm,
+        title: msg.glass_spec
+      });
+    }
+
+    if(elm.nom.elm_type === enm.elm_types.Заполнение) {
+      return msg.show_msg({
+        type: 'alert-info',
+        text: msg.glass_invalid_type,
+        title: msg.glass_spec
       });
     }
 
@@ -29,13 +39,13 @@ class GlassInserts {
       }
     };
 
-    this.wnd = $p.iface.dat_blank(null, options.wnd);
+    this.wnd = iface.dat_blank(null, options.wnd);
 
     this.wnd.elmnts.grids.inserts = this.wnd.attachTabular({
       obj: project.ox,
       ts: "glass_specification",
       selection: {elm: elm.elm},
-      toolbar_struct: $p.injected_data["toolbar_glass_inserts.xml"],
+      toolbar_struct: injected_data["toolbar_glass_inserts.xml"],
       ts_captions: {
         fields: ["inset", "clr"],
         headers: "Вставка,Цвет",
