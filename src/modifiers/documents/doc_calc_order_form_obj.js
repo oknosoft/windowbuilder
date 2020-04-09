@@ -841,11 +841,13 @@
             else if(row.characteristic.coordinates.count()) {
               // добавляем строку
               o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
-                .then(({characteristic}) => {
-
+                .then((nrow) => {
+                  const {characteristic} = nrow;
+                  nrow.quantity = row.quantity;
+                  nrow.note = row.note;
                   // заполняем продукцию копией данных текущей строки
                   characteristic._mixin(row.characteristic._obj, null,
-                    'ref,name,calc_order,product,leading_product,leading_elm,origin,note,partner'.split(','), true);
+                    'ref,name,calc_order,product,leading_product,leading_elm,origin,partner'.split(','), true);
 
                   // при необходимости, установим признак необходимости перезаполнить параметры изделия и фурнитуры
                   if(calc_order.refill_props) {
