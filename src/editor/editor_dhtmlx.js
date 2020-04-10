@@ -158,12 +158,14 @@ class Editor extends $p.EditorInvisible {
         {name: 'cut', css: 'tb_cursor-cut', tooltip: 'Тип соединения'},
         {name: 'fx', text: '<i class="fa fa-magic fa-fw"></i>', tooltip: 'Действия', sub:
             {
-              width: '70px',
+              width: '120px',
               height:'28px',
               align: 'hor',
               buttons: [
-                {name: 'm1', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>1</sub></small>', tooltip: 'Импост по 0-штапику'},
-                {name: 'm2', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>2</sub></small>', tooltip: 'T в угол'},
+                {name: 'm1', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>0</sub></small>', tooltip: 'Импост по 0-штапику'},
+                {name: 'm2', float: 'left', text: '<small><i class="fa fa-magnet"></i><sub>Т</sub></small>', tooltip: 'T в угол'},
+                {name: 'm3', float: 'left', text: '<small><i class="fa fa-arrows-v"></i><sub>би</sub></small>', tooltip: 'Уравнять импост в балконе'},
+                {name: 'm4', float: 'left', text: '<small><i class="fa fa-object-group"></i></small>', tooltip: 'Выделить группу'},
                 ],
             }},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
@@ -523,6 +525,11 @@ class Editor extends $p.EditorInvisible {
     };
 
     /**
+     * Magnetism дополнительных инструментов
+     */
+    _scheme.magnetism = new Magnetism(_scheme);
+
+    /**
      * Подписываемся на события изменения размеров
      */
     _editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
@@ -641,6 +648,14 @@ class Editor extends $p.EditorInvisible {
     switch (name) {
     case 'm1':
       this.project.magnetism.m1();
+      break;
+
+    case 'm3':
+      this.project.magnetism.m3();
+      break;
+
+    case 'm4':
+      this.project.magnetism.m4();
       break;
 
     default:
