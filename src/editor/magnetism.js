@@ -199,10 +199,78 @@ class Magnetism {
    * Уравнивает профиль в балконном блоке
    */
   m3() {
-    const {dialogs} = $p.ui;
-    const profiles = this.scheme.selected_profiles();
-    if(profiles.length !== 1 || profiles[0].elm_type != 'Импост') {
-      dialogs.alert({text: 'm3', title: 'Импост в балконном блоке'});
+    const {enm: {elm_types, orientations}, ui: {dialogs}} = $p;
+    const {scheme} = this;
+    const profiles = scheme.selected_profiles();
+    const {contours} = scheme;
+    const title = 'Импост в балконном блоке';
+    if(profiles.length !== 1 || profiles[0].elm_type !== elm_types.Импост) {
+      return dialogs.alert({text: 'Укажите один импост на эскизе', title});
+    }
+    const profile = profiles[0];
+    const {layer, orientation} = profile;
+    if(orientation !== orientations.hor) {
+      return dialogs.alert({text: 'Укажите горизонтальный импост', title});
+    }
+    if(contours.length < 2) {
+      return dialogs.alert({text: 'В изделии только один контур - нечего уравнивать', title});
+    }
+    // центр профиля
+    const {_corns} = profile._attr;
+    const corns = _corns[3].y > _corns[2].y ? [_corns[1], _corns[2]] : [_corns[3], _corns[3]];
+    // рамный слой
+    let root = layer;
+    while (root.layer) {
+      root = layer.layer;
+    }
+    // ишем профиль, по которому будем уравнивать
+    let nearest;
+    let distance = Infinity;
+    function check(cnt) {
+      const candidat = cnt.profiles_by_side('bottom');
+      const {_corns} = candidat._attr;
+      const d03 = Math.abs(corns[0].x - _corns[3].x);
+      const d04 = Math.abs(corns[0].x - _corns[4].x);
+      const d13 = Math.abs(corns[1].x - _corns[3].x);
+      const d14 = Math.abs(corns[1].x - _corns[4].x);
+      const delta = Math.min(d03, d04, d13, d14);
+      if(!nearest || (delta < distance && nearest.elm_type === elm_types.Рама)|| (delta < 300 && candidat.elm_type === elm_types.Створка)) {
+        distance = delta;
+        nearest = candidat;
+        if(delta === d03) {
+          corns.d = [0, 3];
+        }
+        else if(delta === d04) {
+          corns.d = [0, 4];
+        }
+        else if(delta === d13) {
+          corns.d = [1, 3];
+        }
+        else if(delta === d14) {
+          corns.d = [1, 4];
+        }
+      }
+    }
+    for(const contour of contours) {
+      if(contour === root) {
+        continue;
+      }
+      check(contour);
+      for(const cnt of contour.contours) {
+        check(cnt);
+      }
+    }
+    if(!nearest) {
+      return dialogs.alert({text: 'Не найден подходящий профиль для уравнивания', title});
+    }
+
+    // узнаем, насколько двигать и в какую сторону
+    const delta = nearest._attr._corns[corns.d[1]].y - corns[corns.d[0]].y;
+    if(delta) {
+      scheme.move_points(new paper.Point(0, delta));
+      // setTimeout(() => {
+      //   scheme.register_update();
+      // }, 200);
     }
   }
 
