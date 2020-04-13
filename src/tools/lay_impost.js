@@ -32,6 +32,7 @@ class ToolLayImpost extends ToolElement {
           height: 420,
           width: 320,
           allow_close: true,
+          region: 'r2',
         },
       },
       mode: null,
@@ -112,8 +113,10 @@ class ToolLayImpost extends ToolElement {
       }];
 
       tool.wnd = $p.iface.dat_blank(tool._scope._dxw, tool.options.wnd);
+
       tool._grid = tool.wnd.attachHeadFields({
         obj: profile,
+        oxml: tool.oxml(),
       });
 
       if (!tool.options.wnd.bounds_open) {
@@ -256,6 +259,18 @@ class ToolLayImpost extends ToolElement {
       mousemove: this.mousemove,
     });
 
+  }
+
+  oxml() {
+    const {profile: {_manager, elm_type}} = this;
+    const {form} = _manager.metadata();
+    const oxml = form && form.obj && form.obj.head && $p.utils._clone(form.obj.head);
+    if(oxml && elm_type === $p.enm.elm_types.Раскладка) {
+      if(oxml[' '] && !oxml[' '].includes('region')) {
+        oxml[' '].push('region');
+      }
+    }
+    return oxml;
   }
 
   deactivate() {
@@ -729,9 +744,13 @@ class ToolLayImpost extends ToolElement {
   // при изменении типа элемента, чистим отбор по цвету
   elm_type_change(obj, fields) {
     if (fields.hasOwnProperty('inset_by_x') || fields.hasOwnProperty('inset_by_y') || fields.hasOwnProperty('elm_type')) {
-      const {profile, sys} = this;
+      const {profile, sys, _grid} = this;
       delete profile._elm_type_clrs;
       this.elm_type_clrs(profile, sys);
+      _grid && _grid.attach({
+        obj: profile,
+        oxml: this.oxml(),
+      });
     }
   }
 
@@ -943,15 +962,14 @@ class ToolLayImpost extends ToolElement {
         }
 
         if (profile.elm_type == $p.enm.elm_types.Раскладка) {
-
           nprofiles.push(new $p.EditorInvisible.Onlay({
             generatrix: new paper.Path({
               segments: [p.b, p.e],
             }),
             parent: this.hitItem,
+            region: profile.region,
             proto: proto,
           }));
-
         }
         else {
 
