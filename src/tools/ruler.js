@@ -823,4 +823,6 @@ class ToolRuler extends ToolElement {
 
 }
 
+$p.EditorInvisible.ToolRuler = ToolRuler;
+
 
