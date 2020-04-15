@@ -19,7 +19,7 @@ const load_data = () => {
   if(catalogs.data && Date.now() - catalogs.stamp < 36e5) {
     return Promise.resolve(catalogs.data);
   }
-  return $p.adapters.pouch.fetch(`/adm/api/foroom`, {headers: new Headers()})
+  return $p.adapters.pouch.fetch(`/adm/api/foroom`)
     .then((res) => res.json())
     .then((data) => {
       Object.assign(catalogs, {data, stamp: Date.now()});
@@ -28,7 +28,7 @@ const load_data = () => {
 };
 
 const load_script = () => {
-  return $p.adapters.pouch.fetch(`/adm/api/foroom/js`, {headers: new Headers()})
+  return $p.adapters.pouch.fetch(`/adm/api/foroom/js`)
     .then((res) => res.text())
     .then((code) => {
       //create a dom element to hold the code
