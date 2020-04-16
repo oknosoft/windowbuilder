@@ -25,7 +25,7 @@ class Magnetism {
         }
         selected.profile = generatrix.parent;
         selected.point = 'b';
-      };
+      }
       if(generatrix.lastSegment.selected) {
         if(selected.profile) {
           selected.break = true;
@@ -33,7 +33,7 @@ class Magnetism {
         }
         selected.profile = generatrix.parent;
         selected.point = 'e';
-      };
+      }
     }
     return selected;
   }
@@ -76,7 +76,8 @@ class Magnetism {
    * @return {{segm: *, prev: *, next: *, glass}}
    */
   short_glass(point) {
-    for(const glass of this.scheme.activeLayer.glasses(false, true)){
+    const {_scope: {consts}, activeLayer}  = this.scheme;
+    for(const glass of activeLayer.glasses(false, true)){
       const len = glass.outer_profiles.length - 1;
       for(let i = 0; i <= len; i++) {
         const segm = glass.outer_profiles[i];
@@ -87,7 +88,7 @@ class Magnetism {
           return {segm, prev, next, glass};
         }
       }
-    };
+    }
   }
 
   /**
@@ -124,7 +125,7 @@ class Magnetism {
           // находим штапик, связанный с этим ребром
           const {segm, prev, next, glass} = res;
 
-          let cl, negate;
+          let cl;
           this.scheme.cnns.find_rows({elm1: glass.elm, elm2: segm.profile.elm}, (row) => {
             cl = row.aperture_len;
           });
@@ -268,9 +269,6 @@ class Magnetism {
     const delta = nearest._attr._corns[corns.d[1]].y - corns[corns.d[0]].y;
     if(delta) {
       scheme.move_points(new paper.Point(0, delta));
-      // setTimeout(() => {
-      //   scheme.register_update();
-      // }, 200);
     }
   }
 
@@ -314,7 +312,7 @@ class Magnetism {
             }
           });
       })
-      .catch((err) => null);
+      .catch((err) => err);
   }
 
   select_attache(elm) {

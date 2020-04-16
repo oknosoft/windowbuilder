@@ -2375,7 +2375,7 @@ class Magnetism {
         }
         selected.profile = generatrix.parent;
         selected.point = 'b';
-      };
+      }
       if(generatrix.lastSegment.selected) {
         if(selected.profile) {
           selected.break = true;
@@ -2383,7 +2383,7 @@ class Magnetism {
         }
         selected.profile = generatrix.parent;
         selected.point = 'e';
-      };
+      }
     }
     return selected;
   }
@@ -2415,7 +2415,8 @@ class Magnetism {
   }
 
   short_glass(point) {
-    for(const glass of this.scheme.activeLayer.glasses(false, true)){
+    const {_scope: {consts}, activeLayer}  = this.scheme;
+    for(const glass of activeLayer.glasses(false, true)){
       const len = glass.outer_profiles.length - 1;
       for(let i = 0; i <= len; i++) {
         const segm = glass.outer_profiles[i];
@@ -2426,7 +2427,7 @@ class Magnetism {
           return {segm, prev, next, glass};
         }
       }
-    };
+    }
   }
 
   m1() {
@@ -2458,7 +2459,7 @@ class Magnetism {
         if(res) {
           const {segm, prev, next, glass} = res;
 
-          let cl, negate;
+          let cl;
           this.scheme.cnns.find_rows({elm1: glass.elm, elm2: segm.profile.elm}, (row) => {
             cl = row.aperture_len;
           });
@@ -2633,7 +2634,7 @@ class Magnetism {
             }
           });
       })
-      .catch((err) => null);
+      .catch((err) => err);
   }
 
   select_attache(elm) {
