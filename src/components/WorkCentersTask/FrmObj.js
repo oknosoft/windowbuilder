@@ -10,7 +10,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
-import Helmet from 'react-helmet';
+import {Helmet} from 'react-helmet';
 import FormGroup from '@material-ui/core/FormGroup';
 import IconButton from '@material-ui/core/IconButton';
 import IconEvent from '@material-ui/icons/Event';
