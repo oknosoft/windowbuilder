@@ -41,7 +41,7 @@
     "metadata-superlogin": "2.0.22-beta.6",
     "paper-jsdom-canvas": "^0.12.4",
     "react-highlight-words": "^0.16.0",
-    "windowbuilder": "github:oknosoft/windowbuilder-core#ae1c3da45e2c2c3444917dae27e44ec9448ddf84"
+    "windowbuilder": "github:oknosoft/windowbuilder-core#176049cc4e14402364e5e64465ccda7790fcc26a"
   },
   "devDependencies": {
     "@babel/core": "7.9.0",
