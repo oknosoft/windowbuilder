@@ -9,6 +9,7 @@ class Magnetism {
 
   constructor(scheme) {
     this.scheme = scheme;
+    this.on_impost_selected = this.on_impost_selected.bind(this);
   }
 
   /**
@@ -197,15 +198,28 @@ class Magnetism {
   }
 
   /**
+   * Используется для отложенного выравнивания
+   */
+  on_impost_selected() {
+    const {scheme, on_impost_selected} = this;
+    scheme.view.off('click', on_impost_selected);
+    const profiles = scheme.selected_profiles();
+    if(profiles.length === 1 && profiles[0].elm_type === $p.enm.elm_types.Импост) {
+      this.m3();
+    }
+  }
+
+  /**
    * Уравнивает профиль в балконном блоке
    */
   m3() {
     const {enm: {elm_types, orientations}, ui: {dialogs}} = $p;
-    const {scheme} = this;
+    const {scheme, on_impost_selected} = this;
     const profiles = scheme.selected_profiles();
     const {contours} = scheme;
     const title = 'Импост в балконном блоке';
     if(profiles.length !== 1 || profiles[0].elm_type !== elm_types.Импост) {
+      scheme.view.on('click', on_impost_selected)
       return dialogs.alert({text: 'Укажите один импост на эскизе', title});
     }
     const profile = profiles[0];

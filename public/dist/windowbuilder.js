@@ -2395,6 +2395,7 @@ class Magnetism {
 
   constructor(scheme) {
     this.scheme = scheme;
+    this.on_impost_selected = this.on_impost_selected.bind(this);
   }
 
   get selected() {
@@ -2561,13 +2562,23 @@ class Magnetism {
     }
   }
 
+  on_impost_selected() {
+    const {scheme, on_impost_selected} = this;
+    scheme.view.off('click', on_impost_selected);
+    const profiles = scheme.selected_profiles();
+    if(profiles.length === 1 && profiles[0].elm_type === $p.enm.elm_types.Импост) {
+      this.m3();
+    }
+  }
+
   m3() {
     const {enm: {elm_types, orientations}, ui: {dialogs}} = $p;
-    const {scheme} = this;
+    const {scheme, on_impost_selected} = this;
     const profiles = scheme.selected_profiles();
     const {contours} = scheme;
     const title = 'Импост в балконном блоке';
     if(profiles.length !== 1 || profiles[0].elm_type !== elm_types.Импост) {
+      scheme.view.on('click', on_impost_selected)
       return dialogs.alert({text: 'Укажите один импост на эскизе', title});
     }
     const profile = profiles[0];
@@ -2755,6 +2766,9 @@ class UndoRedo {
     const snapshot = scheme._attr._snapshot || (attr && attr.snapshot);
     this._snap_timer && clearTimeout(this._snap_timer);
     this._snap_timer = 0;
+    if(scheme._scope.tool.mouseDown) {
+      return;
+    }
     if (!snapshot && scheme == this._editor.project) {
       if (scheme._attr._loading) {
         this._snap_timer = setTimeout(() => {
@@ -5817,20 +5831,25 @@ class ToolPen extends ToolElement {
                 project.activeLayer.profiles.some((element) => {
 
                   if(element.children.some((addl) => {
-                      if(addl instanceof $p.EditorInvisible.ProfileAddl &&
-                        project.check_distance(addl, null, res, this.path.firstSegment.point, bind) === false){
-                        this.path.firstSegment.point = this.point1 = res.point;
-                        return true;
-                      }
-                    })){
+                    if(addl instanceof $p.EditorInvisible.ProfileAddl &&
+                      project.check_distance(addl, null, res, this.path.firstSegment.point, bind) === false) {
+                      this.path.firstSegment.point = this.point1 = res.point;
+                      return true;
+                    }
+                  })) {
                     return true;
-
-                  }else if (project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
+                  }
+                  else if(project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false) {
                     this.path.firstSegment.point = this.point1 = res.point;
                     return true;
                   }
                 });
 
+                this.start_binded = true;
+              }
+              else {
+                const {x, y} = this.path.firstSegment.point;
+                this.path.firstSegment.point = this.point1 = new paper.Point((x / 10).round() * 10, (y / 10).round() * 10);
                 this.start_binded = true;
               }
             }
@@ -5883,7 +5902,7 @@ class ToolPen extends ToolElement {
         this.path = null;
       }
 
-      if(event.className != "ToolEvent"){
+      if(event.className != 'ToolEvent') {
         project.register_update();
       }
     }
@@ -7099,6 +7118,7 @@ class ToolSelectNode extends ToolElement {
         }
       },
       mouseStartPos: new paper.Point(),
+      mouseDown: false,
       mode: null,
       hitItem: null,
       originalContent: null,
@@ -7143,6 +7163,7 @@ class ToolSelectNode extends ToolElement {
 
     this.mode = null;
     this.changed = false;
+    this.mouseDown = true;
 
     if(event.event && event.event.which && event.event.which > 1){
     }
@@ -7299,7 +7320,11 @@ class ToolSelectNode extends ToolElement {
         this._scope.canvas_cursor('cursor-arrow-white-shape');
       }
     }
+
+    this.mouseDown = false;
+    this.changed && project.register_change(true);
   }
+
 
   mousedrag(event) {
 

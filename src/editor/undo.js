@@ -66,6 +66,9 @@ class UndoRedo {
     const snapshot = scheme._attr._snapshot || (attr && attr.snapshot);
     this._snap_timer && clearTimeout(this._snap_timer);
     this._snap_timer = 0;
+    if(scheme._scope.tool.mouseDown) {
+      return;
+    }
     if (!snapshot && scheme == this._editor.project) {
       // при открытии изделия чистим историю
       if (scheme._attr._loading) {

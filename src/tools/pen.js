@@ -736,20 +736,25 @@ class ToolPen extends ToolElement {
 
                   // сначала смотрим на доборы, затем - на сам профиль
                   if(element.children.some((addl) => {
-                      if(addl instanceof $p.EditorInvisible.ProfileAddl &&
-                        project.check_distance(addl, null, res, this.path.firstSegment.point, bind) === false){
-                        this.path.firstSegment.point = this.point1 = res.point;
-                        return true;
-                      }
-                    })){
+                    if(addl instanceof $p.EditorInvisible.ProfileAddl &&
+                      project.check_distance(addl, null, res, this.path.firstSegment.point, bind) === false) {
+                      this.path.firstSegment.point = this.point1 = res.point;
+                      return true;
+                    }
+                  })) {
                     return true;
-
-                  }else if (project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false ){
+                  }
+                  else if(project.check_distance(element, null, res, this.path.firstSegment.point, bind) === false) {
                     this.path.firstSegment.point = this.point1 = res.point;
                     return true;
                   }
                 });
 
+                this.start_binded = true;
+              }
+              else {
+                const {x, y} = this.path.firstSegment.point;
+                this.path.firstSegment.point = this.point1 = new paper.Point((x / 10).round() * 10, (y / 10).round() * 10);
                 this.start_binded = true;
               }
             }
@@ -806,7 +811,7 @@ class ToolPen extends ToolElement {
         this.path = null;
       }
 
-      if(event.className != "ToolEvent"){
+      if(event.className != 'ToolEvent') {
         project.register_update();
       }
     }

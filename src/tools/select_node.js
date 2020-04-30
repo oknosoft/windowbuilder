@@ -31,6 +31,7 @@ class ToolSelectNode extends ToolElement {
         }
       },
       mouseStartPos: new paper.Point(),
+      mouseDown: false,
       mode: null,
       hitItem: null,
       originalContent: null,
@@ -75,6 +76,7 @@ class ToolSelectNode extends ToolElement {
 
     this.mode = null;
     this.changed = false;
+    this.mouseDown = true;
 
     if(event.event && event.event.which && event.event.which > 1){
       //
@@ -247,7 +249,11 @@ class ToolSelectNode extends ToolElement {
         this._scope.canvas_cursor('cursor-arrow-white-shape');
       }
     }
+
+    this.mouseDown = false;
+    this.changed && project.register_change(true);
   }
+
 
   mousedrag(event) {
 
