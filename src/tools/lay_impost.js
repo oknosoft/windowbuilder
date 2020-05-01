@@ -312,35 +312,35 @@ class ToolLayImpost extends ToolElement {
       return;
     }
 
-    const {consts} = this._scope;
+    const {_scope: {consts}, project, profile, hitItem}  = this;
 
     this.hitTest(event);
 
     this.paths.forEach((p) => p.removeSegments());
 
-    const {profile} = this;
     if (profile.inset_by_y.empty() && profile.inset_by_x.empty()) {
       return;
     }
 
-    let bounds, gen, hit = !!this.hitItem;
+    let bounds, gen, hit = !!hitItem;
 
-    if (hit) {
-      bounds = this.hitItem.bounds;
-      gen = this.hitItem.path;
+    if(hit) {
+      bounds = (event.modifiers.control || event.modifiers.option || !hitItem.bounds_light) ? hitItem.bounds : hitItem.bounds_light();
+      gen = hitItem.path;
     }
-    else if (profile.w && profile.h) {
+    else if(profile.w && profile.h) {
       gen = new paper.Path({
         insert: false,
         segments: [[0, 0], [0, -profile.h], [profile.w, -profile.h], [profile.w, 0]],
         closed: true,
       });
       bounds = gen.bounds;
-      this.project.zoom_fit(this.project.strokeBounds.unite(bounds));
+      project.zoom_fit(project.strokeBounds.unite(bounds));
 
     }
-    else
+    else {
       return;
+    }
 
     let stepy = profile.step_by_y || (profile.elm_by_y && bounds.height / (profile.elm_by_y + ((hit || profile.elm_by_y < 2) ? 1 : -1))),
       county = profile.elm_by_y > 0 ? profile.elm_by_y.round() : Math.round(bounds.height / stepy) - 1,
@@ -357,7 +357,7 @@ class ToolLayImpost extends ToolElement {
         path = this.paths[base];
         path.fillColor = clr;
         if(!path.isInserted()) {
-          path.parent = this.hitItem ? this.hitItem.layer : this.project.activeLayer;
+          path.parent = hitItem ? hitItem.layer : project.activeLayer;
         }
       }
       else {
@@ -903,7 +903,7 @@ class ToolLayImpost extends ToolElement {
 
     // уточним направления путей для витража
     if (!this.hitItem) {
-      rectification.bind(this)();
+      rectification.call(this);
     }
 
     this.paths.forEach((p) => {
