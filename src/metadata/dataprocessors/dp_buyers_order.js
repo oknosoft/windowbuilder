@@ -172,6 +172,9 @@ export default function ($p) {
     case 'Jalousie':
       imodule = import('../../components/CalcOrder/Jalousie');
       break;
+    case 'ChangeRecalc':
+      imodule = import('../../components/CalcOrder/ChangeRecalc');
+      break;
     case 'CutEvaluation':
       imodule = import('../../components/CalcOrder/CutEvaluation');
       break;

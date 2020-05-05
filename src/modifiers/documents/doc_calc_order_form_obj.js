@@ -413,6 +413,10 @@
         recalc('doc');
         break;
 
+      case 'btn_change_recalc':
+        change_recalc();
+        break;
+
       case 'btn_spec':
         open_spec();
         break;
@@ -818,6 +822,13 @@
             wnd.set_text();
           });
       }
+    }
+
+    /**
+     * Открывает диалог пересчета со сменой системы и прочих параметров
+     */
+    function change_recalc() {
+      $p.dp.buyers_order.open_component(wnd, {ref: o.ref, _mgr}, handlers, 'ChangeRecalc');
     }
 
     /**
