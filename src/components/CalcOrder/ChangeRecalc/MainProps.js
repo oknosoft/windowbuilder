@@ -41,10 +41,10 @@ export default function MainProps({dp}) {
   const classes = useStyles();
 
   const [state, setState] = React.useState({
-    sys: false,
-    furn: false,
-    inset: false,
-    clr: false,
+    sys: dp.use_sys,
+    furn: dp.use_furn,
+    inset: dp.use_inset,
+    clr: dp.use_clr,
   });
 
   const handleChange = ({target}) => {

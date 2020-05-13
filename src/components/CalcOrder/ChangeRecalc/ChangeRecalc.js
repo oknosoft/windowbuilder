@@ -21,12 +21,11 @@ class ChangeRecalc extends React.Component {
     super(props, context);
     this.state = {ready: false};
     this.obj = _mgr.get(ref);
-    this.params = new Map();
     const dp = this.dp = $p.dp.buyers_order.create();
     dp.production.load(this.obj.production);
     dp.production.forEach((row) => {
-      row.use = true;
       const {characteristic} = row;
+      row.use = characteristic.coordinates.count();
       if(dp.sys.empty() && !characteristic.sys.empty()) {
         dp.sys = characteristic.sys;
       }
@@ -55,21 +54,7 @@ class ChangeRecalc extends React.Component {
           }
         })
       }
-      characteristic.coordinates.count() && characteristic.params.find_rows(({hide: false}), ({param, value}) => {
-        if(!param.caption || (!param.show_calculated && param.is_calculated)) {
-          return;
-        }
-        if(!this.params.get(param)) {
-          this.params.set(param, new Set());
-        }
-        this.params.get(param).add(value);
-      })
     });
-    for(const [param, value] of this.params) {
-      if(value.size === 1) {
-        dp.product_params.add({param, value: Array.from(value)[0]});
-      }
-    }
   }
 
   setReady = (ready) => {
