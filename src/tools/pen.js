@@ -469,7 +469,13 @@ class ToolPen extends ToolElement {
 
   on_mouseup(event) {
 
-    this._scope.canvas_cursor('cursor-pen-freehand');
+    const {_scope, addl_hit, profile, project} = this;
+    const {
+      enm: {elm_types},
+      EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, Profile, ProfileItem, Filling}
+    } = $p;
+
+    _scope.canvas_cursor('cursor-pen-freehand');
 
     if(event.event && event.event.which && event.event.which > 1){
       return this.on_keydown({key: 'escape'});
@@ -479,23 +485,24 @@ class ToolPen extends ToolElement {
 
     let whas_select;
 
-    if(this.addl_hit){
+    if(addl_hit){
 
       // рисуем доборный профиль
-      if(this.addl_hit.glass && this.profile.elm_type == $p.enm.elm_types.Добор && !this.profile.inset.empty()){
-        new $p.EditorInvisible.ProfileAddl({
-          generatrix: this.addl_hit.generatrix,
-          proto: this.profile,
-          parent: this.addl_hit.profile,
-          side: this.addl_hit.side
+      if(addl_hit.glass && profile.elm_type == elm_types.Добор && !profile.inset.empty()){
+        new ProfileAddl({
+          generatrix: addl_hit.generatrix,
+          proto: profile,
+          parent: addl_hit.profile,
+          side: addl_hit.side
         });
       }
       // рисуем соединительный профиль
-      else if(this.profile.elm_type == $p.enm.elm_types.Соединитель && !this.profile.inset.empty()){
-        const connective = new $p.EditorInvisible.ProfileConnective({
-          generatrix: this.addl_hit.generatrix,
-          proto: this.profile,
-          parent: this.addl_hit.profile,
+      else if(profile.elm_type == elm_types.Соединитель && !profile.inset.empty()){
+
+        const connective = new ProfileConnective({
+          generatrix: addl_hit.generatrix,
+          proto: profile,
+          parent: project.l_connective,
         });
         connective.joined_nearests().forEach((rama) => {
           const {inner, outer} = rama.joined_imposts();
@@ -507,24 +514,24 @@ class ToolPen extends ToolElement {
           }
           const {_attr, layer} = rama;
           _attr._rays && _attr._rays.clear();
-          layer && layer.notify && layer.notify({profiles: [rama], points: []}, this._scope.consts.move_points);
+          layer && layer.notify && layer.notify({profiles: [rama], points: []}, _scope.consts.move_points);
         });
       }
     }
     else if(this.mode == 'create' && this.path) {
 
-      if (this.path.length < this._scope.consts.sticking){
+      if (this.path.length < _scope.consts.sticking){
         return;
       }
 
-      switch (this.profile.elm_type) {
-      case $p.enm.elm_types.Раскладка:
+      switch (profile.elm_type) {
+      case elm_types.Раскладка:
         // находим заполнение под линией
-        this.project.activeLayer.glasses(false, true).some((glass) => {
+        project.activeLayer.glasses(false, true).some((glass) => {
           if(glass.contains(this.path.firstSegment.point) && glass.contains(this.path.lastSegment.point)){
-            new $p.EditorInvisible.Onlay({
+            new Onlay({
               generatrix: this.path,
-              proto: this.profile,
+              proto: profile,
               parent: glass
             });
             this.path = null;
@@ -533,24 +540,24 @@ class ToolPen extends ToolElement {
         });
         break;
 
-      case $p.enm.elm_types.Водоотлив:
+      case elm_types.Водоотлив:
         // рисуем разрез
-        this.last_profile = new $p.EditorInvisible.Sectional({generatrix: this.path, proto: this.profile});
+        this.last_profile = new Sectional({generatrix: this.path, proto: profile});
         break;
 
-      case $p.enm.elm_types.Линия:
+      case elm_types.Линия:
         // рисуем линию
-        this.last_profile = new $p.EditorInvisible.BaseLine({generatrix: this.path, proto: this.profile});
+        this.last_profile = new BaseLine({generatrix: this.path, proto: profile});
         break;
 
       default:
         // рисуем профиль
-        this.last_profile = new $p.EditorInvisible.Profile({generatrix: this.path, proto: this.profile});
+        this.last_profile = new Profile({generatrix: this.path, proto: profile});
       }
 
       this.path = null;
 
-      if(this.profile.elm_type == $p.enm.elm_types.Рама){
+      if(profile.elm_type == elm_types.Рама){
         setTimeout(() => {
           if(this.last_profile){
             this._controls.mousemove({point: this.last_profile.e}, true);
@@ -571,18 +578,18 @@ class ToolPen extends ToolElement {
         item.selected = !item.selected;
       }
       else {
-        this.project.deselectAll();
+        project.deselectAll();
         item.selected = true;
       }
 
       // TODO: Выделяем элемент, если он подходящего типа
-      if(item instanceof $p.EditorInvisible.ProfileItem && item.isInserted()) {
-        item.attache_wnd(this._scope._acc.elm);
+      if(item instanceof ProfileItem && item.isInserted()) {
+        item.attache_wnd(_scope._acc.elm);
         whas_select = true;
         this._controls.blur();
       }
-      else if(item instanceof $p.EditorInvisible.Filling && item.visible) {
-        item.attache_wnd(this._scope._acc.elm);
+      else if(item instanceof Filling && item.visible) {
+        item.attache_wnd(_scope._acc.elm);
         whas_select = true;
         this._controls.blur();
       }
@@ -593,7 +600,7 @@ class ToolPen extends ToolElement {
 
     }
 
-    if(!whas_select && !this.mode && !this.addl_hit) {
+    if(!whas_select && !this.mode && !addl_hit) {
 
       this.mode = 'continue';
       this.point1 = this._controls.point;
