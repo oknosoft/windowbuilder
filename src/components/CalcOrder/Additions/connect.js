@@ -77,6 +77,7 @@ export function handleAdd() {
     const {_data} = tabular.state._tabular._owner;
     _data._loading = true;
     const row = tabular.state._tabular.add({inset, quantity: 1}, false, props.ProductionRow);
+    tabular.cache_actual = false;
     _data._loading = false;
     row.value_change('inset', 'force', row.inset);
     this.setState({

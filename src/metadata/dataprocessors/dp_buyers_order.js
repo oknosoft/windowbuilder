@@ -106,7 +106,7 @@ export default function ($p) {
           const {product_params} = _owner._owner;
           const defaults = this.inset.product_params;
           product_params.clear({elm: row});
-          this.inset.used_params.forEach((param) => {
+          this.inset.used_params().forEach((param) => {
             const prow = product_params.add({elm: row, param: param});
 
             // подстановка умолчаний для параметра
