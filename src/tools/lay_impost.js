@@ -313,19 +313,23 @@ class ToolLayImpost extends ToolElement {
     }
 
     const {_scope: {consts}, project, profile, hitItem}  = this;
+    const {inset_by_y, inset_by_x} = profile;
 
     this.hitTest(event);
 
     this.paths.forEach((p) => p.removeSegments());
 
-    if (profile.inset_by_y.empty() && profile.inset_by_x.empty()) {
+
+    if (inset_by_y.empty() && inset_by_x.empty()) {
       return;
     }
 
     let bounds, gen, hit = !!hitItem;
 
     if(hit) {
-      bounds = (event.modifiers.control || event.modifiers.option || !hitItem.bounds_light) ? hitItem.bounds : hitItem.bounds_light();
+      bounds = (event.modifiers.control || event.modifiers.option || !hitItem.bounds_light) ?
+        hitItem.bounds :
+        hitItem.bounds_light().expand((inset_by_x || inset_by_y).width(), (inset_by_y || inset_by_x).width());
       gen = hitItem.path;
     }
     else if(profile.w && profile.h) {
