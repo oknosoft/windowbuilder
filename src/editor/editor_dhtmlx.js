@@ -790,6 +790,32 @@ class Editor extends $p.EditorInvisible {
     return new GlassInserts(glasses);
   }
 
+  fragment_spec(elm, name) {
+    const {ui: {dialogs}, cat: {characteristics}} = $p;
+    if(elm) {
+      return dialogs.alert({
+        timeout: 0,
+        title: `Спецификация ${elm >= 0 ? 'элемента' : 'слоя'} №${Math.abs(elm)} (${name})`,
+        Component: characteristics.SpecFragment,
+        props: {_obj: this.project.ox, elm},
+        initFullScreen: true,
+        hide_btn: true,
+        noSpace: true,
+      });
+    }
+    dialogs.alert({text: 'Элемент не выбран', title: $p.msg.main_title});
+  }
+
+  elm_spec() {
+    const {selected_elm: elm} = this.project;
+    this.fragment_spec(elm ? elm.elm : 0, elm && elm.inset.toString());
+  }
+
+  layer_spec() {
+    const {activeLayer} = this.project;
+    this.fragment_spec(-activeLayer.cnstr, activeLayer.furn.toString());
+  }
+
   /**
    * ### Диалог дополнительных вставок
    *

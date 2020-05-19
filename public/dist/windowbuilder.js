@@ -511,7 +511,9 @@ class EditorAccordion {
         {name: 'glass_spec', text: '<i class="fa fa-list-ul fa-fw"></i>', tooltip: $p.msg.glass_spec + ' ' + $p.msg.to_elm, float: 'left'},
         {name: 'sep_1', text: '', float: 'left'},
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
-        {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
+
+        {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '18px'},
+        {name: 'spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию элемента', float: 'right'},
       ],
       image_path: "/imgs/",
       onclick: (name) => {
@@ -538,8 +540,12 @@ class EditorAccordion {
             });
             break;
 
-          default:
-            _editor.profile_align(name);
+        case 'spec':
+          _editor.elm_spec();
+          break;
+
+        default:
+          _editor.profile_align(name);
         }
       }
     });
@@ -560,7 +566,8 @@ class EditorAccordion {
         {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
-        {name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
+
+        {name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'},
 
       ], onclick: (name) => {
 
@@ -629,8 +636,8 @@ class EditorAccordion {
       name: 'bottom',
       image_path: '/imgs/',
       buttons: [
-        {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
-
+        {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'},
+        {name: 'spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию фурнитуры', float: 'right'},
       ], onclick: (name) => {
 
         switch(name) {
@@ -640,6 +647,10 @@ class EditorAccordion {
             _obj.furn.refill_prm(_obj);
             this.stv.reload();
             break;
+
+        case 'spec':
+          _editor.layer_spec();
+          break;
 
           default:
             $p.msg.show_msg(name);
@@ -1559,6 +1570,32 @@ class Editor extends $p.EditorInvisible {
       glasses = this.project.selected_glasses();
     }
     return new GlassInserts(glasses);
+  }
+
+  fragment_spec(elm, name) {
+    const {ui: {dialogs}, cat: {characteristics}} = $p;
+    if(elm) {
+      return dialogs.alert({
+        timeout: 0,
+        title: `Спецификация ${elm > 0 ? 'элемента' : 'слоя'} №${-elm} (${name})`,
+        Component: characteristics.SpecFragment,
+        props: {_obj: this.project.ox, elm},
+        initFullScreen: true,
+        hide_btn: true,
+        noSpace: true,
+      });
+    }
+    dialogs.alert({text: 'Элемент не выбран', title: $p.msg.main_title});
+  }
+
+  elm_spec() {
+    const {selected_elm: elm} = this.project;
+    this.fragment_spec(elm ? elm.elm : 0, elm && elm.inset.toString());
+  }
+
+  layer_spec() {
+    const {activeLayer} = this.project;
+    this.fragment_spec(-activeLayer.cnstr, activeLayer.furn.toString());
   }
 
   additional_inserts(cnstr, cell){
@@ -4143,19 +4180,23 @@ class ToolLayImpost extends ToolElement {
     }
 
     const {_scope: {consts}, project, profile, hitItem}  = this;
+    const {inset_by_y, inset_by_x} = profile;
 
     this.hitTest(event);
 
     this.paths.forEach((p) => p.removeSegments());
 
-    if (profile.inset_by_y.empty() && profile.inset_by_x.empty()) {
+
+    if (inset_by_y.empty() && inset_by_x.empty()) {
       return;
     }
 
     let bounds, gen, hit = !!hitItem;
 
     if(hit) {
-      bounds = (event.modifiers.control || event.modifiers.option || !hitItem.bounds_light) ? hitItem.bounds : hitItem.bounds_light();
+      bounds = (event.modifiers.control || event.modifiers.option || !hitItem.bounds_light) ?
+        hitItem.bounds :
+        hitItem.bounds_light().expand((inset_by_x || inset_by_y).width(), (inset_by_y || inset_by_x).width());
       gen = hitItem.path;
     }
     else if(profile.w && profile.h) {

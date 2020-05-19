@@ -1,7 +1,7 @@
 // модификаторы объектов и менеджеров данных
 
 // // модификаторы справочников
-// import catalogs from './catalogs';
+import catalogs from './catalogs';
 //
 // модификаторы документов
 import documents from './documents';
@@ -27,7 +27,7 @@ export default function ($p) {
   const {_sys_fields} = $p.classes.Meta;
   _sys_fields.push.apply(_sys_fields, ['partner', 'department', 'organization', 'obj_delivery_state']);
 
-  // catalogs($p);
+  catalogs($p);
   // documents($p);
   // chartscharacteristics($p);
   reports($p);

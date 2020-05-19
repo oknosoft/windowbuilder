@@ -531,7 +531,9 @@ class EditorAccordion {
         {name: 'glass_spec', text: '<i class="fa fa-list-ul fa-fw"></i>', tooltip: $p.msg.glass_spec + ' ' + $p.msg.to_elm, float: 'left'},
         {name: 'sep_1', text: '', float: 'left'},
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
-        {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '20px'}
+
+        {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '18px'},
+        {name: 'spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию элемента', float: 'right'},
       ],
       image_path: "/imgs/",
       onclick: (name) => {
@@ -558,8 +560,12 @@ class EditorAccordion {
             });
             break;
 
-          default:
-            _editor.profile_align(name);
+        case 'spec':
+          _editor.elm_spec();
+          break;
+
+        default:
+          _editor.profile_align(name);
         }
       }
     });
@@ -583,7 +589,8 @@ class EditorAccordion {
         {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
-        {name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'}
+
+        {name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'},
 
       ], onclick: (name) => {
 
@@ -659,8 +666,8 @@ class EditorAccordion {
       name: 'bottom',
       image_path: '/imgs/',
       buttons: [
-        {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
-
+        {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'},
+        {name: 'spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию фурнитуры', float: 'right'},
       ], onclick: (name) => {
 
         switch(name) {
@@ -670,6 +677,10 @@ class EditorAccordion {
             _obj.furn.refill_prm(_obj);
             this.stv.reload();
             break;
+
+        case 'spec':
+          _editor.layer_spec();
+          break;
 
           default:
             $p.msg.show_msg(name);

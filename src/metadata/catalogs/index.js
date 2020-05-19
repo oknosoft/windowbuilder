@@ -1,8 +1,8 @@
 // модификаторы справочников
 
 // права пользователей
-//import cat_users_acl from "./cat_users_acl";
+import SpecFragment from '../../components/CatCharacteristics';
 
-export default function ($p) {
-	//cat_users_acl($p);
+export default function ({cat}) {
+  cat.characteristics.SpecFragment = SpecFragment;
 }
