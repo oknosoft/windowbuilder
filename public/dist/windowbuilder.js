@@ -1577,7 +1577,7 @@ class Editor extends $p.EditorInvisible {
     if(elm) {
       return dialogs.alert({
         timeout: 0,
-        title: `Спецификация ${elm > 0 ? 'элемента' : 'слоя'} №${-elm} (${name})`,
+        title: `Спецификация ${elm >= 0 ? 'элемента' : 'слоя'} №${Math.abs(elm)} (${name})`,
         Component: characteristics.SpecFragment,
         props: {_obj: this.project.ox, elm},
         initFullScreen: true,
