@@ -10,6 +10,13 @@
 
 ((_mgr) => {
 
+  // дополняем отбор номенклатуры в метаданных заказа
+  const {nom} = _mgr.metadata('production').fields;
+  if(!nom.choice_params) {
+    nom.choice_params = [];
+  }
+  nom.choice_params.push({name: 'is_procedure', path: false});
+
   // переопределяем формирование списка выбора
   const {form, tabular_sections} = _mgr.metadata();
   tabular_sections.production.fields.characteristic._option_list_local = true;
