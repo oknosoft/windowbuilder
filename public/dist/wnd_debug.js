@@ -1466,6 +1466,12 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
 
 ((_mgr) => {
 
+  const {nom} = _mgr.metadata('production').fields;
+  if(!nom.choice_params) {
+    nom.choice_params = [];
+  }
+  nom.choice_params.push({name: 'is_procedure', path: false});
+
   const {form, tabular_sections} = _mgr.metadata();
   tabular_sections.production.fields.characteristic._option_list_local = true;
 

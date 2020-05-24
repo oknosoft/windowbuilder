@@ -39,9 +39,9 @@
     "metadata-react": "2.0.22-beta.7",
     "metadata-redux": "2.0.22-beta.7",
     "metadata-superlogin": "2.0.22-beta.7",
-    "paper-jsdom-canvas": "^0.12.4",
+    "paper-jsdom-canvas": "^0.12.7",
     "react-highlight-words": "^0.16.0",
-    "windowbuilder": "github:oknosoft/windowbuilder-core#9f05899e9a5b2c8e65d633f45020fe0f16513d63"
+    "windowbuilder": "github:oknosoft/windowbuilder-core#954df4ed86ea910b8f23203d16a2a1e2bbc55629"
   },
   "devDependencies": {
     "@babel/core": "7.9.0",
