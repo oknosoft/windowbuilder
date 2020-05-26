@@ -886,7 +886,8 @@ class Editor extends $p.EditorInvisible {
       }
 
       // получаем текущий внешний контур
-      const layer = this.project.rootLayer();
+      const {project, consts} = this;
+      const layer = project.rootLayer();
 
       layer.profiles.forEach((profile) => {
 
@@ -896,50 +897,52 @@ class Editor extends $p.EditorInvisible {
 
         if(bcnn.profile){
           const d = bcnn.profile.e.getDistance(b);
-          if(d && d < this.consts.sticking_l){
+          if(d > consts.epsilon && d < consts.sticking_l){
             bcnn.profile.e = b;
           }
         }
         if(ecnn.profile){
           const d = ecnn.profile.b.getDistance(e);
-          if(d && d < this.consts.sticking_l){
+          if(d > consts.epsilon && d < consts.sticking_l){
             ecnn.profile.b = e;
           }
         }
 
         let mid;
 
-        if(profile.orientation == $p.enm.orientations.vert){
+        if(profile.orientation == $p.enm.orientations.vert && Math.abs(profile.x1 - profile.x2) > consts.epsilon){
 
-          mid = b.x + e.x / 2;
+          mid = (b.x + e.x) / 2;
 
-          if(mid < layer.bounds.center.x){
+          if(mid < layer.bounds.center.x) {
             mid = Math.min(profile.x1, profile.x2);
             profile.x1 = profile.x2 = mid;
           }
-          else{
+          else {
             mid = Math.max(profile.x1, profile.x2);
             profile.x1 = profile.x2 = mid;
           }
 
-        }else if(profile.orientation == $p.enm.orientations.hor){
+        }
+        else if(profile.orientation == $p.enm.orientations.hor && Math.abs(profile.y1 - profile.y2) > consts.epsilon) {
 
-          mid = b.y + e.y / 2;
+          mid = (b.y + e.y) / 2;
 
-          if(mid < layer.bounds.center.y){
+          if(mid < layer.bounds.center.y) {
             mid = Math.max(profile.y1, profile.y2);
             profile.y1 = profile.y2 = mid;
           }
-          else{
+          else {
             mid = Math.min(profile.y1, profile.y2);
             profile.y1 = profile.y2 = mid;
           }
         }
+        profile.selected = false;
       });
     }
     else{
 
-      const profiles = this.project.selected_profiles();
+      const profiles = project.selected_profiles();
       const contours = [];
       let changed;
 
@@ -1012,7 +1015,7 @@ class Editor extends $p.EditorInvisible {
       if(name != 'delete' && profiles.length > 1){
 
         if(changed){
-          this.project.register_change(true);
+          project.register_change(true);
           setTimeout(this.profile_group_align.bind(this, name, profiles), 100);
         }
         else{
@@ -1020,7 +1023,7 @@ class Editor extends $p.EditorInvisible {
         }
       }
       else if(changed){
-        this.project.register_change(true);
+        project.register_change(true);
       }
     }
 
@@ -1303,6 +1306,7 @@ class Editor extends $p.EditorInvisible {
     else{
       _attr._align_counter = 0;
       this.project.contours.forEach((l) => l.redraw());
+      return true;
     }
   }
 
