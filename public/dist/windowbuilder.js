@@ -1640,6 +1640,8 @@ class Editor extends $p.EditorInvisible {
 
   profile_align(name){
 
+    const {project, consts} = this;
+
     if(name == "all"){
 
       if(this.glass_align()) {
@@ -1650,7 +1652,6 @@ class Editor extends $p.EditorInvisible {
         return;
       }
 
-      const {project, consts} = this;
       const layer = project.rootLayer();
 
       layer.profiles.forEach((profile) => {

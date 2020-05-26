@@ -874,6 +874,8 @@ class Editor extends $p.EditorInvisible {
    */
   profile_align(name){
 
+    const {project, consts} = this;
+
     // если "все", получаем все профили активного или родительского контура
     if(name == "all"){
 
@@ -886,7 +888,6 @@ class Editor extends $p.EditorInvisible {
       }
 
       // получаем текущий внешний контур
-      const {project, consts} = this;
       const layer = project.rootLayer();
 
       layer.profiles.forEach((profile) => {
