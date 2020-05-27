@@ -42,7 +42,7 @@
     "paper-jsdom-canvas": "^0.12.7",
     "react-highlight-words": "^0.16.0",
     "windowbuilder": "github:oknosoft/windowbuilder-core#1d62f7aa6b0fd5c89408a5e0a3f920caaa163f96",
-    "windowbuilder-forms": "github:oknosoft/windowbuilder-forms#2bab591d56f940e1713ad6cb0338ff4f3345fa6a"
+    "windowbuilder-forms": "github:oknosoft/windowbuilder-forms#464fc1f405df68077695f5002a9fa50cfe4c088f"
   },
   "devDependencies": {
     "@babel/core": "7.9.0",
