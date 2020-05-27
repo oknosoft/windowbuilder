@@ -15,6 +15,9 @@ const remoteNodeModules = 'D:\\WORK\\0KNOSOFT\\UniServer\\www\\builder2\\git-osd
 const {dependencies} = require(path.resolve(__dirname, '../package.json'));
 const libs = Object.keys(dependencies).filter(v => /^metadata-/.test(v));
 
+const localForms = path.resolve(__dirname, '../node_modules/windowbuilder-forms/dist');
+const remoteForms  = 'D:\\WORK\\0KNOSOFT\\UniServer\\www\\builder2\\windowbuilder-forms\\dist';
+
 function fromDir(startPath, filter, callback) {
 
   if(!fs.existsSync(startPath)) {
@@ -51,12 +54,28 @@ for (const lib of wbLibs) {
 }
 i && console.log(`from ${remoteWbModules} written ${i} files`);
 
+let j = 0;
+fromDir(remoteForms, /\.(css|js|mjs|md|map|gif|png)$/, (rname, isDir) => {
+  const name = rname.replace(remoteForms, '');
+  const lame = path.join(localForms, name);
+  if(isDir) {
+    if(!fs.existsSync(lame)) {
+      fs.mkdirSync(lame);
+    }
+  }
+  else if(!fs.existsSync(lame) || (md5File.sync(rname) != md5File.sync(lame))){
+    j++;
+    fs.createReadStream(rname).pipe(fs.createWriteStream(lame));
+  }
+});
+j && console.log(`from ${remoteForms} written ${j} files`);
+
 let copied;
 for (const lib of libs) {
   const lpath = path.resolve(localNodeModules, lib);
   const rpath = path.resolve(remoteNodeModules, lib);
   let i = 0;
-  fromDir(rpath, /\.(css|js|mjs|md|map)$/, (rname, isDir) => {
+  fromDir(rpath, /\.(css|js|mjs|md|map|gif|png)$/, (rname, isDir) => {
     const name = rname.replace(rpath, '');
     const lame = path.join(lpath, name);
     if(isDir) {
@@ -74,6 +93,6 @@ for (const lib of libs) {
     console.log(`from ${rpath} written ${i} files`);
   }
 }
-if(!copied && !i){
+if(!copied && !i && !j){
   console.log(`all files match`);
 }
