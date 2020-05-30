@@ -35,7 +35,7 @@ class ChangeRecalc extends React.Component {
             dp.clr = row.clr;
             return false;
           }
-        })
+        });
       }
       if(dp.furn.empty()) {
         characteristic.constructions.forEach((row) => {
@@ -43,7 +43,7 @@ class ChangeRecalc extends React.Component {
             dp.furn = row.furn;
             return false;
           }
-        })
+        });
       }
       if(dp.inset.empty()) {
         characteristic.glasses.find_rows({is_sandwich: false}, ({elm}) => {
@@ -52,7 +52,7 @@ class ChangeRecalc extends React.Component {
             dp.inset = row.inset;
             return false;
           }
-        })
+        });
       }
     });
   }
@@ -62,7 +62,7 @@ class ChangeRecalc extends React.Component {
   };
 
   handleCalck = () => {
-    const {dialog: {ref, cmd, _mgr}} = this.props;
+    //const {dialog: {ref, cmd, _mgr}} = this.props;
     $p.ui.dialogs.alert({title, text: 'Не релизовано'});
     this.handleCancel();
   }
@@ -98,5 +98,10 @@ class ChangeRecalc extends React.Component {
     </Dialog>;
   }
 }
+
+ChangeRecalc.propTypes = {
+  dialog: PropTypes.object,
+  handlers: PropTypes.object,
+};
 
 export default ChangeRecalc;

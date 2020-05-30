@@ -186,7 +186,7 @@
     if(typeof src === 'string') {
       src = await _mgr.get(src, 'promise');
     }
-    await src.load_production();
+    await src.load_linked_refs();
     // создаём заказ
     const {organization, partner, contract, ...others} = src._obj;
     const dst = await _mgr.create({date: new Date(), organization, partner, contract});

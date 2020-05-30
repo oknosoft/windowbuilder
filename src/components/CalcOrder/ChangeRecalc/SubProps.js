@@ -53,7 +53,6 @@ class SubProps extends React.Component{
     const {fields} = product_params._owner._metadata(product_params._name);
     const res = [];
     const grid = {selection: {}};
-    let notify;
 
     product_params.forEach((prow) => {
       const {param} = prow;
@@ -86,7 +85,6 @@ class SubProps extends React.Component{
       if (links.length) {
         const values = [];
         if(param.linked_values(links, prow, values)) {
-          notify = true;
         }
         if(values.length) {
           if(values.length < 50) {
@@ -104,7 +102,6 @@ class SubProps extends React.Component{
       }
       if (prow.hide !== hide) {
         prow.hide = hide;
-        notify = true;
       }
 
       if(hide) {
@@ -123,5 +120,9 @@ class SubProps extends React.Component{
   }
 
 }
+
+SubProps.propTypes = {
+  dp: PropTypes.object,
+};
 
 export default SubProps;

@@ -1,5 +1,6 @@
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import TabularSection from 'metadata-react/TabularSection';
 
@@ -27,7 +28,7 @@ class SelectProd extends React.Component {
           values: production.find_rows({use: true}).map(r => r.row),
         }
       }
-    }
+    };
   }
 
   render() {
@@ -49,6 +50,8 @@ class SelectProd extends React.Component {
   }
 }
 
-
+SelectProd.propTypes = {
+  dp: PropTypes.object,
+};
 
 export default SelectProd;

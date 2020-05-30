@@ -9,7 +9,6 @@ import FrmObj from '../../components/WorkCentersTask';
 export default function ({
                            DocWork_centers_task,
                            DocWork_centers_taskCutsRow,
-                           cat: {characteristics},
                            enm: {cutting_optimization_types, debit_credit_kinds},
                            doc: {work_centers_task, calc_order},
                            utils,
@@ -84,25 +83,6 @@ export default function ({
     },
 
     /**
-     * Загружает в озу продукции задания
-     */
-    load_production() {
-      const refs = [];
-      this.planning.forEach(({obj}) => {
-        obj.is_new() && refs.indexOf(obj.ref) === -1 && refs.push(obj.ref);
-      });
-      return characteristics.adapter.load_array(characteristics, refs)
-        .then(() => {
-          refs.length = 0;
-          this.planning.forEach(({obj}) => {
-            const {calc_order} = obj;
-            calc_order.is_new() && refs.indexOf(calc_order.ref) === -1 && refs.push(calc_order.ref);
-          });
-          return calc_order.adapter.load_array(calc_order, refs);
-        });
-    },
-
-    /**
      * Заполняет табчасть раскрой по плану
      * @param opts {Object}
      * @param opts.clear {Boolean}
@@ -117,7 +97,7 @@ export default function ({
         cutting.clear();
       }
       // получаем спецификации продукций
-      return this.load_production()
+      return this.load_linked_refs()
         .then(() => {
           planning.forEach(({obj, specimen, elm}) => {
             obj.specification.forEach((row) => {

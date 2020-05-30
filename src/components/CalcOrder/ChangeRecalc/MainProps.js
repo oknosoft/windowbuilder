@@ -1,12 +1,10 @@
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import FormLabel from '@material-ui/core/FormLabel';
-import FormControl from '@material-ui/core/FormControl';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormHelperText from '@material-ui/core/FormHelperText';
 import Switch from '@material-ui/core/Switch';
 import DataField from 'metadata-react/DataField';
 
@@ -36,6 +34,15 @@ function PropFld({classes, checked, handleChange, dp, fld, title}) {
   </FormGroup>;
 }
 
+PropFld.propTypes = {
+  classes: PropTypes.object,
+  checked: PropTypes.bool,
+  handleChange: PropTypes.func,
+  dp: PropTypes.object,
+  fld: PropTypes.string,
+  title: PropTypes.string,
+};
+
 export default function MainProps({dp}) {
 
   const classes = useStyles();
@@ -59,3 +66,7 @@ export default function MainProps({dp}) {
     <PropFld classes={classes} checked={state.inset} handleChange={handleChange} dp={dp} fld="inset" title="Заполнения:"/>
   </FormGroup>;
 }
+
+MainProps.propTypes = {
+  dp: PropTypes.object,
+};

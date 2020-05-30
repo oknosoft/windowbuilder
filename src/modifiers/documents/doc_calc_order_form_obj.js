@@ -244,7 +244,7 @@
                 delete o._data._reload;
                 _mgr.emit_async('rows', o, {'production': true});
               }
-              return o.load_production();
+              return o.load_linked_refs();
             })
             .then(() => {
               rsvg_reload();
@@ -584,7 +584,7 @@
 
     function reload() {
       o && o.load()
-        .then(() => o.load_production(true))
+        .then(() => o.load_linked_refs())
         .then(() => {
           const {pg_left, pg_right, grids} = wnd.elmnts;
           pg_left.reload();

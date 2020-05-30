@@ -23,7 +23,7 @@ function Head({_obj, classes}) {
   const orders = new Set();
   _obj.planning.forEach(({obj}) => orders.add(obj.calc_order));
   return <div>
-    <Typography variant="headline">{_obj.presentation}</Typography>
+    <Typography variant="h6">{_obj.presentation}</Typography>
       <Table classes={{cell: classes.cell}}>
         <TableBody>
           <TableRow className={classes.row}>

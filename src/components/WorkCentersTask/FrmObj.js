@@ -41,10 +41,6 @@ const schemas = {
   cuts_out: '8fca797a-4e1c-4f8b-b0aa-1965b5e5e7db',
 };
 
-function Space({classes, children}) {
-  return [<div key="space" className={classes.fullFlex} />, ...children];
-}
-
 class FrmObj extends DataObj {
 
   constructor(props, context) {
@@ -61,11 +57,8 @@ class FrmObj extends DataObj {
     const {_mgr, match} = this.props;
 
     _mgr.get(match.params.ref, 'promise')
-      .then((_obj) => {
-        this.setState({_obj}, () => this.shouldComponentUpdate(this.props));
-        return _obj.load_production();
-      })
-      .then((prods) => prods.length && this.forceUpdate());
+      .then((_obj) => _obj.load_linked_refs())
+      .then((_obj) => this.setState({_obj}, () => this.shouldComponentUpdate(this.props)));
 
     _mgr.on('update', this.onDataChange);
 
@@ -172,12 +165,11 @@ class FrmObj extends DataObj {
           <Tab label="Обрезь вход"/>
           <Tab label="Раскрой"/>
           <Tab label="Обрезь выход"/>
-          <Space classes={classes}>
-            <MenuPrint key="fprint" _obj={_obj}/>
-            <IconButton key="fclose" title="Закрыть форму" onClick={_handlers.handleClose}>
-              <IconClose/>
-            </IconButton>
-          </Space>
+          <div className={classes.fullFlex} />
+          <MenuPrint key="fprint" _obj={_obj}/>
+          <IconButton key="fclose" title="Закрыть форму" onClick={_handlers.handleClose}>
+            <IconClose/>
+          </IconButton>
         </Tabs>,
 
         index === 0 && <DataObjToolbar key="toolbar" {...toolbar_props} />,
