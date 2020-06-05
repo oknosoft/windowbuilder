@@ -771,7 +771,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                 delete o._data._reload;
                 _mgr.emit_async('rows', o, {'production': true});
               }
-              return o.load_production();
+              return o.load_linked_refs();
             })
             .then(() => {
               rsvg_reload();
@@ -1078,7 +1078,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
     function reload() {
       o && o.load()
-        .then(() => o.load_production(true))
+        .then(() => o.load_linked_refs())
         .then(() => {
           const {pg_left, pg_right, grids} = wnd.elmnts;
           pg_left.reload();
@@ -1628,7 +1628,7 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
     if(typeof src === 'string') {
       src = await _mgr.get(src, 'promise');
     }
-    await src.load_production();
+    await src.load_linked_refs();
     const {organization, partner, contract, ...others} = src._obj;
     const dst = await _mgr.create({date: new Date(), organization, partner, contract});
     dst._mixin(others, null, 'ref,date,number_doc,posted,_deleted,number_internal,production,planning,manager,obj_delivery_state'.split(','), true);
