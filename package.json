@@ -1,14 +1,14 @@
 {
   "name": "windowbuilder",
-  "version": "2.1.252",
+  "version": "2.1.253",
   "description": "Order dealer for windows and stained glass",
   "repository": {
     "type": "git",
     "url": "https://github.com/oknosoft/windowbuilder.git"
   },
   "engines": {
-    "node": "^8.15",
-    "npm": "^6.12"
+    "node": "^12.18",
+    "npm": "^6.14"
   },
   "keywords": [
     "metadata",
@@ -31,7 +31,7 @@
     "@turf/points-within-polygon": "^5.1.5",
     "dxf-writer": "^1.6.1",
     "genetic-cutting": "github:oknosoft/genetic-cutting#917ccb931f8d221aeef083d2d7294751ec2603d2",
-    "md5-file": "^4.0",
+    "md5-file": "^5.0",
     "metadata-abstract-ui": "2.0.22-beta.7",
     "metadata-core": "2.0.22-beta.7",
     "metadata-dhtmlx": "2.0.22-beta.7",
@@ -41,7 +41,7 @@
     "metadata-superlogin": "2.0.22-beta.7",
     "paper-jsdom-canvas": "^0.12.8",
     "react-highlight-words": "^0.16.0",
-    "windowbuilder": "github:oknosoft/windowbuilder-core#0842fcadd0ac53c224d3f6c8ae7f4e67a3c4f268",
+    "windowbuilder": "github:oknosoft/windowbuilder-core#5ff3ec794103eb8a4b271d6b4ed5e11058a0310c",
     "windowbuilder-forms": "github:oknosoft/windowbuilder-forms#464fc1f405df68077695f5002a9fa50cfe4c088f"
   },
   "devDependencies": {
@@ -73,14 +73,15 @@
     "file-loader": "4.3.0",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.6",
-    "gulp": "^3.9",
+    "gulp": "^4.0",
     "gulp-base64": "^0.1",
     "gulp-concat": "^2.6",
-    "gulp-csso": "^3.0.1",
-    "gulp-rename": "^1.4.0",
+    "gulp-csso": "^4.0",
+    "gulp-rename": "^2.0",
     "gulp-replace": "^1.0",
-    "gulp-strip-comments": "^2.5.2",
+    "gulp-strip-comments": "^2.5",
     "gulp-umd": "^2.0",
+    "gulp-util": "^3.0.8",
     "gulp-wrap": "^0.15.0",
     "html-webpack-plugin": "4.0.0-beta.11",
     "identity-obj-proxy": "3.0.0",
