@@ -33,7 +33,7 @@ class ParametricFrame extends React.Component {
   handleCalck = () => {
     this.props.handleCalck.call(this)
       .catch((err) => {
-        this.setState({msg: err.msg});
+        this.setState({msg: err.msg || err.message});
       });
   };
 
@@ -73,7 +73,7 @@ class ParametricFrame extends React.Component {
         ]}
       >
         {msg.obj && <div>{msg.obj.name}</div>}
-        {msg.text || msg}
+        {typeof msg === 'string' ? msg.split('\n').map((text, key) => <div key={`i-${key}`}>{text}</div>) : msg.text}
       </Dialog>}
       {queryClose && <Dialog
         open
