@@ -1,0 +1,55 @@
+/**
+ *
+ *
+ * @module OrderRow
+ *
+ * Created by Evgeniy Malyarov on 16.06.2020.
+ */
+
+
+import React from 'react';
+import PropTypes from 'prop-types';
+import Typography from '@material-ui/core/Typography';
+import TabularSection from 'metadata-react/TabularSection';
+
+class SelectProd extends React.Component {
+
+  constructor(props, context) {
+    super(props, context);
+
+    $p.cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production'}, (scheme) => {
+      if(scheme.name.endsWith('select_prod')) {
+        this.scheme = scheme;
+      }
+    });
+  }
+
+  render() {
+    const {dp, handleNext, setProduct} = this.props;
+
+    return this.scheme ?
+      <TabularSection
+        _obj={dp}
+        _tabular="production"
+        scheme={this.scheme}
+        denyAddDel
+        hideToolbar
+        onRowDoubleClick={handleNext}
+        onCellSelected={({rowIdx}) => {
+          setProduct(dp.production.get(rowIdx).characteristic);
+        }}
+      />
+      :
+      <Typography key="err-nom" color="error">
+        {`Не найден элемент scheme_settings {obj: "dp.buyers_order.production", name: "production.select_prod"}`}
+      </Typography>;
+  }
+}
+
+SelectProd.propTypes = {
+  dp: PropTypes.object,
+  setProduct: PropTypes.func,
+  handleNext: PropTypes.func,
+};
+
+export default SelectProd;

@@ -264,7 +264,7 @@ class Additions extends React.Component {
     if(!this.goods_row) {
       return <LoadingMessage text="Чтение заказа..."/>;
     }
-    const {product, props, price} = this.state;
+    const {product, sz_product, props, price} = this.state;
     return <Grid
       container
       direction="row"
@@ -282,7 +282,14 @@ class Additions extends React.Component {
           </div>
         </Grid>
         <Grid item xs={12} md={8}>
-          <Props foroomApi={foroomApi} product={product} props={props} setProp={this.setProp}/>
+          <Props
+            foroomApi={foroomApi}
+            product={product}
+            props={props}
+            setProp={this.setProp}
+            setSzProduct={this.setSzProduct}
+            calc_order={this.calc_order}
+          />
         </Grid>
       </Grid>;
   }
