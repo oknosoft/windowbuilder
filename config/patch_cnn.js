@@ -9,6 +9,7 @@ const keys21 = {
  */
 export const predefined = {
   'aribaz.': {zone: 2, host: 'https://aribaz.oknosoft.ru/'},
+  'krasal.': {zone: 91, host: 'https://krasal.oknosoft.ru/', use_ram: false, ram_indexer: false},
   'eco.': {zone: 21, host: 'https://eco.oknosoft.ru/'},
   'ecookna.': {
     zone: 21,
@@ -51,7 +52,11 @@ export function patch_prm(settings) {
     settings(prm);
     for (const elm in predefined) {
       if(location.host.match(elm)) {
-        prm.zone = predefined[elm].zone;
+        'zone,use_ram,ram_indexer'.split(',').forEach((name) => {
+          if(predefined[elm].hasOwnProperty(name)) {
+            prm[name] = predefined[elm][name];
+          }
+        });
         break;
       }
     }
