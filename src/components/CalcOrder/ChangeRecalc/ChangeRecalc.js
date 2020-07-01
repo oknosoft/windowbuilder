@@ -37,14 +37,14 @@ class ChangeRecalc extends React.Component {
           }
         });
       }
-      if(dp.furn.empty()) {
-        characteristic.constructions.forEach((row) => {
-          if(!row.furn.empty()) {
-            dp.furn = row.furn;
-            return false;
+      // добавляем фурнитуры в табчасть
+      characteristic.constructions.forEach((row) => {
+        if(!row.furn.empty()) {
+          if(!dp.sys_furn.find({elm1: row.furn})) {
+            dp.sys_furn.add({elm1: row.furn});
           }
-        });
-      }
+        }
+      });
       if(dp.inset.empty()) {
         characteristic.glasses.find_rows({is_sandwich: false}, ({elm}) => {
           const row = characteristic.coordinates.find({elm});
@@ -62,9 +62,9 @@ class ChangeRecalc extends React.Component {
   };
 
   handleCalck = () => {
-    //const {dialog: {ref, cmd, _mgr}} = this.props;
-    $p.ui.dialogs.alert({title, text: 'Не релизовано'});
-    this.handleCancel();
+    this.obj.recalc({save: true, dp: this.dp})
+      .then(this.handleCancel)
+      .catch((err) => $p.ui.dialogs.alert({title, text: err.message}));
   }
 
   handleCancel = () => {

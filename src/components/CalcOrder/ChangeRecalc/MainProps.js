@@ -7,6 +7,8 @@ import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import DataField from 'metadata-react/DataField';
+import TabularSection from 'metadata-react/TabularSection';
+import Grid from '@material-ui/core/Grid';
 
 const useStyles = makeStyles((theme) => ({
   group: {
@@ -59,12 +61,24 @@ export default function MainProps({dp}) {
     dp[`use_${target.name}`] = target.checked;
   };
 
-  return <FormGroup>
-    <PropFld classes={classes} checked={state.sys} handleChange={handleChange} dp={dp} fld="sys" title="Система профилей:"/>
-    <PropFld classes={classes} checked={state.clr} handleChange={handleChange} dp={dp} fld="clr" title="Цвет:"/>
-    <PropFld classes={classes} checked={state.furn} handleChange={handleChange} dp={dp} fld="furn" title="Фурнитура:"/>
-    <PropFld classes={classes} checked={state.inset} handleChange={handleChange} dp={dp} fld="inset" title="Заполнения:"/>
-  </FormGroup>;
+  return <Grid container>
+    <Grid item xs={12} lg={6}>
+      <FormGroup>
+        <PropFld classes={classes} checked={state.sys} handleChange={handleChange} dp={dp} fld="sys" title="Система профилей:"/>
+        <PropFld classes={classes} checked={state.clr} handleChange={handleChange} dp={dp} fld="clr" title="Цвет:"/>
+        <PropFld classes={classes} checked={state.inset} handleChange={handleChange} dp={dp} fld="inset" title="Заполнения:"/>
+      </FormGroup>
+    </Grid>
+    <Grid item xs={12} lg={6}>
+      <Typography>Фурнитура:</Typography>
+      <TabularSection
+        _obj={dp}
+        _tabular="sys_furn"
+        denyAddDel
+        hideToolbar
+      />
+    </Grid>
+  </Grid>;
 }
 
 MainProps.propTypes = {

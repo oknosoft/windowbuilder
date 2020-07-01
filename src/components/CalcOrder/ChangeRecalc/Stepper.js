@@ -63,7 +63,7 @@ export default function HorizontalStepper({setReady, ...props}) {
 
   return (
     <div className={classes.root}>
-      <Stepper activeStep={activeStep} alternativeLabel>
+      <Stepper activeStep={activeStep} >
         {steps.map((label) => (
           <Step key={label}>
             <StepLabel>{label}</StepLabel>
