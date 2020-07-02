@@ -14,12 +14,16 @@ export default function ($p) {
   $p.DpBuyers_order = class DpBuyers_order extends $p.DpBuyers_order {
 
     get clr() {
-      return this.characteristic.clr;
+      const {characteristic} = this;
+      return characteristic.empty() ? this._getter('clr') : characteristic.clr;
     }
 
     set clr(v) {
       const {characteristic, _data} = this;
-      if((!v && characteristic.empty()) || characteristic.clr == v) {
+      if(characteristic.empty()) {
+        return this.__setter('clr', v);
+      }
+      if(!v || characteristic.clr == v) {
         return;
       }
       this._manager.emit_async('update', this, {clr: characteristic.clr});
@@ -28,12 +32,16 @@ export default function ($p) {
     }
 
     get sys() {
-      return this.characteristic.sys;
+      const {characteristic} = this;
+      return characteristic.empty() ? this._getter('sys') : characteristic.sys;
     }
 
     set sys(v) {
       const {characteristic, _data} = this;
-      if((!v && characteristic.empty()) || characteristic.sys == v) {
+      if(characteristic.empty()) {
+        return this.__setter('sys', v);
+      }
+      if(!v || characteristic.sys == v) {
         return;
       }
       this._manager.emit_async('update', this, {sys: characteristic.sys});

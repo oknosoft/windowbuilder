@@ -2,6 +2,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PropField from './PropField';
+import Typography from '@material-ui/core/Typography';
 
 class SubProps extends React.Component{
 
@@ -116,7 +117,7 @@ class SubProps extends React.Component{
         ctrl_type={oselect ? 'oselect' : void 0}
       />);
     });
-    return res;
+    return res.length ? res : <Typography>Нет дополнительных свойств</Typography>;
   }
 
 }

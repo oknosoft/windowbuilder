@@ -4,6 +4,11 @@
   }
 }
 
+.mod::after {
+  content: " (изменено)";
+  color: darkred;
+}
+
 .md_column320 {
 	width: 48%;
 	min-width: 320px;
