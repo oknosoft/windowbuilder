@@ -10,6 +10,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import AutoSizer from 'react-virtualized/dist/es/AutoSizer';
 
+const decorate_layers = (project) => {
+  const {activeLayer} = project;
+  project.getItems({class: $p.EditorInvisible.Contour}).forEach((layer) => {
+    layer.opacity = (layer === activeLayer) ? 1 : 0.5;
+  });
+};
+
 export default class Editor extends React.Component {
 
   createEditor(el, width, height){
@@ -19,10 +26,22 @@ export default class Editor extends React.Component {
       }
       else {
         const {sz_product} = this.props;
-        this.editor = new $p.EditorInvisible();
-        this.editor._canvas = el;
-        this.editor.create_scheme();
-        this.editor.project.load(sz_product, {custom_lines: false, mosquito: false /*, visualization: false */})
+        const editor = this.editor = new $p.EditorInvisible();
+        editor._canvas = el;
+        editor.create_scheme();
+        const {project} = editor;
+        project.load(sz_product, {custom_lines: false, mosquito: false /*, visualization: false */});
+        editor.tool = new editor.Tool();
+        editor.tool.onMouseDown = (event) => {
+          if(event.item && event.item.layer) {
+            event.item.layer.activate();
+            decorate_layers(project);
+            this.props.setSizes(event.item.layer.bounds);
+            this.forceUpdate();
+          }
+        }
+        project.l_dimensions.activate();
+        decorate_layers(project);
       }
     }
   }
@@ -34,12 +53,14 @@ export default class Editor extends React.Component {
   }
 
   render() {
-    const {editor} = this;
+    const {editor, props: {dp}} = this;
 
     let note;
     if(editor) {
-      const {width, height} = editor.project.activeLayer.bounds;
-      note = `${width.toFixed()} x ${height.toFixed()}`;
+      const {height, len} = dp;
+      if(height && len) {
+        note = `${len.toFixed()} x ${height.toFixed()}`;
+      }
     }
     return <AutoSizer>
       {({width, height}) => {

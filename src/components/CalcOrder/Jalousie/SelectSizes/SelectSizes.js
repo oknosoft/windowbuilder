@@ -37,13 +37,35 @@ class SelectSizes extends React.Component {
     this.setState({step});
   };
 
+  setProduct = (...attr) => {
+    this.setSizes({height: 0, width: 0});
+    this.props.setProduct(...attr);
+  };
+
+  setSizes = (bounds) => {
+    this.dp.height = bounds.height.round();
+    this.dp.len = bounds.width.round();
+  };
+
   handleCalck = () => {
-    $p.ui.dialogs.alert({title, text: 'Не релизовано'});
-    this.props.handleClose();
+    const {props: {params, setProp, handleClose}, dp: {height, len}} = this;
+    let res = Promise.resolve();
+    if(height && len) {
+      for(const param of params) {
+        if(param.alias === 'width') {
+          res = res.then(() => setProp(param.alias)(len));
+        }
+        else if(param.alias === 'height') {
+          res = res.then(() => setProp(param.alias)(height));
+        }
+      }
+      return res.then(handleClose);
+    }
+    $p.ui.dialogs.alert({title: 'Выбор размеров', text: 'Укажите слой для вставки жалюзи на эскизе'});
   }
 
   render() {
-    const {state: {step}, props: {obj, handleClose, sz_product, setProduct}, dp} = this;
+    const {state: {step}, props: {obj, handleClose, sz_product}, dp, setProduct, setSizes} = this;
     return <Dialog
       open
       //initFullScreen
@@ -61,7 +83,15 @@ class SelectSizes extends React.Component {
         <Button key="cancel" onClick={handleClose} color="primary">Отмена</Button>
       ]}
     >
-      <Stepper step={step} setStep={this.setStep} dp={dp} obj={obj} sz_product={sz_product} setProduct={setProduct}/>
+      <Stepper
+        step={step}
+        setStep={this.setStep}
+        dp={dp}
+        obj={obj}
+        sz_product={sz_product}
+        setProduct={setProduct}
+        setSizes={setSizes}
+      />
     </Dialog>;
   }
 }
@@ -71,6 +101,7 @@ SelectSizes.propTypes = {
   handleClose: PropTypes.func,
   sz_product: PropTypes.object,
   setProduct: PropTypes.func,
+  setProp: PropTypes.func,
 };
 
 export default SelectSizes;

@@ -99,4 +99,5 @@ HorizontalStepper.propTypes = {
   setStep: PropTypes.func,
   sz_product: PropTypes.object,
   setProduct: PropTypes.func,
+  setSizes: PropTypes.func,
 };

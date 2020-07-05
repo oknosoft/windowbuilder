@@ -166,6 +166,14 @@ class Additions extends React.Component {
       .catch((err) => null); /* eslint-disable-line */
   }
 
+  componentWillUnmount() {
+    const {goods_row, calc_order_row} = this;
+    if(!calc_order_row.len && !calc_order_row.width && !calc_order_row.first_cost) {
+      calc_order_row._owner.del(calc_order_row);
+      goods_row._owner.del(goods_row);
+    }
+  }
+
   handleCalck() {
     const {product, props} = this.state;
     const tmpl = Object.assign({}, props, {
@@ -250,7 +258,9 @@ class Additions extends React.Component {
         value = value.target.value;
       }
       const nprops = Object.assign({}, props, {[name]: value});
-      this.setState({props: nprops, price: 0});
+      return new Promise((resolve) => {
+        this.setState({props: nprops, price: 0}, resolve);
+      });
     };
   };
 

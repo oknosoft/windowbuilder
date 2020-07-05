@@ -36,6 +36,7 @@ function ProductProps({foroomApi, product, props, calc_order, setProp}) {
       handleClose={() => setOpen(false)}
       setProduct={setProduct}
       obj={calc_order}
+      setProp={setProp}
     />}
   </>;
 }
