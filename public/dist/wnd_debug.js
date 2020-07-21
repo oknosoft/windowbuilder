@@ -509,12 +509,14 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
 
       attr.toolbar_click = function toolbar_click(btn_id) {
+        const {msg, ui, dp, doc: {calc_order}, enm} = $p;
+        const {grid} = elmnts;
+        const ref = grid.getSelectedRowId();
+
         switch (btn_id) {
 
         case 'calc_order':
-          const ref = wnd.elmnts.grid.getSelectedRowId();
           if(ref) {
-            const {calc_order} = $p.doc;
             handlers.handleIfaceState({
               component: '',
               name: 'repl',
@@ -529,22 +531,51 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             ;
           }
           else {
-            $p.msg.show_msg({
-              type: 'alert-warning',
-              text: $p.msg.no_selected_row.replace('%1', ''),
-              title: $p.msg.main_title
-            });
+            ui.dialogs.alert({title: msg.main_title, text: msg.no_selected_row.replace('%1', '')});
           }
           break;
 
         case 'btn_download':
         case 'btn_share':
         case 'btn_inbox':
-          $p.dp.buyers_order.open_component(wnd, {
-            ref: wnd.elmnts.grid.getSelectedRowId(),
+          dp.buyers_order.open_component(wnd, {
+            ref: grid.getSelectedRowId(),
             cmd: btn_id
           }, handlers, 'PushUtils', 'CalcOrderList');
           break;
+
+        case 'btn_delete':
+          if(ref) {
+            calc_order.get(ref, 'promise')
+              .then((o) => {
+                return ui.dialogs.confirm({
+                  title: msg.main_title,
+                  text: `Перенести ${o.presentation} в архив?`
+                })
+                  .then(() => o)
+                  .catch(() => null);
+              })
+              .then((o) => {
+                if(o) {
+                  wnd.progressOn();
+                  o.obj_delivery_state = enm.obj_delivery_states.Архив;
+                  return o.save();
+                }
+              })
+              .then((o) => {
+                o && attr._frm_list.reload();
+                wnd.progressOff();
+              })
+              .catch((err) => {
+                wnd.progressOff();
+                ui.dialogs.alert({title: msg.main_title, text: err ? err.message || err.reason : 'Ошибка при помещении заказа в архив'});
+              });
+
+          }
+          else {
+            ui.dialogs.alert({title: msg.main_title, text: msg.no_selected_row.replace('%1', '')});
+          }
+          return false;
 
         }
       }
@@ -554,9 +585,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
     attr.toolbar_struct = $p.injected_data['toolbar_calc_order_selection.xml'];
 
-
-
-    return this.mango_selection(pwnd, attr);
+    const _frm_list = this.mango_selection(pwnd, attr);
+    return attr._frm_list = _frm_list;
 
   });
 
