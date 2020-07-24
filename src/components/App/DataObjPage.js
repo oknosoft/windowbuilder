@@ -39,7 +39,7 @@ class DataObjPage extends DhtmlxCell {
    */
   prompt = (loc) => {
     const {prompt} = this.cell;
-    if(!prompt || loc.pathname.match(/builder/)){
+    if(!prompt || loc.pathname.match(/\/builder|\/templates/)){
       return true;
     }
     return prompt(loc);

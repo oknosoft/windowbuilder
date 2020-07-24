@@ -167,7 +167,7 @@ export default function ({
      * @return {Promise<void>}
      */
     optimize(opts) {
-      return import('genetic-cutting')
+      return import('wb-cutting')
         .then(({default: Cutting}) => {
           const fragments = this.fragments();
 

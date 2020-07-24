@@ -67,7 +67,7 @@ module.exports = function settings(prm = {}) {
     data_size_sync_limit: 160000000,
 
     // время до засыпания
-    idle_timeout: 27 * 60 * 1000,
+    idle_timeout: 57 * 60 * 1000,
 
     // разрешаем сохранение пароля
     enable_save_pwd: true,

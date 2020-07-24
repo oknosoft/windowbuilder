@@ -1134,7 +1134,7 @@ class Editor extends $p.EditorInvisible {
           break;
 
         case 'stamp':
-          _editor.load_stamp();
+          _editor.open_templates();
           break;
 
         case 'new_stv':
@@ -1250,7 +1250,47 @@ class Editor extends $p.EditorInvisible {
 
     if(handlers){
       this.handlers = handlers;
-      handlers.props.match.params.ref && this.open(handlers.props.match.params.ref);
+      const {params} = handlers.props.match;
+      const {project} = this;
+      const {order, action} = $p.utils.prm();
+      if(params.ref) {
+        project.load(params.ref)
+          .then(() => {
+            const {ox} = project;
+            if(ox.is_new() || (order && ox.calc_order != order)) {
+              ox.calc_order = order;
+            }
+            if(ox.calc_order.is_new()) {
+              return ox.calc_order.load();
+            }
+          })
+          .then(() => {
+            const {ox} = project;
+            let row = ox.calc_order.production.find(ox.ref, 'characteristic');
+            if(!row) {
+              row = ox.calc_order.production.add({characteristic: ox});
+              ox.product = row.row;
+            }
+            if(isNaN(row.quantity)) {
+              row.quantity = 1;
+            }
+            if(action === 'refill' || action === 'new') {
+              const {base_block, refill, sys} = $p.cat.templates._select_template;
+              if(ox.base_block != base_block && !base_block.empty()) {
+                return project.load_stamp(base_block)
+                  .then(() => {
+                    if(refill && !sys.empty()) {
+                      project.set_sys(sys);
+                    }
+                  })
+              }
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+            $p.ui.dialogs.snack({message: err.message, timeout: 10});
+          });
+      }
     }
 
   }
@@ -1482,25 +1522,22 @@ class Editor extends $p.EditorInvisible {
     }
   }
 
-  open(ox) {
-    ox && this.project.load(ox);
-  }
 
-  load_stamp(confirmed){
+  open_templates(confirmed) {
 
-    if(!confirmed && this.project.ox.coordinates.count()){
-      dhtmlx.confirm({
-        title: $p.msg.bld_from_blocks_title,
-        text: $p.msg.bld_from_blocks,
-        cancel: $p.msg.cancel,
-        callback: (btn) => btn && this.load_stamp(true)
-      });
-      return;
-    }
+    const {msg, ui} = $p;
+    const {project: {ox}, handlers} = this;
 
-    $p.cat.characteristics.form_selection_block(null, {
-      on_select: this.project.load_stamp.bind(this.project)
-    });
+    (ox.coordinates.count() ?
+        ui.dialogs.confirm({
+          title: msg.bld_from_blocks_title,
+          html: msg.bld_from_blocks
+        })
+        :
+        Promise.resolve()
+    )
+      .then(() => handlers.handleNavigate(`/templates/?order=${ox.calc_order.ref}&ref=${ox.ref}`))
+      .catch(console.log);
   }
 
   purge_selection(){

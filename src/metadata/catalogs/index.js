@@ -1,7 +1,9 @@
 // модификаторы справочников
 
-import SpecFragment from 'windowbuilder-forms/dist/CatCharacteristics/LazySpec';
+import SpecFragment from 'wb-forms/dist/CatCharacteristics/LazySpec';
+import select_template from 'wb-core/dist/select_template';
 
-export default function ({cat}) {
-  cat.characteristics.SpecFragment = SpecFragment;
+export default function ($p) {
+  $p.cat.characteristics.SpecFragment = SpecFragment;
+  select_template($p);
 }

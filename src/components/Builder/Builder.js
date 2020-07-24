@@ -40,8 +40,8 @@ class Builder extends DhtmlxCell {
    * @param loc
    * @return {*}
    */
-  prompt = () => {
-    if(!this._editor || !this._editor.project) {
+  prompt = (loc) => {
+    if(!this._editor || !this._editor.project || loc.pathname.match(/\/templates/)) {
       return true;
     }
     const {ox} = this._editor.project;

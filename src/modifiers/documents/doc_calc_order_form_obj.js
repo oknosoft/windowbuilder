@@ -272,7 +272,7 @@
      * @return {*}
      */
     function prompt(loc) {
-      if(loc.pathname.match(/builder/)) {
+      if(loc.pathname.match(/\/builder|\/templates/)) {
         return true;
       }
       return (o && o._modified) ? `${o.presentation} изменён.\n\nЗакрыть без сохранения?` : true;
@@ -878,8 +878,9 @@
       }
       else if(create_new) {
         o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
-          .then((row) => {
-            handlers.handleNavigate(`/builder/${row.characteristic.ref}`);
+          .then(({characteristic}) => {
+            //handlers.handleNavigate(`/builder/${characteristic.ref}`);
+            handlers.handleNavigate(`/templates/?order=${o.ref}&ref=${characteristic.ref}`);
           });
       }
       else {

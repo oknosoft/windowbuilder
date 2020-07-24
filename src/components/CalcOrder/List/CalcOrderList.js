@@ -13,7 +13,6 @@ import PropTypes from 'prop-types';
 import DataList from 'metadata-react/DynList';
 import WindowSizer from 'metadata-react/WindowSize';
 import {withObj} from 'metadata-redux';
-import qs from 'qs';
 import handleSchemeChange from './scheme_change';
 import Svgs from '../../Svgs';
 
@@ -112,7 +111,7 @@ class CalcOrderList extends Component {
       width: windowWidth > 800 ? windowWidth - (windowHeight < 480 ? 20 : 0) : 800
     };
 
-    const prm = qs.parse(location.search.replace('?',''));
+    const prm = $p.utils.prm();
 
     return [
       <DataList

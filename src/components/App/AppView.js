@@ -18,6 +18,7 @@ import {lazy} from './lazy';                        // конструкторы 
 
 import {withNavigateAndMeta} from 'metadata-redux';
 import Builder from '../Builder';
+import Templates from 'wb-forms/dist/CalcOrder/Templates';  // stepper выбора шаблона изделия
 
 let CalcOrderList = DumbScreen;
 
@@ -112,6 +113,7 @@ class AppRoot extends Component {
             <Switch key="switch">
               <Route exact path="/" component={CalcOrderList}/>
               <Route path="/builder/:ref([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})" component={Builder} />
+              <Route path="/templates" render={(routeProps) => <Templates {...props} {...routeProps}/>}/>
               <Route path="/:area(doc|cat|ireg|cch|rep).:name" component={DataRoute} />
               <Route path="/about" component={AboutPage} />
               <Route path="/help" component={HelpPage} />
