@@ -4,7 +4,7 @@
  * @module work_centers_task
  */
 
-import FrmObj from '../../components/WorkCentersTask';
+import FrmObj from 'wb-forms/dist/WorkCentersTask';
 
 export default function ({
                            DocWork_centers_task,

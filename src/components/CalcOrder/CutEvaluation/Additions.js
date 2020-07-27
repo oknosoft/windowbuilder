@@ -9,8 +9,8 @@ import Button from '@material-ui/core/Button';
 import List from '@material-ui/core/List';
 
 import SelectMode from './Mode';
-import Progress from '../../WorkCentersTask/Progress';
-import Report1D from '../../WorkCentersTask/Report1D';
+import Progress from 'wb-forms/dist/WorkCentersTask/Progress';
+import Report1D from 'wb-forms/dist/WorkCentersTask/Report1D';
 
 const styles = theme => ({
   root: {
