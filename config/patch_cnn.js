@@ -9,8 +9,6 @@ const keys21 = {
  */
 export const predefined = {
   'aribaz.': {zone: 2, host: 'https://aribaz.oknosoft.ru/'},
-  'krasal.': {zone: 91, host: 'https://krasal.oknosoft.ru/', use_ram: false, ram_indexer: false},
-  'eco.': {zone: 21, host: 'https://eco.oknosoft.ru/'},
   'ecookna.': {
     zone: 21,
     host: 'https://zakaz.ecookna.ru/',
@@ -19,6 +17,17 @@ export const predefined = {
     templates: true,
     keys: keys21,
     crazy_ram: true,
+  },
+  'start.ecookna.': {
+    zone: 21,
+    host: 'https://start.ecookna.ru/',
+    splash: {css: 'splash21', title: false},
+    log_level: 'warn',
+    templates: false,
+    keys: keys21,
+    crazy_ram: false,
+    use_ram: false,
+    ram_indexer: false,
   },
   'localhost': {
     zone: 21,
@@ -41,7 +50,6 @@ export const predefined = {
   },
   'tmk.': {zone: 23, host: 'https://tmk-online.ru/'},
   'crystallit.': {zone: 25, host: 'https://crystallit.oknosoft.ru/'},
-  'okna-stolicy.': {zone: 22, host: 'https://okna-stolicy.oknosoft.ru/'},
 }
 
 /**
@@ -57,7 +65,6 @@ export function patch_prm(settings) {
             prm[name] = predefined[elm][name];
           }
         });
-        break;
       }
     }
     return prm;
