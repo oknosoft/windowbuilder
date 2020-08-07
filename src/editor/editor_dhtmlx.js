@@ -731,7 +731,7 @@ class Editor extends $p.EditorInvisible {
         :
         Promise.resolve()
     )
-      .then(() => handlers.handleNavigate(`/templates/?order=${ox.calc_order.ref}&ref=${ox.ref}`))
+      .then(() => handlers.handleNavigate(`/templates/?order=${ox.calc_order.ref}&ref=${ox.ref}&step=1`))
       .catch(console.log);
   }
 
