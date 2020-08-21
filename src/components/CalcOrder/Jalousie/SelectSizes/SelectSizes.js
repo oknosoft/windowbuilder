@@ -100,6 +100,7 @@ SelectSizes.propTypes = {
   obj: PropTypes.object,
   handleClose: PropTypes.func,
   sz_product: PropTypes.object,
+  params: PropTypes.object,
   setProduct: PropTypes.func,
   setProp: PropTypes.func,
 };

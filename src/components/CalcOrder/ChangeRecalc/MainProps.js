@@ -53,7 +53,7 @@ class MainProps extends React.Component {
       sys: dp.use_sys,
       inset: dp.use_inset,
       clr: dp.use_clr,
-    }
+    };
 
     const {production, sys, clr, sys_furn, inset} = dp;
     production.forEach((row) => {

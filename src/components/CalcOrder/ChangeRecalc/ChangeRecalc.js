@@ -27,9 +27,7 @@ class ChangeRecalc extends React.Component {
     dp.production.forEach((row) => {
       row.use = row.characteristic.coordinates.count();
     });
-    dp.value_change = function (obj, flds) {
-      return this;
-    }
+    dp.value_change = function () {return this;};
   }
 
   componentDidMount() {

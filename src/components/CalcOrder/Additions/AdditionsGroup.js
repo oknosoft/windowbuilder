@@ -31,11 +31,23 @@ class AdditionsGroup extends React.Component {
 
 
   onRowUpdated = (updated, row) => {
-    if(updated && Object.prototype.hasOwnProperty.call(updated, 'inset')){
-      const {inset} = row;
-      $p.cat.clrs.selection_exclude_service(this.props.meta.fields.clr, inset);
-      // проверим доступность цветов, при необходимости обновим
-      inset.clr_group.default_clr(row);
+    if(updated){
+      if(updated.hasOwnProperty('inset')) {
+        const {inset} = row;
+        $p.cat.clrs.selection_exclude_service(this.props.meta.fields.clr, inset);
+        // проверим доступность цветов, при необходимости обновим
+        inset.clr_group.default_clr(row);
+      }
+      const {calc_order_row} = row.characteristic;
+      if(calc_order_row) {
+        Object.assign(calc_order_row, {
+          amount: 0,
+          amount_internal: 0,
+          price: 0,
+          price_internal: 0,
+          first_cost: 0,
+        });
+      }
     }
   }
 
