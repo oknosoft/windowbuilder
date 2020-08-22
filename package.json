@@ -29,7 +29,8 @@
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
     "@turf/points-within-polygon": "^5.1.5",
-    "dxf-writer": "^1.6.2",
+    "dxf-writer": "^1.7.0",
+    "genetic-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
     "md5-file": "^5.0",
     "metadata-abstract-ui": "2.0.23-beta.3",
     "metadata-core": "2.0.23-beta.3",
@@ -39,7 +40,7 @@
     "metadata-redux": "2.0.23-beta.3",
     "metadata-superlogin": "2.0.23-beta.3",
     "react-highlight-words": "^0.16.0",
-    "wb-core": "github:oknosoft/windowbuilder-core#6ba40f0d39c67bfbc9744441233c30da3072263d",
+    "wb-core": "github:oknosoft/windowbuilder-core#d21ba1f87836cbf3a6d1661a2bd27190279b190b",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
     "wb-forms": "github:oknosoft/windowbuilder-forms#7e7fc8f682ee337c69fea023c8a7b87aa3a9cd27"
   },
