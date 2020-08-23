@@ -39,7 +39,7 @@ export default class Editor extends React.Component {
             this.props.setSizes(event.item.layer.bounds);
             this.forceUpdate();
           }
-        }
+        };
         project.l_dimensions.activate();
         decorate_layers(project);
       }
@@ -102,6 +102,8 @@ export default class Editor extends React.Component {
   }
 }
 
-// Editor.propTypes = {
-//   registerChild: PropTypes.func.isRequired,
-// };
+Editor.propTypes = {
+  dp: PropTypes.object.isRequired,
+  sz_product: PropTypes.object.isRequired,
+  setSizes: PropTypes.func.isRequired,
+};

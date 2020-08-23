@@ -21,6 +21,7 @@ function PropField({classes, ...props}) {
 
 PropField.propTypes = {
   classes: PropTypes.object,
+  _obj: PropTypes.object,
 };
 
 export default withStyles(PropField);

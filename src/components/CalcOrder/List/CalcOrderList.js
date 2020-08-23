@@ -102,7 +102,7 @@ class CalcOrderList extends Component {
 
   render() {
 
-    const {props: {windowHeight, windowWidth, location}, state: {hidden, imgs}, handlers} = this;
+    const {props: {windowHeight, windowWidth}, state: {hidden, imgs}, handlers} = this;
 
     const sizes = {
       windowHeight,
@@ -144,7 +144,6 @@ CalcOrderList.propTypes = {
   handlers: PropTypes.object.isRequired,
   windowHeight: PropTypes.number,
   windowWidth: PropTypes.number,
-  location: PropTypes.object,
 };
 
 CalcOrderList.rname = 'CalcOrderList';

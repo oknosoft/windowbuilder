@@ -274,7 +274,7 @@ class Additions extends React.Component {
     if(!this.goods_row) {
       return <LoadingMessage text="Чтение заказа..."/>;
     }
-    const {product, sz_product, props, price} = this.state;
+    const {product, props, price} = this.state;
     return <Grid
       container
       direction="row"
