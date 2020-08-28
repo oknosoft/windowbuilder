@@ -560,9 +560,13 @@ class Editor extends $p.EditorInvisible {
     _canvas.style.backgroundColor = "#f9fbfa";
 
     const _scheme = new $p.EditorInvisible.Scheme(_canvas, _editor);
-    const pwnd_resize_finish = () => {
-      _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
-    };
+
+    // this._stable_zoom = new StableZoom(this);
+    // this._deformer = new Deformer(this);
+    // this._mover = new Mover(this);
+
+    _scheme._use_skeleton = true;
+    //_scheme._dp.value_change = this.dp_value_change.bind(this);
 
     /**
      * Magnetism дополнительных инструментов
@@ -572,6 +576,9 @@ class Editor extends $p.EditorInvisible {
     /**
      * Подписываемся на события изменения размеров
      */
+    const pwnd_resize_finish = () => {
+      _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
+    };
     _editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
     _editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
     _editor._layout.attachEvent("onCollapse", pwnd_resize_finish);

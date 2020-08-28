@@ -1398,12 +1398,15 @@ class Editor extends $p.EditorInvisible {
     _canvas.style.backgroundColor = "#f9fbfa";
 
     const _scheme = new $p.EditorInvisible.Scheme(_canvas, _editor);
-    const pwnd_resize_finish = () => {
-      _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
-    };
+
+
+    _scheme._use_skeleton = true;
 
     _scheme.magnetism = new Magnetism(_scheme);
 
+    const pwnd_resize_finish = () => {
+      _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
+    };
     _editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
     _editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
     _editor._layout.attachEvent("onCollapse", pwnd_resize_finish);
