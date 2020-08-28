@@ -561,12 +561,17 @@ class Editor extends $p.EditorInvisible {
 
     const _scheme = new $p.EditorInvisible.Scheme(_canvas, _editor);
 
-    // this._stable_zoom = new StableZoom(this);
-    // this._deformer = new Deformer(this);
-    // this._mover = new Mover(this);
+    this._stable_zoom = new StableZoom(this);
+    this._deformer = new Deformer(this);
+    this._mover = new Mover(this);
 
     _scheme._use_skeleton = true;
     //_scheme._dp.value_change = this.dp_value_change.bind(this);
+    this._recalc_timer = 0;
+
+    //this.eve.on('coordinates_calculated', this.coordinates_calculated);
+    _canvas.addEventListener('touchstart', this.canvas_touchstart.bind(this), false);
+    _canvas.addEventListener('mousewheel', this._stable_zoom.mousewheel.bind(this._stable_zoom), false);
 
     /**
      * Magnetism дополнительных инструментов
@@ -627,57 +632,6 @@ class Editor extends $p.EditorInvisible {
     this._errpos.style.display = 'none';
     this._errpos.onclick = () => this.show_errpos();
 
-    /**
-     * Объект для реализации функций масштабирования
-     * @type StableZoom
-     */
-    new function StableZoom(){
-
-      function changeZoom(oldZoom, delta) {
-        const factor = 1.05;
-        if (delta < 0) {
-          return oldZoom * factor;
-        }
-        if (delta > 0) {
-          return oldZoom / factor;
-        }
-        return oldZoom;
-      }
-
-      dhtmlxEvent(_canvas, "mousewheel", (evt) => {
-
-        if (evt.shiftKey || evt.altKey) {
-          if(evt.shiftKey && !evt.deltaX){
-            _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
-          }
-          else{
-            _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
-          }
-          return evt.preventDefault();
-        }
-        else if (evt.ctrlKey) {
-          const mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
-          const viewPosition = _editor.view.viewToProject(mousePosition);
-          const _ref1 = this.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
-          _editor.view.zoom = _ref1[0];
-          _editor.view.center = _editor.view.center.add(_ref1[1]);
-          evt.preventDefault();
-          return _editor.view.draw();
-        }
-      });
-
-      this.changeZoom = function(oldZoom, delta, c, p) {
-        const newZoom = changeZoom(oldZoom, delta);
-        const beta = oldZoom / newZoom;
-        const pc = p.subtract(c);
-        return [newZoom, p.subtract(pc.multiply(beta)).subtract(c)];
-      };
-
-      this.changeCenter = function(oldCenter, deltaX, deltaY, factor) {
-        const offset = new paper.Point(deltaX, -deltaY);
-        return oldCenter.add(offset.multiply(factor));
-      };
-    };
 
     _editor._acc.attach(_editor.project._dp);
   }
@@ -715,6 +669,23 @@ class Editor extends $p.EditorInvisible {
     }
   }
 
+  canvas_touchstart(evt) {
+    evt.preventDefault();
+    evt.stopPropagation();
+    const touch = evt.touches.length && evt.touches[0];
+    const {view, tool} = this;
+    let {element} = view;
+    const offsets = {x: element.offsetLeft, y: element.offsetTop};
+    while (element.offsetParent) {
+      element = element.offsetParent;
+      offsets.x += element.offsetLeft;
+      offsets.y += element.offsetTop;
+    }
+    const point = view.viewToProject([touch.pageX - offsets.x, touch.pageY - offsets.y]);
+    const event = {point, modifiers: {}};
+    tool.hitTest(event);
+    tool.mousedown(event);
+  }
 
   /**
    * ### (Пере)заполняет изделие данными типового блока

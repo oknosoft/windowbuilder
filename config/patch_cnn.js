@@ -16,7 +16,6 @@ export const predefined = {
     log_level: 'warn',
     templates: true,
     keys: keys21,
-    crazy_ram: true,
   },
   'start.ecookna.': {
     zone: 21,
@@ -25,8 +24,6 @@ export const predefined = {
     log_level: 'warn',
     templates: false,
     keys: keys21,
-    crazy_ram: false,
-    use_ram: false,
     ram_indexer: false,
   },
   'localhost': {
@@ -35,7 +32,6 @@ export const predefined = {
     log_level: 'warn',
     templates: true,
     //keys: {google: ''},
-    crazy_ram: false,
   },
   'rusokon.': {
     zone: 19,
@@ -60,7 +56,7 @@ export function patch_prm(settings) {
     settings(prm);
     for (const elm in predefined) {
       if(location.host.match(elm)) {
-        'zone,use_ram,ram_indexer'.split(',').forEach((name) => {
+        'zone,ram_indexer'.split(',').forEach((name) => {
           if(predefined[elm].hasOwnProperty(name)) {
             prm[name] = predefined[elm][name];
           }
@@ -82,7 +78,7 @@ export function patch_cnn() {
     const prm = predefined[elm];
     if(location.host.match(elm)) {
       prm.zone && wsql.get_user_param('zone') != prm.zone && wsql.set_user_param('zone', prm.zone);
-      'log_level,splash,templates,keys,crazy_ram'.split(',').forEach((name) => {
+      'log_level,splash,templates,keys'.split(',').forEach((name) => {
         if(prm.hasOwnProperty(name)) {
           if(typeof job_prm[name] === 'object') {
             Object.assign(job_prm[name], prm[name]);

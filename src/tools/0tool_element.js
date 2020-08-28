@@ -63,5 +63,17 @@ class ToolElement extends $p.EditorInvisible.ToolElement {
     return true;
   }
 
+  get eve() {
+    return this._scope.eve;
+  }
+
+  get project() {
+    return this._scope.project;
+  }
+
+  get mover() {
+    return this._scope._mover;
+  }
+
 }
 

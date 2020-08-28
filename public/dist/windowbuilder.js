@@ -1010,6 +1010,99 @@ function Clipbrd(_editor) {
 }
 
 
+class Deformer {
+
+  constructor(editor) {
+    this.editor = editor;
+    const {constructor: {BuilderElement}, project} = editor;
+    this.elm = (elm) => project.getItem({class: BuilderElement, elm});
+  }
+
+  get history() {
+    return this.editor._undo;
+  }
+
+  get mover() {
+    return this.editor._mover;
+  }
+
+  get project() {
+    return this.editor.project;
+  }
+
+  select(items) {
+    const {project, editor} = this;
+    let deselect;
+    for(const {elm, node, shift} of items) {
+      const item = this.elm(elm);
+      if(item) {
+        if(node) {
+          item.generatrix[node === 'b' ? 'firstSegment' : 'lastSegment'].selected = true;
+        }
+        else {
+          deselect = true;
+          item.selected = true;
+          if(item.layer){
+            editor.eve.emit_async('layer_activated', item.layer);
+            editor.eve.emit_async('elm_activated', item, shift);
+          }
+        }
+      }
+    }
+    deselect && project.deselect_all_points();
+  }
+
+  deselect(items) {
+    const {project, editor} = this;
+    if(!items || !items.length || items.some(({elm}) => !elm)) {
+      project.deselectAll();
+      return editor.eve.emit('elm_deactivated', null);
+    }
+    for(const {elm, node} of items) {
+      const item = this.elm(elm);
+      if(item) {
+        if(node) {
+          item.generatrix[node === 'b' ? 'firstSegment' : 'lastSegment'].selected = false;
+        }
+        else {
+          item.selected = false;
+        }
+      }
+    }
+  }
+
+  move(delta) {
+    const {project, editor: {Point}} = this;
+    project.move_points(new Point(delta));
+  }
+
+  merge() {
+
+  }
+
+  separate() {
+
+  }
+
+  split() {
+
+  }
+
+  add() {
+
+  }
+
+  remove() {
+
+  }
+
+  prop() {
+
+  }
+
+
+}
+
 
 class Editor extends $p.EditorInvisible {
 
@@ -1399,8 +1492,15 @@ class Editor extends $p.EditorInvisible {
 
     const _scheme = new $p.EditorInvisible.Scheme(_canvas, _editor);
 
+    this._stable_zoom = new StableZoom(this);
+    this._deformer = new Deformer(this);
+    this._mover = new Mover(this);
 
     _scheme._use_skeleton = true;
+    this._recalc_timer = 0;
+
+    _canvas.addEventListener('touchstart', this.canvas_touchstart.bind(this), false);
+    _canvas.addEventListener('mousewheel', this._stable_zoom.mousewheel.bind(this._stable_zoom), false);
 
     _scheme.magnetism = new Magnetism(_scheme);
 
@@ -1449,53 +1549,6 @@ class Editor extends $p.EditorInvisible {
     this._errpos.style.display = 'none';
     this._errpos.onclick = () => this.show_errpos();
 
-    new function StableZoom(){
-
-      function changeZoom(oldZoom, delta) {
-        const factor = 1.05;
-        if (delta < 0) {
-          return oldZoom * factor;
-        }
-        if (delta > 0) {
-          return oldZoom / factor;
-        }
-        return oldZoom;
-      }
-
-      dhtmlxEvent(_canvas, "mousewheel", (evt) => {
-
-        if (evt.shiftKey || evt.altKey) {
-          if(evt.shiftKey && !evt.deltaX){
-            _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
-          }
-          else{
-            _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
-          }
-          return evt.preventDefault();
-        }
-        else if (evt.ctrlKey) {
-          const mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
-          const viewPosition = _editor.view.viewToProject(mousePosition);
-          const _ref1 = this.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
-          _editor.view.zoom = _ref1[0];
-          _editor.view.center = _editor.view.center.add(_ref1[1]);
-          evt.preventDefault();
-          return _editor.view.draw();
-        }
-      });
-
-      this.changeZoom = function(oldZoom, delta, c, p) {
-        const newZoom = changeZoom(oldZoom, delta);
-        const beta = oldZoom / newZoom;
-        const pc = p.subtract(c);
-        return [newZoom, p.subtract(pc.multiply(beta)).subtract(c)];
-      };
-
-      this.changeCenter = function(oldCenter, deltaX, deltaY, factor) {
-        const offset = new paper.Point(deltaX, -deltaY);
-        return oldCenter.add(offset.multiply(factor));
-      };
-    };
 
     _editor._acc.attach(_editor.project._dp);
   }
@@ -1525,6 +1578,23 @@ class Editor extends $p.EditorInvisible {
     }
   }
 
+  canvas_touchstart(evt) {
+    evt.preventDefault();
+    evt.stopPropagation();
+    const touch = evt.touches.length && evt.touches[0];
+    const {view, tool} = this;
+    let {element} = view;
+    const offsets = {x: element.offsetLeft, y: element.offsetTop};
+    while (element.offsetParent) {
+      element = element.offsetParent;
+      offsets.x += element.offsetLeft;
+      offsets.y += element.offsetTop;
+    }
+    const point = view.viewToProject([touch.pageX - offsets.x, touch.pageY - offsets.y]);
+    const event = {point, modifiers: {}};
+    tool.hitTest(event);
+    tool.mousedown(event);
+  }
 
   open_templates(confirmed) {
 
@@ -2815,6 +2885,404 @@ class Magnetism {
 
 $p.EditorInvisible.Magnetism = Magnetism;
 
+class Mover {
+
+  constructor(editor) {
+    this.editor = editor;
+  }
+
+  get project() {
+    return this.editor.project;
+  }
+
+  snap_to_edges({start, event: {point, modifiers}, mode}) {
+    const {consts: {move_shapes, move_points}, Path} = this.editor;
+    let delta = point.subtract(start);
+    if (!modifiers.shift){
+      delta = delta.snap_to_angle(Math.PI*2/4);
+      point = start.add(delta);
+    }
+
+    if(mode === move_shapes) {
+      return this.snap_shapes({start, point, delta});
+    }
+
+    if(mode === move_points) {
+      return this.snap_points({start, point, delta});
+    }
+  }
+
+  snap_points({start, point, delta}) {
+    const {Path} = this.editor;
+    const vertexes = new Map();
+    const tvertexes = new Map();
+
+    for(const profile of this.project.selected_profiles()) {
+      const {skeleton} = profile;
+      for(const vertex of skeleton.vertexesByProfile(profile)) {
+        if(vertex.selected) {
+          vertexes.set(vertex, [{skeleton, profile, ribs: new Map(), points: new Set()}]);
+          break;
+        }
+      }
+      if(vertexes.size) {
+        break;
+      }
+    }
+
+    for(const [vertex, v] of vertexes) {
+      const {skeleton, profile, ribs, points} = v[0];
+      const corners = profile.is_corner();
+      const candidates = new Set();
+      for(const edge of vertex.getEdges()) {
+        points.add(edge.endVertex.point);
+        if(!ribs.has(edge.profile)) {
+          ribs.set(edge.profile, {paths: []});
+        }
+        const rv = ribs.get(edge.profile);
+        rv.paths.push(edge.profile.generatrix.get_subpath(edge.endVertex.point, edge.startVertex.point));
+        if(edge.profile.b.is_nearest(vertex.point, true)) {
+          rv.node = 'b';
+        }
+        if(edge.profile.e.is_nearest(vertex.point, true)) {
+          rv.node = 'e';
+        }
+
+        if(edge.profile !== profile) {
+          candidates.add(edge);
+        }
+      }
+      for(const edge of vertex.getEndEdges()) {
+        points.add(edge.startVertex.point);
+        if(!ribs.has(edge.profile)) {
+          ribs.set(edge.profile, {paths: []});
+        }
+        const rv = ribs.get(edge.profile);
+        rv.paths.push(edge.profile.generatrix.get_subpath(edge.startVertex.point, edge.endVertex.point));
+        if(edge.profile.b.is_nearest(vertex.point, true)) {
+          rv.node = 'b';
+        }
+        if(edge.profile.e.is_nearest(vertex.point, true)) {
+          rv.node = 'e';
+        }
+
+        if(edge.profile !== profile) {
+          for(const candidate of candidates) {
+            if(candidate.profile === edge.profile && !candidate.is_profile_outer(edge)) {
+              const path = edge.profile.generatrix
+                .get_subpath(edge.startVertex.point, candidate.endVertex.point)
+                .elongation(-edge.profile.width);
+              point = path.getNearestPoint(point);
+              delta = point.subtract(start);
+              v[0].point = point;
+              break;
+            }
+          }
+        }
+      }
+      if(v[0].point) {
+        break;
+      }
+
+      for(const [profile, rv] of ribs) {
+        const {paths, node} = rv;
+        const {width} = profile;
+        for(const path of paths) {
+          const pt = path.getNearestPoint(point);
+          const offset = path.getOffsetOf(pt);
+          if(offset < width) {
+            point = path.getPointAt(width);
+            delta = point.subtract(start);
+            v[0].point = point;
+            break;
+          }
+        }
+      }
+
+      if(ribs.size <= 2) {
+        v[0].point = point;
+        points.clear();
+        for(const [profile, {node}] of ribs) {
+          if(node) {
+            const ppoint = node === 'b' ? profile.e : profile.b;
+            const {inner, outer} = profile.joined_imposts();
+            const imposts = inner.concat(outer);
+
+            if(imposts.length) {
+              const ppath = new Path({insert: false, segments: [point, ppoint]});
+              for(const impost of imposts) {
+                const {b, e} = impost.profile.rays;
+                const ipoint = b.profile === profile ? b.point : e.point;
+                const i0point = b.profile === profile ? e.point : b.point;
+                const gen = impost.profile.generatrix.clone({insert: false})
+                let mpoint = ppath.intersect_point(gen, ipoint, true);
+                if(!mpoint) {
+                  mpoint = ppath.intersect_point(gen.elongation(3000), mpoint, true);
+                }
+                if(mpoint) {
+                  const tv = {skeleton, profile: impost.profile, point: mpoint, ribs: new Map(), points: new Set()};
+                  tv.points.add(i0point);
+                  tvertexes.set(skeleton.vertexByPoint(i0point), [tv]);
+                }
+              }
+            }
+            points.add(ppoint);
+
+          }
+        }
+      }
+      else {
+
+      }
+    }
+
+    for(const [k,v] of tvertexes) {
+      vertexes.set(k, v);
+    }
+    this.draw_move_ribs(vertexes);
+
+    return delta;
+  }
+
+  snap_shapes({start, point, delta}) {
+    const {Path} = this.editor;
+    const vertexes = new Map();
+    const lines = new Map();
+
+    for(const profile of this.project.selected_profiles()) {
+      const {skeleton, b, e} = profile;
+      const vb = skeleton.vertexByPoint(b);
+      const ve = skeleton.vertexByPoint(e);
+      if(!vertexes.has(vb)) {
+        vertexes.set(vb, []);
+      }
+      if(!vertexes.has(ve)) {
+        vertexes.set(ve, []);
+      }
+      const db = b.add(delta);
+      const de = e.add(delta);
+      const line = new Path({insert: false, segments: [db, de]}).elongation(1000);
+      vertexes.get(vb).push({skeleton, profile, line, pt: db, ribs: new Map(), points: new Set()});
+      vertexes.get(ve).push({skeleton, profile, line, pt: de, ribs: new Map(), points: new Set()});
+      lines.set(line, {vb, ve, db, de});
+    }
+
+    for(const [line, lv] of lines) {
+      const {vb, ve, db, de} = lv;
+      const {skeleton, profile, ribs, points} = vertexes.get(vb);
+    }
+
+    for(const [vertex, av] of vertexes) {
+      if(!vertex) {
+        break;
+      }
+      for(const v of av) {
+        const {skeleton, profile, ribs, points, line, pt} = v;
+        const candidates = new Set();
+        let edges = vertex.getEdges();
+        for (const edge of edges) {
+          if(!edge.is_some_side(profile, vertex)) {
+            continue;
+          }
+
+          if(edge.profile.b.is_nearest(vertex.point, true)) {
+            ribs.set(edge.profile, 'b');
+          }
+          if(edge.profile.e.is_nearest(vertex.point, true)) {
+            ribs.set(edge.profile, 'e');
+          }
+
+          if(edge.profile !== profile) {
+            points.add(edge.endVertex.point);
+            candidates.add(edge);
+          }
+        }
+        for (const edge of vertex.getEndEdges()) {
+          if(!edge.is_some_side(profile, vertex)) {
+            continue;
+          }
+
+          if(edge.profile.b.is_nearest(vertex.point, true)) {
+            ribs.set(edge.profile, 'b');
+          }
+          if(edge.profile.e.is_nearest(vertex.point, true)) {
+            ribs.set(edge.profile, 'e');
+          }
+
+          if(edge.profile !== profile) {
+            points.add(edge.startVertex.point);
+            for (const candidate of candidates) {
+              if(candidate.profile === edge.profile && !candidate.is_profile_outer(edge)) {
+                const path = edge.profile.generatrix
+                  .get_subpath(edge.startVertex.point, candidate.endVertex.point)
+                  .elongation(-edge.profile.width);
+                const npoint = line.intersect_point(path, point);
+                if(npoint) {
+                  point = npoint;
+                }
+                else {
+                  point = path.getNearestPoint(pt);
+                }
+                v.point = point;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+    }
+
+    for(const [line, lv] of lines) {
+      const {vb, ve, db, de} = lv;
+      const {skeleton, profile, ribs, points} = vertexes.get(vb);
+
+    }
+
+    this.draw_move_ribs(vertexes);
+
+    return vertexes;
+  }
+
+  hide_move_ribs(withOpacity) {
+    for(const contour of this.project.contours) {
+      const {l_visualization} = contour;
+      if(l_visualization._move_ribs) {
+        l_visualization._move_ribs.removeChildren();
+        if(withOpacity) {
+          contour.profiles.forEach((profile) => profile.opacity = 1);
+          contour.glasses().forEach((glass) => glass.opacity = 1);
+        }
+      }
+    }
+  }
+
+  draw_move_ribs(vertexes) {
+    this.hide_move_ribs();
+    const {Path} = this.editor;
+    const ppoints = new Map();
+
+    for(const [vertex, v] of vertexes) {
+      for(const {skeleton, profile, points, point} of v) {
+        const {l_visualization} = skeleton.owner;
+        if(!l_visualization._move_ribs) {
+          l_visualization._move_ribs = new paper.Group({parent: l_visualization});
+        }
+
+        if(!ppoints.has(profile)) {
+          ppoints.set(profile, {parent: l_visualization._move_ribs, points: []});
+        }
+        const pp = ppoints.get(profile);
+        pp.points.push(point);
+
+        for(const pt of points) {
+          new Path({
+            parent: l_visualization._move_ribs,
+            strokeColor: 'blue',
+            strokeWidth: 2,
+            strokeScaling: false,
+            dashArray: [4, 4],
+            guide: true,
+            segments: [point, pt],
+          });
+        }
+        new Path.Rectangle({
+          parent: l_visualization._move_ribs,
+          fillColor: 'blue',
+          center: point,
+          strokeScaling: false,
+          size: [80, 80],
+        });
+
+        const glasses = skeleton.owner.glasses();
+        for(const profile of vertex.profiles) {
+          profile.opacity = 0.4;
+          profile.joined_glasses(glasses).forEach((glass) => glass.opacity = 0.4);
+        }
+      }
+    }
+
+    for(const [profile, {parent, points}] of ppoints) {
+      if(points.length > 1) {
+        new Path({
+          parent,
+          strokeColor: 'blue',
+          strokeWidth: 2,
+          strokeScaling: false,
+          dashArray: [4, 4],
+          guide: true,
+          segments: [points[0], points[1]],
+        });
+      }
+    }
+  }
+
+  move_shapes(vertexes) {
+    const {project} = this;
+    for(const [vertex, av] of vertexes) {
+      for (const v of av) {
+        let {ribs, point, pt} = v;
+        if(!point) {
+          point = pt;
+        }
+        for(const [profile, node] of ribs) {
+          const node_point = profile[node];
+          if(!node_point.is_nearest(point, true)) {
+            project.deselectAll();
+            node_point.selected = true;
+            profile.move_points(point.subtract(node_point));
+            node_point.selected = false;
+          }
+        }
+      }
+    }
+    this.hide_move_ribs(true);
+  }
+}
+
+class StableZoom {
+
+  constructor(editor) {
+    this.editor = editor;
+  }
+
+  mousewheel(evt) {
+    const {view, Point} = this.editor;
+    if (evt.shiftKey || evt.altKey) {
+      if(evt.shiftKey && !evt.deltaX){
+        view.center = this.changeCenter(view.center, evt.deltaY, 0, 1);
+      }
+      else{
+        view.center = this.changeCenter(view.center, evt.deltaX, evt.deltaY, 1);
+      }
+      return evt.preventDefault();
+    }
+    else if (evt.ctrlKey) {
+      const mousePosition = new Point(evt.offsetX, evt.offsetY);
+      const viewPosition = view.viewToProject(mousePosition);
+      const _ref1 = this.changeZoom(view.zoom, evt.deltaY, view.center, viewPosition);
+      view.zoom = _ref1[0];
+      view.center = view.center.add(_ref1[1]);
+      evt.preventDefault();
+      return view.draw();
+    }
+  }
+
+  changeZoom(oldZoom, delta, c, p) {
+    const factor = 1.05;
+    const newZoom = delta ? (delta < 0 ? oldZoom * factor : oldZoom / factor) : oldZoom;
+    const beta = oldZoom / newZoom;
+    const pc = p.subtract(c);
+    return [newZoom, p.subtract(pc.multiply(beta)).subtract(c)];
+  }
+
+  changeCenter(oldCenter, deltaX, deltaY, factor) {
+    const offset = new this.editor.Point(deltaX, -deltaY);
+    return oldCenter.add(offset.multiply(factor));
+  }
+
+}
+
 
 class UndoRedo {
 
@@ -3001,6 +3469,18 @@ class ToolElement extends $p.EditorInvisible.ToolElement {
   on_close(wnd) {
     wnd && wnd.cell && setTimeout(() => this._scope.tools[1].activate());
     return true;
+  }
+
+  get eve() {
+    return this._scope.eve;
+  }
+
+  get project() {
+    return this._scope.project;
+  }
+
+  get mover() {
+    return this._scope._mover;
   }
 
 }
@@ -7236,7 +7716,9 @@ $p.EditorInvisible.ToolRuler = ToolRuler;
 class ToolSelectNode extends ToolElement {
 
   constructor() {
+
     super();
+
     Object.assign(this, {
       options: {
         name: 'select_node',
@@ -7253,7 +7735,9 @@ class ToolSelectNode extends ToolElement {
       originalHandleIn: null,
       originalHandleOut: null,
       changed: false,
-      minDistance: 10
+      minDistance: 10,
+      dp: $p.dp.builder_pen.create({grid: 50}),
+      input: null,
     });
 
     this.on({
@@ -7279,7 +7763,7 @@ class ToolSelectNode extends ToolElement {
 
   deactivate() {
     this._scope.clear_selection_bounds();
-    if(this.profile){
+    if(this.profile) {
       this.profile.detache_wnd();
       delete this.profile;
     }
@@ -7287,150 +7771,174 @@ class ToolSelectNode extends ToolElement {
 
   mousedown(event) {
 
-    const {project, consts} = this._scope;
+    const {_scope: {PointText, consts, constructor}, hitItem} = this;
+    const {shift, space, alt} = event.modifiers;
+    const {ProfileItem, Filling, DimensionLine} = constructor;
 
     this.mode = null;
     this.changed = false;
-    this.mouseDown = true;
+    const select = [];
+    const deselect = [];
 
-    if(event.event && event.event.which && event.event.which > 1){
-    }
+    this.sz_fin();
 
-    if (this.hitItem && !event.modifiers.alt) {
+    if(hitItem && !alt) {
 
-      if(this.hitItem.item instanceof paper.PointText) {
+      if(hitItem.item instanceof PointText) {
+        if(hitItem.item.parent instanceof DimensionLine) {
+          this.sz_start(hitItem.item.parent);
+        }
         return;
       }
 
-
-      let item = this.hitItem.item.parent;
-      if (event.modifiers.space && item.nearest && item.nearest()) {
+      let item = hitItem.item.parent;
+      if(space && item.nearest && item.nearest()) {
         item = item.nearest();
       }
 
-      if (item && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
-
-        if (event.modifiers.shift) {
-          item.selected = !item.selected;
-        } else {
-          project.deselectAll();
-          item.selected = true;
-        }
-        if (item.selected) {
-          this.mode = consts.move_shapes;
-          project.deselect_all_points();
-          this.mouseStartPos = event.point.clone();
-          this.originalContent = this._scope.capture_selection_state();
-
-          if(item.layer){
-            this.eve.emit("layer_activated", item.layer);
+      if(item && (hitItem.type == 'fill' || hitItem.type == 'stroke')) {
+        if(shift) {
+          if(item.selected) {
+            deselect.push({elm: item.elm, node: null, shift});
           }
+          else {
+            select.push({elm: item.elm, node: null, shift});
+          }
+        }
+        else {
+          deselect.push({elm: null, shift});
+          select.push({elm: item.elm, node: null, shift});
+        }
+        if(select.length) {
+          this.mode = consts.move_shapes;
+          this.mouseStartPos = event.point.clone();
+        }
+
+        if(item.layer) {
+          this.eve.emit('layer_activated', item.layer);
         }
 
       }
-      else if (this.hitItem.type == 'segment') {
-        if (event.modifiers.shift) {
-          this.hitItem.segment.selected = !this.hitItem.segment.selected;
-        } else {
-          if (!this.hitItem.segment.selected){
-            project.deselect_all_points();
-            project.deselectAll();
+      else if(hitItem.type == 'segment') {
+        const node = item.generatrix.firstSegment.point.is_nearest(event.point, true) ? 'b' : 'e';
+        if(shift) {
+          if(hitItem.segment.selected) {
+            deselect.push({elm: item.elm, node, shift});
           }
-          this.hitItem.segment.selected = true;
+          else {
+            select.push({elm: item.elm, node, shift});
+          }
         }
-        if (this.hitItem.segment.selected) {
+        else {
+          if(!hitItem.segment.selected) {
+            deselect.push({elm: null, shift});
+            select.push({elm: item.elm, node, shift});
+          }
+        }
+        if(select.length) {
           this.mode = consts.move_points;
           this.mouseStartPos = event.point.clone();
-          this.originalContent = this._scope.capture_selection_state();
         }
       }
-      else if (this.hitItem.type == 'handle-in' || this.hitItem.type == 'handle-out') {
+      else if(hitItem.type == 'handle-in' || hitItem.type == 'handle-out') {
         this.mode = consts.move_handle;
         this.mouseStartPos = event.point.clone();
-        this.originalHandleIn = this.hitItem.segment.handleIn.clone();
-        this.originalHandleOut = this.hitItem.segment.handleOut.clone();
+        this.originalHandleIn = hitItem.segment.handleIn.clone();
+        this.originalHandleOut = hitItem.segment.handleOut.clone();
 
       }
 
-      if(item instanceof $p.EditorInvisible.ProfileItem || item instanceof $p.EditorInvisible.Filling){
+      if(item instanceof ProfileItem || item instanceof Filling) {
         item.attache_wnd(this._scope._acc.elm);
         this.profile = item;
       }
 
       this._scope.clear_selection_bounds();
 
-    } else {
+    }
+    else {
       this.mouseStartPos = event.point.clone();
       this.mode = 'box-select';
 
-      if(!event.modifiers.shift && this.profile){
+      if(!shift && this.profile) {
         this.profile.detache_wnd();
         delete this.profile;
       }
 
     }
+
+    deselect.length && this._scope.cmd('deselect', deselect);
+    select.length && this._scope.cmd('select', select);
   }
 
   mouseup(event) {
 
-    const {project, consts} = this._scope;
+    const {_scope, project, mover} = this;
+    const {consts, Rectangle, constructor} = _scope;
+    const {ProfileItem} = constructor;
 
-    if (this.mode == consts.move_shapes) {
-      if (this.changed) {
-        this._scope.clear_selection_bounds();
+    if(this.mode == consts.move_shapes) {
+      if(this.changed) {
+        const vertexes = mover.snap_to_edges({start: this.mouseStartPos, mode: this.mode, event});
+        mover.move_shapes(vertexes);
+        project.redraw();
+        _scope.clear_selection_bounds();
       }
     }
-    else if (this.mode == consts.move_points) {
-      if (this.changed) {
-        this._scope.clear_selection_bounds();
+    else if(this.mode == consts.move_points) {
+      if(this.changed) {
+        const delta = mover.snap_to_edges({start: this.mouseStartPos, mode: this.mode, event});
+        project.move_points(delta);
+        project.redraw();
+        project.deselect_all_points();
       }
     }
-    else if (this.mode == consts.move_handle) {
-      if (this.changed) {
-        this._scope.clear_selection_bounds();
+    else if(this.mode == consts.move_handle) {
+      if(this.changed) {
+        _scope.clear_selection_bounds();
       }
     }
-    else if (this.mode == 'box-select') {
+    else if(this.mode == 'box-select') {
 
-      const box = new paper.Rectangle(this.mouseStartPos, event.point);
+      const box = new Rectangle(this.mouseStartPos, event.point);
 
-      if (!event.modifiers.shift){
+      if(!event.modifiers.shift) {
         project.deselectAll();
       }
 
-      if (event.modifiers.control) {
+      if(event.modifiers.control) {
 
         const profiles = [];
-        this._scope.paths_intersecting_rect(box).forEach((path) => {
-          if(path.parent instanceof $p.EditorInvisible.ProfileItem){
-            if(profiles.indexOf(path.parent) == -1){
+        _scope.paths_intersecting_rect(box).forEach((path) => {
+          if(path.parent instanceof ProfileItem) {
+            if(profiles.indexOf(path.parent) == -1) {
               profiles.push(path.parent);
               path.parent.selected = !path.parent.selected;
             }
           }
-          else{
+          else {
             path.selected = !path.selected;
           }
         });
       }
       else {
 
-        const selectedSegments = this._scope.segments_in_rect(box);
-        if (selectedSegments.length > 0) {
+        const selectedSegments = _scope.segments_in_rect(box);
+        if(selectedSegments.length > 0) {
           for (let i = 0; i < selectedSegments.length; i++) {
             selectedSegments[i].selected = !selectedSegments[i].selected;
           }
         }
         else {
           const profiles = [];
-          this._scope.paths_intersecting_rect(box).forEach((path) => {
-            if(path.parent instanceof $p.EditorInvisible.ProfileItem){
-              if(profiles.indexOf(path.parent) == -1){
+          _scope.paths_intersecting_rect(box).forEach((path) => {
+            if(path.parent instanceof ProfileItem) {
+              if(profiles.indexOf(path.parent) == -1) {
                 profiles.push(path.parent);
                 path.parent.selected = !path.parent.selected;
               }
             }
-            else{
+            else {
               path.selected = !path.selected;
             }
           });
@@ -7438,51 +7946,34 @@ class ToolSelectNode extends ToolElement {
       }
     }
 
-    this._scope.clear_selection_bounds();
+    _scope.clear_selection_bounds();
 
-    if (this.hitItem) {
-      if (this.hitItem.item.selected || (this.hitItem.item.parent && this.hitItem.item.parent.selected)) {
-        this._scope.canvas_cursor('cursor-arrow-small');
+    if(this.hitItem) {
+      if(this.hitItem.item.selected || (this.hitItem.item.parent && this.hitItem.item.parent.selected)) {
+        _scope.canvas_cursor('cursor-arrow-small');
       }
       else {
-        this._scope.canvas_cursor('cursor-arrow-white-shape');
+        _scope.canvas_cursor('cursor-arrow-white-shape');
       }
     }
-
-    this.mouseDown = false;
-    this.changed && project.register_change(true);
   }
-
 
   mousedrag(event) {
 
-    const {project, consts} = this._scope;
+    const {_scope, project, mover} = this;
+    const {consts} = _scope;
 
     this.changed = true;
 
-    if (this.mode == consts.move_shapes) {
-      this._scope.canvas_cursor('cursor-arrow-small');
-
-      let delta = event.point.subtract(this.mouseStartPos);
-      if (!event.modifiers.shift){
-        delta = delta.snap_to_angle(Math.PI*2/4);
-      }
-      this._scope.restore_selection_state(this.originalContent);
-      project.move_points(delta, true);
-      this._scope.clear_selection_bounds();
+    if(this.mode == consts.move_shapes) {
+      _scope.canvas_cursor('cursor-arrow-small');
+      mover.snap_to_edges({start: this.mouseStartPos, mode: this.mode, event});
     }
-    else if (this.mode == consts.move_points) {
-      this._scope.canvas_cursor('cursor-arrow-small');
-
-      let delta = event.point.subtract(this.mouseStartPos);
-      if(!event.modifiers.shift) {
-        delta = delta.snap_to_angle(Math.PI*2/4);
-      }
-      this._scope.restore_selection_state(this.originalContent);
-      project.move_points(delta);
-      this._scope.purge_selection();
+    else if(this.mode == consts.move_points) {
+      _scope.canvas_cursor('cursor-arrow-small');
+      mover.snap_to_edges({start: this.mouseStartPos, mode: this.mode, event});
     }
-    else if (this.mode == consts.move_handle) {
+    else if(this.mode == consts.move_handle) {
 
       const delta = event.point.subtract(this.mouseStartPos);
       const noti = {
@@ -7491,7 +7982,7 @@ class ToolSelectNode extends ToolElement {
         points: []
       };
 
-      if (this.hitItem.type == 'handle-out') {
+      if(this.hitItem.type == 'handle-out') {
         let handlePos = this.originalHandleOut.add(delta);
 
         this.hitItem.segment.handleOut = handlePos;
@@ -7507,25 +7998,26 @@ class ToolSelectNode extends ToolElement {
       noti.profiles[0].rays.clear();
       noti.profiles[0].layer.notify(noti);
 
-      this._scope.purge_selection();
+      _scope.purge_selection();
     }
-    else if (this.mode == 'box-select') {
-      this._scope.drag_rect(this.mouseStartPos, event.point);
+    else if(this.mode == 'box-select') {
+      _scope.drag_rect(this.mouseStartPos, event.point);
     }
   }
 
   keydown(event) {
 
-    const {project} = this._scope;
+    const {project, mover, _scope} = this;
+    const {Profile, Filling, GeneratrixElement, ProfileAddl, Sectional, DimensionLineCustom} = _scope.constructor;
     const {key, modifiers} = event;
     const step = modifiers.shift ? 1 : 10;
     let j, segment, index, point, handle;
 
-    if (key == '+' || key == 'insert') {
+    if(key == '+' || key == 'insert') {
 
-      for(let path of project.selectedItems){
-        if (modifiers.space) {
-          if(path.parent instanceof $p.EditorInvisible.Profile){
+      for (let path of project.selectedItems) {
+        if(modifiers.space) {
+          if(path.parent instanceof Profile) {
 
             const cnn_point = path.parent.cnn_point('e');
             cnn_point && cnn_point.profile && cnn_point.profile.rays.clear(true);
@@ -7538,34 +8030,34 @@ class ToolSelectNode extends ToolElement {
             const newpath = path.split(path.length * 0.5);
             path.lastSegment.point = path.lastSegment.point.add(newpath.getNormalAt(0));
             newpath.firstSegment.point = path.lastSegment.point;
-            new $p.EditorInvisible.Profile({generatrix: newpath, proto: path.parent});
+            new Profile({generatrix: newpath, proto: path.parent});
           }
         }
-        else{
+        else {
           let do_select = false;
-          if(path.parent instanceof $p.EditorInvisible.GeneratrixElement && !(path instanceof $p.EditorInvisible.ProfileAddl)){
+          if(path.parent instanceof GeneratrixElement && !(path instanceof ProfileAddl)) {
             for (let j = 0; j < path.segments.length; j++) {
               segment = path.segments[j];
-              if (segment.selected){
+              if(segment.selected) {
                 do_select = true;
                 break;
               }
             }
-            if(!do_select){
+            if(!do_select) {
               j = 0;
               segment = path.segments[j];
               do_select = true;
             }
           }
-          if(do_select){
+          if(do_select) {
             index = (j < (path.segments.length - 1) ? j + 1 : j);
             point = segment.curve.getPointAt(0.5, true);
-            if(path.parent instanceof $p.EditorInvisible.Sectional){
-              paper.Path.prototype.insert.call(path, index, new paper.Segment(point));
+            if(path.parent instanceof Sectional) {
+              Path.prototype.insert.call(path, index, new Segment(point));
             }
-            else{
+            else {
               handle = segment.curve.getTangentAt(0.5, true).normalize(segment.curve.length / 4);
-              paper.Path.prototype.insert.call(path, index, new paper.Segment(point, handle.negate(), handle));
+              Path.prototype.insert.call(path, index, new Segment(point, handle.negate(), handle));
             }
           }
         }
@@ -7576,43 +8068,45 @@ class ToolSelectNode extends ToolElement {
 
 
     } 
-    else if (key == '-' || key == 'delete' || key == 'backspace') {
+    else if(key == '-' || key == 'delete' || key == 'backspace') {
 
-      if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
+      if(event.event && event.event.target && ['textarea', 'input'].indexOf(event.event.target.tagName.toLowerCase()) != -1) {
         return;
+      }
 
       project.selectedItems.some((path) => {
 
         let do_select = false;
 
-        if(path.parent instanceof $p.EditorInvisible.DimensionLineCustom){
+        if(path.parent instanceof DimensionLineCustom) {
           path.parent.remove();
           return true;
         }
-        else if(path.parent instanceof $p.EditorInvisible.GeneratrixElement){
-          if(path instanceof $p.EditorInvisible.ProfileAddl){
+        else if(path.parent instanceof GeneratrixElement) {
+          if(path instanceof ProfileAddl) {
             path.removeChildren();
             path.remove();
           }
-          else{
+          else {
             for (let j = 0; j < path.segments.length; j++) {
               segment = path.segments[j];
               do_select = do_select || segment.selected;
-              if (segment.selected && segment != path.firstSegment && segment != path.lastSegment ){
+              if(segment.selected && segment != path.firstSegment && segment != path.lastSegment) {
                 path.removeSegment(j);
 
-                path.parent.x1 = path.parent.x1;
+                const x1 = path.parent.x1;
+                path.parent.x1 = x1;
                 break;
               }
             }
-            if(!do_select){
+            if(!do_select) {
               path = path.parent;
               path.removeChildren();
               path.remove();
             }
           }
         }
-        else if(path instanceof $p.EditorInvisible.Filling){
+        else if(path instanceof Filling) {
           path.remove_onlays();
         }
       });
@@ -7621,22 +8115,42 @@ class ToolSelectNode extends ToolElement {
       return false;
 
     }
-    else if (key == 'left') {
-      project.move_points(new paper.Point(-step, 0));
+    else if(['left', 'right', 'up', 'down'].includes(key)) {
+      const profiles = project.selected_profiles();
+
+      if(profiles.length) {
+        let delta;
+        if(key == 'left') {
+          delta = [-step, 0];
+        }
+        else if(key == 'right') {
+          delta = [step, 0];
+        }
+        else if(key == 'up') {
+          delta = [0, -step];
+        }
+        else if(key == 'down') {
+          delta = [0, step];
+        }
+        this._scope.cmd('move', delta);
+        if(event.event) {
+          event.event.preventDefault();
+          event.event.cancelBubble = true;
+        }
+      }
+      else if(!event.event) {
+        $p.ui.dialogs.snack({message: 'Для сдвига профиля, его сначала нужно выделить на эскизе', timeout: 10});
+      }
     }
-    else if (key == 'right') {
-      project.move_points(new paper.Point(step, 0));
-    }
-    else if (key == 'up') {
-      project.move_points(new paper.Point(0, -step));
-    }
-    else if (key == 'down') {
-      project.move_points(new paper.Point(0, step));
+    else if(key == 'escape') {
+      this.mode = null;
+      mover.hide_move_ribs(true);
+      project.deselect_all_points();
     }
   }
 
   testHot(type, event, mode) {
-    if (mode == 'tool-direct-select'){
+    if(mode == 'tool-direct-select') {
       return this.hitTest(event);
     }
   }
@@ -7644,75 +8158,126 @@ class ToolSelectNode extends ToolElement {
   hitTest({point}) {
 
     const hitSize = 6;
-    const {project} = this._scope;
+    const {project, _scope} = this;
+    const canvas_cursor = _scope.canvas_cursor.bind(_scope);
     this.hitItem = null;
 
-    if (point) {
+    const {ProfileItem, DimensionLine, Sectional, EditableText} = _scope.constructor;
+
+    if(point) {
 
       this.hitItem = project.hitTest(point, {selected: true, fill: true, tolerance: hitSize});
 
-      if (!this.hitItem){
+      if(!this.hitItem) {
         this.hitItem = project.hitTest(point, {fill: true, visible: true, tolerance: hitSize});
       }
 
       let hit = project.hitTest(point, {selected: true, handles: true, tolerance: hitSize});
-      if (hit){
+      if(hit) {
         this.hitItem = hit;
       }
 
       hit = project.hitPoints(point, 16, true);
 
-      if (hit) {
-        if (hit.item.parent instanceof $p.EditorInvisible.ProfileItem) {
-          if (hit.item.parent.generatrix === hit.item){
+      if(hit) {
+        if(hit.item.parent instanceof ProfileItem) {
+          if(hit.item.parent.generatrix === hit.item) {
             this.hitItem = hit;
           }
         }
-        else{
+        else {
           this.hitItem = hit;
         }
       }
     }
 
     const {hitItem} = this;
-    if (hitItem) {
-      if (hitItem.type == 'fill' || hitItem.type == 'stroke') {
-
-        if (hitItem.item.parent instanceof $p.EditorInvisible.DimensionLine) {
+    if(hitItem) {
+      if(hitItem.type == 'fill' || hitItem.type == 'stroke') {
+        if(hitItem.item.parent instanceof DimensionLine) {
         }
-        else if (hitItem.item instanceof paper.PointText) {
-          !(hitItem.item instanceof $p.EditorInvisible.EditableText) && this._scope.canvas_cursor('cursor-text');     
+        else if(hitItem.item instanceof _scope.PointText) {
+          !(hitItem.item instanceof EditableText) && canvas_cursor('cursor-text');     
         }
-        else if (hitItem.item.selected) {
-          this._scope.canvas_cursor('cursor-arrow-small');
+        else if(hitItem.item.selected) {
+          canvas_cursor('cursor-arrow-small');
         }
         else {
-          this._scope.canvas_cursor('cursor-arrow-white-shape');
+          canvas_cursor('cursor-arrow-white-shape');
         }
       }
-      else if (hitItem.type == 'segment' || hitItem.type == 'handle-in' || hitItem.type == 'handle-out') {
-        if (hitItem.segment.selected) {
-          this._scope.canvas_cursor('cursor-arrow-small-point');
+      else if(hitItem.type == 'segment' || hitItem.type == 'handle-in' || hitItem.type == 'handle-out') {
+        if(hitItem.segment.selected) {
+          canvas_cursor('cursor-arrow-small-point');
         }
         else {
-          this._scope.canvas_cursor('cursor-arrow-white-point');
+          canvas_cursor('cursor-arrow-white-point');
         }
       }
     }
     else {
       const hit = project.hitTest(point, {stroke: true, visible: true, tolerance: 16});
-      if (hit && hit.item.parent instanceof $p.EditorInvisible.Sectional){
+      if(hit && hit.item.parent instanceof Sectional) {
         this.hitItem = hit;
-        this._scope.canvas_cursor('cursor-arrow-white-shape');
+        canvas_cursor('cursor-arrow-white-shape');
       }
-      else{
-        this._scope.canvas_cursor('cursor-arrow-white');
+      else {
+        canvas_cursor('cursor-arrow-white');
       }
     }
 
     return true;
   }
 
+  sz_start(item) {
+    this.sz_fin();
+    this.mode = 'sz_start';
+    this.profile = item;
+    const {view} = this.project;
+    const point = view.projectToView(item.children.text.bounds.center);
+    this.input = document.createElement('INPUT');
+    this.input.classList.add('sz_input');
+    this.input.style.top = `${point.y - 4}px`;
+    this.input.style.left = `${point.x - 16}px`;
+    this.input.type = 'number';
+    this.input.step = '10';
+    this.input.value = item.size;
+    view.element.parentNode.appendChild(this.input);
+    this.input.focus();
+    this.input.select();
+    this.input.onkeydown = this.sz_keydown.bind(this);
+  }
+
+  sz_keydown({key}) {
+    if(key === 'Escape' || key === 'Tab') {
+      this.sz_fin();
+    }
+    else if(key === 'Enter') {
+      const {input, profile} = this;
+      const attr = {
+        wnd: profile,
+        size: parseFloat(input.value),
+        name: 'auto',
+      };
+      this.sz_fin();
+      profile.sizes_wnd(attr);
+    }
+  }
+
+  sz_fin() {
+    const {input, profile, project, mode, _scope} = this;
+    const {DimensionLine} = _scope.constructor;
+    if(input) {
+      project.view.element.parentNode.removeChild(input);
+      this.input = null;
+    }
+    if(profile instanceof DimensionLine) {
+      this.profile = null;
+    }
+    if(mode === 'sz_start') {
+      this.mode = null;
+    }
+  }
 }
 
 

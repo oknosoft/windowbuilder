@@ -47,8 +47,7 @@ class DumbScreen extends Component {
     const footer = page ? (over ?
       <div>{`Такт №${page.page}, загружено ${page.total_rows} объектов - чтение изменений `} <i className="fa fa-spinner fa-pulse"></i></div>
       :
-      page.text || `Такт №${page.page}, загружено ${
-        job_prm && job_prm.use_ram === false ? page.docs_written : Math.min(page.page * page.limit, page.total_rows)} из ${page.total_rows} объектов`)
+      page.text || `Такт №${page.page}, загружено ${page.docs_written} из ${page.total_rows} объектов`)
       : '';
 
     return <div className='splash' style={{marginTop: top, opacity: splash ? 1 : 0.15}}>

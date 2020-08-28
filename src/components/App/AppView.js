@@ -139,20 +139,20 @@ class AppRoot extends Component {
       confirm && confirm.open && <Confirm key="confirm" {...confirm}/>,
 
       // обрыв связи
-      couch_direct && user.logged_in && !offline && props.complete_loaded && !props.sync_started && $p.job_prm.use_ram !== false &&
-      <Snack
-        key="break"
-        snack={{
-          open: true,
-          message: 'Потеряна связь с сервером, ждём восстановления...',
-          button: 'Подробнее'}}
-        handleClose={() => {
-          props.handleIfaceState({
-            component: '',
-            name: 'alert',
-            value: {open: true, title: 'Интернет-соединение', text: 'Можно будет продолжить работу после восстановления связи'}});
-        }}
-      />,
+      // couch_direct && user.logged_in && !offline && props.complete_loaded && !props.sync_started &&
+      // <Snack
+      //   key="break"
+      //   snack={{
+      //     open: true,
+      //     message: 'Потеряна связь с сервером, ждём восстановления...',
+      //     button: 'Подробнее'}}
+      //   handleClose={() => {
+      //     props.handleIfaceState({
+      //       component: '',
+      //       name: 'alert',
+      //       value: {open: true, title: 'Интернет-соединение', text: 'Можно будет продолжить работу после восстановления связи'}});
+      //   }}
+      // />,
 
     ];
   }
