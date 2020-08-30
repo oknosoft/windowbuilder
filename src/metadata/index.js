@@ -65,15 +65,13 @@ export function init(store) {
     pouch.init(wsql, job_prm);
     reset_cache(pouch);
 
-    if(job_prm.use_ram === false) {
-      pouch.remote.ram = new classes.PouchDB(pouch.dbpath('ram'), {auto_compaction: true, revs_limit: 3, owner: pouch, fetch: pouch.fetch});
-      pouch.on({
-        on_log_in() {
-          return load_ram($p);
-        },
-      });
-      md.once('predefined_elmnts_inited', () => pouch.emit('pouch_complete_loaded'));
-    }
+    pouch.remote.ram = new classes.PouchDB(pouch.dbpath('ram'), {auto_compaction: true, revs_limit: 3, owner: pouch, fetch: pouch.fetch});
+    pouch.on({
+      on_log_in() {
+        return load_ram($p);
+      },
+    });
+    md.once('predefined_elmnts_inited', () => pouch.emit('pouch_complete_loaded'));
 
     // читаем paperjs и deep-diff
     $p.load_script('/dist/paperjs-deep-diff.min.js', 'script')
@@ -101,7 +99,7 @@ export function init(store) {
         dispatch(metaActions.META_LOADED($p));
 
         // читаем локальные данные в ОЗУ
-        return job_prm.use_ram === false ? load_common($p) : pouch.load_data();
+        return load_common($p);
 
       })
       .catch((err) => {

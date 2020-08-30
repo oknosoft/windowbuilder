@@ -26,7 +26,8 @@ class PenControls {
     this.mousemove = this.mousemove.bind(this);
     this.create_click = this.create_click.bind(this);
 
-    function input_change() {
+      function input_change() {
+        let p;
 
       switch(this.name) {
 
@@ -47,7 +48,7 @@ class PenControls {
             return false;
           }
 
-          const p = new paper.Point();
+          p = new paper.Point();
           p.length = parseFloat(t._l.value || 0);
           p.angle = parseFloat(t._a.value || 0);
           p.y = -p.y;
@@ -59,8 +60,8 @@ class PenControls {
       }
     }
 
-    tool._scope._wrapper.appendChild(_cont);
-    _cont.className = "pen_cont";
+      tool.view.element.parentNode.appendChild(_cont);
+      _cont.className = "pen_cont";
 
     tool.project.view.on('mousemove', this.mousemove);
 
@@ -171,7 +172,7 @@ class PenControls {
   unload() {
     const {_scope} = this._tool;
     _scope.project.view.off('mousemove', this.mousemove);
-    _scope._wrapper.removeChild(this._cont);
+    this._cont.parentNode.removeChild(this._cont);
     this._cont = null;
   }
 
@@ -566,6 +567,8 @@ class ToolPen extends ToolElement {
           }
         }, 50);
       }
+
+      project.redraw();
     }
     else if (this.hitItem && this.hitItem.item && (event.modifiers.shift || event.modifiers.control || event.modifiers.option)) {
 

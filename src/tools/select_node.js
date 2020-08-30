@@ -440,6 +440,8 @@ class ToolSelectNode extends ToolElement {
         }
       });
 
+      project._ch.length && project.redraw();
+
       // Prevent the key event from bubbling
       event.stop();
       return false;

@@ -209,14 +209,9 @@ class Mover {
       const de = e.add(delta);
       const line = new Path({insert: false, segments: [db, de]}).elongation(1000);
       // map узлов грава и структуры точек
-      vertexes.get(vb).push({skeleton, profile, line, pt: db, ribs: new Map(), points: new Set()});
-      vertexes.get(ve).push({skeleton, profile, line, pt: de, ribs: new Map(), points: new Set()});
+      vertexes.get(vb).push({skeleton, profile, line, pt: db, node: 'b', ribs: new Map(), points: new Set()});
+      vertexes.get(ve).push({skeleton, profile, line, pt: de, node: 'e', ribs: new Map(), points: new Set()});
       lines.set(line, {vb, ve, db, de});
-    }
-
-    for(const [line, lv] of lines) {
-      const {vb, ve, db, de} = lv;
-      const {skeleton, profile, ribs, points} = vertexes.get(vb);
     }
 
     // анализируем вариант T
@@ -264,7 +259,7 @@ class Mover {
               if(candidate.profile === edge.profile && !candidate.is_profile_outer(edge)) {
                 const path = edge.profile.generatrix
                   .get_subpath(edge.startVertex.point, candidate.endVertex.point)
-                  .elongation(-edge.profile.width);
+                  .elongation(-edge.profile.width * 2);
                 const npoint = line.intersect_point(path, point);
                 if(npoint) {
                   point = npoint;
@@ -283,10 +278,71 @@ class Mover {
 
     }
 
-    for(const [line, lv] of lines) {
-      const {vb, ve, db, de} = lv;
-      const {skeleton, profile, ribs, points} = vertexes.get(vb);
+    // ограничения для рамных элементов
+    for(const [vertex, av] of vertexes) {
+      for (const v of av) {
+        let {ribs, point, points, pt, node, profile, line} = v;
+        let {width} = profile;
+        width *= 2;
+        if(!point) {
+          for(const pnt of points) {
+            const l1 = new Path({insert: false, segments: [pnt, profile[node]]});
+            const tangent = l1.getTangentAt(0);
+            const dt = delta.project(tangent);
+            point = profile[node].add(dt);
 
+            // проверка на длину вставки
+            let brlen;
+            for(const [rprofile, rnode] of ribs) {
+              if(rprofile === profile) {
+                continue;
+              }
+              const rp = rnode === 'b' ? rprofile.e : rprofile.b;
+              const l3 = new Path({insert: false, segments: [rp, point]});
+              const {lmin, lmax} = rprofile.inset;
+              if(lmax && l3.length > lmax) {
+                point = l3.getPointAt(lmax);
+                brlen = {path: l3, len: lmax, point: point.clone()};
+                break;
+              }
+              if(lmin) {
+                let cond = l3.length < lmin;
+                if(!cond) {
+                  const angle = tangent.getDirectedAngle(l3.getTangentAt(0));
+                  cond = angle > 170 || angle < -170;
+                }
+                if(cond) {
+                  const l4 = new Path({insert: false, segments: [rp, profile[node]]});
+                  point = l4.getPointAt(lmin);
+                  if(!point) {
+                    point = profile[node];
+                  }
+                  brlen = {path: l4, len: lmin, point: point.clone()};
+                  break;
+                }
+              }
+            }
+
+            // проверка на длину сегмента
+            const l2 = new Path({insert: false, segments: [pnt, point]});
+            const angle = tangent.getDirectedAngle(l2.getTangentAt(0));
+            if(l2.length < width || angle > 170 || angle < -170) {
+              let ipt = l1.getPointAt(width);
+              if(brlen) {
+                const bpt = brlen.path.getNearestPoint(ipt);
+                const offset = brlen.path.getOffsetOf(bpt);
+                if(offset < brlen.len) {
+                  ipt = brlen.point;
+                }
+              }
+              point = ipt;
+              break;
+            }
+
+          }
+          v.point = point;
+        }
+      }
     }
 
     this.draw_move_ribs(vertexes);
@@ -341,7 +397,7 @@ class Mover {
           fillColor: 'blue',
           center: point,
           strokeScaling: false,
-          size: [80, 80],
+          size: [60, 60],
         });
 
         // прозрачность для деформируемых элементов
