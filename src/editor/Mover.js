@@ -40,23 +40,26 @@ class Mover {
    * @param point
    * @return {Point}
    */
-  snap_points({start, point, delta}) {
+  snap_points({start, point, delta, vertexes, exclude = []}) {
     // в режиме move_points, обрабатываем только один узел
     const {Path} = this.editor;
-    const vertexes = new Map();
     const tvertexes = new Map();
 
     // ищем первый узел
-    for(const profile of this.project.selected_profiles()) {
-      const {skeleton} = profile;
-      for(const vertex of skeleton.vertexesByProfile(profile)) {
-        if(vertex.selected) {
-          vertexes.set(vertex, [{skeleton, profile, ribs: new Map(), points: new Set()}]);
+    if(!vertexes) {
+      this.hide_move_ribs();
+      vertexes = new Map();
+      for(const profile of this.project.selected_profiles()) {
+        const {skeleton} = profile;
+        for(const vertex of skeleton.vertexesByProfile(profile)) {
+          if(vertex.selected) {
+            vertexes.set(vertex, [{skeleton, profile, ribs: new Map(), points: new Set()}]);
+            break;
+          }
+        }
+        if(vertexes.size) {
           break;
         }
-      }
-      if(vertexes.size) {
-        break;
       }
     }
 
@@ -67,6 +70,9 @@ class Mover {
       const corners = profile.is_corner();
       const candidates = new Set();
       for(const edge of vertex.getEdges()) {
+        if(exclude.includes(edge.profile)) {
+          continue;
+        }
         points.add(edge.endVertex.point);
         if(!ribs.has(edge.profile)) {
           ribs.set(edge.profile, {paths: []});
@@ -85,6 +91,9 @@ class Mover {
         }
       }
       for(const edge of vertex.getEndEdges()) {
+        if(exclude.includes(edge.profile)) {
+          continue;
+        }
         points.add(edge.startVertex.point);
         if(!ribs.has(edge.profile)) {
           ribs.set(edge.profile, {paths: []});
@@ -174,6 +183,7 @@ class Mover {
     for(const [k,v] of tvertexes) {
       vertexes.set(k, v);
     }
+
     this.draw_move_ribs(vertexes);
 
     return delta;
@@ -191,6 +201,8 @@ class Mover {
     const lines = new Map();
     // элементы двигаем перпендикулярно их образующим и следим за вершинами
     // добавляем delta к узлам, строим через них линию, находим точки на примыкающих - они и будут конечными
+
+    this.hide_move_ribs();
 
     // собираем узлы
     for(const profile of this.project.selected_profiles()) {
@@ -211,14 +223,14 @@ class Mover {
       // map узлов грава и структуры точек
       vertexes.get(vb).push({skeleton, profile, line, pt: db, node: 'b', ribs: new Map(), points: new Set()});
       vertexes.get(ve).push({skeleton, profile, line, pt: de, node: 'e', ribs: new Map(), points: new Set()});
-      lines.set(line, {vb, ve, db, de});
+      lines.set(line, {vb, ve, db, de, profile});
     }
 
     // анализируем вариант T
     for(const [vertex, av] of vertexes) {
-      if(!vertex) {
-        break;
-      }
+      // if(!vertex) {
+      //   break;
+      // }
       // в ribs живут отрезки, а в points - концы подходящих для сдвига сегментов
       for(const v of av) {
         const {skeleton, profile, ribs, points, line, pt} = v;
@@ -345,6 +357,37 @@ class Mover {
       }
     }
 
+    // связанные импосты
+    const tvertexes = new Map();
+    for(const [line, {vb, ve, db, de, profile}] of lines) {
+      const {inner, outer} = profile.joined_imposts();
+      for(const {point: ipt, profile: impost} of inner.concat(outer)) {
+        // получаем дельту, для пересечения будущей линии ведущего профиля с текущим импостом
+        const avb = vertexes.get(vb)[0];
+        const ave = vertexes.get(ve)[0];
+        const l2 = new Path({insert: false, segments: [avb.point || avb.pt, ave.point || ave.pt]});
+        const gen = impost.generatrix.clone({insert: false}).elongation(1000);
+        const p2 = gen.intersect_point(l2, 3000);
+        const delta = p2.subtract(ipt);
+        const {skeleton} = impost;
+        for(const vertex of skeleton.vertexesByProfile(impost)) {
+          if(vertex.point.is_nearest(ipt)) {
+            const ivertexes = new Map();
+            ivertexes.set(vertex, [{skeleton, profile: impost, ribs: new Map(), points: new Set()}])
+            const idelta = this.snap_points({start: ipt, point: p2, delta, vertexes: ivertexes, exclude: [profile]});
+            if(idelta.length < delta.length) {
+              avb.point = avb.point.subtract(delta).add(idelta);
+              ave.point = ave.point.subtract(delta).add(idelta);
+            }
+            break;
+          }
+        }
+      }
+    }
+    for(const [k,v] of tvertexes) {
+      vertexes.set(k, v);
+    }
+
     this.draw_move_ribs(vertexes);
 
     return vertexes;
@@ -364,7 +407,6 @@ class Mover {
   }
 
   draw_move_ribs(vertexes) {
-    this.hide_move_ribs();
     const {Path} = this.editor;
     const ppoints = new Map();
 

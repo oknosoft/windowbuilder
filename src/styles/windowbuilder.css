@@ -78,6 +78,15 @@
 	word-break: break-all;
 }
 
+.sz_input {
+  position: absolute;
+  background: white;
+  padding: 4px;
+  width: 4rem;
+  text-align: center;
+  border: none;
+}
+
 .mousepos {
 	position: absolute;
 	left: 4px;

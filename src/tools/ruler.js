@@ -344,8 +344,6 @@ class RulerWnd {
   }
 }
 
-$p.EditorInvisible.RulerWnd = RulerWnd;
-
 
 /**
  * ### Относительное позиционирование и сдвиг
