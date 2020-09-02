@@ -3049,7 +3049,7 @@ class Mover {
       vertexes.set(k, v);
     }
 
-    this.draw_move_ribs(vertexes);
+    !exclude.length && this.draw_move_ribs(vertexes);
 
     return delta;
   }
@@ -3209,19 +3209,23 @@ class Mover {
         const ave = vertexes.get(ve)[0];
         const l2 = new Path({insert: false, segments: [avb.point || avb.pt, ave.point || ave.pt]});
         const gen = impost.generatrix.clone({insert: false}).elongation(1000);
-        const p2 = gen.intersect_point(l2, 3000);
-        const delta = p2.subtract(ipt);
-        const {skeleton} = impost;
-        for(const vertex of skeleton.vertexesByProfile(impost)) {
-          if(vertex.point.is_nearest(ipt)) {
-            const ivertexes = new Map();
-            ivertexes.set(vertex, [{skeleton, profile: impost, ribs: new Map(), points: new Set()}])
-            const idelta = this.snap_points({start: ipt, point: p2, delta, vertexes: ivertexes, exclude: [profile]});
-            if(idelta.length < delta.length) {
-              avb.point = avb.point.subtract(delta).add(idelta);
-              ave.point = ave.point.subtract(delta).add(idelta);
+        const p2 = gen.intersect_point(l2, ipt, 3000);
+        if(p2) {
+          const delta = p2.subtract(ipt);
+          const {skeleton} = impost;
+          for(const vertex of skeleton.vertexesByProfile(impost)) {
+            if(vertex.point.is_nearest(ipt)) {
+              const vv = [{skeleton, profile: impost, ribs: new Map(), points: new Set()}];
+              const ivertexes = new Map();
+              ivertexes.set(vertex, vv);
+              tvertexes.set(vertex, vv);
+              const idelta = this.snap_points({start: ipt, point: p2, delta, vertexes: ivertexes, exclude: [profile]});
+              if(idelta.length < delta.length) {
+                avb.point = avb.point.subtract(delta).add(idelta);
+                ave.point = ave.point.subtract(delta).add(idelta);
+              }
+              break;
             }
-            break;
           }
         }
       }
@@ -3316,8 +3320,8 @@ class Mover {
           point = pt;
         }
         for(const [profile, node] of ribs) {
-          const node_point = profile[node];
-          if(!node_point.is_nearest(point, true)) {
+          const node_point = profile[node.node || node];
+          if(!node_point.is_nearest(point)) {
             project.deselectAll();
             node_point.selected = true;
             profile.move_points(point.subtract(node_point));
