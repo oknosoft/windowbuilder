@@ -5,12 +5,7 @@
   "description": "Расчет и заказ изделий онлайн",
   "icons": [
     {
-      "src": "./imgs/fav-wnd.png",
-      "sizes": "32x32",
-      "type": "image/png"
-    },
-    {
-      "src": "./imgs/fav-md144.png",
+      "src": "./imgs/fav-okn144.png",
       "sizes": "144x144",
       "type": "image/png"
     }],

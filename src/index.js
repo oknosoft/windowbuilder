@@ -49,8 +49,8 @@ RootProvider.childContextTypes = {
 
 render(<RootProvider />, document.getElementById('root'));
 
-serviceWorker.unregister({
+serviceWorker.register({
   onUpdate() {
-    $p && $p.record_log('Доступен новый контент, обновите страницу');
-  }
+    $p && $p.ui.dialogs.snack({message: `Код программы обновлён, перезагрузите страницу`, reset: true});
+  },
 });
