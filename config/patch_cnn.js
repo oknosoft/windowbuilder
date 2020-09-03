@@ -34,7 +34,7 @@ export const predefined = {
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
     templates: true,
-    //keys: {google: ''},
+    keys: {google: ''},
     crazy_ram: false,
   },
   'rusokon.': {

@@ -632,7 +632,7 @@ module.exports = function(webpackEnv) {
             new RegExp('^/$'),
           ],
           // дополнительные скрипты сервисворкера
-          //importScripts: ['sw-ext.js'],
+          importScripts: ['sw-ext.js'],
         }),
       // TypeScript type checking
       useTypeScript &&
