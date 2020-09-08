@@ -14,7 +14,6 @@ export const predefined = {
     host: 'https://zakaz.ecookna.ru/',
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
-    templates: true,
     keys: keys21,
   },
   'start.ecookna.': {
@@ -22,7 +21,6 @@ export const predefined = {
     host: 'https://start.ecookna.ru/',
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
-    templates: false,
     keys: keys21,
     ram_indexer: false,
   },
@@ -30,7 +28,6 @@ export const predefined = {
     zone: 21,
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
-    templates: true,
     //keys: {google: ''},
   },
   'rusokon.': {
@@ -73,6 +70,9 @@ export function patch_prm(settings) {
 export function patch_cnn() {
 
   const {job_prm, wsql} = $p;
+
+  job_prm.use_ram = false;
+  wsql.set_user_param('use_ram', false);
 
   for (const elm in predefined) {
     const prm = predefined[elm];
