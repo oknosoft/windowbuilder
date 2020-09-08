@@ -1010,6 +1010,7 @@ function Clipbrd(_editor) {
 }
 
 
+
 class Deformer {
 
   constructor(editor) {
@@ -1029,6 +1030,7 @@ class Deformer {
   get project() {
     return this.editor.project;
   }
+
 
   select(items) {
     const {project, editor} = this;
@@ -1052,6 +1054,7 @@ class Deformer {
     deselect && project.deselect_all_points();
   }
 
+
   deselect(items) {
     const {project, editor} = this;
     if(!items || !items.length || items.some(({elm}) => !elm)) {
@@ -1071,30 +1074,37 @@ class Deformer {
     }
   }
 
+
   move(delta) {
     const {project, editor: {Point}} = this;
     project.move_points(new Point(delta));
   }
 
+
   merge() {
 
   }
+
 
   separate() {
 
   }
 
+
   split() {
 
   }
+
 
   add() {
 
   }
 
+
   remove() {
 
   }
+
 
   prop() {
 
@@ -1533,6 +1543,8 @@ class Editor extends $p.EditorInvisible {
     _editor._wrapper.appendChild(_toppos);
     _toppos.className = 'toppos';
 
+    this.arrow_btns(_toppos);
+
     this._ortpos = document.createElement('div');
     _toppos.appendChild(this._ortpos);
     this._ortpos.className = 'ortpos';
@@ -1549,8 +1561,52 @@ class Editor extends $p.EditorInvisible {
     this._errpos.style.display = 'none';
     this._errpos.onclick = () => this.show_errpos();
 
-
     _editor._acc.attach(_editor.project._dp);
+  }
+
+  arrow_btns(toppos) {
+    const arrow_mouseup = this._mover.arrow.mouseup.bind(this._mover.arrow);
+
+    const _arrow_up = document.createElement('div');
+    toppos.appendChild(_arrow_up);
+    _arrow_up.className = 'arrowpos';
+    _arrow_up.innerHTML = '<i class="fa fa-arrow-up"></i>';
+    _arrow_up.setAttribute('title', 'Сдвинуть элемент вверх');
+    _arrow_up.onmousedown = this._mover.arrow.mousedown.bind(this._mover.arrow, 'up');
+    _arrow_up.onmouseup = arrow_mouseup;
+
+    const _rdrpos = document.createElement('div');
+    toppos.parentNode.appendChild(_rdrpos);
+    _rdrpos.className = 'toppos rdrpos';
+    const _arrow_right = document.createElement('div');
+    _rdrpos.appendChild(_arrow_right);
+    _arrow_right.className = ' arrowpos';
+    _arrow_right.innerHTML = '<i class="fa fa-arrow-right"></i>';
+    _arrow_right.setAttribute('title', 'Сдвинуть элемент вправо');
+    _arrow_right.onmousedown = this._mover.arrow.mousedown.bind(this._mover.arrow, 'right');
+    _arrow_right.onmouseup = arrow_mouseup;
+
+    const _rddpos = document.createElement('div');
+    toppos.parentNode.appendChild(_rddpos);
+    _rddpos.className = 'toppos rddpos';
+    const _arrow_down = document.createElement('div');
+    _rddpos.appendChild(_arrow_down);
+    _arrow_down.className = ' arrowpos';
+    _arrow_down.innerHTML = '<i class="fa fa-arrow-down"></i>';
+    _arrow_down.setAttribute('title', 'Сдвинуть элемент вниз');
+    _arrow_down.onmousedown = this._mover.arrow.mousedown.bind(this._mover.arrow, 'down');
+    _arrow_down.onmouseup = arrow_mouseup;
+
+    const _ldlpos = document.createElement('div');
+    toppos.parentNode.appendChild(_ldlpos);
+    _ldlpos.className = 'toppos ldlpos';
+    const _arrow_left = document.createElement('div');
+    _ldlpos.appendChild(_arrow_left);
+    _arrow_left.className = ' arrowpos';
+    _arrow_left.innerHTML = '<i class="fa fa-arrow-left"></i>';
+    _arrow_left.setAttribute('title', 'Сдвинуть элемент влево');
+    _arrow_left.onmousedown = this._mover.arrow.mousedown.bind(this._mover.arrow, 'left');
+    _arrow_left.onmouseup = arrow_mouseup;
   }
 
   select_tool(name) {
@@ -2889,6 +2945,82 @@ class Mover {
 
   constructor(editor) {
     this.editor = editor;
+
+    this.arrow = {
+      pos: '',
+      timer: 0,
+      shift: null,
+      last: 0,
+      delta() {
+        const delta = editor.Key.isDown('shift') ? 1 : 10;
+        const {Point} = editor;
+        switch (this.pos) {
+        case 'up':
+          return new Point(0, -delta);
+        case 'left':
+          return new Point(-delta, 0);
+        case 'down':
+          return new Point(0, delta);
+        case 'right':
+          return new Point(delta, 0);
+        }
+      },
+      mousedown(pos) {
+        this.pos = pos;
+        this.shift = null;
+        const {tool} = editor;
+        if(tool instanceof ToolSelectNode) {
+          const profiles = editor.project.selected_profiles();
+          if(profiles.length) {
+            const profile = profiles[0];
+            tool.mode = editor.consts.move_shapes;
+            tool.mouseStartPos = profile.interiorPoint();
+          }
+          this.handleTick(600);
+        }
+      },
+      mousedrag() {
+        const {tool} = editor;
+        if(this.shift && tool) {
+          tool.emit('mousedrag', {
+            point: tool.mouseStartPos.add(this.shift),
+            modifiers: {}
+          });
+        }
+      },
+      mouseup() {
+        if(!this.timer) {
+          return;
+        }
+        clearTimeout(this.timer);
+        this.timer = 0;
+        if(!this.shift) {
+          this.handleTick(0);
+        }
+        const {tool} = editor;
+        if(this.shift && tool instanceof ToolSelectNode) {
+          tool.emit('mouseup', {
+            point: tool.mouseStartPos.add(this.shift),
+            modifiers: {}
+          });
+        }
+      },
+      handleTick(interval) {
+        if(interval > 30) {
+          interval /= 2;
+        }
+        const delta = this.delta();
+        this.shift = this.shift ? this.shift.add(delta) : delta;
+        this.mousedrag();
+        if(this.timer) {
+          clearTimeout(this.timer);
+          this.timer = 0;
+        }
+        if(interval) {
+          this.timer = setTimeout(this.handleTick.bind(this, interval), interval);
+        }
+      }
+    };
   }
 
   get project() {
@@ -3332,6 +3464,7 @@ class Mover {
     }
     this.hide_move_ribs(true);
   }
+
 }
 
 class StableZoom {
@@ -3525,6 +3658,8 @@ class UndoRedo {
 
 
 
+
+
 class ToolElement extends $p.EditorInvisible.ToolElement {
 
   constructor() {
@@ -3536,6 +3671,7 @@ class ToolElement extends $p.EditorInvisible.ToolElement {
     super.on_activate(cursor);
     this._scope.tb_left.select(this.options.name);
   }
+
 
   detache_wnd() {
     if (this.wnd) {
@@ -5841,6 +5977,8 @@ class ToolPan extends ToolElement {
 }
 
 
+
+
 class PenControls {
 
   constructor(tool) {
@@ -6003,6 +6141,7 @@ class PenControls {
   }
 
 }
+
 
 
 class ToolPen extends ToolElement {
@@ -6812,6 +6951,7 @@ class ToolPen extends ToolElement {
 
 
 
+
   standard_form(name) {
     if(this['add_' + name]) {
       this['add_' + name](this.project.bounds);
@@ -6821,6 +6961,7 @@ class ToolPen extends ToolElement {
       name !== 'standard_form' && $p.msg.show_not_implemented();
     }
   }
+
 
   add_sequence(points) {
     const profiles = [];
@@ -6835,6 +6976,7 @@ class ToolPen extends ToolElement {
     return profiles;
   }
 
+
   add_square(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -6845,6 +6987,7 @@ class ToolPen extends ToolElement {
     ]);
   }
 
+
   add_triangle1(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -6853,6 +6996,7 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
+
 
   add_triangle2(bounds) {
     const point = bounds.bottomRight;
@@ -6863,6 +7007,7 @@ class ToolPen extends ToolElement {
     ]);
   }
 
+
   add_triangle3(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -6871,6 +7016,7 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
+
 
   add_semicircle1(bounds) {
     const point = bounds.bottomRight;
@@ -6881,6 +7027,7 @@ class ToolPen extends ToolElement {
     profiles[0].arc_h = 500;
   }
 
+
   add_semicircle2(bounds) {
     const point = bounds.bottomRight;
     const profiles = this.add_sequence([
@@ -6889,6 +7036,7 @@ class ToolPen extends ToolElement {
     ]);
     profiles[1].arc_h = 500;
   }
+
 
   add_circle(bounds) {
     const point = bounds.bottomRight;
@@ -6899,6 +7047,7 @@ class ToolPen extends ToolElement {
     profiles[0].arc_h = 500;
     profiles[1].arc_h = 500;
   }
+
 
   add_arc1(bounds) {
     const point = bounds.bottomRight;
@@ -6911,6 +7060,7 @@ class ToolPen extends ToolElement {
     profiles[1].arc_h = 500;
   }
 
+
   add_trapeze1(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -6921,6 +7071,7 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
+
 
   add_trapeze2(bounds) {
     const point = bounds.bottomRight;
@@ -6934,6 +7085,7 @@ class ToolPen extends ToolElement {
     ]);
   }
 
+
   add_trapeze3(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -6943,6 +7095,7 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
+
 
   add_trapeze4(bounds) {
     const point = bounds.bottomRight;
@@ -6954,6 +7107,7 @@ class ToolPen extends ToolElement {
     ]);
   }
 
+
   add_trapeze5(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -6964,6 +7118,7 @@ class ToolPen extends ToolElement {
     ]);
   }
 
+
   add_trapeze6(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -6973,6 +7128,7 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
+
 
   add_trapeze7(bounds) {
     const point = bounds.bottomRight;
@@ -6985,6 +7141,7 @@ class ToolPen extends ToolElement {
     ]);
   }
 
+
   add_trapeze8(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -6995,6 +7152,7 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
+
 
   add_trapeze9(bounds) {
     const point = bounds.bottomRight;
@@ -7007,6 +7165,7 @@ class ToolPen extends ToolElement {
     ]);
   }
 
+
   add_trapeze10(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -7018,6 +7177,7 @@ class ToolPen extends ToolElement {
     ]);
   }
 
+
   decorate_layers(reset) {
     const {activeLayer} = this.project;
     this.project.getItems({class: $p.EditorInvisible.Contour}).forEach((l) => {
@@ -7026,6 +7186,8 @@ class ToolPen extends ToolElement {
   }
 
 }
+
+
 
 
 
@@ -7358,6 +7520,7 @@ class RulerWnd {
     this.grid.setEditable(line.selected);
   }
 }
+
 
 
 class ToolRuler extends ToolElement {
@@ -7808,6 +7971,8 @@ $p.EditorInvisible.ToolRuler = ToolRuler;
 
 
 
+
+
 class ToolSelectNode extends ToolElement {
 
   constructor() {
@@ -7940,6 +8105,7 @@ class ToolSelectNode extends ToolElement {
         this.mouseStartPos = event.point.clone();
         this.originalHandleIn = hitItem.segment.handleIn.clone();
         this.originalHandleOut = hitItem.segment.handleOut.clone();
+
 
       }
 

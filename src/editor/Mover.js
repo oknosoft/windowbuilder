@@ -5,6 +5,83 @@ class Mover {
 
   constructor(editor) {
     this.editor = editor;
+
+    this.arrow = {
+      pos: '',
+      timer: 0,
+      shift: null,
+      last: 0,
+      delta() {
+        const delta = editor.Key.isDown('shift') ? 1 : 10;
+        const {Point} = editor;
+        switch (this.pos) {
+        case 'up':
+          return new Point(0, -delta);
+        case 'left':
+          return new Point(-delta, 0);
+        case 'down':
+          return new Point(0, delta);
+        case 'right':
+          return new Point(delta, 0);
+        }
+      },
+      mousedown(pos) {
+        this.pos = pos;
+        this.shift = null;
+        const {tool} = editor;
+        if(tool instanceof ToolSelectNode) {
+          const profiles = editor.project.selected_profiles();
+          if(profiles.length) {
+            const profile = profiles[0];
+            tool.mode = editor.consts.move_shapes;
+            tool.mouseStartPos = profile.interiorPoint();
+          }
+          this.handleTick(600);
+        }
+      },
+      mousedrag() {
+        const {tool} = editor;
+        if(this.shift && tool) {
+          tool.emit('mousedrag', {
+            point: tool.mouseStartPos.add(this.shift),
+            modifiers: {}
+          });
+        }
+      },
+      mouseup() {
+        //evt.target.blur();
+        if(!this.timer) {
+          return;
+        }
+        clearTimeout(this.timer);
+        this.timer = 0;
+        if(!this.shift) {
+          this.handleTick(0);
+        }
+        const {tool} = editor;
+        if(this.shift && tool instanceof ToolSelectNode) {
+          tool.emit('mouseup', {
+            point: tool.mouseStartPos.add(this.shift),
+            modifiers: {}
+          });
+        }
+      },
+      handleTick(interval) {
+        if(interval > 30) {
+          interval /= 2;
+        }
+        const delta = this.delta();
+        this.shift = this.shift ? this.shift.add(delta) : delta;
+        this.mousedrag();
+        if(this.timer) {
+          clearTimeout(this.timer);
+          this.timer = 0;
+        }
+        if(interval) {
+          this.timer = setTimeout(this.handleTick.bind(this, interval), interval);
+        }
+      }
+    };
   }
 
   get project() {
@@ -491,4 +568,5 @@ class Mover {
     }
     this.hide_move_ribs(true);
   }
+
 }

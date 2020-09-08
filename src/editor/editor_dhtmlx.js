@@ -616,6 +616,8 @@ class Editor extends $p.EditorInvisible {
     _editor._wrapper.appendChild(_toppos);
     _toppos.className = 'toppos';
 
+    this.arrow_btns(_toppos);
+
     this._ortpos = document.createElement('div');
     _toppos.appendChild(this._ortpos);
     this._ortpos.className = 'ortpos';
@@ -632,8 +634,55 @@ class Editor extends $p.EditorInvisible {
     this._errpos.style.display = 'none';
     this._errpos.onclick = () => this.show_errpos();
 
-
     _editor._acc.attach(_editor.project._dp);
+  }
+
+  /**
+   * Создаёт кнопки для сдвига элементов
+   */
+  arrow_btns(toppos) {
+    const arrow_mouseup = this._mover.arrow.mouseup.bind(this._mover.arrow);
+
+    const _arrow_up = document.createElement('div');
+    toppos.appendChild(_arrow_up);
+    _arrow_up.className = 'arrowpos';
+    _arrow_up.innerHTML = '<i class="fa fa-arrow-up"></i>';
+    _arrow_up.setAttribute('title', 'Сдвинуть элемент вверх');
+    _arrow_up.onmousedown = this._mover.arrow.mousedown.bind(this._mover.arrow, 'up');
+    _arrow_up.onmouseup = arrow_mouseup;
+
+    const _rdrpos = document.createElement('div');
+    toppos.parentNode.appendChild(_rdrpos);
+    _rdrpos.className = 'toppos rdrpos';
+    const _arrow_right = document.createElement('div');
+    _rdrpos.appendChild(_arrow_right);
+    _arrow_right.className = ' arrowpos';
+    _arrow_right.innerHTML = '<i class="fa fa-arrow-right"></i>';
+    _arrow_right.setAttribute('title', 'Сдвинуть элемент вправо');
+    _arrow_right.onmousedown = this._mover.arrow.mousedown.bind(this._mover.arrow, 'right');
+    _arrow_right.onmouseup = arrow_mouseup;
+
+    const _rddpos = document.createElement('div');
+    toppos.parentNode.appendChild(_rddpos);
+    _rddpos.className = 'toppos rddpos';
+    const _arrow_down = document.createElement('div');
+    _rddpos.appendChild(_arrow_down);
+    _arrow_down.className = ' arrowpos';
+    _arrow_down.innerHTML = '<i class="fa fa-arrow-down"></i>';
+    _arrow_down.setAttribute('title', 'Сдвинуть элемент вниз');
+    _arrow_down.onmousedown = this._mover.arrow.mousedown.bind(this._mover.arrow, 'down');
+    _arrow_down.onmouseup = arrow_mouseup;
+
+    const _ldlpos = document.createElement('div');
+    toppos.parentNode.appendChild(_ldlpos);
+    _ldlpos.className = 'toppos ldlpos';
+    const _arrow_left = document.createElement('div');
+    _ldlpos.appendChild(_arrow_left);
+    _arrow_left.className = ' arrowpos';
+    _arrow_left.innerHTML = '<i class="fa fa-arrow-left"></i>';
+    _arrow_left.setAttribute('title', 'Сдвинуть элемент влево');
+    _arrow_left.onmousedown = this._mover.arrow.mousedown.bind(this._mover.arrow, 'left');
+    _arrow_left.onmouseup = arrow_mouseup;
   }
 
   /**
