@@ -553,6 +553,7 @@ class Mover {
 
   move_shapes(vertexes) {
     const {project} = this;
+    const selected = project.selected_profiles();
     for(const [vertex, av] of vertexes) {
       for (const v of av) {
         let {ribs, point, pt} = v;
@@ -571,6 +572,10 @@ class Mover {
       }
     }
     this.hide_move_ribs(true);
+    project.deselectAll();
+    for(const profile of selected) {
+      profile.selected = true;
+    }
   }
 
 }

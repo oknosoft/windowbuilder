@@ -3485,6 +3485,7 @@ class Mover {
 
   move_shapes(vertexes) {
     const {project} = this;
+    const selected = project.selected_profiles();
     for(const [vertex, av] of vertexes) {
       for (const v of av) {
         let {ribs, point, pt} = v;
@@ -3503,6 +3504,10 @@ class Mover {
       }
     }
     this.hide_move_ribs(true);
+    project.deselectAll();
+    for(const profile of selected) {
+      profile.selected = true;
+    }
   }
 
 }
@@ -8157,7 +8162,6 @@ class ToolSelectNode extends ToolElement {
         const vertexes = mover.snap_to_edges({start: this.mouseStartPos, mode: this.mode, event});
         mover.move_shapes(vertexes);
         project.redraw();
-        _scope.clear_selection_bounds();
       }
     }
     else if(this.mode == consts.move_points) {

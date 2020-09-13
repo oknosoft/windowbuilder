@@ -198,11 +198,11 @@ class ToolSelectNode extends ToolElement {
 
     if(this.mode == consts.move_shapes) {
       if(this.changed) {
+        //this.originalContent = _scope.capture_selection_state();
         const vertexes = mover.snap_to_edges({start: this.mouseStartPos, mode: this.mode, event});
-        //_scope.restore_selection_state(this.originalContent);
         mover.move_shapes(vertexes);
+        //_scope.restore_selection_state(this.originalContent);
         project.redraw();
-        _scope.clear_selection_bounds();
         //undo.snapshot("Move Shapes");
       }
     }
