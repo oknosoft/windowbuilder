@@ -62,6 +62,8 @@ class ToolSelectNode extends ToolElement {
       mousemove: this.hitTest,
 
       keydown: this.keydown,
+
+      keyup: this.keyup,
     });
 
   }
@@ -451,20 +453,23 @@ class ToolSelectNode extends ToolElement {
       const profiles = project.selected_profiles();
 
       if(profiles.length) {
-        let delta;
-        if(key == 'left') {
-          delta = [-step, 0];
-        }
-        else if(key == 'right') {
-          delta = [step, 0];
-        }
-        else if(key == 'up') {
-          delta = [0, -step];
-        }
-        else if(key == 'down') {
-          delta = [0, step];
-        }
-        this._scope.cmd('move', delta);
+        !mover.arrow.timer && mover.arrow.mousedown(key);
+
+        // let delta;
+        // if(key == 'left') {
+        //   delta = [-step, 0];
+        // }
+        // else if(key == 'right') {
+        //   delta = [step, 0];
+        // }
+        // else if(key == 'up') {
+        //   delta = [0, -step];
+        // }
+        // else if(key == 'down') {
+        //   delta = [0, step];
+        // }
+        //this._scope.cmd('move', delta);
+
         if(event.event) {
           event.event.preventDefault();
           event.event.cancelBubble = true;
@@ -478,6 +483,12 @@ class ToolSelectNode extends ToolElement {
       this.mode = null;
       mover.hide_move_ribs(true);
       project.deselect_all_points();
+    }
+  }
+
+  keyup(event) {
+    if(['left', 'right', 'up', 'down'].includes(event.key)) {
+      this.mover.arrow.mouseup();
     }
   }
 

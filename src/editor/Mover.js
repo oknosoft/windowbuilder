@@ -1,3 +1,4 @@
+
 /**
  * Отвечает за сдвиг узлов и элементов
  */
@@ -211,6 +212,9 @@ class Mover {
           const offset = path.getOffsetOf(pt);
           if(offset < width) {
             point = path.getPointAt(width);
+            if(!point) {
+              point = pt;
+            }
             delta = point.subtract(start);
             v[0].point = point;
             break;

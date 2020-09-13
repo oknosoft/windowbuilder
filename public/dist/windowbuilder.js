@@ -1031,7 +1031,6 @@ class Deformer {
     return this.editor.project;
   }
 
-
   select(items) {
     const {project, editor} = this;
     let deselect;
@@ -1054,7 +1053,6 @@ class Deformer {
     deselect && project.deselect_all_points();
   }
 
-
   deselect(items) {
     const {project, editor} = this;
     if(!items || !items.length || items.some(({elm}) => !elm)) {
@@ -1074,37 +1072,30 @@ class Deformer {
     }
   }
 
-
   move(delta) {
     const {project, editor: {Point}} = this;
     project.move_points(new Point(delta));
   }
 
-
   merge() {
 
   }
-
 
   separate() {
 
   }
 
-
   split() {
 
   }
-
 
   add() {
 
   }
 
-
   remove() {
 
   }
-
 
   prop() {
 
@@ -1112,6 +1103,8 @@ class Deformer {
 
 
 }
+
+
 
 
 class Editor extends $p.EditorInvisible {
@@ -1124,11 +1117,13 @@ class Editor extends $p.EditorInvisible {
 
     this.activate();
 
+
     this.__define('_pwnd', {
       get() {
         return pwnd;
       }
     });
+
 
     this._layout = pwnd.attachLayout({
       pattern: '2U',
@@ -1145,6 +1140,7 @@ class Editor extends $p.EditorInvisible {
       offsets: {top: 28, right: 0, bottom: 0, left: 0}
     });
 
+
     this._wrapper = document.createElement('div');
 
     this._layout.cells("a").attachObject(_editor._wrapper);
@@ -1155,11 +1151,16 @@ class Editor extends $p.EditorInvisible {
     this._drawSelectionBounds = 0;
 
 
+
+
     this._keybrd = new Keybrd(this);
+
 
     this._undo = new UndoRedo(this);
 
+
     this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
+
 
     this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '320px',
       image_path: '/imgs/',
@@ -1194,6 +1195,7 @@ class Editor extends $p.EditorInvisible {
         popup.p.querySelector('.dhx_popup_arrow').style.top = '20px';
       }
     });
+
 
     this.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
       image_path: '/imgs/',
@@ -1303,6 +1305,7 @@ class Editor extends $p.EditorInvisible {
     this.tb_top.cell.style.background = '#fff';
     this.tb_top.cell.style.boxShadow = 'none';
 
+
     this.on_keydown = this.on_keydown.bind(this);
     document.body.addEventListener('keydown', this.on_keydown, false);
 
@@ -1324,25 +1327,36 @@ class Editor extends $p.EditorInvisible {
     $p.on('alert', this.on_alert);
 
 
+
     new ZoomFit();
+
 
     new ToolSelectNode();
 
+
     new ToolPan();
+
 
     new ToolArc();
 
+
     new ToolCut();
+
 
     new ToolM2();
 
+
     new ToolPen();
+
 
     new ToolLayImpost();
 
+
     new ToolText();
 
+
     new ToolRuler();
+
 
     new ToolCoordinates();
 
@@ -1485,6 +1499,7 @@ class Editor extends $p.EditorInvisible {
     });
   }
 
+
   get _dxw() {
     return this._layout.dhxWins;
   }
@@ -1512,7 +1527,9 @@ class Editor extends $p.EditorInvisible {
     _canvas.addEventListener('touchstart', this.canvas_touchstart.bind(this), false);
     _canvas.addEventListener('mousewheel', this._stable_zoom.mousewheel.bind(this._stable_zoom), false);
 
+
     _scheme.magnetism = new Magnetism(_scheme);
+
 
     const pwnd_resize_finish = () => {
       _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
@@ -1528,6 +1545,7 @@ class Editor extends $p.EditorInvisible {
 
     pwnd_resize_finish();
 
+
     const _mousepos = document.createElement('div');
     _editor._wrapper.appendChild(_mousepos);
     _mousepos.className = 'mousepos';
@@ -1538,6 +1556,7 @@ class Editor extends $p.EditorInvisible {
           ' y:' + (bounds.height + bounds.y - event.point.y).toFixed(0);
       }
     });
+
 
     const _toppos = document.createElement('div');
     _editor._wrapper.appendChild(_toppos);
@@ -1563,6 +1582,7 @@ class Editor extends $p.EditorInvisible {
 
     _editor._acc.attach(_editor.project._dp);
   }
+
 
   arrow_btns(toppos) {
     const arrow_mouseup = this._mover.arrow.mouseup.bind(this._mover.arrow);
@@ -1609,6 +1629,7 @@ class Editor extends $p.EditorInvisible {
     _arrow_left.onmouseup = arrow_mouseup;
   }
 
+
   select_tool(name) {
 
     switch (name) {
@@ -1651,6 +1672,7 @@ class Editor extends $p.EditorInvisible {
     tool.hitTest(event);
     tool.mousedown(event);
   }
+
 
   open_templates(confirmed) {
 
@@ -1706,6 +1728,7 @@ class Editor extends $p.EditorInvisible {
     });
   }
 
+
   drag_rect(p1, p2) {
     const {view} = this;
     const half = new paper.Point(0.5 / view.zoom, 0.5 / view.zoom);
@@ -1730,6 +1753,7 @@ class Editor extends $p.EditorInvisible {
     rect.guide = true;
     return rect;
   }
+
 
   glass_inserts(glasses){
     if(!Array.isArray(glasses)){
@@ -1764,9 +1788,11 @@ class Editor extends $p.EditorInvisible {
     this.fragment_spec(-activeLayer.cnstr, activeLayer.furn.toString());
   }
 
+
   additional_inserts(cnstr, cell){
     new AdditionalInserts(cnstr, this.project, cell);
   }
+
 
   profile_radius(){
 
@@ -1803,6 +1829,7 @@ class Editor extends $p.EditorInvisible {
       });
     }
   }
+
 
   profile_align(name){
 
@@ -1958,6 +1985,7 @@ class Editor extends $p.EditorInvisible {
 
   }
 
+
   profile_group_align(name, profiles) {
 
     let	coordin = name == 'left' || name == 'bottom' ? Infinity : 0;
@@ -2013,6 +2041,7 @@ class Editor extends $p.EditorInvisible {
     });
 
   }
+
 
   do_glass_align(name = 'auto', glasses) {
 
@@ -2184,6 +2213,7 @@ class Editor extends $p.EditorInvisible {
     return res;
   }
 
+
   glass_align(name = 'auto', glasses) {
 
     const shift = this.do_glass_align(name, glasses);
@@ -2211,6 +2241,7 @@ class Editor extends $p.EditorInvisible {
       return true;
     }
   }
+
 
   do_lay_impost_align(name = 'auto', glass) {
 
@@ -2357,6 +2388,7 @@ class Editor extends $p.EditorInvisible {
     return true;
   }
 
+
   lay_impost_align(name = 'auto', glass) {
     const width = (name === 'auto' || name === 'width') && this.do_lay_impost_align('width', glass);
     const height = (name === 'auto' ||  name === 'height') && this.do_lay_impost_align('height', glass);
@@ -2368,6 +2400,7 @@ class Editor extends $p.EditorInvisible {
 
     return true;
   }
+
 
   on_del_row({grid, tabular_section}) {
     if(tabular_section == 'inserts'){
@@ -2383,6 +2416,7 @@ class Editor extends $p.EditorInvisible {
   on_keydown(ev) {
     this.eve.emit('keydown', ev);
   }
+
 
   on_alert(ev) {
     if(ev._shown) {
@@ -2422,6 +2456,7 @@ class Editor extends $p.EditorInvisible {
     this.handlers.handleNavigate(path);
   }
 
+
   unload() {
     const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, project} = this;
 
@@ -2447,6 +2482,7 @@ class Editor extends $p.EditorInvisible {
   }
 
 };
+
 
 
 $p.Editor = Editor;
@@ -2941,6 +2977,7 @@ class Magnetism {
 
 $p.EditorInvisible.Magnetism = Magnetism;
 
+
 class Mover {
 
   constructor(editor) {
@@ -3133,6 +3170,9 @@ class Mover {
           const offset = path.getOffsetOf(pt);
           if(offset < width) {
             point = path.getPointAt(width);
+            if(!point) {
+              point = pt;
+            }
             delta = point.subtract(start);
             v[0].point = point;
             break;
@@ -3659,7 +3699,6 @@ class UndoRedo {
 
 
 
-
 class ToolElement extends $p.EditorInvisible.ToolElement {
 
   constructor() {
@@ -3671,7 +3710,6 @@ class ToolElement extends $p.EditorInvisible.ToolElement {
     super.on_activate(cursor);
     this._scope.tb_left.select(this.options.name);
   }
-
 
   detache_wnd() {
     if (this.wnd) {
@@ -5978,7 +6016,6 @@ class ToolPan extends ToolElement {
 
 
 
-
 class PenControls {
 
   constructor(tool) {
@@ -6141,7 +6178,6 @@ class PenControls {
   }
 
 }
-
 
 
 class ToolPen extends ToolElement {
@@ -6951,7 +6987,6 @@ class ToolPen extends ToolElement {
 
 
 
-
   standard_form(name) {
     if(this['add_' + name]) {
       this['add_' + name](this.project.bounds);
@@ -6961,7 +6996,6 @@ class ToolPen extends ToolElement {
       name !== 'standard_form' && $p.msg.show_not_implemented();
     }
   }
-
 
   add_sequence(points) {
     const profiles = [];
@@ -6976,7 +7010,6 @@ class ToolPen extends ToolElement {
     return profiles;
   }
 
-
   add_square(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -6987,7 +7020,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_triangle1(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -6996,7 +7028,6 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
-
 
   add_triangle2(bounds) {
     const point = bounds.bottomRight;
@@ -7007,7 +7038,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_triangle3(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -7016,7 +7046,6 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
-
 
   add_semicircle1(bounds) {
     const point = bounds.bottomRight;
@@ -7027,7 +7056,6 @@ class ToolPen extends ToolElement {
     profiles[0].arc_h = 500;
   }
 
-
   add_semicircle2(bounds) {
     const point = bounds.bottomRight;
     const profiles = this.add_sequence([
@@ -7036,7 +7064,6 @@ class ToolPen extends ToolElement {
     ]);
     profiles[1].arc_h = 500;
   }
-
 
   add_circle(bounds) {
     const point = bounds.bottomRight;
@@ -7047,7 +7074,6 @@ class ToolPen extends ToolElement {
     profiles[0].arc_h = 500;
     profiles[1].arc_h = 500;
   }
-
 
   add_arc1(bounds) {
     const point = bounds.bottomRight;
@@ -7060,7 +7086,6 @@ class ToolPen extends ToolElement {
     profiles[1].arc_h = 500;
   }
 
-
   add_trapeze1(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -7071,7 +7096,6 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
-
 
   add_trapeze2(bounds) {
     const point = bounds.bottomRight;
@@ -7085,7 +7109,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_trapeze3(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -7095,7 +7118,6 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
-
 
   add_trapeze4(bounds) {
     const point = bounds.bottomRight;
@@ -7107,7 +7129,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_trapeze5(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -7118,7 +7139,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_trapeze6(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -7128,7 +7148,6 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
-
 
   add_trapeze7(bounds) {
     const point = bounds.bottomRight;
@@ -7141,7 +7160,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_trapeze8(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -7152,7 +7170,6 @@ class ToolPen extends ToolElement {
       [point.add([1000, 0]), point]
     ]);
   }
-
 
   add_trapeze9(bounds) {
     const point = bounds.bottomRight;
@@ -7165,7 +7182,6 @@ class ToolPen extends ToolElement {
     ]);
   }
 
-
   add_trapeze10(bounds) {
     const point = bounds.bottomRight;
     this.add_sequence([
@@ -7176,7 +7192,6 @@ class ToolPen extends ToolElement {
       [point.add([500, 0]), point]
     ]);
   }
-
 
   decorate_layers(reset) {
     const {activeLayer} = this.project;
@@ -7971,8 +7986,6 @@ $p.EditorInvisible.ToolRuler = ToolRuler;
 
 
 
-
-
 class ToolSelectNode extends ToolElement {
 
   constructor() {
@@ -8017,6 +8030,8 @@ class ToolSelectNode extends ToolElement {
       mousemove: this.hitTest,
 
       keydown: this.keydown,
+
+      keyup: this.keyup,
     });
 
   }
@@ -8105,7 +8120,6 @@ class ToolSelectNode extends ToolElement {
         this.mouseStartPos = event.point.clone();
         this.originalHandleIn = hitItem.segment.handleIn.clone();
         this.originalHandleOut = hitItem.segment.handleOut.clone();
-
 
       }
 
@@ -8382,20 +8396,9 @@ class ToolSelectNode extends ToolElement {
       const profiles = project.selected_profiles();
 
       if(profiles.length) {
-        let delta;
-        if(key == 'left') {
-          delta = [-step, 0];
-        }
-        else if(key == 'right') {
-          delta = [step, 0];
-        }
-        else if(key == 'up') {
-          delta = [0, -step];
-        }
-        else if(key == 'down') {
-          delta = [0, step];
-        }
-        this._scope.cmd('move', delta);
+        !mover.arrow.timer && mover.arrow.mousedown(key);
+
+
         if(event.event) {
           event.event.preventDefault();
           event.event.cancelBubble = true;
@@ -8409,6 +8412,12 @@ class ToolSelectNode extends ToolElement {
       this.mode = null;
       mover.hide_move_ribs(true);
       project.deselect_all_points();
+    }
+  }
+
+  keyup(event) {
+    if(['left', 'right', 'up', 'down'].includes(event.key)) {
+      this.mover.arrow.mouseup();
     }
   }
 
