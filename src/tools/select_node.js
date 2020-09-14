@@ -71,7 +71,7 @@ class ToolSelectNode extends ToolElement {
   deactivate() {
     this._scope.clear_selection_bounds();
     if(this.profile) {
-      this.profile.detache_wnd();
+      this.profile.detache_wnd && this.profile.detache_wnd();
       delete this.profile;
     }
   }
@@ -179,7 +179,7 @@ class ToolSelectNode extends ToolElement {
       this.mode = 'box-select';
 
       if(!shift && this.profile) {
-        this.profile.detache_wnd();
+        this.profile.detache_wnd && this.profile.detache_wnd();
         delete this.profile;
       }
 

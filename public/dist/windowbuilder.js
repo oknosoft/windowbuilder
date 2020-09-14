@@ -3038,7 +3038,7 @@ class Mover {
         if(this.shift && tool instanceof ToolSelectNode) {
           tool.emit('mouseup', {
             point: tool.mouseStartPos.add(this.shift),
-            modifiers: {}
+            modifiers: {shift: true}
           });
         }
       },
@@ -3068,7 +3068,7 @@ class Mover {
     const {consts: {move_shapes, move_points}, Path} = this.editor;
     let delta = point.subtract(start);
     if (!modifiers.shift){
-      delta = delta.snap_to_angle(Math.PI*2/4);
+      delta = delta.snap_to_angle(Math.PI*2/4, modifiers.shift);
       point = start.add(delta);
     }
 
@@ -3494,7 +3494,7 @@ class Mover {
         }
         for(const [profile, node] of ribs) {
           const node_point = profile[node.node || node];
-          if(!node_point.is_nearest(point)) {
+          if(!node_point.is_nearest(point, 0)) {
             project.deselectAll();
             node_point.selected = true;
             profile.move_points(point.subtract(node_point));
@@ -8044,7 +8044,7 @@ class ToolSelectNode extends ToolElement {
   deactivate() {
     this._scope.clear_selection_bounds();
     if(this.profile) {
-      this.profile.detache_wnd();
+      this.profile.detache_wnd && this.profile.detache_wnd();
       delete this.profile;
     }
   }
@@ -8141,7 +8141,7 @@ class ToolSelectNode extends ToolElement {
       this.mode = 'box-select';
 
       if(!shift && this.profile) {
-        this.profile.detache_wnd();
+        this.profile.detache_wnd && this.profile.detache_wnd();
         delete this.profile;
       }
 
