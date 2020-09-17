@@ -880,7 +880,7 @@
         o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
           .then(({characteristic}) => {
             //handlers.handleNavigate(`/builder/${characteristic.ref}`);
-            handlers.handleNavigate(`/templates/?order=${o.ref}&ref=${characteristic.ref}`);
+            handlers.handleNavigate(`/templates/?order=${o.ref}&ref=${characteristic.ref}&action=new`);
           });
       }
       else {
