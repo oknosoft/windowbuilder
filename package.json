@@ -1,6 +1,6 @@
 {
   "name": "windowbuilder",
-  "version": "2.1.253",
+  "version": "2.1.254",
   "description": "Order dealer for windows and stained glass",
   "repository": {
     "type": "git",
@@ -28,21 +28,22 @@
   "proxy": "http://localhost:3016/",
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
+    "@material-ui/lab": "^4.0.0-alpha.56",
     "@turf/points-within-polygon": "^5.1.5",
     "dxf-writer": "^1.7.0",
     "genetic-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
     "md5-file": "^5.0",
-    "metadata-abstract-ui": "2.0.23-beta.3",
-    "metadata-core": "2.0.23-beta.3",
-    "metadata-dhtmlx": "2.0.23-beta.3",
-    "metadata-pouchdb": "2.0.23-beta.3",
-    "metadata-react": "2.0.23-beta.3",
-    "metadata-redux": "2.0.23-beta.3",
-    "metadata-superlogin": "2.0.23-beta.3",
+    "metadata-abstract-ui": "2.0.23-beta.4",
+    "metadata-core": "2.0.23-beta.4",
+    "metadata-dhtmlx": "2.0.23-beta.4",
+    "metadata-pouchdb": "2.0.23-beta.4",
+    "metadata-react": "2.0.23-beta.4",
+    "metadata-redux": "2.0.23-beta.4",
+    "metadata-superlogin": "2.0.23-beta.4",
     "react-highlight-words": "^0.16.0",
-    "wb-core": "github:oknosoft/windowbuilder-core#316e791e0ebaa33a0bb1274bf4a3630c129cffec",
+    "wb-core": "github:oknosoft/windowbuilder-core#5218dae6260c1a2831803ee991f1bae49be3f8a7",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#f7a78170462a606a08a81a8774c25d0a25afc484"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#d846f5fb964de6ccc9bc998c1b8936b914ceed41"
   },
   "devDependencies": {
     "@babel/core": "7.9.0",
