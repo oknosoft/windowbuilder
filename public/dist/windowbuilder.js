@@ -1276,12 +1276,22 @@ class Editor extends $p.EditorInvisible {
               row.quantity = 1;
             }
             if(action === 'refill' || action === 'new') {
-              const {base_block, refill, sys} = $p.cat.templates._select_template;
+              const {EditorInvisible: {BuilderElement, Onlay, Filling}, cat: {templates}, utils: {blank}} = $p;
+              const {base_block, refill, sys, clr, params} = templates._select_template;
               if(ox.base_block != base_block && !base_block.empty()) {
-                return project.load_stamp(base_block)
+                return project.load_stamp(base_block, false, true)
                   .then(() => {
-                    if(refill && !sys.empty()) {
-                      project.set_sys(sys);
+                    if(refill) {
+                      !sys.empty() && project.set_sys(sys, params);
+                      if(!clr.empty()){
+                        ox.clr = clr;
+                        project.getItems({class: BuilderElement}).forEach((elm) => {
+                          if(!(elm instanceof Onlay) && !(elm instanceof Filling)) {
+                            elm.clr = clr;
+                          }
+                        });
+                      }
+                      this._acc.props.reload();
                     }
                   })
               }
@@ -1537,7 +1547,7 @@ class Editor extends $p.EditorInvisible {
         :
         Promise.resolve()
     )
-      .then(() => handlers.handleNavigate(`/templates/?order=${ox.calc_order.ref}&ref=${ox.ref}&step=1`))
+      .then(() => handlers.handleNavigate(`/templates/?order=${ox.calc_order.ref}&ref=${ox.ref}`))
       .catch(console.log);
   }
 
