@@ -416,7 +416,7 @@ class Editor extends $p.EditorInvisible {
             }
           })
           .then(() => {
-            const {ox} = project;
+            const {_dp, ox} = project;
             let row = ox.calc_order.production.find(ox.ref, 'characteristic');
             if(!row) {
               row = ox.calc_order.production.add({characteristic: ox});
@@ -428,11 +428,15 @@ class Editor extends $p.EditorInvisible {
             if(action === 'refill' || action === 'new') {
               const {EditorInvisible: {BuilderElement, Onlay, Filling}, cat: {templates}, utils: {blank}} = $p;
               const {base_block, refill, sys, clr, params} = templates._select_template;
-              if(ox.base_block != base_block && !base_block.empty()) {
+              if(!base_block.empty() && (refill || ox.base_block != base_block)) {
+                if(refill) {
+                  _dp._data._loading = true;
+                }
                 return project.load_stamp(base_block, false, true)
                   .then(() => {
                     if(refill) {
                       !sys.empty() && project.set_sys(sys, params);
+                      _dp._data._loading = false;
                       if(!clr.empty()){
                         ox.clr = clr;
                         project.getItems({class: BuilderElement}).forEach((elm) => {
@@ -444,6 +448,7 @@ class Editor extends $p.EditorInvisible {
                       this._acc.props.reload();
                     }
                   })
+                  .catch(() => _dp._data._loading = false);
               }
             }
           })
@@ -650,7 +655,10 @@ class Editor extends $p.EditorInvisible {
 
       dhtmlxEvent(_canvas, "mousewheel", (evt) => {
 
-        if (evt.shiftKey || evt.altKey) {
+        if(_editor.tool instanceof ToolSelectNode && (_editor.Key.isDown('r') || _editor.Key.isDown('к'))) {
+          return _editor.tool.mousewheel(evt);
+        }
+        else if (evt.shiftKey || evt.altKey) {
           if(evt.shiftKey && !evt.deltaX){
             _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
           }

@@ -1266,7 +1266,7 @@ class Editor extends $p.EditorInvisible {
             }
           })
           .then(() => {
-            const {ox} = project;
+            const {_dp, ox} = project;
             let row = ox.calc_order.production.find(ox.ref, 'characteristic');
             if(!row) {
               row = ox.calc_order.production.add({characteristic: ox});
@@ -1278,11 +1278,15 @@ class Editor extends $p.EditorInvisible {
             if(action === 'refill' || action === 'new') {
               const {EditorInvisible: {BuilderElement, Onlay, Filling}, cat: {templates}, utils: {blank}} = $p;
               const {base_block, refill, sys, clr, params} = templates._select_template;
-              if(ox.base_block != base_block && !base_block.empty()) {
+              if(!base_block.empty() && (refill || ox.base_block != base_block)) {
+                if(refill) {
+                  _dp._data._loading = true;
+                }
                 return project.load_stamp(base_block, false, true)
                   .then(() => {
                     if(refill) {
                       !sys.empty() && project.set_sys(sys, params);
+                      _dp._data._loading = false;
                       if(!clr.empty()){
                         ox.clr = clr;
                         project.getItems({class: BuilderElement}).forEach((elm) => {
@@ -1294,6 +1298,7 @@ class Editor extends $p.EditorInvisible {
                       this._acc.props.reload();
                     }
                   })
+                  .catch(() => _dp._data._loading = false);
               }
             }
           })
@@ -1472,7 +1477,10 @@ class Editor extends $p.EditorInvisible {
 
       dhtmlxEvent(_canvas, "mousewheel", (evt) => {
 
-        if (evt.shiftKey || evt.altKey) {
+        if(_editor.tool instanceof ToolSelectNode && (_editor.Key.isDown('r') || _editor.Key.isDown('к'))) {
+          return _editor.tool.mousewheel(evt);
+        }
+        else if (evt.shiftKey || evt.altKey) {
           if(evt.shiftKey && !evt.deltaX){
             _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
           }
@@ -7225,8 +7233,6 @@ $p.EditorInvisible.ToolRuler = ToolRuler;
 
 
 
-
-
 class ToolSelectNode extends ToolElement {
 
   constructor() {
@@ -7247,7 +7253,11 @@ class ToolSelectNode extends ToolElement {
       originalHandleIn: null,
       originalHandleOut: null,
       changed: false,
-      minDistance: 10
+      minDistance: 10,
+      wheel: {
+        end: this.wheelEnd.bind(this),
+        listen: false,
+      },
     });
 
     this.on({
@@ -7343,7 +7353,6 @@ class ToolSelectNode extends ToolElement {
         this.mouseStartPos = event.point.clone();
         this.originalHandleIn = this.hitItem.segment.handleIn.clone();
         this.originalHandleOut = this.hitItem.segment.handleOut.clone();
-
 
       }
 
@@ -7508,6 +7517,45 @@ class ToolSelectNode extends ToolElement {
       this._scope.drag_rect(this.mouseStartPos, event.point);
     }
   }
+
+  mousewheel(event) {
+    const {wheelDelta, shiftKey} = event;
+    const {wheel, wheelEnd, _scope: {project}} = this;
+    const {center} = project.bounds;
+    const angle = wheelDelta / (shiftKey ? 300 : 60);
+    for(const root of project.contours) {
+      root.rotate(angle, center);
+    }
+    project.l_dimensions.rotate(angle, center);
+    event.preventDefault();
+    if(!wheel.listen) {
+      wheel.listen = true;
+      this.on('keyup', wheel.end);
+    }
+  }
+
+  wheelEnd(event) {
+    if(event.key !== 'r' && event.key !== 'к') {
+      return;
+    }
+    const {wheel, _scope: {project, _undo}} = this;
+    this.off('keyup', wheel.end);
+    wheel.listen = false;
+    $p.ui.dialogs.confirm({text: 'Сохранить текущий поворот?', title: 'Поворот изделия'})
+      .then(() => {
+        project.save_coordinates({snapshot: true, clipboard: false});
+        const obx = $p.utils._clone(project.ox._obj);
+        project.load_stamp(obx, true);
+      })
+      .catch(() => {
+        const {center} = project.bounds;
+        for(const root of project.contours) {
+          root.rotate(0, center);
+        }
+        _undo.back();
+      });
+  }
+
 
   keydown(event) {
 

@@ -38,7 +38,11 @@ class ToolSelectNode extends ToolElement {
       originalHandleIn: null,
       originalHandleOut: null,
       changed: false,
-      minDistance: 10
+      minDistance: 10,
+      wheel: {
+        end: this.wheelEnd.bind(this),
+        listen: false,
+      },
     });
 
     this.on({
@@ -314,6 +318,45 @@ class ToolSelectNode extends ToolElement {
       this._scope.drag_rect(this.mouseStartPos, event.point);
     }
   }
+
+  mousewheel(event) {
+    const {wheelDelta, shiftKey} = event;
+    const {wheel, wheelEnd, _scope: {project}} = this;
+    const {center} = project.bounds;
+    const angle = wheelDelta / (shiftKey ? 300 : 60);
+    for(const root of project.contours) {
+      root.rotate(angle, center);
+    }
+    project.l_dimensions.rotate(angle, center);
+    event.preventDefault();
+    if(!wheel.listen) {
+      wheel.listen = true;
+      this.on('keyup', wheel.end);
+    }
+  }
+
+  wheelEnd(event) {
+    if(event.key !== 'r' && event.key !== 'к') {
+      return;
+    }
+    const {wheel, _scope: {project, _undo}} = this;
+    this.off('keyup', wheel.end);
+    wheel.listen = false;
+    $p.ui.dialogs.confirm({text: 'Сохранить текущий поворот?', title: 'Поворот изделия'})
+      .then(() => {
+        project.save_coordinates({snapshot: true, clipboard: false});
+        const obx = $p.utils._clone(project.ox._obj);
+        project.load_stamp(obx, true);
+      })
+      .catch(() => {
+        const {center} = project.bounds;
+        for(const root of project.contours) {
+          root.rotate(0, center);
+        }
+        _undo.back();
+      });
+  }
+
 
   keydown(event) {
 
