@@ -381,7 +381,7 @@ class ToolSelectNode extends ToolElement {
 
             point = path.getPointAt(path.length * 0.5);
             const newpath = path.split(path.length * 0.5);
-            path.lastSegment.point = path.lastSegment.point.add(newpath.getNormalAt(0));
+            path.lastSegment.point = path.lastSegment.point.add(newpath.getNormalAt(0).divide(10));
             newpath.firstSegment.point = path.lastSegment.point;
             new $p.EditorInvisible.Profile({generatrix: newpath, proto: path.parent});
           }
@@ -424,8 +424,66 @@ class ToolSelectNode extends ToolElement {
     } // удаление сегмента или элемента
     else if (key == '-' || key == 'delete' || key == 'backspace') {
 
-      if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
+      if(event.event && event.event.target && ['textarea', 'input'].includes(event.event.target.tagName.toLowerCase())) {
         return;
+      }
+
+      if (modifiers.space) {
+        const profiles = project.selected_profiles(true);
+        if(profiles.length === 2) {
+          const [p1, p2] = profiles;
+          let pt, npp, save, remove, gen;
+          if(p1.b.is_nearest(p2.e, 0)) {
+            save = p2;
+            remove = p1;
+            gen = remove.generatrix.clone({insert: false});
+            pt = remove.cnn_point('b');
+            npp = 'b';
+          }
+          else if(p1.b.is_nearest(p2.b, 0)) {
+            save = p2;
+            remove = p1;
+            gen = remove.generatrix.clone({insert: false}).reverse();
+            pt = remove.cnn_point('e');
+            npp = 'e';
+          }
+          else if(p1.e.is_nearest(p2.b, 0)) {
+            save = p1;
+            remove = p2;
+            gen = remove.generatrix.clone({insert: false});
+            pt = remove.cnn_point('e');
+            npp = 'e';
+          }
+          else if(p1.e.is_nearest(p2.e, 0)) {
+            save = p1;
+            remove = p2;
+            gen = remove.generatrix.clone({insert: false}).reverse();
+            pt = remove.cnn_point('b');
+            npp = 'b';
+          }
+          else {
+            return;
+          }
+          remove.remove();
+          // for(let i = 0; i < gen.segments.length; i++) {
+          //   save.generatrix.add(gen.segments[i]);
+          // }
+          save.generatrix.join(gen);
+          const profile = pt.profile;
+          const pp = pt.profile_point;
+          if(profile && pp) {
+            profile.rays.clear(true);
+            const cnn = profile.cnn_point(pp);
+            cnn.profile = save;
+            cnn.profile_point = npp;
+          }
+          // if(save.generatrix.hasHandles()) {
+          //   save.generatrix.simplify(0.4);
+          // }
+          save.rays.clear(true);
+          return;
+        }
+      }
 
       project.selectedItems.some((path) => {
 

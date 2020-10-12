@@ -428,7 +428,7 @@ class Editor extends $p.EditorInvisible {
             if(action === 'refill' || action === 'new') {
               const {EditorInvisible: {BuilderElement, Onlay, Filling}, cat: {templates}, utils: {blank}} = $p;
               const {base_block, refill, sys, clr, params} = templates._select_template;
-              if(!base_block.empty() && (refill || ox.base_block != base_block)) {
+              if(!base_block.empty()) {
                 if(refill) {
                   _dp._data._loading = true;
                 }
@@ -738,20 +738,8 @@ class Editor extends $p.EditorInvisible {
    * @param confirmed {Boolean} - подавляет показ диалога подтверждения перезаполнения
    */
   open_templates(confirmed) {
-
-    const {msg, ui} = $p;
     const {project: {ox}, handlers} = this;
-
-    (ox.coordinates.count() ?
-        ui.dialogs.confirm({
-          title: msg.bld_from_blocks_title,
-          html: msg.bld_from_blocks
-        })
-        :
-        Promise.resolve()
-    )
-      .then(() => handlers.handleNavigate(`/templates/?order=${ox.calc_order.ref}&ref=${ox.ref}`))
-      .catch(console.log);
+    handlers.handleNavigate(`/templates/?order=${ox.calc_order.ref}&ref=${ox.ref}`);
   }
 
   purge_selection(){

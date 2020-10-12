@@ -1278,7 +1278,7 @@ class Editor extends $p.EditorInvisible {
             if(action === 'refill' || action === 'new') {
               const {EditorInvisible: {BuilderElement, Onlay, Filling}, cat: {templates}, utils: {blank}} = $p;
               const {base_block, refill, sys, clr, params} = templates._select_template;
-              if(!base_block.empty() && (refill || ox.base_block != base_block)) {
+              if(!base_block.empty()) {
                 if(refill) {
                   _dp._data._loading = true;
                 }
@@ -1543,20 +1543,8 @@ class Editor extends $p.EditorInvisible {
 
 
   open_templates(confirmed) {
-
-    const {msg, ui} = $p;
     const {project: {ox}, handlers} = this;
-
-    (ox.coordinates.count() ?
-        ui.dialogs.confirm({
-          title: msg.bld_from_blocks_title,
-          html: msg.bld_from_blocks
-        })
-        :
-        Promise.resolve()
-    )
-      .then(() => handlers.handleNavigate(`/templates/?order=${ox.calc_order.ref}&ref=${ox.ref}`))
-      .catch(console.log);
+    handlers.handleNavigate(`/templates/?order=${ox.calc_order.ref}&ref=${ox.ref}`);
   }
 
   purge_selection(){
@@ -7621,8 +7609,60 @@ class ToolSelectNode extends ToolElement {
     } 
     else if (key == '-' || key == 'delete' || key == 'backspace') {
 
-      if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1)
+      if(event.event && event.event.target && ['textarea', 'input'].includes(event.event.target.tagName.toLowerCase())) {
         return;
+      }
+
+      if (modifiers.space) {
+        const profiles = project.selected_profiles(true);
+        if(profiles.length === 2) {
+          const [p1, p2] = profiles;
+          let pt, npp, save, remove, gen;
+          if(p1.b.is_nearest(p2.e, 0)) {
+            save = p2;
+            remove = p1;
+            gen = remove.generatrix.clone({insert: false});
+            pt = remove.cnn_point('b');
+            npp = 'b';
+          }
+          else if(p1.b.is_nearest(p2.b, 0)) {
+            save = p2;
+            remove = p1;
+            gen = remove.generatrix.clone({insert: false}).reverse();
+            pt = remove.cnn_point('e');
+            npp = 'e';
+          }
+          else if(p1.e.is_nearest(p2.b, 0)) {
+            save = p1;
+            remove = p2;
+            gen = remove.generatrix.clone({insert: false});
+            pt = remove.cnn_point('e');
+            npp = 'e';
+          }
+          else if(p1.e.is_nearest(p2.e, 0)) {
+            save = p1;
+            remove = p2;
+            gen = remove.generatrix.clone({insert: false}).reverse();
+            pt = remove.cnn_point('b');
+            npp = 'b';
+          }
+          else {
+            return;
+          }
+          remove.remove();
+          save.generatrix.join(gen);
+          const profile = pt.profile;
+          const pp = pt.profile_point;
+          if(profile && pp) {
+            const cnn = profile.cnn_point(pp);
+            cnn.profile = save;
+            cnn.profile_point = npp;
+            profile.rays.clear();
+          }
+          save.rays.clear();
+          return;
+        }
+      }
 
       project.selectedItems.some((path) => {
 
