@@ -31,7 +31,6 @@
     "@material-ui/lab": "^4.0.0-alpha.56",
     "@turf/points-within-polygon": "^5.1.5",
     "dxf-writer": "^1.7.0",
-    "genetic-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
     "md5-file": "^5.0",
     "metadata-abstract-ui": "2.0.23-beta.4",
     "metadata-core": "2.0.23-beta.4",

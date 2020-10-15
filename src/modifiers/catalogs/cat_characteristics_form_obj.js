@@ -37,6 +37,11 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
       if(res) {
         o = res.o;
         wnd = res.wnd;
+        wnd.elmnts.frm_toolbar.attachEvent('onclick', (btn_id) => {
+          if(btn_id === 'btn_history') {
+            $p.ui.dialogs.alert({title: $p.msg.main_title, text: $p.msg.not_implemented});
+          }
+        });
         return res;
       }
     });

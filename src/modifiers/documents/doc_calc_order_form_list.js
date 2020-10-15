@@ -234,6 +234,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           }, handlers, 'PushUtils', 'CalcOrderList');
           break;
 
+        case 'btn_history':
+          ui.dialogs.alert({title: msg.main_title, text: msg.not_implemented});
+          break;
+
         case 'btn_delete':
           if(ref) {
             calc_order.get(ref, 'promise')

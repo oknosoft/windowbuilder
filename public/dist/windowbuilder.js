@@ -7567,7 +7567,7 @@ class ToolSelectNode extends ToolElement {
 
             point = path.getPointAt(path.length * 0.5);
             const newpath = path.split(path.length * 0.5);
-            path.lastSegment.point = path.lastSegment.point.add(newpath.getNormalAt(0));
+            path.lastSegment.point = path.lastSegment.point.add(newpath.getNormalAt(0).divide(10));
             newpath.firstSegment.point = path.lastSegment.point;
             new $p.EditorInvisible.Profile({generatrix: newpath, proto: path.parent});
           }
@@ -7654,12 +7654,12 @@ class ToolSelectNode extends ToolElement {
           const profile = pt.profile;
           const pp = pt.profile_point;
           if(profile && pp) {
+            profile.rays.clear(true);
             const cnn = profile.cnn_point(pp);
             cnn.profile = save;
             cnn.profile_point = npp;
-            profile.rays.clear();
           }
-          save.rays.clear();
+          save.rays.clear(true);
           return;
         }
       }

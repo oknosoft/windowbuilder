@@ -433,6 +433,10 @@
         go_connection();
         break;
 
+      case 'btn_history':
+        $p.ui.dialogs.alert({title: $p.msg.main_title, text: $p.msg.not_implemented});
+        break;
+
       case 'calc_order':
         clone_calc_order(o);
         break;
