@@ -459,6 +459,9 @@ class Editor extends $p.EditorInvisible {
       }
     }
 
+    // излучаем событие при создании экземпляра рисовалки
+    $p.md.emit('drawer_created', this);
+
   }
 
   set_text() {

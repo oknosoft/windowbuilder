@@ -28,7 +28,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
             $p.msg.show_msg({
               type: 'alert-warning',
               text: $p.msg.no_selected_row.replace('%1', 'Спецификация'),
-              title: o.presentation
+              title: o.presentation,
             });
           }
 
@@ -45,6 +45,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
       if(res) {
         o = res.o;
         wnd = res.wnd;
+        wnd.close_confirmed = true;
         wnd.elmnts.frm_toolbar.attachEvent('onclick', (btn_id) => {
           if(btn_id === 'btn_history') {
             $p.ui.dialogs.alert({title: $p.msg.main_title, text: $p.msg.not_implemented});

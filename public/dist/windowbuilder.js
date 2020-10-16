@@ -1309,6 +1309,8 @@ class Editor extends $p.EditorInvisible {
       }
     }
 
+    $p.md.emit('drawer_created', this);
+
   }
 
   set_text() {
