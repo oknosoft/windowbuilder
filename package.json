@@ -1,6 +1,6 @@
 {
   "name": "windowbuilder",
-  "version": "2.1.254",
+  "version": "2.1.255",
   "description": "Order dealer for windows and stained glass",
   "repository": {
     "type": "git",
@@ -32,17 +32,17 @@
     "@turf/points-within-polygon": "^5.1.5",
     "dxf-writer": "^1.7.0",
     "md5-file": "^5.0",
-    "metadata-abstract-ui": "2.0.23-beta.4",
-    "metadata-core": "2.0.23-beta.4",
-    "metadata-dhtmlx": "2.0.23-beta.4",
-    "metadata-pouchdb": "2.0.23-beta.4",
-    "metadata-react": "2.0.23-beta.4",
-    "metadata-redux": "2.0.23-beta.4",
-    "metadata-superlogin": "2.0.23-beta.4",
+    "metadata-abstract-ui": "2.0.23-beta.5",
+    "metadata-core": "2.0.23-beta.5",
+    "metadata-dhtmlx": "2.0.23-beta.5",
+    "metadata-pouchdb": "2.0.23-beta.5",
+    "metadata-react": "2.0.23-beta.5",
+    "metadata-redux": "2.0.23-beta.5",
+    "metadata-superlogin": "2.0.23-beta.5",
     "react-highlight-words": "^0.16.0",
-    "wb-core": "github:oknosoft/windowbuilder-core#3059d22dbc2e8bc2b261fe6f8284b75ce9d2f680",
+    "wb-core": "github:oknosoft/windowbuilder-core#b4daef5b99a968895384c3598da655f34e754bea",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#5e0c0fc1d7d6e3946e7893caa5943e6d6d995764"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#99759972328f2175b23bfbca8e9ab60876b4cd29"
   },
   "devDependencies": {
     "@babel/core": "7.9.0",
@@ -98,10 +98,10 @@
     "postcss-preset-env": "6.7.0",
     "postcss-safe-parser": "4.0.1",
     "raw-loader": "^3.1.0",
-    "react": "^16.13.1",
+    "react": "^16.14",
     "react-app-polyfill": "^1.0.6",
     "react-dev-utils": "^10.2.1",
-    "react-dom": "^16.13.1",
+    "react-dom": "^16.14",
     "resolve": "1.15.0",
     "resolve-url-loader": "3.1.1",
     "sass-loader": "8.0.2",
@@ -116,8 +116,6 @@
     "workbox-webpack-plugin": "4.3.1"
   },
   "files": [
-    "public/dist/drawer.js",
-    "public/dist/init.js",
     "LICENSE",
     "LICENSE.ru.md"
   ],

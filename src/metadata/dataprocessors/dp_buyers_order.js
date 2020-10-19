@@ -189,6 +189,9 @@ export default function ($p) {
     case 'DeliveryAddr':
       imodule = import('../../components/DeliveryAddr');
       break;
+    case 'ObjHistory':
+      imodule = import('wb-forms/dist/ObjHistory');
+      break;
     }
     imodule.then((module) => handlers.handleIfaceState({
         component: area,

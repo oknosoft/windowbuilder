@@ -434,7 +434,7 @@
         break;
 
       case 'btn_history':
-        $p.ui.dialogs.alert({title: $p.msg.main_title, text: $p.msg.not_implemented});
+        $p.dp.buyers_order.open_component(wnd, {ref: o.ref, cmd: {hfields: null, db: null}, _mgr}, handlers, 'ObjHistory');
         break;
 
       case 'calc_order':

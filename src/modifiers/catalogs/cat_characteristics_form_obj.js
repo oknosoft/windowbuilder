@@ -1,5 +1,5 @@
 // индивидуальная форма объекта характеристики
-$p.cat.characteristics.form_obj = function (pwnd, attr) {
+$p.cat.characteristics.form_obj = function (pwnd, attr, handlers) {
 
   const _meta = this.metadata();
 
@@ -40,7 +40,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr) {
         wnd.close_confirmed = true;
         wnd.elmnts.frm_toolbar.attachEvent('onclick', (btn_id) => {
           if(btn_id === 'btn_history') {
-            $p.ui.dialogs.alert({title: $p.msg.main_title, text: $p.msg.not_implemented});
+            $p.dp.buyers_order.open_component(wnd, {ref: o.ref, cmd: {hfields: null, db: null}, _mgr: this}, handlers, 'ObjHistory');
           }
         });
         return res;
