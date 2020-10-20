@@ -7247,6 +7247,7 @@ class ToolSelectNode extends ToolElement {
       wheel: {
         end: this.wheelEnd.bind(this),
         listen: false,
+        angle: 0,
       },
     });
 
@@ -7304,20 +7305,25 @@ class ToolSelectNode extends ToolElement {
 
       if (item && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
 
-        if (event.modifiers.shift) {
-          item.selected = !item.selected;
-        } else {
-          project.deselectAll();
-          item.selected = true;
+        if(item instanceof $p.EditorInvisible.Filling && project._attr.elm_fragment) {
+          item.selected = false;
         }
-        if (item.selected) {
-          this.mode = consts.move_shapes;
-          project.deselect_all_points();
-          this.mouseStartPos = event.point.clone();
-          this.originalContent = this._scope.capture_selection_state();
+        else {
+          if (event.modifiers.shift) {
+            item.selected = !item.selected;
+          } else {
+            project.deselectAll();
+            item.selected = true;
+          }
+          if (item.selected) {
+            this.mode = consts.move_shapes;
+            project.deselect_all_points();
+            this.mouseStartPos = event.point.clone();
+            this.originalContent = this._scope.capture_selection_state();
 
-          if(item.layer){
-            this.eve.emit("layer_activated", item.layer);
+            if(item.layer){
+              this.eve.emit("layer_activated", item.layer);
+            }
           }
         }
 
@@ -7513,6 +7519,7 @@ class ToolSelectNode extends ToolElement {
     const {wheel, wheelEnd, _scope: {project}} = this;
     const {center} = project.bounds;
     const angle = wheelDelta / (shiftKey ? 300 : 60);
+    wheel.angle += angle;
     for(const root of project.contours) {
       root.rotate(angle, center);
     }
@@ -7530,22 +7537,34 @@ class ToolSelectNode extends ToolElement {
     }
     const {wheel, _scope: {project, _undo}} = this;
     this.off('keyup', wheel.end);
+    const init_angle = wheel.angle;
+    wheel.angle = 0;
     wheel.listen = false;
-    $p.ui.dialogs.confirm({text: 'Сохранить текущий поворот?', title: 'Поворот изделия'})
-      .then(() => {
+    const {center} = project.bounds;
+    $p.ui.dialogs.input_value({
+      title: 'Поворот изделия',
+      text: 'Уточните угол поворота',
+      type: 'number',
+      initialValue: init_angle,
+    })
+      .then((angle) => {
+        const delta = angle - init_angle;
+        if(delta) {
+          for(const root of project.contours) {
+            root.rotate(delta, center);
+          }
+        }
         project.save_coordinates({snapshot: true, clipboard: false});
         const obx = $p.utils._clone(project.ox._obj);
         project.load_stamp(obx, true);
       })
       .catch(() => {
-        const {center} = project.bounds;
         for(const root of project.contours) {
           root.rotate(0, center);
         }
         _undo.back();
       });
   }
-
 
   keydown(event) {
 
