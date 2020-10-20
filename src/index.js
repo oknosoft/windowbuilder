@@ -51,6 +51,10 @@ render(<RootProvider />, document.getElementById('root'));
 
 serviceWorker.register({
   onUpdate() {
-    $p && $p.ui.dialogs.snack({message: `Код программы обновлён, перезагрузите страницу`, reset: true});
+    if($p && $p.eve) {
+      $p.eve.redirect = true;
+    }
+    alert('Код программы обновлён, необходимо перезагрузить страницу');
+    location.reload();
   },
 });

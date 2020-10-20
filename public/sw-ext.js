@@ -6,20 +6,31 @@
  * Created by Evgeniy Malyarov on 16.09.2018.
  */
 
-const revision = '0000';
-const cfiles = [
-  '/favicon.ico',
-  '/imgs/fav-okn144.png',
-  '/imgs/splash.gif',
-  '/dist/qrcodejs/qrcode.min.js',
-  '/dist/dhtmlx.min.js',
-  '/dist/jszip.min.js',
-  '/dist/paperjs-deep-diff.min.js',
-  '/dist/windowbuilder.js',
-  '/dist/wnd_debug.js',
-];
+const cfiles = {
+  frozen: {
+    revision: '0000',
+    files: [
+      '/favicon.ico',
+      '/imgs/fav-okn144.png',
+      '/imgs/splash.gif',
+      '/dist/qrcodejs/qrcode.min.js',
+      '/dist/dhtmlx.min.js',
+      '/dist/jszip.min.js',
+      '/dist/paperjs-deep-diff.min.js',
+    ]
+  },
+  dyn: {
+    revision: '20201020',
+    files: [
+      '/dist/windowbuilder.js',
+      '/dist/wnd_debug.js',
+    ]
+  }
+}
 
-self.__precacheManifest = (self.__precacheManifest || []).concat(cfiles.map((url) => ({url, revision})));
+self.__precacheManifest = (self.__precacheManifest || [])
+  .concat(cfiles.frozen.files.map((url) => ({url, revision: cfiles.frozen.revision})))
+  .concat(cfiles.dyn.files.map((url) => ({url, revision: cfiles.dyn.revision})));
 
 self.addEventListener('sync', (event) => {
   if (event.tag == 'reload') {
