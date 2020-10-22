@@ -101,7 +101,7 @@ class ToolSelectNode extends ToolElement {
 
       if (item && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
 
-        if(item instanceof $p.EditorInvisible.Filling && project._attr.elm_fragment) {
+        if(item instanceof $p.EditorInvisible.Filling && project._attr.elm_fragment > 0) {
           item.selected = false;
         }
         else {

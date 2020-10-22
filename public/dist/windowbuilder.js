@@ -1111,6 +1111,7 @@ class Editor extends $p.EditorInvisible {
 
         {name: 'open_spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
         {name: 'dxf', text: 'DXF', tooltip: 'Экспорт в DXF', float: 'left', width: '30px'},
+        {name: 'fragment', text: 'F', tooltip: 'Фрагмент', float: 'left', width: '20px'},
 
         {name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть без сохранения', float: 'right'}
 
@@ -1169,6 +1170,15 @@ class Editor extends $p.EditorInvisible {
 
         case 'dxf':
           $p.md.emit('dxf', _editor.project);
+          break;
+
+        case 'fragment':
+          if(_editor.project._attr.elm_fragment) {
+            _editor.project.reset_fragment();
+          }
+          else {
+            _editor.project.draw_fragment();
+          }
           break;
 
         case 'square':
@@ -7305,7 +7315,7 @@ class ToolSelectNode extends ToolElement {
 
       if (item && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
 
-        if(item instanceof $p.EditorInvisible.Filling && project._attr.elm_fragment) {
+        if(item instanceof $p.EditorInvisible.Filling && project._attr.elm_fragment > 0) {
           item.selected = false;
         }
         else {
