@@ -45,7 +45,7 @@ class AppRoot extends Component {
     $p.ui.dialogs.init({handleIfaceState: this.props.handleIfaceState, lazy});
     let comp;
     if($p.wsql.get_user_param('ram_indexer')) {
-      comp = import('../CalcOrder/List/CalcOrderList.js');
+      comp = import('wb-forms/dist/CalcOrder/FrmList/CalcOrderList');
       if(items[0].id === 'orders') {
         const orders = items.splice(0, 1);
         items[0].items.unshift({
