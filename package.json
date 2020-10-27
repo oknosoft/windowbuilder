@@ -43,7 +43,7 @@
     "react-highlight-words": "^0.16.0",
     "wb-core": "github:oknosoft/windowbuilder-core#d87bb1b21bf742bb0cadec2d1dd9ba3326dcba74",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#4cf9c0642a0d19381d363e66fbfe0468bad3dd30"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#9d72b7109f016f410010bac01619cfb278db0c99"
   },
   "devDependencies": {
     "@babel/core": "7.9.0",

@@ -8,15 +8,16 @@
 
 import RepParams from '../../components/CalcOrder/List/Params';
 
-export default function ({doc, dp, utils, DocCalc_order}) {
-  const {calc_order: _mgr, _owner} = doc;
+export default function () {
+  const {doc, dp, utils, DocCalc_order} = $p;
+  const {calc_order: _mgr} = doc;
 
   // если хотим по умолчанию читать из 'couchdb'...
   Object.defineProperties(_mgr, {
 
     source_mode: {
       get() {
-        const {current_user} = _owner.$p;
+        const {current_user} = $p;
         if(current_user && !current_user.branch.empty()) {
           return 'ram';
         }
