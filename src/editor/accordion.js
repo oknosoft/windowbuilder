@@ -1,3 +1,4 @@
+
 /**
  * Элементы управления в аккордеоне редактора
  * Created 16.02.2016
@@ -6,7 +7,6 @@
  * @submodule editor_accordion
  */
 
-"use strict";
 
 class SchemeLayers {
 
@@ -496,6 +496,11 @@ class EditorAccordion {
         text: '<i class="fa fa-picture-o fa-fw"></i>',
         title: 'Свойства изделия',
       },
+      {
+        id: "tool",
+        text: '<i class="fa fa-wrench fa-fw"></i>',
+        title: 'Свойства инструмента',
+      },
     ];
     this.tabbar = cell_acc.attachTabbar({
       arrows_mode: "auto",
@@ -734,6 +739,7 @@ class EditorAccordion {
     });
     this.props = new SchemeProps(this._prod, _editor);
 
+    this._tool = this.tabbar.cells('tool');
 
   }
 
