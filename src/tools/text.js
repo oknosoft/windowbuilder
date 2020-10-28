@@ -43,7 +43,6 @@ class ToolText extends ToolElement {
 
       deactivate() {
         this._scope.hide_selection_bounds();
-        this.detache_wnd();
       },
 
       mousedown(event) {
@@ -55,39 +54,23 @@ class ToolText extends ToolElement {
 
         if(this.hitItem) {
 
-          if(this.hitItem.item instanceof paper.PointText) {
+          if(this.hitItem.item instanceof Editor.FreeText) {
             this.text = this.hitItem.item;
             this.text.selected = true;
 
           }
           else {
-            this.text = new $p.EditorInvisible.FreeText({
+            this.text = new Editor.FreeText({
               parent: this.hitItem.item.layer.l_text,
               point: this.mouseStartPos,
               content: '...',
               selected: true
             });
           }
-
           this.textStartPos = this.text.point;
-
-          // включить диалог свойст текстового элемента
-          if(!this.wnd || !this.wnd.elmnts) {
-            $p.wsql.restore_options('editor', this.options);
-            this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
-            this._grid = this.wnd.attachHeadFields({
-              obj: this.text
-            });
-          }
-          else {
-            this._grid.attach({obj: this.text});
-          }
-
-        }
-        else {
-          this.detache_wnd();
         }
 
+        this.eve.emit_async('tool_activated', this);
       },
 
       mouseup() {
@@ -122,9 +105,10 @@ class ToolText extends ToolElement {
           }
 
           for (const text of  this.project.selectedItems) {
-            if(text instanceof $p.EditorInvisible.FreeText){
-              text.text = "";
-              setTimeout(() => this._scope.view.update(), 100);
+            if(text instanceof Editor.FreeText){
+              text.remove();
+              this.text = null;
+              this.eve.emit_async('tool_activated', this);
             }
           }
 
@@ -140,20 +124,24 @@ class ToolText extends ToolElement {
     const {project} = this;
 
     // хит над текстом обрабатываем особо
-    this.hitItem = project.hitTest(event.point, {class: paper.TextItem, bounds: true, fill: true, stroke: true, tolerance: hitSize});
+    this.hitItem = project.hitTest(event.point, {class: Editor.FreeText, bounds: true, fill: true, stroke: true, tolerance: hitSize});
     if(!this.hitItem) {
       this.hitItem = project.hitTest(event.point, {fill: true, stroke: false, tolerance: hitSize});
     }
     if(!this.hitItem) {
       const hit = project.hitTest(event.point, {fill: false, stroke: true, tolerance: hitSize});
-      if(hit && hit.item.parent instanceof $p.EditorInvisible.Sectional) {
+      if(hit && hit.item.parent instanceof Editor.Sectional) {
         this.hitItem = hit;
       }
     }
 
     if(this.hitItem) {
-      if(this.hitItem.item instanceof paper.PointText) {
+      if(this.hitItem.item instanceof Editor.FreeText) {
         this._scope.canvas_cursor('cursor-text');     // указатель с черным Т
+      }
+      else if(this.hitItem.item instanceof paper.PointText) {
+        this.hitItem = null;
+        this._scope.canvas_cursor('cursor-text-select');  // указатель с вопросом
       }
       else {
         this._scope.canvas_cursor('cursor-text-add'); // указатель с серым Т
@@ -167,4 +155,6 @@ class ToolText extends ToolElement {
   }
 
 }
+
+Editor.ToolText = ToolText;
 

@@ -740,7 +740,15 @@ class EditorAccordion {
     this.props = new SchemeProps(this._prod, _editor);
 
     this._tool = this.tabbar.cells('tool');
+    _editor.eve.on('tool_activated', this.tool_activated.bind(this));
 
+
+  }
+
+  tool_activated(tool) {
+    if(tool.constructor.ToolWnd) {
+      this._tool.setActive();
+    }
   }
 
   attach(obj) {
