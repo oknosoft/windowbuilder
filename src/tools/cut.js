@@ -58,7 +58,7 @@ class ToolCut extends ToolElement{
    */
   mouseup(event) {
     const hitItem = this.project.hitTest(event.point, {fill: true, stroke: false, segments: false});
-    if(hitItem && hitItem.item.parent instanceof $p.EditorInvisible.Profile) {
+    if(hitItem && hitItem.item.parent instanceof Editor.Profile) {
       let item = hitItem.item.parent;
       if(event.modifiers.shift) {
         item.selected = !item.selected;
@@ -247,7 +247,7 @@ class ToolCut extends ToolElement{
     }
 
     const loc = generatrix.getNearestLocation(impost.profile[impost.point]);
-    const rack2 = new $p.EditorInvisible.Profile({generatrix: generatrix.splitAt(loc), proto: rack.profile});
+    const rack2 = new Editor.Profile({generatrix: generatrix.splitAt(loc), proto: rack.profile});
 
     // соединения конца нового профиля из разрыва
     cnn = rack2.cnn_point('e');
@@ -397,7 +397,7 @@ class ToolCut extends ToolElement{
       this.hitItem = this.project.hitTest(event.point, { ends: true, tolerance: hitSize });
     }
 
-    if (this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem) {
+    if (this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem) {
       const {activeLayer, magnetism} = this.project;
       const profile = this.hitItem.item.parent;
       if(profile.parent === activeLayer) {
@@ -420,4 +420,6 @@ class ToolCut extends ToolElement{
   }
 
 }
+
+Editor.ToolCut = ToolCut;
 

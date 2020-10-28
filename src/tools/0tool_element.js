@@ -17,7 +17,7 @@
  * @extends paper.Tool
  * @constructor
  */
-class ToolElement extends $p.EditorInvisible.ToolElement {
+class ToolElement extends Editor.ToolElement {
 
   constructor() {
     super();
@@ -27,6 +27,7 @@ class ToolElement extends $p.EditorInvisible.ToolElement {
   on_activate(cursor) {
     super.on_activate(cursor);
     this._scope.tb_left.select(this.options.name);
+    this.eve.emit_async('tool_activated', this);
   }
 
   /**

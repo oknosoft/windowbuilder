@@ -17,9 +17,18 @@ const Stub = () => <Typography color="primary">Текущий инструмен
 
 class ToolWnd extends React.Component {
 
+  componentDidMount() {
+    this.props.editor.eve.on('tool_activated', this.tool_activated);
+  }
+
+  tool_activated = () => {
+    this.forceUpdate();
+  };
+
   render() {
     const {editor} = this.props;
-    const Wnd = editor.tool.ToolWnd || Stub;
+    const {tool} = editor
+    const Wnd = tool.ToolWnd || tool.constructor.ToolWnd || Stub;
     return <ThemeProvider theme={theme}>
       <Wnd editor={editor} />
     </ThemeProvider>;

@@ -75,7 +75,7 @@ class ToolArc extends ToolElement{
     this.mode = null;
     this.changed = false;
 
-    if (this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem
+    if (this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem
       && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
 
       this.mode = this.hitItem.item.parent.generatrix;
@@ -127,7 +127,7 @@ class ToolArc extends ToolElement{
 
     let item = this.hitItem ? this.hitItem.item : null;
 
-    if(item instanceof $p.EditorInvisible.Filling && item.visible) {
+    if(item instanceof Editor.Filling && item.visible) {
       item.attache_wnd(this._scope._acc.elm);
       item.selected = true;
 
@@ -172,7 +172,7 @@ class ToolArc extends ToolElement{
       const step = modifiers.shift ? 1 : 10;
       const {parent} = project.selectedItems[0];
 
-      if(parent instanceof $p.EditorInvisible.Profile && ['left', 'right', 'up', 'down'].includes(key)) {
+      if(parent instanceof Editor.Profile && ['left', 'right', 'up', 'down'].includes(key)) {
         const {generatrix} = parent;
 
         if(event.modifiers.space){
@@ -235,7 +235,7 @@ class ToolArc extends ToolElement{
       this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: hitSize});
     }
 
-    if(this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem
+    if(this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem
       && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
       this._scope.canvas_cursor('cursor-arc');
     }
@@ -247,4 +247,6 @@ class ToolArc extends ToolElement{
   }
 
 }
+
+Editor.ToolArc = ToolArc;
 

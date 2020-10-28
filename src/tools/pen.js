@@ -251,11 +251,11 @@ class ToolPen extends ToolElement {
 
     // если в текущем слое есть профили, выбираем импост
     if((profile.elm_type.empty() || profile.elm_type == $p.enm.elm_types.Рама) &&
-      project.activeLayer instanceof $p.EditorInvisible.Contour && project.activeLayer.profiles.length) {
+      project.activeLayer instanceof Editor.Contour && project.activeLayer.profiles.length) {
       profile.elm_type = $p.enm.elm_types.Импост;
     }
     else if((profile.elm_type.empty() || profile.elm_type == $p.enm.elm_types.Импост) &&
-      project.activeLayer instanceof $p.EditorInvisible.Contour && !project.activeLayer.profiles.length) {
+      project.activeLayer instanceof Editor.Contour && !project.activeLayer.profiles.length) {
       profile.elm_type = $p.enm.elm_types.Рама;
     }
 
@@ -418,7 +418,7 @@ class ToolPen extends ToolElement {
       }
 
       this.project.selectedItems.forEach((path) => {
-        if(path.parent instanceof $p.EditorInvisible.ProfileItem){
+        if(path.parent instanceof Editor.ProfileItem){
           path = path.parent;
           path.removeChildren();
           path.remove();
@@ -730,7 +730,7 @@ class ToolPen extends ToolElement {
 
               if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
-                res = $p.EditorInvisible.Onlay.prototype.bind_node(this.path.firstSegment.point, project.activeLayer.glasses(false, true));
+                res = Editor.Onlay.prototype.bind_node(this.path.firstSegment.point, project.activeLayer.glasses(false, true));
                 if(res.binded){
                   this.path.firstSegment.point = this.point1 = res.point;
                 }
@@ -744,7 +744,7 @@ class ToolPen extends ToolElement {
 
                   // сначала смотрим на доборы, затем - на сам профиль
                   if(element.children.some((addl) => {
-                    if(addl instanceof $p.EditorInvisible.ProfileAddl &&
+                    if(addl instanceof Editor.ProfileAddl &&
                       project.check_distance(addl, null, res, this.path.firstSegment.point, bind) === false) {
                       this.path.firstSegment.point = this.point1 = res.point;
                       return true;
@@ -770,7 +770,7 @@ class ToolPen extends ToolElement {
             // попытаемся привязать конец пути к профилям (и или заполнениям - для раскладок) контура
             if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
 
-              res = $p.EditorInvisible.Onlay.prototype.bind_node(this.path.lastSegment.point, project.activeLayer.glasses(false, true));
+              res = Editor.Onlay.prototype.bind_node(this.path.lastSegment.point, project.activeLayer.glasses(false, true));
               if(res.binded)
                 this.path.lastSegment.point = res.point;
 
@@ -782,7 +782,7 @@ class ToolPen extends ToolElement {
 
                 // сначала смотрим на доборы, затем - на сам профиль
                 if(element.children.some((addl) => {
-                    if(addl instanceof $p.EditorInvisible.ProfileAddl &&
+                    if(addl instanceof Editor.ProfileAddl &&
                       project.check_distance(addl, null, res, this.path.lastSegment.point, bind) === false){
                       this.path.lastSegment.point = res.point;
                       return true;
@@ -901,7 +901,7 @@ class ToolPen extends ToolElement {
     if (this.hitItem) {
 
       if(this.hitItem.item.layer == project.activeLayer &&
-        this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem && !(this.hitItem.item.parent instanceof $p.EditorInvisible.Onlay)){
+        this.hitItem.item.parent instanceof Editor.ProfileItem && !(this.hitItem.item.parent instanceof Editor.Onlay)){
         // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
 
         const hit = {
@@ -938,7 +938,7 @@ class ToolPen extends ToolElement {
         }
 
       }
-      else if(this.hitItem.item.parent instanceof $p.EditorInvisible.Filling){
+      else if(this.hitItem.item.parent instanceof Editor.Filling){
         // для заполнения, ищем ребро и примыкающий профиль
 
         // this.addl_hit = this.hitItem;
@@ -968,7 +968,7 @@ class ToolPen extends ToolElement {
 
     if (this.hitItem) {
 
-      if(this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem && !(this.hitItem.item.parent instanceof $p.EditorInvisible.Onlay)){
+      if(this.hitItem.item.parent instanceof Editor.ProfileItem && !(this.hitItem.item.parent instanceof Editor.Onlay)){
         // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
 
         const hit = {
@@ -1026,7 +1026,7 @@ class ToolPen extends ToolElement {
         this.hitItem = this.project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
       }
 
-      if (this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem
+      if (this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem
         && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
         this._scope.canvas_cursor('cursor-pen-adjust');
       }
@@ -1062,7 +1062,7 @@ class ToolPen extends ToolElement {
   add_sequence(points) {
     const profiles = [];
     points.forEach((segments) => {
-      profiles.push(new $p.EditorInvisible.Profile({
+      profiles.push(new Editor.Profile({
         generatrix: new paper.Path({
           strokeColor: 'black',
           segments: segments
@@ -1351,11 +1351,13 @@ class ToolPen extends ToolElement {
    */
   decorate_layers(reset) {
     const {activeLayer} = this.project;
-    this.project.getItems({class: $p.EditorInvisible.Contour}).forEach((l) => {
+    this.project.getItems({class: Editor.Contour}).forEach((l) => {
       l.opacity = (l == activeLayer || reset) ? 1 : 0.5;
     });
   }
 
 }
+
+Editor.ToolPen = ToolPen;
 
 

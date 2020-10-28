@@ -73,7 +73,7 @@ class ToolCoordinates extends ToolElement{
       this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: hitSize});
     }
 
-    if(this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem
+    if(this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem
       && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
       this._scope.canvas_cursor('cursor-arrow-lay');
     }
@@ -156,7 +156,7 @@ class ToolCoordinates extends ToolElement{
       this.grid.visible = true;
     }
     else {
-      this.grid = new $p.EditorInvisible.GridCoordinates({
+      this.grid = new Editor.GridCoordinates({
         step: this.dp.step,
         offset: this.dp.offset,
         angle: this.dp.angle,
@@ -342,3 +342,5 @@ ToolCoordinates.defaultProps = {
   step: 200,
   offset: 200,
 };
+
+Editor.ToolCoordinates = ToolCoordinates;

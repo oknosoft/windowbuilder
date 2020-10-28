@@ -191,7 +191,7 @@ class RulerWnd {
     const {wnd, tool, size} = this;
 
     if (!tool.project.selectedItems.some((path) => {
-        if (path.parent instanceof $p.EditorInvisible.DimensionLineCustom) {
+        if (path.parent instanceof Editor.DimensionLineCustom) {
 
           switch (ev.currentTarget.name) {
 
@@ -254,7 +254,7 @@ class RulerWnd {
           }
 
           tool.project.selectedItems.some((path) => {
-            if (path.parent instanceof $p.EditorInvisible.DimensionLineCustom) {
+            if (path.parent instanceof Editor.DimensionLineCustom) {
               path.parent.remove();
               return true;
             }
@@ -287,7 +287,7 @@ class RulerWnd {
     });
 
     if (this.options) {
-      if (tool instanceof $p.EditorInvisible.DimensionLine) {
+      if (tool instanceof Editor.DimensionLine) {
         delete this.options.wnd.on_close;
         wnd.wnd_options(this.options.wnd);
         $p.wsql.save_options('editor', this.options);
@@ -344,7 +344,7 @@ class RulerWnd {
   }
 }
 
-$p.EditorInvisible.RulerWnd = RulerWnd;
+Editor.RulerWnd = RulerWnd;
 
 
 /**
@@ -456,7 +456,7 @@ class ToolRuler extends ToolElement {
             }
             else {
               // создаём размерную линию
-              new $p.EditorInvisible.DimensionRadius({
+              new Editor.DimensionRadius({
                 elm1: parent,
                 p1: this.hitItem.item.getOffsetOf(this.hitPoint).round(),
                 parent: parent.layer.l_dimensions,
@@ -490,7 +490,7 @@ class ToolRuler extends ToolElement {
               else {
 
                 // создаём размерную линию
-                new $p.EditorInvisible.DimensionLineCustom({
+                new Editor.DimensionLineCustom({
                   elm1: this.selected.a[0].profile,
                   elm2: this.hitPoint.profile,
                   p1: this.selected.a[0].point_name,
@@ -583,7 +583,7 @@ class ToolRuler extends ToolElement {
             return;
 
           this.project.selectedItems.some((path) => {
-            if (path.parent instanceof $p.EditorInvisible.DimensionLineCustom) {
+            if (path.parent instanceof Editor.DimensionLineCustom) {
               path.parent.remove();
               return true;
             }
@@ -616,13 +616,13 @@ class ToolRuler extends ToolElement {
       else {
         // Hit test points
         const hit = this.project.hitPoints(event.point, 16, false, true);
-        if (hit && hit.item.parent instanceof $p.EditorInvisible.ProfileItem) {
+        if (hit && hit.item.parent instanceof Editor.ProfileItem) {
           this.hitItem = hit;
         }
       }
     }
 
-    if (this.hitItem && this.hitItem.item.parent instanceof $p.EditorInvisible.ProfileItem) {
+    if (this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem) {
       if (this.mode) {
         this._scope.canvas_cursor('cursor-arrow-white-point');
         if (this.mode === 4) {
@@ -823,6 +823,6 @@ class ToolRuler extends ToolElement {
 
 }
 
-$p.EditorInvisible.ToolRuler = ToolRuler;
+Editor.ToolRuler = ToolRuler;
 
 
