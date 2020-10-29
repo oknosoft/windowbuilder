@@ -5,7 +5,10 @@
  */
 
 import TextWnd from '../../components/Builder/ToolWnds/TextWnd';
+import tool_stulp_flap from './tool_stulp_flap';
 
-export default function ({Editor}) {
-  Editor.ToolText.ToolWnd = TextWnd;
+export default function ($p) {
+
+  tool_stulp_flap($p);
+  $p.Editor.ToolText.ToolWnd = TextWnd;
 }

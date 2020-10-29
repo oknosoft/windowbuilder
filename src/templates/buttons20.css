@@ -34,6 +34,7 @@
 .tb_grid { background-image: url(/imgs/grid.png);}
 .tb_line { background-image: url(/imgs/line.png);}
 .tb_text { background-image: url(/imgs/text.png);}
+.tb_stulp_flap {background-image: url(imgs/stulp-flap.png);}
 
 .tb_disable { pointer-events: none; opacity: 0.4}
 

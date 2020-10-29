@@ -1073,7 +1073,7 @@ class Editor extends $p.EditorInvisible {
 
     this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
 
-    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '320px',
+    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '350px',
       image_path: '/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
@@ -1096,6 +1096,7 @@ class Editor extends $p.EditorInvisible {
                 ],
             }},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
+        {name: 'stulp_flap', css: 'tb_stulp_flap', tooltip: 'Штульповые створки'},
         {name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
         {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'},
       ],
@@ -1265,6 +1266,8 @@ class Editor extends $p.EditorInvisible {
     new ToolText();
 
     new ToolRuler();
+
+    new Editor.ToolStulpFlap();
 
     new ToolCoordinates();
 
@@ -3004,7 +3007,6 @@ class ToolElement extends Editor.ToolElement {
   on_activate(cursor) {
     super.on_activate(cursor);
     this._scope.tb_left.select(this.options.name);
-    this.eve.emit_async('tool_activated', this);
   }
 
   detache_wnd() {
