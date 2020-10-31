@@ -20,7 +20,7 @@ const cfiles = {
     ]
   },
   dyn: {
-    revision: '20201025',
+    revision: '20201029',
     files: [
       '/dist/windowbuilder.js',
       '/dist/wnd_debug.js',

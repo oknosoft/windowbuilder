@@ -109,7 +109,8 @@ export function handleRemove() {
     const {calc_order_row} = selectedRow.characteristic;
     selectedRow._owner.del(selectedRow);
     this.selectedRow = null;
-    tabular.forceUpdate();
+    tabular.cache_actual = false;
+    tabular.setState({selected: {rowIdx: 0}});
     if(state.count) {
       this.setState({
         count: state.count - 1,
