@@ -1,3 +1,4 @@
+
 /**
  * Работа с буфером обмена
  * @author Evgeniy Malyarov

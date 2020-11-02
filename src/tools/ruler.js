@@ -1,3 +1,4 @@
+
 /**
  * Относительное позиционирование и сдвиг
  * Created 25.08.2015<br />
@@ -344,7 +345,7 @@ class RulerWnd {
   }
 }
 
-Editor.RulerWnd = RulerWnd;
+$p.EditorInvisible.RulerWnd = RulerWnd;
 
 
 /**

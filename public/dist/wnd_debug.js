@@ -157,6 +157,7 @@ Object.defineProperties($p.cat.furns, {
 
 
 
+
 $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
 	if(!attr){
@@ -308,6 +309,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
 
 
+
       attr.toolbar_click = function toolbar_click(btn_id) {
         const {msg, ui, dp, doc: {calc_order}, enm} = $p;
         const {grid} = elmnts;
@@ -404,6 +406,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
 
 
+
 (function ($p) {
 
   const _mgr = $p.doc.calc_order;
@@ -412,6 +415,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
   _mgr.form_obj = function (pwnd, attr, handlers) {
 
     let o, wnd;
+
 
     if(!_meta_patched) {
       (function (source, user) {
@@ -444,6 +448,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
     }
 
     attr.draw_tabular_sections = (o, wnd, tabular_init) => {
+
 
       const refs = [];
       o.production.forEach((row) => {
@@ -502,6 +507,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
         });
 
+
       wnd.elmnts.statusbar = wnd.attachStatusBar();
       wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.statusbar, rsvg_click);
     };
@@ -518,11 +524,13 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }, 200);
       }
 
+
       wnd.elmnts.layout_header = wnd.elmnts.tabs.tab_header.attachLayout('3U');
 
       wnd.elmnts.layout_header.attachEvent('onResizeFinish', layout_resize_finish);
 
       wnd.elmnts.layout_header.attachEvent('onPanelResizeFinish', layout_resize_finish);
+
 
       wnd.elmnts.cell_left = wnd.elmnts.layout_header.cells('a');
       wnd.elmnts.cell_left.hideHeader();
@@ -559,6 +567,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       }
 
 
+
       wnd.elmnts.cell_right = wnd.elmnts.layout_header.cells('b');
       wnd.elmnts.cell_right.hideHeader();
       wnd.elmnts.pg_right = wnd.elmnts.cell_right.attachHeadFields({
@@ -579,6 +588,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             {id: 'amount_internal', path: 'o.amount_internal', synonym: 'Сумма внутр', type: 'ron', txt: o['amount_internal']}]
         }
       });
+
 
       wnd.elmnts.cell_note = wnd.elmnts.layout_header.cells('c');
       wnd.elmnts.cell_note.hideHeader();
@@ -633,6 +643,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }
       });
 
+
     function prompt(loc) {
       if(loc.pathname.match(/\/builder|\/templates/)) {
         return true;
@@ -650,6 +661,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       }
       $p.doc.calc_order.off('svgs', rsvg_reload);
     }
+
 
     function production_select(id, ind) {
       const row = o.production.get(id - 1);
@@ -680,6 +692,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }
       }
     }
+
 
     function toolbar_click(btn_id) {
 
@@ -799,13 +812,16 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       }
     }
 
+
     function calendar_new_event() {
       $p.msg.show_not_implemented();
     }
 
+
     function go_connection() {
       $p.msg.show_not_implemented();
     }
+
 
     function clone_calc_order(o) {
       const {_manager} = o;
@@ -831,6 +847,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           handlers.handleNavigate(`/`);
         });
     }
+
 
     function show_discount() {
 
@@ -904,6 +921,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       dp._data._loading = false;
       dp._manager.emit_async('rows', dp, {'charges_discounts': true});
     }
+
 
 
 
@@ -1079,6 +1097,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       }
     }
 
+
     function not_production() {
       const {msg} = $p;
       msg.show_msg({
@@ -1087,6 +1106,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         text: msg.bld_not_product
       });
     }
+
 
     function recalc(mode) {
       if(mode == 'row') {
@@ -1140,9 +1160,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       }
     }
 
+
     function change_recalc() {
       $p.dp.buyers_order.open_component(wnd, {ref: o.ref, _mgr}, handlers, 'ChangeRecalc');
     }
+
 
     function open_builder(create_new) {
 
@@ -1243,6 +1265,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       }
     }
 
+
     function open_spec() {
       const selId = production_get_sel_index();
       if(selId != undefined) {
@@ -1263,6 +1286,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         return false;
       });
     }
+
 
     function add_material() {
       const {production} = wnd.elmnts.grids;

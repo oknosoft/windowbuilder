@@ -1,3 +1,4 @@
+
 /**
  * Обработчик сочетаний клавишь
  * @author Evgeniy Malyarov
