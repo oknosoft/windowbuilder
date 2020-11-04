@@ -15,7 +15,7 @@ import RootView from './components/App/RootView';
 // sw для оффлайна и прочих дел
 import * as serviceWorker from './serviceWorker';
 
-const store = configureStore();
+export const store = configureStore();
 
 class RootProvider extends React.Component {
 

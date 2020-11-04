@@ -221,6 +221,7 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
           }
         }
       }
+      _scope.tools[1].activate()
     }
 
   };

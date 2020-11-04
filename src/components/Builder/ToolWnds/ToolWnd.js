@@ -7,11 +7,14 @@
  */
 import React from 'react';
 import PropTypes from 'prop-types';
+import {Provider} from 'react-redux';
+import {ThemeProvider} from '@material-ui/styles';
 import Typography from '@material-ui/core/Typography';
 
 // тема для material-ui
-import {ThemeProvider} from '@material-ui/styles';
 import theme from '../../../styles/muiTheme';
+import {lazy} from '../../App/lazy';
+import {store} from '../../../index';
 
 const Stub = () => <Typography color="primary">Текущий инструмент не имеет окна свойств</Typography>;
 
@@ -29,11 +32,22 @@ class ToolWnd extends React.Component {
     const {editor} = this.props;
     const {tool} = editor
     const Wnd = tool.ToolWnd || tool.constructor.ToolWnd || Stub;
-    return <ThemeProvider theme={theme}>
-      <Wnd editor={editor} />
-    </ThemeProvider>;
+    return <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <Wnd editor={editor} />
+      </ThemeProvider>
+    </Provider>;
+  }
+
+  getChildContext() {
+    return {components: lazy, store};
   }
 }
+
+ToolWnd.childContextTypes = {
+  components: PropTypes.object,
+  store: PropTypes.object,
+};
 
 ToolWnd.propTypes = {
   editor: PropTypes.object.isRequired,
