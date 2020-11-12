@@ -179,19 +179,19 @@ export default function ({Editor}) {
 
     */
 
-    /*
+
       const {
         c,
         e,
         g
       } = project.ox.sys;
-    */
 
-    const {
-      c,
-      e,
-      g
-    } = $p.job_prm.builder;
+
+    // const {
+    //   c,
+    //   e,
+    //   g
+    // } = $p.job_prm.builder;
     /*
 
       Wo  — нормативное значение ветрового давления  [кг/ м2] (табл. 5, СНиП 2.01.07-85*);*/
