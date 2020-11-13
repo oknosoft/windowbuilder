@@ -30,7 +30,7 @@ class ToolWnd extends React.Component {
 
   render() {
     const {editor} = this.props;
-    const {tool} = editor
+    const {tool} = editor;
     const Wnd = tool.ToolWnd || tool.constructor.ToolWnd || Stub;
     return <Provider store={store}>
       <ThemeProvider theme={theme}>
