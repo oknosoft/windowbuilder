@@ -8,8 +8,7 @@
 
 import RepParams from '../../components/CalcOrder/List/Params';
 
-export default function () {
-  const {doc, dp, utils, DocCalc_order} = $p;
+export default function ({doc, dp, utils, DocCalc_order}) {
   const {calc_order: _mgr} = doc;
 
   // если хотим по умолчанию читать из 'couchdb'...
@@ -41,7 +40,7 @@ export default function () {
             return rows.length ? {rows} : doc.query('doc/number_doc', {
               include_docs: true,
               key: [_mgr.class_name, date_till.getFullYear() - 1, filter]
-            })
+            });
           })
           .then(({rows}) => ({
             docs: rows.map(({doc}) => {
