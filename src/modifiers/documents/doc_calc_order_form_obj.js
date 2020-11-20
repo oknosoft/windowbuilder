@@ -298,7 +298,7 @@
       const row = o.production.get(id - 1);
       const {svgs, grids: {production}} = wnd.elmnts;
       wnd.elmnts.svgs.select(row.characteristic.ref);
-
+        
       // если пользователь неполноправный, проверяем разрешение изменять цены номенклатуры
       if(production.columnIds[ind] === 'price') {
         const {current_user, CatParameters_keys, utils, enm: {comparison_types, parameters_keys_applying}} = $p;
@@ -306,7 +306,7 @@
           production.cells(id, ind).setDisabled(false);
         }
         else {
-          const {nom} = row;
+          const {nom,characteristic} = row;
           let disabled = true;
           current_user.acl_objs.forEach(({acl_obj}) => {
             if(acl_obj instanceof CatParameters_keys && acl_obj.applying == parameters_keys_applying.Ценообразование) {
@@ -320,9 +320,18 @@
               }
             }
           });
-          production.cells(id, ind).setDisabled(disabled);
+
+          return production.cells(id, ind).setDisabled(disabled);
         }
       }
+      /*если выбрана номенклатура*/
+            if (production.columnIds[ind] === 'nom') {
+          if (!characteristic.empty() && characteristic.calc_order_row) {
+            return production.cells(id, ind).setDisabled(true);
+
+          }
+
+        }
     }
 
     /**
