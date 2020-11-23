@@ -183,6 +183,9 @@ export default function ($p) {
     case 'ChangeRecalc':
       imodule = import('../../components/CalcOrder/ChangeRecalc');
       break;
+      case 'Sysparams':
+        imodule = import('../../components/CalcOrder/Sysparams');
+        break;
     case 'CutEvaluation':
       imodule = import('../../components/CalcOrder/CutEvaluation');
       break;
@@ -207,5 +210,3 @@ export default function ($p) {
   };
 
 }
-
-
