@@ -168,6 +168,9 @@
             'obj_delivery_state',
             'category',
             {id: 'manager', path: 'o.manager', synonym: 'Автор', type: 'ro'},
+            o.obj_delivery_state === $p.enm.obj_delivery_states.Шаблон ? {id: 'extra_fields|fe0effea-f68e-11ea-bb4b-a3a00cb42f46',
+             path: 'extra_fields.find({property:$p.cch.properties.predefined("permitted_sys")}).txt_row',
+              synonym: 'Разрешенные системы', type: 'permitted_sys'}:'',
             'leading_manager'
           ]
         }
