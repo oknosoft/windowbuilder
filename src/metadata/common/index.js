@@ -3,7 +3,7 @@
 // строки интернационализации
 import i18ru from './i18n.ru';
 import scale_svg from './scale_svg';
-import tools from './tools';
+import tools from '../tools';
 import static_load from './static_load';
 import qs from 'qs';
 
