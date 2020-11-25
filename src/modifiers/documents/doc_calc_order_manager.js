@@ -141,16 +141,16 @@
 
     // дополним base_block шаблонами из систем профилей
     const {base_block} = $p.job_prm.builder;
-    $p.cat.production_params.forEach((o) => {
-      if(!o.is_folder) {
-        o.base_blocks.forEach(({_obj}) => {
-          const calc_order = _mgr.get(_obj.calc_order, false, false);
-          if(base_block.indexOf(calc_order) == -1) {
-            base_block.push(calc_order);
-          }
-        });
-      }
-    });
+    // $p.cat.production_params.forEach((o) => {
+    //   if(!o.is_folder) {
+    //     o.base_blocks.forEach(({_obj}) => {
+    //       const calc_order = _mgr.get(_obj.calc_order, false, false);
+    //       if(base_block.indexOf(calc_order) == -1) {
+    //         base_block.push(calc_order);
+    //       }
+    //     });
+    //   }
+    // });
 
     // загрузим шаблоны пачками по 30 документов
     try {

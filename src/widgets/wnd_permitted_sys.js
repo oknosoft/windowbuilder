@@ -33,19 +33,9 @@ class eXcell_permitted_sys extends eXcell {
   }
 
   ti_keydown(e) {
-    const {
-      code,
-      ctrlKey
-    } = e;
-    const {
-      grid
-    } = this;
-    const {
-      iface,
-      job_prm: {
-        builder
-      }
-    } = $p;
+    const {code, ctrlKey} = e;
+    const {grid} = this;
+    const {iface, job_prm: {builder}} = $p;
     const td = this.cell.firstChild;
     const ti = td.childNodes[0];
     ti.readOnly = true;
@@ -53,54 +43,17 @@ class eXcell_permitted_sys extends eXcell {
     // if(code === 'F4' || (ctrlKey && code === 'KeyF')) {
     //   return this.open_selection(e);
     // }
-    // по {F2} открываем форму объекта
-    if (code === 'F2' && builder.client_of_dealer_mode != 'string') {
-      return this.open_obj(e);
-    }
-
-    // если разрешена только форма, другие клавиши не обрабатываем
-    if (builder.client_of_dealer_mode == 'frm') {
-      return iface.cancel_bubble(e, true);
-    }
-
-    // по {del} очищаем значение
-    if (code === 'Delete') {
-      this.setValue('');
-      grid.editStop();
-      return iface.cancel_bubble(e);
-    }
-    // по {tab} добавляем неразрывный пробел
-    if (code === 'Tab') {
-      const {
-        cell: {
-          firstChild
-        }
-      } = this;
-      firstChild.childNodes[0].value += '\u00A0';
-      return iface.cancel_bubble(e);
-    }
-    // по {enter} заканчиваем редактирование
-    if (code === 'Enter') {
-      grid.editStop();
-      return iface.cancel_bubble(e);
-    }
+    // по {F2} открываем форму объекта, другие клавиши не обрабатываем
+    return code === 'F2' ? this.open_obj(e) : iface.cancel_bubble(e, true);
   }
 
-  // open_selection(e) {
-  //   const v = this.grid.get_cell_field();
-  //   if(v && v.field) {
-  //     v.obj[v.field] = this.getValue();
-  //     this.grid.xcell_action && this.grid.xcell_action('ClientOfDealerSearch', v.field);
-  //   }
-  //   return $p.iface.cancel_bubble(e);
-  // }
-
   open_obj(e) {
-    const v = this.grid.get_cell_field();
-    if (v && v.field) {
-      v.obj[v.field] = this.getValue();
-      this.grid.xcell_action && this.grid.xcell_action('Sysparams', v.field);
+    let v = this.grid.get_cell_field();
+    if (!v) {
+      this.grid._obj._extra('permitted_sys', '');
+      v = this.grid.get_cell_field();
     }
+    v && v.field && this.grid.xcell_action && this.grid.xcell_action('Sysparams', v.field);
     return $p.iface.cancel_bubble(e);
   }
 
@@ -108,58 +61,8 @@ class eXcell_permitted_sys extends eXcell {
    * Устанавливает текст в ячейке. например, this.setCValue("<input type='button' value='"+val+"'>",val);
    */
   setValue(val) {
-
-    const v = this.grid.get_cell_field();
-
-    if (v.obj instanceof $p.DocCalc_order) {
-      const  str = v.obj.extra_fields.find({
-        property: $p.cch.properties.predefined("permitted_sys")
-      });
-      if (str && str._obj && str._obj.txt_row.length > 0) {
-        val = "Fill";
-
-      } else {
-        val = "Empty";
-
-      }
-
-
-    }
-
-    this.setCValue(val);
-
-    // const v = this.grid.get_cell_field();
-    // var rez = "";
-    // var txt_row = "";
-    // if (v.obj instanceof $p.DocCalc_orderExtra_fieldsRow) {
-    //   txt_row = val;
-    //   return txt_row;
-    // } else {
-    //
-    //   txt_row = v.obj.extra_fields.find({
-    //     property: $p.cch.properties.predefined("permitted_sys")
-    //   }).txt_row;
-    //   if (val === "") {
-    //     var arr = txt_row.split(',');
-    //     if (arr.length) {
-    //       arr.forEach((row) => {
-    //         rez += $p.cat.production_params.by_ref[row].name + " | ";
-    //
-    //       });
-    //     } else {
-    //
-    //       rez = "no";
-    //     }
-    //
-    //     //console.log(rez)
-    //     //this.setCValue(rez);
-    //     this.setCValue(txt_row);
-    //   } else {
-    //     this.setCValue(val);
-    //
-    //   }
-    // }
-
+    const v = this.getValue();
+    this.setCValue(v);
   }
 
   /**
@@ -167,28 +70,22 @@ class eXcell_permitted_sys extends eXcell {
    */
   getValue() {
 
-    const {
-      cell: {
-        firstChild
-      }
-    } = this;
-    if (firstChild && firstChild.childNodes.length) {
+    const {cell: {firstChild}} = this;
+    if(firstChild && firstChild.childNodes.length) {
       return firstChild.childNodes[0].value;
-    } else {
-      const v = this.grid.get_cell_field();
-      if (v.obj instanceof $p.DocCalc_orderExtra_fieldsRow) {
-        return v.obj._obj.txt_row !== "" ? "Fill" : 'Empty';
-        //return v.obj._obj.txt_row ;
-
-      } else {
-        return "";
-
-      }
-
-
     }
-
-    
+    else {
+      const v = this.grid.get_cell_field();
+      const empty = 'Любые системы';
+      const {DocCalc_orderExtra_fieldsRow, cat} = $p;
+      if(v && v.obj instanceof DocCalc_orderExtra_fieldsRow) {
+        const refs = v.obj.txt_row.split(',');
+        return refs.length ? refs.map((ref) => cat.production_params.get(ref).name).join(', ') : empty;
+      }
+      else {
+        return empty;
+      }
+    }
   }
 
   /**

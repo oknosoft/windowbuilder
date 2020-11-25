@@ -467,10 +467,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                   sum += row.s * row.quantity;
                 });
                 return sum.toFixed(2);
-              }
-              this._stat_in_header(tag,calck,index,data);
+              };
+              this._stat_in_header(tag, calck, index, data);
             }
-          }
+          };
 
           tabular_init('production', $p.injected_data['toolbar_calc_order_production.xml'], footer);
           const {production} = wnd.elmnts.grids;
@@ -528,7 +528,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
       wnd.elmnts.cell_left = wnd.elmnts.layout_header.cells('a');
       wnd.elmnts.cell_left.hideHeader();
-      wnd.elmnts.pg_left = wnd.elmnts.cell_left.attachHeadFields({
+      const struct = {
         obj: o,
         pwnd: wnd,
         read_only: wnd.elmnts.ro,
@@ -551,14 +551,25 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             'leading_manager'
           ]
         }
-      });
+      };
+      if(o.obj_delivery_state == 'Шаблон') {
+        const permitted_sys = $p.cch.properties.predefined('permitted_sys');
+        struct.oxml['Дополнительные реквизиты'].push({
+          id: `extra_fields|${permitted_sys.ref}`,
+          path: '', 
+          synonym: 'Разрешенные системы',
+          type: 'permitted_sys'
+        });
+      }
+      wnd.elmnts.pg_left = wnd.elmnts.cell_left.attachHeadFields(struct);
+
       wnd.elmnts.pg_left.xcell_action = function (component, fld) {
         $p.dp.buyers_order.open_component(wnd, {
           ref: o.ref,
           cmd: fld,
           _mgr: _mgr,
         }, handlers, component);
-      }
+      };
 
 
       wnd.elmnts.cell_right = wnd.elmnts.layout_header.cells('b');
@@ -625,7 +636,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                   wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
                   rsvg_click(search.ref, 0);
                 }, 200);
-              };
+              }
             })
             .catch(() => {
               delete o._data._reload;
@@ -656,7 +667,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
     function production_select(id, ind) {
       const row = o.production.get(id - 1);
       const {svgs, grids: {production}} = wnd.elmnts;
-      wnd.elmnts.svgs.select(row.characteristic.ref);
+      svgs.select(row.characteristic.ref);
 
       if(production.columnIds[ind] === 'price') {
         const {current_user, CatParameters_keys, utils, enm: {comparison_types, parameters_keys_applying}} = $p;
@@ -821,7 +832,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           type: 'alert-warning',
           text: 'Документ изменён.<br />Перед созданием копии сохраните заказ'
         });
-      };
+      }
       handlers.handleIfaceState({
         component: '',
         name: 'repl',
@@ -914,7 +925,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
 
     function production_get_sel_index() {
-      var selId = wnd.elmnts.grids.production.getSelectedRowId();
+      const selId = wnd.elmnts.grids.production.getSelectedRowId();
       if(selId && !isNaN(Number(selId))) {
         return Number(selId) - 1;
       }
@@ -1436,16 +1447,6 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
     }
 
     const {base_block} = $p.job_prm.builder;
-    $p.cat.production_params.forEach((o) => {
-      if(!o.is_folder) {
-        o.base_blocks.forEach(({_obj}) => {
-          const calc_order = _mgr.get(_obj.calc_order, false, false);
-          if(base_block.indexOf(calc_order) == -1) {
-            base_block.push(calc_order);
-          }
-        });
-      }
-    });
 
     try {
       const refs = [];
@@ -3419,6 +3420,103 @@ class eXcell_addr extends eXcell {
 }
 window.eXcell_addr = eXcell_addr;
 
+
+
+
+class eXcell_permitted_sys extends eXcell {
+
+  constructor(cell) {
+
+    if (!cell) {
+      return;
+    }
+
+    super(cell);
+
+    this.cell = cell;
+    this.open_obj = this.open_obj.bind(this);
+    this.edit = eXcell_permitted_sys.prototype.edit.bind(this);
+    this.detach = eXcell_permitted_sys.prototype.detach.bind(this);
+
+  }
+
+  get grid() {
+    return this.cell.parentNode.grid;
+  }
+
+  ti_keydown(e) {
+    const {code, ctrlKey} = e;
+    const {grid} = this;
+    const {iface, job_prm: {builder}} = $p;
+    const td = this.cell.firstChild;
+    const ti = td.childNodes[0];
+    ti.readOnly = true;
+    return code === 'F2' ? this.open_obj(e) : iface.cancel_bubble(e, true);
+  }
+
+  open_obj(e) {
+    let v = this.grid.get_cell_field();
+    if (!v) {
+      this.grid._obj._extra('permitted_sys', '');
+      v = this.grid.get_cell_field();
+    }
+    v && v.field && this.grid.xcell_action && this.grid.xcell_action('Sysparams', v.field);
+    return $p.iface.cancel_bubble(e);
+  }
+
+  setValue(val) {
+    const v = this.getValue();
+    this.setCValue(v);
+  }
+
+  getValue() {
+
+    const {cell: {firstChild}} = this;
+    if(firstChild && firstChild.childNodes.length) {
+      return firstChild.childNodes[0].value;
+    }
+    else {
+      const v = this.grid.get_cell_field();
+      const empty = 'Любые системы';
+      const {DocCalc_orderExtra_fieldsRow, cat} = $p;
+      if(v && v.obj instanceof DocCalc_orderExtra_fieldsRow) {
+        const refs = v.obj.txt_row.split(',');
+        return refs.length ? refs.map((ref) => cat.production_params.get(ref).name).join(', ') : empty;
+      }
+      else {
+        return empty;
+      }
+    }
+  }
+
+  edit() {
+
+    this.val = this.getValue(); 
+    this.cell.innerHTML = `<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_ofrm21" title="Открыть форму ввода по реквизитам {F2}">&nbsp;</div></div>`;
+
+    const {
+      cell: {
+        firstChild
+      },
+      val
+    } = this;
+    const ti = firstChild.childNodes[0];
+    ti.value = val;
+    ti.readOnly = true;
+    ti.onclick = $p.iface.cancel_bubble; 
+    ti.focus();
+    ti.onkeydown = this.ti_keydown.bind(this);
+    firstChild.childNodes[1].onclick = this.open_obj;
+      }
+
+  detach() {
+    const val = this.getValue();
+    val !== null && this.setValue(val);
+    return true; 
+  }
+
+}
+window.eXcell_permitted_sys = eXcell_permitted_sys;
 
 return ;
 }));

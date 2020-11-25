@@ -75,10 +75,10 @@
                   sum += row.s * row.quantity;
                 });
                 return sum.toFixed(2);
-              }
-              this._stat_in_header(tag,calck,index,data);
+              };
+              this._stat_in_header(tag, calck, index, data);
             }
-          }
+          };
 
           // табчасть продукции со специфическим набором кнопок
           tabular_init('production', $p.injected_data['toolbar_calc_order_production.xml'], footer);
@@ -148,7 +148,7 @@
        */
       wnd.elmnts.cell_left = wnd.elmnts.layout_header.cells('a');
       wnd.elmnts.cell_left.hideHeader();
-      wnd.elmnts.pg_left = wnd.elmnts.cell_left.attachHeadFields({
+      const struct = {
         obj: o,
         pwnd: wnd,
         read_only: wnd.elmnts.ro,
@@ -168,20 +168,28 @@
             'obj_delivery_state',
             'category',
             {id: 'manager', path: 'o.manager', synonym: 'Автор', type: 'ro'},
-            o.obj_delivery_state === $p.enm.obj_delivery_states.Шаблон ? {id: 'extra_fields|fe0effea-f68e-11ea-bb4b-a3a00cb42f46',
-             path: 'extra_fields.find({property:$p.cch.properties.predefined("permitted_sys")}).txt_row',
-              synonym: 'Разрешенные системы', type: 'permitted_sys'}:'',
             'leading_manager'
           ]
         }
-      });
+      };
+      if(o.obj_delivery_state == 'Шаблон') {
+        const permitted_sys = $p.cch.properties.predefined('permitted_sys');
+        struct.oxml['Дополнительные реквизиты'].push({
+          id: `extra_fields|${permitted_sys.ref}`,
+          path: '', //'extra_fields.find({property}).txt_row',
+          synonym: 'Разрешенные системы',
+          type: 'permitted_sys'
+        });
+      }
+      wnd.elmnts.pg_left = wnd.elmnts.cell_left.attachHeadFields(struct);
+
       wnd.elmnts.pg_left.xcell_action = function (component, fld) {
         $p.dp.buyers_order.open_component(wnd, {
           ref: o.ref,
           cmd: fld,
           _mgr: _mgr,
         }, handlers, component);
-      }
+      };
 
       /**
        *  правая колонка шапки документа
@@ -259,7 +267,7 @@
                   wnd.elmnts.tabs.tab_production && wnd.elmnts.tabs.tab_production.setActive();
                   rsvg_click(search.ref, 0);
                 }, 200);
-              };
+              }
             })
             .catch(() => {
               delete o._data._reload;
@@ -300,7 +308,7 @@
     function production_select(id, ind) {
       const row = o.production.get(id - 1);
       const {svgs, grids: {production}} = wnd.elmnts;
-      wnd.elmnts.svgs.select(row.characteristic.ref);
+      svgs.select(row.characteristic.ref);
 
       // если пользователь неполноправный, проверяем разрешение изменять цены номенклатуры
       if(production.columnIds[ind] === 'price') {
@@ -482,7 +490,7 @@
           type: 'alert-warning',
           text: 'Документ изменён.<br />Перед созданием копии сохраните заказ'
         });
-      };
+      }
       handlers.handleIfaceState({
         component: '',
         name: 'repl',
@@ -582,7 +590,7 @@
      */
 
     function production_get_sel_index() {
-      var selId = wnd.elmnts.grids.production.getSelectedRowId();
+      const selId = wnd.elmnts.grids.production.getSelectedRowId();
       if(selId && !isNaN(Number(selId))) {
         return Number(selId) - 1;
       }
