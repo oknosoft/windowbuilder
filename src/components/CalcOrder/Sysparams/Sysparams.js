@@ -69,7 +69,7 @@ class Sysparams extends React.Component {
 
   render() {
 
-    const {handleCancel, handleOk, handleErrClose, state: {_obj, msg}} = this;
+    const {handleCancel, handleOk, handleErrClose, state: {_obj, msg}, scheme} = this;
 
     return <Dialog
       open
@@ -82,7 +82,7 @@ class Sysparams extends React.Component {
         <Button key='cancel'onClick={handleCancel}color='primary'> Закрыть </Button>
       ]}
     >
-      <TabularSection key = 'system' _obj = {_obj } _tabular = 'sys_profile' />
+      <TabularSection key='system' _obj={_obj} _tabular='sys_profile' scheme={scheme}/>
     </Dialog>;
   }
 }
