@@ -5,6 +5,7 @@ import {Switch, Route} from 'react-router';
 import Snack from 'metadata-react/App/Snack';       // сообщения в верхней части страницы (например, обновить после первого запуска)
 import Alert from 'metadata-react/App/Alert';       // диалог сообщения пользователю
 import Confirm from 'metadata-react/App/Confirm';   // диалог вопросов пользователю (да, нет)
+import WindowPortal from 'metadata-react/App/WindowPortal';     // контент в новом окне (например, для печати)
 import Login, {FrmLogin} from 'metadata-react/FrmLogin/Proxy';  // логин и свойства подключения
 import NeedAuth from 'metadata-react/App/NeedAuth'; // страница "необхлдима авторизация"
 import Header from 'metadata-react/Header';         // навигация
@@ -67,7 +68,7 @@ class AppRoot extends Component {
 
   render() {
     const {props} = this;
-    const {snack, alert, confirm, meta_loaded, doc_ram_loaded, nom_prices_step, page, user, couch_direct, offline, title, idle} = props;
+    const {snack, alert, confirm, wnd_portal, meta_loaded, doc_ram_loaded, nom_prices_step, page, user, couch_direct, offline, title, idle} = props;
     const iprops = item_props();
 
 
@@ -137,6 +138,9 @@ class AppRoot extends Component {
 
       // диалог вопросов пользователю (да, нет)
       confirm && confirm.open && <Confirm key="confirm" {...confirm}/>,
+
+      // popup окно печатных форм
+      wnd_portal && wnd_portal.open && <WindowPortal key="wnd_portal" {...wnd_portal}/>,
 
       // обрыв связи
       couch_direct && user.logged_in && !offline && props.complete_loaded && !props.sync_started && $p.job_prm.use_ram !== false &&
