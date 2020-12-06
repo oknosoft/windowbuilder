@@ -25,8 +25,8 @@
     "url": "https://github.com/oknosoft/windowbuilder/issues"
   },
   "homepage": "https://light.oknosoft.ru/",
-  "proxy1": "https://develop.ecookna.ru/",
-  "proxy": "http://localhost:3016/",
+  "proxy": "https://develop.ecookna.ru/",
+  "proxy1": "http://localhost:3016/",
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
     "@material-ui/lab": "^4.0.0-alpha.56",
@@ -41,7 +41,7 @@
     "metadata-redux": "2.0.23-beta.7",
     "metadata-superlogin": "2.0.23-beta.7",
     "react-highlight-words": "^0.16.0",
-    "wb-core": "github:oknosoft/windowbuilder-core#1f674373b76df6c54e6258e568e4473870439f03",
+    "wb-core": "github:oknosoft/windowbuilder-core#f6dee0f88c32141d95cb59ef5cb87a63bbc506b9",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
     "wb-forms": "github:oknosoft/windowbuilder-forms#9d72b7109f016f410010bac01619cfb278db0c99"
   },

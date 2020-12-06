@@ -97,6 +97,7 @@ Object.defineProperties($p.cat.divisions, {
   }
 });
 
+
 Object.defineProperties($p.cat.furns, {
 
   sql_selection_list_flds: {
@@ -1297,6 +1298,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
 
 
+
 $p.doc.calc_order.form_selection = function(pwnd, attr){
 
 	const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
@@ -1516,6 +1518,7 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
 
 
 })($p.doc.calc_order);
+
 
 
 $p.doc.calc_order.__define({

@@ -92,22 +92,21 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
         name: 'ref',
         path: {'in': furns}
       }];
+      let furn_parent;
       furns.some((furn) => {
-        if(this.furn1.empty()) {
-          if(furn.shtulp_kind() === 2) {
-            this.furn1 = furn;
-          }
-        }
-        else if(this.furn2.empty()) {
-          if(furn.shtulp_kind() === 1) {
-            this.furn2 = furn;
-          }
-        }
-        else {
+        if(this.furn1.empty() && furn.shtulp_kind() === 2) {
+          this.furn1 = furn;
+          furn_parent = furn.parent;
           return true;
         }
       });
+      furns.some((furn) => {
+        if(this.furn2.empty() && furn.shtulp_kind() === 1 && (!furn_parent || furn_parent === furn.parent)) {
+          this.furn2 = furn;
+        }
+      });
     }
+
   }
 
   class ToolStulpFlap extends ToolElement {
@@ -137,9 +136,31 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
 
     on_activate() {
       super.on_activate('cursor-text-select');
-      this._scope.tb_left.select(this.options.name);
+      const {options, project} = this;
+      this._scope.tb_left.select(options.name);
       this._obj = new FakeStulpFlap();
-      this._obj.by_sys(this.project);
+      this._obj.by_sys(project);
+
+      /**
+       * При изменении одной фурнитуры, пересчитаем другую
+       * @param field
+       * @param type
+       * @param value
+       */
+      this._obj.value_change = function (field, type, value) {
+        if(!['furn1', 'furn2'].includes(field)) {
+          return;
+        }
+        const {_dp, ox} = project;
+        this[field] = value;
+        const shtulp_kind = this[field].shtulp_kind() === 2 ? 1 : 2;
+        _dp.sys.furns(ox).some(({furn}) => {
+          if(furn.parent === this[field].parent && furn.shtulp_kind() === shtulp_kind) {
+            this[field === 'furn1' ? 'furn2' : 'furn1'] = furn;
+            return true;
+          }
+        });
+      };
     }
 
     on_deactivate() {
@@ -210,6 +231,18 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
       project.redraw();
       const {Левое, Правое} = $p.enm.open_directions;
       const flaps = {l: null, r: null};
+      // сначала создаём пассивную створку
+      for(const glass of layer.glasses(false, true)) {
+        if(glass.profiles.some((segm) => segm.profile === shtulp)) {
+          const line = new _scope.Line(pb, pe);
+          if(line.getSide(glass.interiorPoint()) > 0 && !flaps.l && furn1.shtulp_kind() === 2) {
+            flaps.l = glass.create_leaf(furn1, Левое);
+          }
+          else if(!flaps.r && furn2.shtulp_kind() === 2) {
+            flaps.r = glass.create_leaf(furn2, Правое);
+          }
+        }
+      }
       for(const glass of layer.glasses(false, true)) {
         if(glass.profiles.some((segm) => segm.profile === shtulp)) {
           const line = new _scope.Line(pb, pe);
