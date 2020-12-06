@@ -207,6 +207,12 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
       }
       // проверки закончены, строим вертикальный путь в середине заполнения
       const {top, bottom} = filling.profiles_by_side();
+      if(!top || !bottom) {
+        return dialogs.alert({
+          text: `Не найден верхний или нижний профиль заполнения (сложная форма)`,
+          title: 'Штульповые створки'
+        });
+      }
       const pt = filling.interiorPoint();
       const path = new Path([pt.add([0, 2000]), pt.add([0, -2000])]);
       const pb = path.intersect_point(bottom.profile.generatrix);
@@ -219,14 +225,10 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
       }
       path.firstSegment.point = pb;
       path.lastSegment.point = pe;
-      const {layer} = top.profile;
+      const {layer, clr} = top.profile;
       const shtulp = new Profile({
         generatrix: path,
-        proto: {
-          inset,
-          clr: top.clr,
-          parent: layer,
-        }
+        proto: {inset, clr, parent: layer}
       });
       project.redraw();
       const {Левое, Правое} = $p.enm.open_directions;
