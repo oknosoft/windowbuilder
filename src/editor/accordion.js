@@ -558,7 +558,7 @@ class EditorAccordion {
           case 'delete':
             _editor.project.selectedItems.forEach((path) => {
               const {parent} = path;
-              if(parent instanceof $p.EditorInvisible.ProfileItem){
+              if(parent instanceof Editor.ProfileItem){
                 parent.removeChildren();
                 parent.remove();
               }
@@ -592,6 +592,8 @@ class EditorAccordion {
       buttons: [
         {name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'},
         {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
+        {name: 'nested_layer', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить вложенное изделие', float: 'left'},
+        {name: 'virtual_layer', text: '<i class="fa fa-file-excel-o fa-fw"></i>', tooltip: 'Вставить виртуальный слой', float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
 
@@ -599,53 +601,53 @@ class EditorAccordion {
 
       ], onclick: (name) => {
 
-        switch(name) {
+        switch (name) {
 
-          case 'new_stv':
-            const fillings = _editor.project.getItems({class: $p.EditorInvisible.Filling, selected: true});
-            if(fillings.length){
-              fillings[0].create_leaf();
-            }
-            else{
-              $p.msg.show_msg({
-                type: "alert-warning",
-                text: $p.msg.bld_new_stv_no_filling,
-                title: $p.msg.bld_new_stv
-              });
-            }
-            break;
+        case 'new_stv':
+        case 'nested_layer':
+        case 'virtual_layer':
+          const fillings = _editor.project.getItems({class: Editor.Filling, selected: true});
+          if(fillings.length) {
+            fillings[0].create_leaf(name);
+          }
+          else {
+            $p.msg.show_msg({
+              type: 'alert-warning',
+              text: $p.msg.bld_new_stv_no_filling,
+              title: $p.msg.bld_new_stv
+            });
+          }
+          break;
 
-          case 'drop_layer':
-            this.tree_layers.drop_layer();
-            break;
+        case 'drop_layer':
+          this.tree_layers.drop_layer();
+          break;
 
-          case 'new_layer':
+        case 'new_layer':
 
-            // создаём пустой новый слой
-            new $p.EditorInvisible.Contour({parent: undefined});
+          // создаём пустой новый слой
+          Editor.Contour.create();
+          break;
 
-            // оповещаем мир о новых слоях
-            _editor.eve.emit_async('rows', _editor.project.ox, {constructions: true});
-            break;
+        case 'inserts_to_product':
+          // дополнительные вставки в изделие
+          _editor.additional_inserts();
+          break;
 
-          case 'inserts_to_product':
-            // дополнительные вставки в изделие
-            _editor.additional_inserts();
-            break;
+        case 'inserts_to_contour':
+          // дополнительные вставки в контур
+          _editor.additional_inserts('contour');
+          break;
 
-          case 'inserts_to_contour':
-            // дополнительные вставки в контур
-            _editor.additional_inserts('contour');
-            break;
-
-          default:
-            $p.msg.show_msg(name);
-            break;
+        default:
+          $p.msg.show_msg(name);
+          break;
         }
 
         return false;
       }
     });
+    this._layers._otoolbar.buttons.virtual_layer.classList.add('disabledbutton');
 
     this.tree_layers = new SchemeLayers(this._layers, (text) => {
       this._stv._toolbar.setItemText("info", text);
