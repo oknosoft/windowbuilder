@@ -25,14 +25,14 @@
     "url": "https://github.com/oknosoft/windowbuilder/issues"
   },
   "homepage": "https://light.oknosoft.ru/",
-  "proxy1": "https://develop.ecookna.ru/",
-  "proxy": "https://start.ecookna.ru/",
-  "proxy2": "http://localhost:3016/",
+  "proxy2": "https://develop.ecookna.ru/",
+  "proxy1": "https://start.ecookna.ru/",
+  "proxy": "http://localhost:3016/",
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
-    "@material-ui/lab": "^4.0.0-alpha.56",
+    "@material-ui/lab": "^4.0.0-alpha.57",
     "@turf/points-within-polygon": "^5.1.5",
-    "dxf-writer": "^1.7.0",
+    "dxf-writer": "^1.7",
     "md5-file": "^5.0",
     "metadata-abstract-ui": "2.0.23-beta.7",
     "metadata-core": "2.0.23-beta.7",
@@ -41,10 +41,10 @@
     "metadata-react": "2.0.23-beta.7",
     "metadata-redux": "2.0.23-beta.7",
     "metadata-superlogin": "2.0.23-beta.7",
-    "react-highlight-words": "^0.16.0",
-    "wb-core": "github:oknosoft/windowbuilder-core#567f315950fc320b1a41e2391a6190ab38ec68d9",
+    "react-highlight-words": "^0.16",
+    "wb-core": "github:oknosoft/windowbuilder-core#74063fb503982c0108d62cb2470cb7ad0de41a98",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#72d824dc79430ccef6cb4eedb81ec62854e9e249"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#237316dce6ff4baff06a930b7a06375c9a85c19a"
   },
   "devDependencies": {
     "@babel/core": "7.9.0",
