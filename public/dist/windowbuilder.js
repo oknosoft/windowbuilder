@@ -55,7 +55,7 @@ class SchemeLayers {
         if(editor.project.activeLayer != contour){
           contour.activate(true);
         }
-        set_text(this.layer_text(contour));
+        set_text(contour.presentation());
       }
     });
 
@@ -77,11 +77,11 @@ class SchemeLayers {
 
   layer_activated(contour) {
     const {tree} = this;
-    if(contour && contour.cnstr && tree && tree.getSelectedId && contour.cnstr != tree.getSelectedId()){
+    if(contour && !(contour instanceof Editor.ContourNestedContent) && contour.cnstr && tree && tree.getSelectedId && contour.cnstr != tree.getSelectedId()){
       const layers = [];
       const {project} = this.editor;
       for(const elm of project.getSelectedItems()) {
-        elm.layer instanceof $p.EditorInvisible.Contour && layers.indexOf(elm.layer) === -1 && layers.push(elm.layer);
+        elm.layer instanceof Editor.Contour && layers.indexOf(elm.layer) === -1 && layers.push(elm.layer);
       }
       if(layers.length > 1) {
         const parents = [];
@@ -100,15 +100,18 @@ class SchemeLayers {
 
       if(tree.items[contour.cnstr]){
         tree.selectItem(contour.cnstr);
-        this._set_text(this.layer_text(contour));
+        this._set_text(contour.presentation());
       }
     }
   }
 
   contour_redrawed(contour, bounds) {
+    if(contour instanceof Editor.ContourNestedContent) {
+      return;
+    }
     const {tree} = this;
     if(tree && tree.setItemText){
-      const text = this.layer_text(contour, bounds);
+      const text = contour.presentation(bounds);
       tree.setItemText(contour.cnstr, text);
       if(contour.project.activeLayer == contour){
         this._set_text(text);
@@ -116,16 +119,8 @@ class SchemeLayers {
     }
   }
 
-  layer_text(layer, bounds){
-    if(!bounds){
-      bounds = layer.bounds;
-    }
-    return (layer.parent ? "Створка №" : "Рама №") + layer.cnstr +
-      (bounds ? " " + bounds.width.toFixed() + "х" + bounds.height.toFixed() : "");
-  }
-
   load_layer(layer) {
-    this.tree.addItem(layer.cnstr, this.layer_text(layer), layer.parent ? layer.parent.cnstr : 0);
+    this.tree.addItem(layer.cnstr, layer.presentation(), layer.parent ? layer.parent.cnstr : 0);
     this.tree.checkItem(layer.cnstr);
     layer.contours.forEach((l) => this.load_layer(l));
   }
@@ -602,7 +597,7 @@ class EditorAccordion {
 
         case 'new_layer':
 
-          Editor.Contour.create();
+          Editor.Contour.create({project: _editor.project});
           break;
 
         case 'inserts_to_product':
@@ -741,7 +736,6 @@ class EditorAccordion {
   }
 
 }
-
 
 
 
