@@ -8,19 +8,20 @@
 
 const cfiles = {
   frozen: {
-    revision: '0000',
+    revision: '0001',
     files: [
       '/favicon.ico',
       '/imgs/fav-okn144.png',
       '/imgs/splash.gif',
       '/dist/qrcodejs/qrcode.min.js',
+      '/dist/qrcodejs/qrcode.tosjis.min.js',
       '/dist/dhtmlx.min.js',
       '/dist/jszip.min.js',
       '/dist/paperjs-deep-diff.min.js',
     ]
   },
   dyn: {
-    revision: '20201109',
+    revision: '20201203',
     files: [
       '/dist/windowbuilder.js',
       '/dist/wnd_debug.js',

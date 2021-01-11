@@ -623,7 +623,7 @@ module.exports = function(webpackEnv) {
           navigateFallback: paths.publicUrlOrPath + 'index.html',
           navigateFallbackBlacklist: [
             // Exclude URLs starting with /_, as they're likely an API call
-            new RegExp('^(/_|/index|/auth/|/adm/|/user/|/couchdb/|/help/|/r/)'),
+            new RegExp('^(/_|/index|/auth/|/adm/|/user/|/couchdb/|/help/|/r/|/a/|/pgadmin4/)'),
             // Exclude any URLs whose last part seems to be a file extension
             // as they're likely a resource and not a SPA route.
             // URLs containing a "?" character won't be blacklisted as they're likely

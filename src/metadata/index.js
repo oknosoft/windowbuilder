@@ -100,6 +100,10 @@ export function init(store) {
         // информируем хранилище о готовности MetaEngine
         dispatch(metaActions.META_LOADED($p));
 
+        // скрипт qrcode грузим асинхронно
+        $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script');
+        $p.load_script('/dist/qrcodejs/qrcode.tosjis.min.js', 'script');
+
         // читаем локальные данные в ОЗУ
         return job_prm.use_ram === false ? load_common($p) : pouch.load_data();
 
