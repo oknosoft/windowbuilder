@@ -158,7 +158,6 @@ Object.defineProperties($p.cat.furns, {
 
 
 
-
 $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
 	if(!attr){
@@ -310,7 +309,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
 
 
-
       attr.toolbar_click = function toolbar_click(btn_id) {
         const {msg, ui, dp, doc: {calc_order}, enm} = $p;
         const {grid} = elmnts;
@@ -330,7 +328,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               .then((doc) => {
                 handlers.handleNavigate(`/${calc_order.class_name}/${doc.ref}`);
               })
-              .catch($p.record_log);
+              .catch((err) => {
+                handlers.handleNavigate(`/?ref=${ref}`);
+                ui.dialogs.alert({title: msg.main_title, text: err.message});
+              });
             ;
           }
           else {
@@ -419,19 +420,19 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
     if(!_meta_patched) {
       (function (source, user) {
         if($p.wsql.get_user_param('hide_price_dealer')) {
-          source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
-          source.widths = '40,200,*,220,0,70,70,40,70,70,70,0,0,0';
-          source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,0,0,0';
+          source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
+          source.widths = '40,200,*,220,0,0,0,70,70,40,70,70,70,0,0,0';
+          source.min_widths = '30,200,220,150,0,0,0,70,70,70,70,70,70,0,0,0';
         }
         else if($p.wsql.get_user_param('hide_price_manufacturer')) {
-          source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма';
-          source.widths = '40,200,*,220,0,70,70,40,0,0,0,70,70,70';
-          source.min_widths = '30,200,220,150,0,70,40,70,70,70,0,0,0,70,70,70';
+          source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма';
+          source.widths = '40,200,*,220,0,0,0,70,70,40,0,0,0,70,70,70';
+          source.min_widths = '30,200,220,150,0,0,0,70,70,70,0,0,0,70,70,70';
         }
         else {
-          source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
-          source.widths = '40,200,*,220,0,70,70,40,70,70,70,70,70,70';
-          source.min_widths = '30,200,220,150,0,70,40,70,70,70,70,70,70,70,70,70';
+          source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
+          source.widths = '40,200,*,220,0,0,0,70,70,40,70,70,70,70,70,70';
+          source.min_widths = '30,200,220,150,0,0,0,70,70,70,70,70,70,70,70,70';
         }
 
         if(user.role_available('СогласованиеРасчетовЗаказов') || user.role_available('РедактированиеЦен') || user.role_available('РедактированиеСкидок')) {
@@ -1476,46 +1477,6 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
     }
 
   };
-
-  _mgr.clone = async function(src) {
-    if(typeof src === 'string') {
-      src = await _mgr.get(src, 'promise');
-    }
-    await src.load_linked_refs();
-    const {organization, partner, contract, ...others} = src._obj;
-    const dst = await _mgr.create({date: new Date(), organization, partner, contract});
-    dst._mixin(others, null, 'ref,date,number_doc,posted,_deleted,number_internal,production,planning,manager,obj_delivery_state'.split(','), true);
-    const map = new Map();
-
-    src.production.forEach((row) => {
-      const prow = Object.assign({}, row._obj);
-      if(row.characteristic.calc_order === src) {
-        const cx = prow.characteristic = $p.cat.characteristics.create({calc_order: dst.ref}, false, true);
-        cx._mixin(row.characteristic._obj, null, 'ref,name,calc_order,timestamp'.split(','), true);
-        cx._data._modified = true;
-        cx._data._is_new = true;
-        if(cx.coordinates.count() && src.refill_props) {
-          cx._data.refill_props = true;
-        }
-        map.set(row.characteristic, cx);
-      }
-      dst.production.add(prow);
-    });
-
-    dst.production.forEach((row) => {
-      const cx = map.get(row.ordn);
-      if(cx) {
-        row.ordn = row.characteristic.leading_product = cx;
-      }
-    });
-
-    if(src.refill_props) {
-      await dst.recalc();
-    }
-
-    return dst.save();
-  }
-
 
 })($p.doc.calc_order);
 
