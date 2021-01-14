@@ -1024,8 +1024,6 @@ function Clipbrd(_editor) {
 
 
 
-
-
 class Editor extends $p.EditorInvisible {
 
   constructor(pwnd, handlers){
@@ -1036,13 +1034,11 @@ class Editor extends $p.EditorInvisible {
 
     this.activate();
 
-
     this.__define('_pwnd', {
       get() {
         return pwnd;
       }
     });
-
 
     this._layout = pwnd.attachLayout({
       pattern: '2U',
@@ -1059,7 +1055,6 @@ class Editor extends $p.EditorInvisible {
       offsets: {top: 28, right: 0, bottom: 0, left: 0}
     });
 
-
     this._wrapper = document.createElement('div');
 
     this._layout.cells("a").attachObject(_editor._wrapper);
@@ -1070,16 +1065,11 @@ class Editor extends $p.EditorInvisible {
     this._drawSelectionBounds = 0;
 
 
-
-
     this._keybrd = new Keybrd(this);
-
 
     this._undo = new UndoRedo(this);
 
-
     this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
-
 
     this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '350px',
       image_path: '/imgs/',
@@ -1115,7 +1105,6 @@ class Editor extends $p.EditorInvisible {
         popup.p.querySelector('.dhx_popup_arrow').style.top = '20px';
       }
     });
-
 
     this.tb_top = new $p.iface.OTooolBar({wrapper: _editor._layout.base, width: '100%', height: '28px', top: '0px', left: '0px', name: 'top',
       image_path: '/imgs/',
@@ -1161,13 +1150,6 @@ class Editor extends $p.EditorInvisible {
 
         case 'stamp':
           _editor.open_templates();
-          break;
-
-        case 'new_stv':
-          var fillings = _editor.project.getItems({class: $p.EditorInvisible.Filling, selected: true});
-          if(fillings.length) {
-            fillings[0].create_leaf();
-          }
           break;
 
         case 'back':
@@ -1235,7 +1217,6 @@ class Editor extends $p.EditorInvisible {
     this.tb_top.cell.style.background = '#fff';
     this.tb_top.cell.style.boxShadow = 'none';
 
-
     this.on_keydown = this.on_keydown.bind(this);
     document.body.addEventListener('keydown', this.on_keydown, false);
 
@@ -1257,39 +1238,27 @@ class Editor extends $p.EditorInvisible {
     $p.on('alert', this.on_alert);
 
 
-
     new ZoomFit();
-
 
     new ToolSelectNode();
 
-
     new ToolPan();
-
 
     new ToolArc();
 
-
     new ToolCut();
-
 
     new ToolM2();
 
-
     new ToolPen();
-
 
     new ToolLayImpost();
 
-
     new ToolText();
-
 
     new ToolRuler();
 
-
     new Editor.ToolStulpFlap();
-
 
     new ToolCoordinates();
 
@@ -1449,7 +1418,6 @@ class Editor extends $p.EditorInvisible {
     });
   }
 
-
   get _dxw() {
     return this._layout.dhxWins;
   }
@@ -1470,9 +1438,7 @@ class Editor extends $p.EditorInvisible {
       _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
     };
 
-
     _scheme.magnetism = new Magnetism(_scheme);
-
 
     _editor._layout.attachEvent("onResizeFinish", pwnd_resize_finish);
     _editor._layout.attachEvent("onPanelResizeFinish", pwnd_resize_finish);
@@ -1485,7 +1451,6 @@ class Editor extends $p.EditorInvisible {
 
     pwnd_resize_finish();
 
-
     const _mousepos = document.createElement('div');
     _editor._wrapper.appendChild(_mousepos);
     _mousepos.className = 'mousepos';
@@ -1496,7 +1461,6 @@ class Editor extends $p.EditorInvisible {
           ' y:' + (bounds.height + bounds.y - event.point.y).toFixed(0);
       }
     });
-
 
     const _toppos = document.createElement('div');
     _editor._wrapper.appendChild(_toppos);
@@ -1517,7 +1481,6 @@ class Editor extends $p.EditorInvisible {
     this._errpos.setAttribute('title', 'Есть ошибки');
     this._errpos.style.display = 'none';
     this._errpos.onclick = () => this.show_errpos();
-
 
     new function StableZoom(){
 
@@ -1573,7 +1536,6 @@ class Editor extends $p.EditorInvisible {
     _editor._acc.attach(_editor.project._dp);
   }
 
-
   select_tool(name) {
 
     switch (name) {
@@ -1598,7 +1560,6 @@ class Editor extends $p.EditorInvisible {
       });
     }
   }
-
 
 
   open_templates(confirmed) {
@@ -1643,7 +1604,6 @@ class Editor extends $p.EditorInvisible {
     });
   }
 
-
   drag_rect(p1, p2) {
     const {view} = this;
     const half = new paper.Point(0.5 / view.zoom, 0.5 / view.zoom);
@@ -1668,7 +1628,6 @@ class Editor extends $p.EditorInvisible {
     rect.guide = true;
     return rect;
   }
-
 
   glass_inserts(glasses){
     if(!Array.isArray(glasses)){
@@ -1703,11 +1662,9 @@ class Editor extends $p.EditorInvisible {
     this.fragment_spec(-activeLayer.cnstr, activeLayer.furn.toString());
   }
 
-
   additional_inserts(cnstr, cell){
     new AdditionalInserts(cnstr, this.project, cell);
   }
-
 
   profile_radius(){
 
@@ -1744,7 +1701,6 @@ class Editor extends $p.EditorInvisible {
       });
     }
   }
-
 
   profile_align(name){
 
@@ -1900,7 +1856,6 @@ class Editor extends $p.EditorInvisible {
 
   }
 
-
   profile_group_align(name, profiles) {
 
     let	coordin = name == 'left' || name == 'bottom' ? Infinity : 0;
@@ -1956,7 +1911,6 @@ class Editor extends $p.EditorInvisible {
     });
 
   }
-
 
   do_glass_align(name = 'auto', glasses) {
 
@@ -2128,7 +2082,6 @@ class Editor extends $p.EditorInvisible {
     return res;
   }
 
-
   glass_align(name = 'auto', glasses) {
 
     const shift = this.do_glass_align(name, glasses);
@@ -2156,7 +2109,6 @@ class Editor extends $p.EditorInvisible {
       return true;
     }
   }
-
 
   do_lay_impost_align(name = 'auto', glass) {
 
@@ -2303,7 +2255,6 @@ class Editor extends $p.EditorInvisible {
     return true;
   }
 
-
   lay_impost_align(name = 'auto', glass) {
     const width = (name === 'auto' || name === 'width') && this.do_lay_impost_align('width', glass);
     const height = (name === 'auto' ||  name === 'height') && this.do_lay_impost_align('height', glass);
@@ -2315,7 +2266,6 @@ class Editor extends $p.EditorInvisible {
 
     return true;
   }
-
 
   on_del_row({grid, tabular_section}) {
     if(tabular_section == 'inserts'){
@@ -2331,7 +2281,6 @@ class Editor extends $p.EditorInvisible {
   on_keydown(ev) {
     this.eve.emit('keydown', ev);
   }
-
 
   on_alert(ev) {
     if(ev._shown) {
@@ -2371,7 +2320,6 @@ class Editor extends $p.EditorInvisible {
     this.handlers.handleNavigate(path);
   }
 
-
   unload() {
     const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, project} = this;
 
@@ -2397,7 +2345,6 @@ class Editor extends $p.EditorInvisible {
   }
 
 };
-
 
 
 $p.Editor = Editor;

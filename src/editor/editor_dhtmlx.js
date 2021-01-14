@@ -240,13 +240,6 @@ class Editor extends $p.EditorInvisible {
           _editor.open_templates();
           break;
 
-        case 'new_stv':
-          var fillings = _editor.project.getItems({class: $p.EditorInvisible.Filling, selected: true});
-          if(fillings.length) {
-            fillings[0].create_leaf();
-          }
-          break;
-
         case 'back':
           _editor._undo.back();
           break;

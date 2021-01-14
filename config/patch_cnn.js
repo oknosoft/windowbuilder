@@ -8,7 +8,6 @@ const keys21 = {
  * предопределенные зоны
  */
 export const predefined = {
-  'aribaz.': {zone: 2, host: 'https://aribaz.oknosoft.ru/'},
   'ecookna.': {
     zone: 21,
     host: 'https://zakaz.ecookna.ru/',
@@ -27,6 +26,28 @@ export const predefined = {
     keys: keys21,
     crazy_ram: false,
     use_ram: false,
+    ram_indexer: false,
+  },
+  'sandbox1.oknagc.': {
+    zone: 21,
+    host: 'http://sandbox1.oknagc.ru/',
+    splash: {css: 'splash21', title: false},
+    log_level: 'warn',
+    templates: false,
+    keys: keys21,
+    crazy_ram: false,
+    use_ram: true,
+    ram_indexer: false,
+  },
+  'sandbox2.oknagc.': {
+    zone: 21,
+    host: 'https://sandbox2.oknagc.ru/',
+    splash: {css: 'splash21', title: false},
+    log_level: 'warn',
+    templates: false,
+    keys: keys21,
+    crazy_ram: false,
+    use_ram: true,
     ram_indexer: false,
   },
   'localhost': {
@@ -48,6 +69,7 @@ export const predefined = {
     splash: {css: 'splash21', title: false},
     keys: keys21,
   },
+  'aribaz.': {zone: 2, host: 'https://aribaz.oknosoft.ru/'},
   'tmk.': {zone: 23, host: 'https://tmk-online.ru/'},
   'crystallit.': {zone: 25, host: 'https://crystallit.oknosoft.ru/'},
 }
