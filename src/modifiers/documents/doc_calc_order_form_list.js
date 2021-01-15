@@ -217,7 +217,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               .then((doc) => {
                 handlers.handleNavigate(`/${calc_order.class_name}/${doc.ref}`);
               })
-              .catch($p.record_log);
+              .catch((err) => {
+                handlers.handleNavigate(`/?ref=${ref}`);
+                ui.dialogs.alert({title: msg.main_title, text: err.message});
+              });
             ;
           }
           else {
