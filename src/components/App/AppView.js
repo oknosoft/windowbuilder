@@ -189,6 +189,7 @@ AppRoot.propTypes = {
   repl: PropTypes.object,
   user: PropTypes.object,
   page: PropTypes.object,
+  wnd_portal: PropTypes.object,
   nom_prices_step: PropTypes.number,
   title: PropTypes.string,
 };
