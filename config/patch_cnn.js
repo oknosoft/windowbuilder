@@ -2,21 +2,12 @@
 const keys21 = {
   google: '',
   yandex: '283f550e-8184-4c84-b0e3-bdc5c1dee693',
-}
+};
 
 /**
  * предопределенные зоны
  */
 export const predefined = {
-  'ecookna.': {
-    zone: 21,
-    host: 'https://zakaz.ecookna.ru/',
-    splash: {css: 'splash21', title: false},
-    log_level: 'warn',
-    templates: true,
-    keys: keys21,
-    crazy_ram: true,
-  },
   'start.ecookna.': {
     zone: 21,
     host: 'https://start.ecookna.ru/',
@@ -27,6 +18,15 @@ export const predefined = {
     crazy_ram: false,
     use_ram: false,
     ram_indexer: false,
+  },
+  'ecookna.': {
+    zone: 21,
+    host: 'https://zakaz.ecookna.ru/',
+    splash: {css: 'splash21', title: false},
+    log_level: 'warn',
+    templates: true,
+    keys: keys21,
+    crazy_ram: true,
   },
   'sandbox1.oknagc.': {
     zone: 21,
@@ -63,12 +63,6 @@ export const predefined = {
     host: 'https://rusokon.oknosoft.ru/',
     keys: keys21,
   },
-  'kaleva.': {
-    zone: 8,
-    host: 'https://zakaz.kaleva.ru/',
-    splash: {css: 'splash21', title: false},
-    keys: keys21,
-  },
   'start.kaleva.': {
     zone: 8,
     host: 'https://start.kaleva.ru/',
@@ -101,10 +95,16 @@ export const predefined = {
     use_ram: false,
     ram_indexer: false,
   },
+  'kaleva.': {
+    zone: 8,
+    host: 'https://zakaz.kaleva.ru/',
+    splash: {css: 'splash21', title: false},
+    keys: keys21,
+  },
   'aribaz.': {zone: 2, host: 'https://aribaz.oknosoft.ru/'},
   'tmk.': {zone: 23, host: 'https://tmk-online.ru/'},
   'crystallit.': {zone: 25, host: 'https://crystallit.oknosoft.ru/'},
-}
+};
 
 /**
  * патч зоны по умолчанию
@@ -119,6 +119,9 @@ export function patch_prm(settings) {
             prm[name] = predefined[elm][name];
           }
         });
+        if(predefined[elm].host && !predefined[elm].host.match(elm)) {
+          location.replace(predefined[elm].host);
+        }
       }
     }
     return prm;

@@ -69,7 +69,22 @@ export function init(store) {
       pouch.remote.ram = new classes.PouchDB(pouch.dbpath('ram'), {auto_compaction: true, revs_limit: 3, owner: pouch, fetch: pouch.fetch});
       pouch.on({
         on_log_in() {
-          return load_ram($p);
+          return load_ram($p)
+            .then(() => {
+              pouch.local.sync.ram = pouch.remote.ram.changes({
+                since: 'now',
+                live: true,
+                include_docs: true
+              })
+                .on('change', (change) => {
+                  // информируем мир об изменениях
+                  pouch.load_changes({docs: [change.doc]});
+                  pouch.emit('ram_change', change);
+                })
+                .on('error', (err) => {
+                  $p.record_log(err);
+                });
+            });
         },
       });
       md.once('predefined_elmnts_inited', () => pouch.emit('pouch_complete_loaded'));
