@@ -71,19 +71,22 @@ export function init(store) {
         on_log_in() {
           return load_ram($p)
             .then(() => {
-              pouch.local.sync.ram = pouch.remote.ram.changes({
-                since: 'now',
-                live: true,
-                include_docs: true
-              })
-                .on('change', (change) => {
-                  // информируем мир об изменениях
-                  pouch.load_changes({docs: [change.doc]});
-                  pouch.emit('ram_change', change);
+              const {roles} = $p.current_user || {};
+              if(roles && roles.includes('ram_editor')) {
+                pouch.local.sync.ram = pouch.remote.ram.changes({
+                  since: 'now',
+                  live: true,
+                  include_docs: true
                 })
-                .on('error', (err) => {
-                  $p.record_log(err);
-                });
+                  .on('change', (change) => {
+                    // информируем мир об изменениях
+                    pouch.load_changes({docs: [change.doc]});
+                    pouch.emit('ram_change', change);
+                  })
+                  .on('error', (err) => {
+                    $p.record_log(err);
+                  });
+              }
             });
         },
       });
