@@ -15,7 +15,6 @@ export const predefined = {
     log_level: 'warn',
     templates: false,
     keys: keys21,
-    crazy_ram: false,
     use_ram: false,
     ram_indexer: false,
   },
@@ -26,7 +25,6 @@ export const predefined = {
     log_level: 'warn',
     templates: true,
     keys: keys21,
-    crazy_ram: true,
   },
   'sandbox1.oknagc.': {
     zone: 21,
@@ -35,7 +33,6 @@ export const predefined = {
     log_level: 'warn',
     templates: false,
     keys: keys21,
-    crazy_ram: false,
     use_ram: true,
     ram_indexer: false,
   },
@@ -46,7 +43,6 @@ export const predefined = {
     log_level: 'warn',
     templates: false,
     keys: keys21,
-    crazy_ram: false,
     use_ram: true,
     ram_indexer: false,
   },
@@ -56,7 +52,6 @@ export const predefined = {
     log_level: 'warn',
     templates: true,
     keys: {google: ''},
-    crazy_ram: false,
   },
   'rusokon.': {
     zone: 19,
@@ -70,7 +65,6 @@ export const predefined = {
     log_level: 'warn',
     templates: false,
     keys: keys21,
-    crazy_ram: false,
     use_ram: false,
     ram_indexer: false,
   },
@@ -80,7 +74,6 @@ export const predefined = {
     log_level: 'warn',
     templates: false,
     keys: keys21,
-    crazy_ram: false,
     use_ram: false,
     ram_indexer: false,
   },
@@ -91,7 +84,6 @@ export const predefined = {
     log_level: 'warn',
     templates: false,
     keys: keys21,
-    crazy_ram: false,
     use_ram: false,
     ram_indexer: false,
   },
@@ -139,7 +131,7 @@ export function patch_cnn() {
     const prm = predefined[elm];
     if(location.host.match(elm)) {
       prm.zone && wsql.get_user_param('zone') != prm.zone && wsql.set_user_param('zone', prm.zone);
-      'log_level,splash,templates,keys,crazy_ram'.split(',').forEach((name) => {
+      'log_level,splash,templates,keys'.split(',').forEach((name) => {
         if(prm.hasOwnProperty(name)) {
           if(typeof job_prm[name] === 'object') {
             Object.assign(job_prm[name], prm[name]);
