@@ -1,10 +1,12 @@
 import React from 'react';
+import {render} from 'react-dom';
 // import PropTypes from 'prop-types';
 import DhtmlxCell from '../DhtmlxCell';
 import WindowSizer from 'metadata-react/WindowSize';
 import {withIface} from 'metadata-redux';
 
 import {Prompt} from 'react-router-dom';
+import ToolWnd from './ToolWnds/ToolWnd';
 
 class Builder extends DhtmlxCell {
 
@@ -12,6 +14,7 @@ class Builder extends DhtmlxCell {
     super.componentDidMount();
     const {cell, handlers} = this;
     this._editor = new $p.Editor(cell, handlers);
+    render(<ToolWnd editor={this._editor}/>, this._editor._acc._tool.cell);
   }
 
   componentWillUnmount() {

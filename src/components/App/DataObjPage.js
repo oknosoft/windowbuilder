@@ -47,7 +47,7 @@ class DataObjPage extends DhtmlxCell {
 
   render() {
     const {match, dialog} = this.props;
-    const Dialog = dialog && match.params.ref === dialog.ref && dialog.Component;
+    const Dialog = dialog && dialog.ref && dialog.Component;
     return [
       <Prompt key="prompt" when message={this.prompt} />,
 

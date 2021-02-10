@@ -7,7 +7,6 @@
 const gulp = require('gulp'),
 	base64 = require('gulp-base64'),
 	concat = require('gulp-concat'),
-  strip = require('gulp-strip-comments'),
 	rename = require('gulp-rename'),
 	resources = require('./scripts/resource-concat.js'),
 	umd = require('gulp-umd'),
@@ -23,7 +22,6 @@ gulp.task('build-iface', function(){
 		'./src/widgets/*.js',
 	])
 		.pipe(concat('wnd_debug.js'))
-    .pipe(strip())
 		.pipe(umd({
 			exports: function(file) {
 				return undefined;
@@ -40,7 +38,6 @@ gulp.task('build-lib', function(){
 		'./data/merged_wb_tips.js'
 	])
 		.pipe(concat('windowbuilder.js'))
-    .pipe(strip())
 		.pipe(umd({
 			exports: function(file) {
 				return 'Editor';
@@ -56,7 +53,7 @@ gulp.task('injected-tips', function(){
 		'./src/templates/tip_*.html'
 	])
 		.pipe(resources('merged_wb_tips.js', function (data) {
-			return new Buffer('$p.injected_data._mixin(' + JSON.stringify(data) + ');');
+			return Buffer.from('$p.injected_data._mixin(' + JSON.stringify(data) + ');');
 		}))
 		.pipe(gulp.dest('./data'));
 });
@@ -71,11 +68,12 @@ gulp.task('injected-templates', function(){
     './src/templates/xml/toolbar_characteristics_specification.xml',
     './src/templates/xml/toolbar_glass_inserts.xml',
     './src/templates/xml/toolbar_discounts.xml',
+    './src/templates/xml/toolbar_obj.xml',
 		'./src/templates/xml/tree_*.xml',
 		'./src/templates/view_*.html',
 	])
 		.pipe(resources('merged_wb_templates.js', function (data) {
-			return new Buffer('$p.injected_data._mixin(' + JSON.stringify(data) + ');');
+			return Buffer.from('$p.injected_data._mixin(' + JSON.stringify(data) + ');');
 		}))
 		.pipe(gulp.dest('./data'));
 });
