@@ -215,7 +215,7 @@ class ToolSelectNode extends ToolElement {
         const profiles = [];
         this._scope.paths_intersecting_rect(box).forEach((path) => {
           if(path.parent instanceof Editor.ProfileItem){
-            if(profiles.indexOf(path.parent) == -1){
+            if(!profiles.includes(path.parent) && !(path.parent instanceof ProfileParent)){
               profiles.push(path.parent);
               path.parent.selected = !path.parent.selected;
             }
@@ -228,16 +228,19 @@ class ToolSelectNode extends ToolElement {
       else {
 
         const selectedSegments = this._scope.segments_in_rect(box);
-        if (selectedSegments.length > 0) {
-          for (let i = 0; i < selectedSegments.length; i++) {
-            selectedSegments[i].selected = !selectedSegments[i].selected;
+        if (selectedSegments.length) {
+          for(const segm of selectedSegments) {
+            if(segm.path.parent instanceof Editor.ProfileParent) {
+              continue;
+            }
+            segm.selected = !segm.selected;
           }
         }
         else {
           const profiles = [];
           this._scope.paths_intersecting_rect(box).forEach((path) => {
             if(path.parent instanceof Editor.ProfileItem){
-              if(profiles.indexOf(path.parent) == -1){
+              if(!profiles.includes(path.parent) && !(path.parent instanceof Editor.ProfileParent)){
                 profiles.push(path.parent);
                 path.parent.selected = !path.parent.selected;
               }
@@ -327,8 +330,11 @@ class ToolSelectNode extends ToolElement {
   }
 
   mousewheel(event) {
-    const {wheelDelta, shiftKey} = event;
     const {wheel, wheelEnd, _scope: {project}} = this;
+    if(project.rootLayer() instanceof Editor.ContourParent) {
+      return;
+    }
+    const {wheelDelta, shiftKey} = event;
     const {center} = project.bounds;
     const angle = wheelDelta / (shiftKey ? 300 : 60);
     wheel.angle += angle;
