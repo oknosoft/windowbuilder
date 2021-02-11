@@ -8,6 +8,7 @@
   }
 }(this, function() {
 $p.injected_data._mixin({"toolbar_calc_order_production.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n\n  <item type=\"buttonSelect\" id=\"bs_grp_add\" text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Добавить строку заказа\" openAll=\"true\" >\n    <item type=\"button\" id=\"btn_add_builder\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt; Изделие построителя\" />\n    <item type=\"button\" id=\"btn_add_product\" text=\"&lt;i class='fa fa-gavel fa-fw'&gt;&lt;/i&gt; Продукцию или услугу\" />\n    <item type=\"button\" id=\"btn_add_material\" text=\"&lt;i class='fa fa-cube fa-fw'&gt;&lt;/i&gt; Материал\" />\n    <item type=\"button\" id=\"btn_additions\" text=\"&lt;i class='fa fa-cart-plus fa-fw'&gt;&lt;/i&gt; Аксессуары и услуги\" />\n    <item type=\"button\" id=\"btn_jalousie\" text=\"&lt;i class='fa fa-sun-o fa-fw'&gt;&lt;/i&gt; Жалюзи\" />\n    <item type=\"button\" id=\"btn_clone\" text=\"&lt;i class='fa fa-clone fa-fw'&gt;&lt;/i&gt; Скопировать изделие\" />\n    <item id=\"sep_prod\" type=\"separator\"/>\n    <item type=\"button\" id=\"btn_recalc_row\" text=\"&lt;i class='fa fa-repeat fa-fw'&gt;&lt;/i&gt; Пересчитать строку\" />\n    <item type=\"button\" id=\"btn_recalc_doc\" text=\"&lt;i class='fa fa-repeat fa-fw'&gt;&lt;/i&gt; Пересчитать заказ\" />\n    <item type=\"button\" id=\"btn_change_recalc\" text=\"&lt;i class='fa fa-random fa-fw'&gt;&lt;/i&gt; Пересчитать с заменой параметров\" />\n  </item>\n\n  <item type=\"button\" id=\"btn_edit\" text=\"&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt;\" title=\"Редактировать изделие построителя\" />\n  <item type=\"button\" id=\"btn_spec\" text=\"&lt;i class='fa fa-table fa-fw'&gt;&lt;/i&gt;\" title=\"Открыть спецификацию изделия\" />\n  <item type=\"button\" id=\"btn_delete\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Удалить строку заказа\" />\n  <item type=\"button\" id=\"btn_discount\" text=\"&lt;i class='fa fa-percent fa-fw'&gt;&lt;/i&gt;\" title=\"Скидки по типам строк заказа\"/>\n  <item id=\"sep1\" type=\"separator\"/>\n\n</toolbar>\n","toolbar_calc_order_obj.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n  <item type=\"button\" id=\"btn_save_close\" text=\"&lt;i class='fa fa-caret-square-o-down fa-fw'&gt;&lt;/i&gt;\" title=\"Записать и закрыть\"/>\n  <item type=\"button\" id=\"btn_save\" text=\"&lt;i class='fa fa-floppy-o fa-fw'&gt;&lt;/i&gt;\" title=\"Записать\"/>\n  <item type=\"button\" id=\"btn_sent\" text=\"&lt;i class='fa fa-paper-plane-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отправить заказ\"/>\n\n  <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"&lt;i class='fa fa-check-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Провести документ\"/>\n  <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"&lt;i class='fa fa-square-o fa-fw'&gt;&lt;/i&gt;\" title=\"Отмена проведения\"/>\n\n  <item type=\"button\" id=\"btn_files\" text=\"&lt;i class='fa fa-paperclip fa-fw'&gt;&lt;/i&gt;\" title=\"Присоединенные файлы\"/>\n\n  <item type=\"buttonSelect\" id=\"bs_print\" text=\"&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt;\" title=\"Печать\" openAll=\"true\">\n  </item>\n\n  <item type=\"buttonSelect\" id=\"bs_create_by_virtue\" text=\"&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;\" title=\"Создать на основании\" openAll=\"true\">\n    <item type=\"button\" id=\"planning_event\" enabled=\"false\" text=\"Событие\"/>\n    <item type=\"button\" id=\"calc_order\" text=\"Расчет\"/>\n    <item type=\"button\" id=\"cut_evaluation\" text=\"Оценка раскроя\"/>\n    <item type=\"button\" id=\"debit_cash_order\" enabled=\"false\" text=\"Наличная оплата\"/>\n    <item type=\"button\" id=\"credit_card_order\" enabled=\"false\" text=\"Оплата картой\"/>\n    <item type=\"button\" id=\"selling\" enabled=\"false\" text=\"Реализация товаров услуг\"/>\n  </item>\n\n  <!--item type=\"buttonSelect\" id=\"bs_go_to\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;\" title=\"Перейти\" openAll=\"true\">\n    <item type=\"button\" id=\"btn_go_connection\" enabled=\"false\" text=\"Связи\"/>\n  </item-->\n\n  <item type=\"buttonSelect\" id=\"bs_more\" text=\"&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;\" title=\"Дополнительно\" openAll=\"true\">\n    <item type=\"button\" id=\"btn_reload\" text=\"&lt;i class='fa fa-refresh fa-fw'&gt;&lt;/i&gt; Перечитать с сервера\"/>\n    <item type=\"button\" id=\"btn_history\" text=\"&lt;i class='fa fa-history fa-fw'&gt;&lt;/i&gt; История\"/>\n    <item type=\"separator\" id=\"sep_reload\"/>\n    <item type=\"button\" id=\"btn_retrieve\" text=\"&lt;i class='fa fa-undo fa-fw'&gt;&lt;/i&gt; Отозвать\" title=\"Отозвать заказ\"/>\n    <item type=\"separator\" id=\"sep_export\"/>\n    <item type=\"button\" id=\"btn_share\" text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt; Отправить сотруднику\"/>\n\n    <!--item type=\"button\" id=\"btn_import\" text=\"&lt;i class='fa fa-upload fa-fw'&gt;&lt;/i&gt; Загрузить из файла\"/>\n    <item type=\"button\" id=\"btn_export\" text=\"&lt;i class='fa fa-download fa-fw'&gt;&lt;/i&gt; Выгрузить в файл\"/>\n    <item id=\"btn_download\" type=\"button\" text=\"&lt;i class='fa fa-cloud-download fa-fw'&gt;&lt;/i&gt; Обновить из облака\"/>\n    <item id=\"btn_share\" type=\"button\" text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt; Отправить сотруднику\"/>\n    <item id=\"btn_inbox\" type=\"button\" text=\"&lt;i class='fa fa-inbox fa-fw'&gt;&lt;/i&gt; Входящие заказы\"/-->\n  </item>\n\n  <item id=\"sep_close_1\" type=\"separator\"/>\n  <item type=\"button\" id=\"btn_close\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Закрыть форму\"/>\n  <item id=\"sep_close_2\" type=\"separator\"/>\n\n</toolbar>\n","toolbar_calc_order_selection.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n\n  <item id=\"sep0\" type=\"separator\"/>\n\n  <item id=\"btn_select\" type=\"button\" title=\"Выбрать элемент списка\" text=\"&lt;b&gt;Выбрать&lt;/b&gt;\"/>\n\n  <item id=\"sep1\" type=\"separator\"/>\n  <item id=\"btn_new\" type=\"button\" text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Создать\"/>\n  <item id=\"btn_edit\" type=\"button\" text=\"&lt;i class='fa fa-pencil fa-fw'&gt;&lt;/i&gt;\" title=\"Изменить\"/>\n  <item id=\"btn_delete\" type=\"button\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\" title=\"Удалить\"/>\n  <item id=\"sep2\" type=\"separator\"/>\n\n  <item type=\"buttonSelect\" id=\"bs_print\" text=\"&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt; Печать\" openAll=\"true\">\n  </item>\n\n  <item type=\"buttonSelect\" id=\"bs_create_by_virtue\" text=\"&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;\" title=\"Создать на основании\" openAll=\"true\">\n    <item type=\"button\" id=\"planning_event\" enabled=\"false\" text=\"Событие\"/>\n    <item type=\"button\" id=\"calc_order\" text=\"Расчет\"/>\n    <item type=\"button\" id=\"debit_cash_order\" enabled=\"false\" text=\"Наличная оплата\"/>\n    <item type=\"button\" id=\"credit_card_order\" enabled=\"false\" text=\"Оплата картой\"/>\n    <item type=\"button\" id=\"selling\" enabled=\"false\" text=\"Реализация товаров услуг\"/>\n  </item>\n\n  <!--item type=\"buttonSelect\" id=\"bs_go_to\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt;\" title=\"Перейти\" openAll=\"true\" >\n    <item type=\"button\" id=\"btn_go_connection\" enabled=\"false\" text=\"Связи\" />\n  </item-->\n\n  <item type=\"buttonSelect\" id=\"bs_more\" text=\"&lt;i class='fa fa-th-large fa-fw'&gt;&lt;/i&gt;\" title=\"Дополнительно\" openAll=\"true\">\n    <item id=\"btn_requery\" type=\"button\" text=\"&lt;i class='fa fa-refresh fa-fw'&gt;&lt;/i&gt; Обновить список\"/>\n    <item id=\"btn_history\" type=\"button\"  text=\"&lt;i class='fa fa-history fa-fw'&gt;&lt;/i&gt; История\"/>\n    <item id=\"sep_requery\" type=\"separator\"/>\n    <item id=\"btn_download\" type=\"button\" text=\"&lt;i class='fa fa-cloud-download fa-fw'&gt;&lt;/i&gt; Обновить из облака\"/>\n    <item id=\"btn_share\" type=\"button\" text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt; Отправить сотруднику\"/>\n    <item id=\"btn_inbox\" type=\"button\" text=\"&lt;i class='fa fa-inbox fa-fw'&gt;&lt;/i&gt; Входящие заказы\"/>\n    <item id=\"sep_export\" type=\"separator\"/>\n  </item>\n\n  <item id=\"sep3\" type=\"separator\"/>\n\n</toolbar>\n","toolbar_product_list.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\r\n<toolbar>\r\n    <item id=\"btn_ok\"   type=\"button\"   text=\"&lt;b&gt;Рассчитать и закрыть&lt;/b&gt;\" title=\"Рассчитать, записать и закрыть\"  />\r\n    <item id=\"sep0\" type=\"separator\"/>\r\n    <item id=\"btn_xls\"  type=\"button\"\ttext=\"Загрузить из XLS\" title=\"Загрузить список продукции из файла xls\" />\r\n\r\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"\" title=\"\" />\r\n    <item type=\"buttonSelect\" id=\"bs_print\" enabled=\"false\" text=\"\" title=\"\" openAll=\"true\">\r\n    </item>\r\n\r\n</toolbar>","toolbar_characteristics_specification.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"sep0\" type=\"separator\"/>\n  <item type=\"button\" id=\"btn_origin\" text=\"&lt;i class='fa fa-external-link fa-fw'&gt;&lt;/i&gt; Происхождение\" title=\"Ссылка на настройки\" />\n  <item id=\"sp\" type=\"spacer\"/>\n\n  <item id=\"input_filter\" type=\"buttonInput\" width=\"200\" title=\"Поиск по подстроке\" />\n\n  <item id=\"sep2\" type=\"separator\"/>\n  <item type=\"buttonSelect\"   id=\"bs_more\"  text=\"&lt;i class='fa fa-share-alt fa-fw'&gt;&lt;/i&gt;\"  title=\"Экспорт\" openAll=\"true\">\n    <item type=\"button\" id=\"btn_csv\" text=\"&lt;i class='fa fa-file-text-o fa-fw'&gt;&lt;/i&gt; Скопировать в CSV\" />\n    <item type=\"button\" id=\"btn_json\" text=\"&lt;i class='fa fa-file-code-o fa-fw'&gt;&lt;/i&gt; Скопировать в JSON\" />\n    <item type=\"button\" id=\"btn_xls\" text=\"&lt;i class='fa fa-file-excel-o fa-fw'&gt;&lt;/i&gt; Выгрузить в XLS\" />\n  </item>\n</toolbar>\n","toolbar_glass_inserts.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item id=\"btn_add\" type=\"button\"  text=\"&lt;i class='fa fa-plus-circle fa-fw'&gt;&lt;/i&gt;\" title=\"Добавить строку\"  />\n  <item id=\"btn_delete\" type=\"button\" text=\"&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;\"  title=\"Удалить строку\" />\n  <item id=\"btn_up\" type=\"button\" text=\"&lt;i class='fa fa-arrow-up fa-fw'&gt;&lt;/i&gt;\"  title=\"Переместить строку вверх\" />\n  <item id=\"btn_down\" type=\"button\" text=\"&lt;i class='fa fa-arrow-down fa-fw'&gt;&lt;/i&gt;\"  title=\"Переместить строку вниз\" />\n  <item id=\"sep1\" type=\"separator\"/>\n  <item id=\"btn_inset\" type=\"button\" text=\"&lt;i class='fa fa-plug fa-fw'&gt;&lt;/i&gt;\"  title=\"Заполнить по вставке\" />\n</toolbar>\n","toolbar_discounts.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n  <item type=\"buttonSelect\"   id=\"bs\"  text=\"Скидки производителя\"  title=\"Режим\" openAll=\"true\">\n    <item type=\"button\" id=\"discount_percent\" text=\"Скидки производителя\" />\n    <item type=\"button\" id=\"discount_percent_internal\" text=\"Скидки дилера\" />\n  </item>\n</toolbar>\n","toolbar_obj.xml":"<?xml version=\"1.0\" encoding='utf-8'?>\n<toolbar>\n    <item id=\"sep0\" type=\"separator\"/>\n    <item type=\"button\" id=\"btn_save_close\" text=\"&lt;b&gt;Записать и закрыть&lt;/b&gt;\" title=\"Рассчитать, записать и закрыть\" />\n    <item type=\"button\" id=\"btn_save\" text=\"&lt;i class='fa fa-floppy-o fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Рассчитать и записать данные\"/>\n    <item type=\"button\" id=\"btn_post\" enabled=\"false\" text=\"&lt;i class='fa fa-check-square-o fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Провести документ\" />\n    <item type=\"button\" id=\"btn_unpost\" enabled=\"false\" text=\"&lt;i class='fa fa-square-o fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Отмена проведения\" />\n\n    <item type=\"button\" id=\"btn_files\" text=\"&lt;i class='fa fa-paperclip fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Присоединенные файлы\"/>\n\n    <item type=\"buttonSelect\" id=\"bs_print\" text=\"&lt;i class='fa fa-print fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Печать\" openAll=\"true\">\n    </item>\n\n    <item type=\"buttonSelect\" id=\"bs_create_by_virtue\" text=\"&lt;i class='fa fa-bolt fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Создать на основании\" openAll=\"true\" >\n        <item type=\"button\" id=\"btn_message\" enabled=\"false\" text=\"Сообщение\" />\n    </item>\n\n    <item type=\"buttonSelect\" id=\"bs_go_to\" text=\"&lt;i class='fa fa-external-link fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Перейти\" openAll=\"true\" >\n        <item type=\"button\" id=\"btn_go_connection\" enabled=\"false\" text=\"Связи\" />\n    </item>\n\n    <item type=\"buttonSelect\"   id=\"bs_more\"  text=\"&lt;i class='fa fa-th-large fa-lg fa-fw'&gt;&lt;/i&gt;\"  title=\"Дополнительно\" openAll=\"true\">\n      <item type=\"button\" id=\"btn_history\" text=\"&lt;i class='fa fa-history fa-fw'&gt;&lt;/i&gt; История\"/>\n      <item type=\"button\" id=\"btn_import\" text=\"&lt;i class='fa fa-upload fa-lg fa-fw'&gt;&lt;/i&gt; Загрузить из файла\" />\n      <item type=\"button\" id=\"btn_export\" text=\"&lt;i class='fa fa-download fa-lg fa-fw'&gt;&lt;/i&gt; Выгрузить в файл\" />\n    </item>\n\n    <item id=\"sep_close_1\" type=\"separator\"/>\n    <item type=\"button\" id=\"btn_close\" text=\"&lt;i class='fa fa-times fa-lg fa-fw'&gt;&lt;/i&gt;\" title=\"Закрыть форму\"/>\n    <item id=\"sep_close_2\" type=\"separator\"/>\n\n</toolbar>\n","tree_balance.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"doc.debit_cash_order\" text=\"Приходный кассовый ордер\" select=\"1\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.credit_card_order\" text=\"Оплата от покупателя платежной картой\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.debit_bank_order\" text=\"Платежное поручение входящее\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"doc.selling\" text=\"Реализация товаров и услуг\"><icons file=\"icon_1c_doc\" /></item>\r\n</tree>\r\n","tree_events.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.stores\" text=\"Склады\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.divisions\" text=\"Подразделения\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"doc.work_centers_performance\" select=\"1\" text=\"Мощности рабочих центров\"><icons file=\"icon_1c_doc\" /></item>\r\n    <!--\r\n    <item id=\"doc.planning_event\" text=\"Событие планирования\"><icons file=\"icon_1c_doc\" /></item>\r\n    -->\r\n</tree>\r\n","tree_filteres.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<tree id=\"0\">\n    <item id=\"draft\" text=\"Черновики\" select=\"1\" tooltip=\"Предварительные расчеты\"><icons file=\"fa-pencil\" /></item>\n    <item id=\"sent\" text=\"Отправлено\" tooltip=\"Отправленные, но еще не принятые в работу. Могут быть отозваны (переведены в 'черновики')\"><icons file=\"fa-paper-plane-o\" /></item>\n    <item id=\"confirmed\" text=\"Согласовано\" tooltip=\"Включены в план производства. Могут быть изменены менеджером. Недоступны для изменения дилером\"><icons file=\"fa-thumbs-o-up\" /></item>\n    <item id=\"declined\" text=\"Отклонено\" tooltip=\"Не приняты в работу по техническим причинам. Требуется изменение конструктива или комплектации\"><icons file=\"fa-thumbs-o-down\" /></item>\n\n    <!--item id=\"execution\" text=\"Долги\" tooltip=\"Оплата, отгрузка\"><icons file=\"fa-money\" /></item>\n    <item id=\"plan\" text=\"План\" tooltip=\"Согласованы, но еще не запущены в работу\"><icons file=\"fa-calendar-check-o\" /></item>\n    <item id=\"underway\" text=\"В работе\" tooltip=\"Включены в задания на производство, но еще не изготовлены\"><icons file=\"fa-industry\" /></item>\n    <item id=\"manufactured\" text=\"Изготовлено\" tooltip=\"Изготовлены, но еще не отгружены\"><icons file=\"fa-gavel\" /></item>\n    <item id=\"executed\" text=\"Исполнено\" tooltip=\"Отгружены клиенту\"><icons file=\"fa-truck\" /></item -->\n\n    <item id=\"service\" text=\"Сервис\" tooltip=\"Сервисное обслуживание\"><icons file=\"fa-medkit\" /></item>\n    <item id=\"complaints\" text=\"Рекламации\" tooltip=\"Жалобы и рекламации\"><icons file=\"fa-frown-o\" /></item>\n\n    <item id=\"template\" text=\"Шаблоны\" tooltip=\"Типовые блоки\"><icons file=\"fa-puzzle-piece\" /></item>\n    <item id=\"zarchive\" text=\"Архив\" tooltip=\"Старые заказы\"><icons file=\"fa-archive\" /></item>\n    <item id=\"all\" text=\"Все\" tooltip=\"Отключить фильтрацию\"><icons file=\"fa-expand\" /></item>\n</tree>\n","tree_industry.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.nom_kinds\" text=\"Виды номенклатуры\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom_groups\" text=\"Номенклатурные группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom\" text=\"Номенклатура\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.production_params\" text=\"Параметры продукции\" select=\"1\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.cnns\" text=\"Соединения\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.inserts\" text=\"Вставки\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.furns\" text=\"Фурнитура\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.clrs\" text=\"Цвета\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.color_price_groups\" text=\"Цвето-ценовые группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.params_links\" text=\"Связи параметров\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.elm_visualization\" text=\"Визуализация элементов\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.insert_bind\" text=\"Привязки вставок\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.formulas\" text=\"Формулы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cch.properties\" text=\"Дополнительные реквизиты\"><icons file=\"icon_1c_cch\" /></item>\r\n</tree>\r\n","tree_price.xml":"<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<tree id=\"0\">\r\n    <item id=\"cat.users\" text=\"Пользователи\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.individuals\" text=\"Физические лица\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.organizations\" text=\"Организации\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.partners\" text=\"Контрагенты\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.contracts\" text=\"Договоры\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.nom_prices_types\" text=\"Виды цен\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.price_groups\" text=\"Ценовые группы\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"cat.currencies\" text=\"Валюты\"><icons file=\"icon_1c_cat\" /></item>\r\n    <item id=\"ireg.currency_courses\" text=\"Курсы валют\"><icons file=\"icon_1c_ireg\" /></item>\r\n    <item id=\"ireg.margin_coefficients\" text=\"Маржинальные коэффициенты\"><icons file=\"icon_1c_ireg\" /></item>\r\n    <item id=\"doc.nom_prices_setup\" text=\"Установка цен номенклатуры\" select=\"1\"><icons file=\"icon_1c_doc\" /></item>\r\n    <item id=\"cch.predefined_elmnts\" text=\"Константы и списки\"><icons file=\"icon_1c_cch\" /></item>\r\n\r\n</tree>\r\n","view_blank.html":"<!DOCTYPE html>\r\n<html lang=\"ru\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"/>\r\n    <title>Документ</title>\r\n    <style>\r\n\r\n        html {\r\n            width: 100%;\r\n            height: 100%;\r\n            margin: 0;\r\n            padding: 0;\r\n            overflow: auto;\r\n\r\n        }\r\n        body {\r\n            width: 210mm;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n            overflow: hidden;\r\n            color: rgb(48, 57, 66);\r\n            font-family: Arial, sans-serif;\r\n            font-size: 11pt;\r\n            text-rendering: optimizeLegibility;\r\n        }\r\n\r\n        /* Таблица */\r\n        table.border {\r\n            border-collapse: collapse; border: 1px solid;\r\n        }\r\n        table.border > tbody > tr > td,\r\n        table.border > tr > td,\r\n        table.border th{\r\n            border: 1px solid;\r\n        }\r\n        .noborder{\r\n            border: none;\r\n        }\r\n\r\n        /* Многоуровневый список */\r\n        ol {\r\n            counter-reset: li;\r\n            list-style: none;\r\n            padding: 0;\r\n        }\r\n        li {\r\n            margin-top: 8px;\r\n        }\r\n        li:before {\r\n            counter-increment: li;\r\n            content: counters(li,\".\") \".\";\r\n            padding-right: 8px;\r\n        }\r\n        li.flex {\r\n            display: flex;\r\n            text-align: left;\r\n            list-style-position: outside;\r\n            font-weight: normal;\r\n        }\r\n\r\n        .container {\r\n            width: 100%;\r\n            position: relative;\r\n        }\r\n\r\n        .margin-top-20 {\r\n            margin-top: 20px;\r\n        }\r\n\r\n        .column-50-percent {\r\n            width: 48%;\r\n            min-width: 40%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .column-30-percent {\r\n            width: 31%;\r\n            min-width: 30%;\r\n            float: left;\r\n            padding: 8px;\r\n        }\r\n\r\n        .block-left {\r\n            display: block;\r\n            float: left;\r\n        }\r\n\r\n        .block-center {\r\n            display: block;\r\n            margin-left: auto;\r\n            margin-right: auto;\r\n        }\r\n\r\n        .block-right {\r\n            display: block;\r\n            float: right;\r\n        }\r\n\r\n        .list-center {\r\n            text-align: center;\r\n            list-style-position: inside;\r\n            font-weight: bold;\r\n        }\r\n\r\n        .clear-both {\r\n            clear: both;\r\n        }\r\n\r\n        .small {\r\n            font-size: small;\r\n        }\r\n\r\n        .text-center {\r\n            text-align: center;\r\n        }\r\n\r\n        .text-justify {\r\n            text-align: justify;\r\n        }\r\n\r\n        .text-right {\r\n            text-align: right;\r\n        }\r\n\r\n        .muted-color {\r\n            color: #636773;\r\n        }\r\n\r\n        .accent-color {\r\n            color: #f30000;\r\n        }\r\n\r\n        .note {\r\n            background: #eaf3f8;\r\n            color: #2980b9;\r\n            font-style: italic;\r\n            padding: 12px 20px;\r\n        }\r\n\r\n        .note:before {\r\n            content: 'Замечание: ';\r\n            font-weight: 500;\r\n        }\r\n        *, *:before, *:after {\r\n            box-sizing: inherit;\r\n        }\r\n\r\n    </style>\r\n</head>\r\n<body>\r\n\r\n</body>\r\n</html>","view_settings.html":"<div class=\"md_column1300\">\r\n\r\n    <div class=\"md_column320\" name=\"form1\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n    <div class=\"md_column320\" name=\"form2\" style=\"max-width: 400px;\"><div></div></div>\r\n\r\n</div>"});
+// индивидуальная форма объекта характеристики
 $p.cat.characteristics.form_obj = function (pwnd, attr, handlers) {
 
   const _meta = this.metadata();
@@ -16,6 +17,7 @@ $p.cat.characteristics.form_obj = function (pwnd, attr, handlers) {
 
     _meta.form.obj.tabular_sections_order.forEach((ts) => {
       if(ts == 'specification') {
+        // табчасть со специфическим набором кнопок
         tabular_init('specification', $p.injected_data['toolbar_characteristics_specification.xml']);
         wnd.elmnts.tabs.tab_specification.getAttachedToolbar().attachEvent('onclick', (btn_id) => {
 
@@ -57,6 +59,11 @@ $p.cat.characteristics.form_obj = function (pwnd, attr, handlers) {
 };
 
 
+/**
+ * @module cat_divisions
+ *
+ * Created by Evgeniy Malyarov on 27.05.2017.
+ */
 
 
 Object.defineProperties($p.cat.divisions, {
@@ -98,6 +105,9 @@ Object.defineProperties($p.cat.divisions, {
 });
 
 
+/**
+ * Методы менеджера фурнитуры
+ */
 Object.defineProperties($p.cat.furns, {
 
   sql_selection_list_flds: {
@@ -123,6 +133,7 @@ Object.defineProperties($p.cat.furns, {
           });
 
           if(links.length){
+            // собираем все доступные значения в одном массиве
             const list = [];
             links.forEach((link) => link.values.forEach((row) => list.push(this.get(row._obj.value))));
 
@@ -156,6 +167,13 @@ Object.defineProperties($p.cat.furns, {
 
 });
 
+/**
+ * форма списка документов Расчет-заказ. публикуемый метод: doc.calc_order.form_list(o, pwnd, attr)
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
+ *
+ * @module doc_calc_order_form_list
+ */
 
 
 $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
@@ -192,6 +210,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }
       }
 
+      // добавляем слушателя внешних событий
       if(handlers){
         const {custom_selection} = elmnts.filter;
         custom_selection._state = handlers.props.state_filter;
@@ -215,9 +234,20 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         wnd.handleIfaceState = handlers.handleIfaceState;
       }
 
+      // добавляем отбор по подразделению
       const dp = $p.dp.builder_price.create();
       const pos = elmnts.toolbar.getPosition('input_filter');
 
+      // кнопка поиска по номеру
+      // elmnts.toolbar.addButtonTwoState('by_number', pos, '<i class="fa fa-key fa-fw"></i>');
+      // if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
+      //   elmnts.toolbar.setItemState('by_number', true);
+      // }
+      // elmnts.toolbar.setItemToolTip('by_number', 'Режим поиска с учетом либо без учета статуса и подразделения');
+      // elmnts.toolbar.attachEvent('onStateChange', (id, state) => {
+      //   $p.wsql.set_user_param('calc_order_by_number', state);
+      //   elmnts.filter.call_event();
+      // });
 
       const txt_id = `txt_${dhx4.newId()}`;
       elmnts.toolbar.addText(txt_id, pos, '');
@@ -243,6 +273,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         $p.md.once('user_log_in', set_department);
       }
 
+      // настраиваем фильтр для списка заказов
       elmnts.filter.disable_timer = true;
       elmnts.filter.custom_selection.__define({
         department: {
@@ -259,15 +290,24 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           enumerable: true
         },
 
+        // sort может зависеть от ...
         _sort: {
           get() {
+            // if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
+            //   const flt = elmnts.filter.get_filter();
+            //   if(flt.filter.length > 5) {
+            //     return [{class_name: 'desc'}, {date: 'desc'}, {search: 'desc'}];
+            //   }
+            // }
             return [{department: 'desc'}, {state: 'desc'}, {date: 'desc'}];
           }
         },
 
+        // индекс может зависеть от ...
         _index: {
           get() {
             const {filter, date_till} = elmnts.filter.get_filter();
+            // строку, в которой 11 символов, из которых не менее 6 числа, считаем номером
             if(filter.length === 11 && filter.replace(/\D/g, '').length > 5) {
               const {doc} = $p.adapters.pouch.local;
               return doc.query('doc/number_doc', {
@@ -290,9 +330,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
       });
 
+      // картинка заказа в статусбаре
       elmnts.status_bar = wnd.attachStatusBar();
       elmnts.svgs = new $p.iface.OSvgs(wnd, elmnts.status_bar,
         (ref, dbl) => {
+          //dbl && $p.iface.set_hash("cat.characteristics", ref, "builder")
           dbl && handlers.handleNavigate(`/builder/${ref}`);
         });
       elmnts.grid.attachEvent('onRowSelect', (rid) => elmnts.svgs.reload(rid));
@@ -307,8 +349,24 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         dep && dep.unload();
       }
 
+      // wnd.close = (on_create) => {
+      //
+      //   if (wnd) {
+      //     wnd.getAttachedToolbar().clearAll();
+      //     wnd.detachToolbar();
+      //     wnd.detachStatusBar();
+      //     if (wnd.conf) {
+      //       wnd.conf.unloading = true;
+      //     }
+      //     wnd.detachObject(true);
+      //   }
+      //   this.frm_unload(on_create);
+      // }
 
 
+      /**
+       * обработчик нажатия кнопок командных панелей
+       */
       attr.toolbar_click = function toolbar_click(btn_id) {
         const {msg, ui, dp, doc: {calc_order}, enm} = $p;
         const {grid} = elmnts;
@@ -407,6 +465,13 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 };
 
 
+/**
+ * форма документа Расчет-заказ. публикуемый метод: doc.calc_order.form_obj(o, pwnd, attr)
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
+ *
+ * @module doc_calc_order_form_obj
+ */
 
 (function ($p) {
 
@@ -417,8 +482,13 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
     let o, wnd;
 
+    /**
+     * структура заголовков табчасти продукции
+     * @param source
+     */
     if(!_meta_patched) {
       (function (source, user) {
+        // TODO: штуки сейчас спрятаны в ro и имеют нулевую ширину
         if($p.wsql.get_user_param('hide_price_dealer')) {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
           source.widths = '40,200,*,220,0,0,0,70,70,40,70,70,70,0,0,0';
@@ -449,6 +519,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
     attr.draw_tabular_sections = (o, wnd, tabular_init) => {
 
+      /**
+       * получим задействованные в заказе объекты характеристик
+       */
       const refs = [];
       o.production.forEach((row) => {
         if(!$p.utils.is_empty_guid(row._obj.characteristic) && row.characteristic.is_new()) {
@@ -456,8 +529,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }
       });
       const {cat: {characteristics}, enm: {obj_delivery_states}} = $p;
-      characteristics.adapter.load_array(characteristics, refs, false,
-          o.obj_delivery_state == obj_delivery_states.Шаблон && characteristics.adapter.local.templates)
+      characteristics.adapter.load_array(characteristics, refs, false)
         .then(() => {
 
           const footer = {
@@ -474,6 +546,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             }
           };
 
+          // табчасть продукции со специфическим набором кнопок
           tabular_init('production', $p.injected_data['toolbar_calc_order_production.xml'], footer);
           const {production} = wnd.elmnts.grids;
           production.disable_sorting = true;
@@ -497,15 +570,20 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           toolbar.addSpacer('btn_delete');
           toolbar.attachEvent('onclick', toolbar_click);
 
+          // табчасть планирования
           tabular_init('planning');
           toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
           toolbar.addButton('btn_fill_plan', 3, 'Заполнить');
           toolbar.attachEvent('onclick', toolbar_click);
 
+          // в зависимости от статуса
           set_editable(o, wnd);
 
         });
 
+      /**
+       *  статусбар с картинками
+       */
       wnd.elmnts.statusbar = wnd.attachStatusBar();
       wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.statusbar, rsvg_click);
     };
@@ -522,12 +600,18 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }, 200);
       }
 
+      /**
+       *  закладка шапка
+       */
       wnd.elmnts.layout_header = wnd.elmnts.tabs.tab_header.attachLayout('3U');
 
       wnd.elmnts.layout_header.attachEvent('onResizeFinish', layout_resize_finish);
 
       wnd.elmnts.layout_header.attachEvent('onPanelResizeFinish', layout_resize_finish);
 
+      /**
+       *  левая колонка шапки документа
+       */
       wnd.elmnts.cell_left = wnd.elmnts.layout_header.cells('a');
       wnd.elmnts.cell_left.hideHeader();
       const struct = {
@@ -558,7 +642,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         const permitted_sys = $p.cch.properties.predefined('permitted_sys');
         struct.oxml['Дополнительные реквизиты'].push({
           id: `extra_fields|${permitted_sys.ref}`,
-          path: '', 
+          path: '', //'extra_fields.find({property}).txt_row',
           synonym: 'Разрешенные системы',
           type: 'permitted_sys'
         });
@@ -573,6 +657,14 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }, handlers, component);
       };
 
+      /**
+       *  правая колонка шапки документа
+       * TODO: задействовать либо удалить choice_links
+       * var choice_links = {contract: [
+				 * {name: ["selection", "owner"], path: ["partner"]},
+				 * {name: ["selection", "organization"], path: ["organization"]}
+				 * ]};
+       */
 
       wnd.elmnts.cell_right = wnd.elmnts.layout_header.cells('b');
       wnd.elmnts.cell_right.hideHeader();
@@ -595,6 +687,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }
       });
 
+      /**
+       *  редактор комментариев
+       */
       wnd.elmnts.cell_note = wnd.elmnts.layout_header.cells('c');
       wnd.elmnts.cell_note.hideHeader();
       wnd.elmnts.cell_note.setHeight(100);
@@ -648,6 +743,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }
       });
 
+    /**
+     * проверка, можно ли покидать страницу
+     * @param loc
+     * @return {*}
+     */
     function prompt(loc) {
       if(loc.pathname.match(/\/builder|\/templates/)) {
         return true;
@@ -666,11 +766,17 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       $p.doc.calc_order.off('svgs', rsvg_reload);
     }
 
+    /**
+     * При активизации строки продукции
+     * @param id
+     * @param ind
+     */
     function production_select(id, ind) {
       const row = o.production.get(id - 1);
       const {svgs, grids: {production}} = wnd.elmnts;
       svgs.select(row.characteristic.ref);
 
+      // если пользователь неполноправный, проверяем разрешение изменять цены номенклатуры
       if(production.columnIds[ind] === 'price') {
         const {current_user, CatParameters_keys, utils, enm: {comparison_types, parameters_keys_applying}} = $p;
         if(current_user.role_available('СогласованиеРасчетовЗаказов') || current_user.role_available('РедактированиеЦен')) {
@@ -695,11 +801,15 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           return production.cells(id, ind).setDisabled(disabled);
         }
       }
+      // если выбрана номенклатура
       if (['nom', 'characteristic'].includes(production.columnIds[ind])) {
         production.cells(id, ind).setDisabled(!row.characteristic.calc_order.empty());
       }
     }
 
+    /**
+     * обработчик нажатия кнопок командных панелей
+     */
     function toolbar_click(btn_id) {
 
       switch (btn_id) {
@@ -749,6 +859,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         break;
 
       case 'btn_add_product':
+        //$p.dp.buyers_order.open_product_list(wnd, o);
         $p.dp.buyers_order.open_component(wnd, o, handlers, 'AdditionsExt');
         break;
 
@@ -818,14 +929,25 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       }
     }
 
+    /**
+     * создаёт событие календаря
+     */
     function calendar_new_event() {
       $p.msg.show_not_implemented();
     }
 
+    /**
+     * показывает список связанных документов
+     */
     function go_connection() {
       $p.msg.show_not_implemented();
     }
 
+    /**
+     * копирует заказ
+     * @param o
+     * @return {undefined}
+     */
     function clone_calc_order(o) {
       const {_manager} = o;
       if(o._modified) {
@@ -851,11 +973,15 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         });
     }
 
+    /**
+     * создаёт и показывает диалог групповых скидок
+     */
     function show_discount() {
 
       if(!wnd.elmnts.discount) {
         wnd.elmnts.discount = $p.dp.buyers_order.create();
       }
+      // перезаполняем
       refill_discount(wnd.elmnts.discount);
 
       const discount = $p.iface.dat_blank(null, {
@@ -925,6 +1051,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
     }
 
 
+    /**
+     * вспомогательные функции
+     */
 
     function production_get_sel_index() {
       const selId = wnd.elmnts.grids.production.getSelectedRowId();
@@ -974,6 +1103,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           })
           .catch((err) => {
             if(err._rev) {
+              // показать диалог и обработать возврат
               dhtmlx.confirm({
                 title: o.presentation,
                 text: err.message + '<div style="text-align: left;padding-top: 16px;">Ваши правки потеряны, можно закрыть форму либо прочитать актуальную версию заказа с сервера</div>',
@@ -995,12 +1125,14 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
       switch (action) {
       case 'sent':
+        // показать диалог и обработать возврат
         dhtmlx.confirm({
           title: msg.order_sent_title,
           text: msg.order_sent_message,
           cancel: msg.cancel,
           callback: function (btn) {
             if(btn) {
+              // установить транспорт в "отправлено" и записать
               o.obj_delivery_state = enm.obj_delivery_states.Отправлен;
               do_save();
             }
@@ -1009,6 +1141,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         break;
 
       case 'retrieve':
+        // установить транспорт в "отозвано" и записать
         o.obj_delivery_state = enm.obj_delivery_states.Отозван;
         do_save();
         break;
@@ -1028,7 +1161,12 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
     function frm_close() {
 
+      // if(o && !location.pathname.match(/builder/)) {
+      //   // при закрыти формы не в рисовалку, выгружаем заказ и его продукции из памяти
+      //   setTimeout(o.unload.bind(o), 200);
+      // }
 
+      // выгружаем из памяти всплывающие окна скидки и связанных файлов
       ['vault', 'vault_pop', 'discount', 'svgs', 'layout_header'].forEach((elm) => {
         wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload && wnd.elmnts[elm].unload();
       });
@@ -1036,6 +1174,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       return true;
     }
 
+    // устанавливает видимость и доступность
     function set_editable(o, wnd) {
 
       const {pg_left, pg_right, frm_toolbar, grids, tabs} = wnd.elmnts;
@@ -1054,15 +1193,18 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       pg_left.setEditable(!ro);
       pg_right.setEditable(!ro);
 
+      // гасим кнопки проведения, если недоступна роль
       if(!current_user.role_available('СогласованиеРасчетовЗаказов')) {
         frm_toolbar.hideItem('btn_post');
         frm_toolbar.hideItem('btn_unpost');
       }
 
+      // если не технологи и не менеджер - запрещаем менять статусы
       if(!current_user.role_available('ИзменениеТехнологическойНСИ') && !current_user.role_available('СогласованиеРасчетовЗаказов')) {
         pg_left.cells('obj_delivery_state', 1).setDisabled(true);
       }
 
+      // кнопки записи и отправки гасим в зависимости от статуса
       if(ro) {
         frm_toolbar.disableItem('btn_sent');
         frm_toolbar.disableItem('btn_save');
@@ -1075,6 +1217,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         toolbar.forEachItem(disable);
       }
       else {
+        // шаблоны никогда не надо отправлять
         if(o.obj_delivery_state == Шаблон) {
           frm_toolbar.disableItem('btn_sent');
         }
@@ -1098,6 +1241,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       }
     }
 
+    /**
+     * показывает диалог с сообщением "это не продукция"
+     */
     function not_production() {
       const {msg} = $p;
       msg.show_msg({
@@ -1107,6 +1253,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       });
     }
 
+    /**
+     * Пересчитывает строку или весь заказ
+     * @param [mode] {String} - если 'row' - пересчет строки
+     */
     function recalc(mode) {
       if(mode == 'row') {
         const selId = production_get_sel_index();
@@ -1121,6 +1271,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             return not_production();
           }
           else if(row.characteristic.coordinates.count() == 0) {
+            // возможно, это подчиненная продукция
             if(row.characteristic.leading_product.calc_order == calc_order) {
               ox = row.characteristic.leading_product;
             }
@@ -1159,10 +1310,17 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       }
     }
 
+    /**
+     * Открывает диалог пересчета со сменой системы и прочих параметров
+     */
     function change_recalc() {
       $p.dp.buyers_order.open_component(wnd, {ref: o.ref, _mgr}, handlers, 'ChangeRecalc');
     }
 
+    /**
+     * ОткрытьПостроитель()
+     * @param [create_new] {Boolean} - создавать новое изделие или открывать в текущей строке
+     */
     function open_builder(create_new) {
 
       if(create_new == 'clone') {
@@ -1178,18 +1336,22 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               not_production();
             }
             else if(row.characteristic.coordinates.count()) {
+              // добавляем строку
               o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
                 .then((nrow) => {
                   const {characteristic} = nrow;
                   nrow.quantity = row.quantity;
                   nrow.note = row.note;
+                  // заполняем продукцию копией данных текущей строки
                   characteristic._mixin(row.characteristic._obj, null,
                     'ref,name,calc_order,product,leading_product,leading_elm,origin,partner'.split(','), true);
 
+                  // при необходимости, установим признак необходимости перезаполнить параметры изделия и фурнитуры
                   if(calc_order.refill_props) {
                     characteristic._data.refill_props = true;
                   }
 
+                  // открываем рисовалку
                   handlers.handleNavigate(`/builder/${characteristic.ref}`);
                 });
             }
@@ -1203,6 +1365,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       else if(create_new) {
         o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
           .then(({characteristic}) => {
+            //handlers.handleNavigate(`/builder/${characteristic.ref}`);
             handlers.handleNavigate(`/templates/?order=${o.ref}&ref=${characteristic.ref}&action=new`);
           });
       }
@@ -1212,6 +1375,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           const row = o.production.get(selId);
           if(row) {
             const {owner, calc_order} = row.characteristic;
+            // если стоим на строке жалюзи, открываем конструктор жалюзи
             if(owner === $p.job_prm.nom.foroom) {
               return open_jalousie();
             }
@@ -1219,6 +1383,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               not_production();
             }
             else if(row.characteristic.coordinates.count() == 0) {
+              // возможно, это заготовка - проверим номенклатуру системы
               if(row.characteristic.leading_product.calc_order == calc_order) {
                 handlers.handleNavigate(`/builder/${row.characteristic.leading_product.ref}`);
               }
@@ -1252,6 +1417,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         if(selId != undefined) {
           const row = o.production.get(selId);
           const {owner} = row.characteristic;
+          // если стоим на строке жалюзи, открываем конструктор жалюзи
           if(owner === nom.foroom) {
             row.nom = nom.foroom;
             row.unit = row.nom.storage_unit;
@@ -1262,6 +1428,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       }
     }
 
+    /**
+     * Открывает форму спецификации текущей строки
+     */
     function open_spec() {
       const selId = production_get_sel_index();
       if(selId != undefined) {
@@ -1283,6 +1452,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       });
     }
 
+    /**
+     * добавляет строку материала
+     */
     function add_material() {
       const {production} = wnd.elmnts.grids;
       const row = o.create_product_row({grid: production}).row - 1;
@@ -1298,15 +1470,24 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 })($p);
 
 
+/**
+ * форма выбора документов Расчет-заказ. публикуемый метод: doc.calc_order.form_selection(pwnd, attr)
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
+ *
+ * @module doc_calc_order_form_selection
+ */
 
 
 $p.doc.calc_order.form_selection = function(pwnd, attr){
 
 	const wnd = this.constructor.prototype.form_selection.call(this, pwnd, attr);
 
+	// настраиваем фильтр для списка заказов
 	wnd.elmnts.filter.custom_selection._view = { get value() { return '' } };
 	wnd.elmnts.filter.custom_selection._key = { get value() { return '' } };
 
+	// картинка заказа в статусбаре
 	wnd.do_not_maximize = true;
 	wnd.elmnts.svgs = new $p.iface.OSvgs(wnd, wnd.elmnts.status_bar,
     (ref, dbl) => {
@@ -1327,19 +1508,33 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
 };
 
 
+/**
+ * ### Модуль менеджера документа Расчет-заказ
+ * Обрботчики событий after_create, after_load, before_save, after_save, value_change
+ * Методы выполняются в контексте текущего объекта this = DocObj
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
+ *
+ * @module doc_calc_order
+ */
 
 ((_mgr) => {
 
+  // дополняем отбор номенклатуры в метаданных заказа
   const {nom} = _mgr.metadata('production').fields;
   if(!nom.choice_params) {
     nom.choice_params = [];
   }
   nom.choice_params.push({name: 'is_procedure', path: false});
 
+  // переопределяем формирование списка выбора
   const {form, tabular_sections} = _mgr.metadata();
   tabular_sections.production.fields.characteristic._option_list_local = true;
 
+  // структура дополнительных форм, связанных с реквизитами
+  // те же самые данные можно было разместить в meta_patch и пересобрать init.js
   form.client_of_dealer = {
+    // описание полей по общим правилам метаданных
     fields: {
       surname: {
         synonym: 'Фамилия',
@@ -1370,6 +1565,7 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
         type: {types: ['string'], str_len: 0}
       }
     },
+    // форма объекта
     obj: {
       items: [
         {
@@ -1414,6 +1610,7 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
         }
       ]
     },
+    // форма выбора
     selection: {
       indexes: [
         {
@@ -1424,8 +1621,10 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
     }
   };
 
+  // переопределяем объекты назначения дополнительных реквизитов
   _mgr._destinations_condition = {predefined_name: {in: ['Документ_Расчет', 'Документ_ЗаказПокупателя']}};
 
+  // индивидуальная строка поиска
   _mgr.build_search = function (tmp, obj) {
 
     const {number_internal, client_of_dealer, partner, note} = obj;
@@ -1437,50 +1636,19 @@ $p.doc.calc_order.form_selection = function(pwnd, attr){
       (note ? ' ' + note : '')).toLowerCase();
   };
 
-  _mgr.load_templates = async function () {
-
-    if(!$p.job_prm.builder) {
-      $p.job_prm.builder = {};
-    }
-    if(!$p.job_prm.builder.base_block) {
-      $p.job_prm.builder.base_block = [];
-    }
-    if(!$p.job_prm.pricing) {
-      $p.job_prm.pricing = {};
-    }
-
-    const {base_block} = $p.job_prm.builder;
-
-    try {
-      const refs = [];
-      for (let o of base_block) {
-        refs.push(o.ref);
-        if(refs.length > 29) {
-          await _mgr.adapter.load_array(_mgr, refs, false, _mgr.adapter.local.templates);
-          refs.length = 0;
-        }
-      }
-      if(refs.length) {
-        await _mgr.adapter.load_array(_mgr, refs, false, _mgr.adapter.local.templates);
-      }
-
-      refs.length = 0;
-      base_block.forEach(({production}) => {
-        if(production.count()) {
-          refs.push(production.get(0).characteristic.ref);
-        }
-      });
-      return _mgr.adapter.load_array($p.cat.characteristics, refs, false, _mgr.adapter.local.templates);
-    }
-    catch (e) {
-
-    }
-
-  };
-
 })($p.doc.calc_order);
 
 
+/**
+ * ### Отчеты по документу Расчет
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
+ *
+ * Created 23.06.2016
+ *
+ * @module doc_calc_order_reports
+ *
+ */
 
 $p.doc.calc_order.__define({
 
@@ -1509,9 +1677,11 @@ $p.doc.calc_order.__define({
 						{type: 'numeric', format: '0 0.00'}
 					],
 					wordWrap: false
+					//minSpareRows: 1
 				};
 
 			if(!$p.current_user.role_available("СогласованиеРасчетовЗаказов")){
+				//query_options.group_level = 3;
 				query_options.startkey = [$p.current_user.partners_uids[0],""];
 				query_options.endkey = [$p.current_user.partners_uids[0],"\ufff0"];
 			}
@@ -1591,6 +1761,7 @@ $p.doc.calc_order.__define({
 					data: [],
 					readOnly: true,
 					wordWrap: false
+					//minSpareRows: 1
 				};
 
       return $p.adapters.pouch.remote.doc.query('server/planning', query_options)
@@ -1629,6 +1800,9 @@ $p.doc.calc_order.__define({
 
 });
 
+/**
+ * Регистрируем данные расчета для статистики
+ */
 
 $p.doc.calc_order.aggregate_stat = $p.wsql.alasql.compile(
   `select state, department, doc, nom, sys, sum(quantity) quantity, sum(s) s, sum(amount) amount
@@ -1673,14 +1847,28 @@ $p.doc.calc_order.on('after_save', function (doc) {
     .catch((err) => err);
 });
 
+/**
+ * ### Модуль менеджера и документа Установка цен номенклатуры
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
+ *
+ * @module doc_nom_prices_setup
+ * Created 28.07.2016
+ */
 
 
+// Переопределяем формирование списка выбора характеристики в табчасти документа установки цен
 $p.doc.nom_prices_setup.metadata().tabular_sections.goods.fields.nom_characteristic._option_list_local = true;
 
+/**
+ * Обработчик при создании документа
+ */
 $p.DocNom_prices_setup.prototype.after_create = function () {
+  //Номер документа
   return this.new_number_doc();
 };
 
+// установим валюту и тип цен по умолчению при добавлении строки
 $p.DocNom_prices_setup.prototype.add_row = function (row) {
   if (row._owner.name === 'goods') {
     const {price_type} = row._owner._owner;
@@ -1689,6 +1877,7 @@ $p.DocNom_prices_setup.prototype.add_row = function (row) {
   }
 };
 
+// перед записью проверяем уникальность ключа
 $p.DocNom_prices_setup.prototype.before_save = function () {
   let aggr = this.goods.aggregate(['nom', 'nom_characteristic', 'price_type'], ['price'], 'COUNT', true),
     err;
@@ -1710,6 +1899,7 @@ $p.DocNom_prices_setup.prototype.before_save = function () {
   }
 };
 
+// Подписываемся на глобальное событие tabular_paste
 $p.on('tabular_paste', (clip) => {
 
   if (clip.grid && clip.obj && clip.obj._manager == $p.doc.nom_prices_setup) {
@@ -1769,21 +1959,35 @@ $p.on('tabular_paste', (clip) => {
 
 });
 
+/**
+ * ### Отчет _Потребность в материалах_
+ *
+ * @module materials_demand
+ *
+ * Created 07.11.2016
+ */
 
 (($p) => {
 
+  // дополняем прототип отчета
   Object.assign($p.RepMaterials_demand.prototype, {
 
+    // формирует данные печати, склеивая их из данных заказа и текущего отчета
     print_data() {
+      // получаем структуру данных заказа
       return this.calc_order.print_data().then((order) => {
+        // получаем данные спецификации
         return this.calculate012()
           .then((specification) => {
+            // дополняем описанием продукции
 
+            // возвращаем объединенную структуру
             return Object.assign(order, {specification, _grouping: this.scheme.dimensions})
           })
       })
     },
 
+    // извлекает спецификацию изделий заказа, фильтрует и группирует
     calculate012() {
 
       const {specification, production, scheme, discard, _manager} = this;
@@ -1792,6 +1996,7 @@ $p.on('tabular_paste', (clip) => {
       const spec_flds = Object.keys($p.cat.characteristics.metadata('specification').fields);
       const rspec_flds = Object.keys(_manager.metadata('specification').fields);
 
+      // получаем массив объектов продукций
       production.forEach((row) => {
         if(!row.use){
           return;
@@ -1802,6 +2007,7 @@ $p.on('tabular_paste', (clip) => {
         }
       })
 
+      // чистим таблицу результата
       specification.clear();
       if (!specification._rows) {
         specification._rows = []
@@ -1811,6 +2017,7 @@ $p.on('tabular_paste', (clip) => {
 
       return Promise.all(aobjs)
 
+      // получаем массив объектов заказов и вложенных характеристик
         .then((ares) => {
 
           arefs.length = 0;
@@ -1839,8 +2046,10 @@ $p.on('tabular_paste', (clip) => {
 
         .then(() => {
 
+          // строки изделия в исходном заказе
           const prows = {};
 
+          // подготовим массив строк отбора
           const selection = [];
           scheme.selection.forEach((row) => {
             if(row.use){
@@ -1848,6 +2057,7 @@ $p.on('tabular_paste', (clip) => {
             }
           })
 
+          // бежим по продукции и заполняем результат
           production.forEach((row) => {
             if(!row.use){
               return;
@@ -1855,6 +2065,7 @@ $p.on('tabular_paste', (clip) => {
             if (!row.characteristic.empty()) {
               row.characteristic.specification.forEach((sprow) => {
 
+                // фильтруем
                 if(discard(sprow, selection)){
                   return;
                 }
@@ -1867,13 +2078,16 @@ $p.on('tabular_paste', (clip) => {
                 });
                 resrow = specification.add(resrow)
 
+                // учтём количество
                 resrow.qty = resrow.qty * row.qty;
                 resrow.totqty = resrow.totqty * row.qty;
                 resrow.totqty1 = resrow.totqty1 * row.qty;
                 resrow.amount = resrow.amount * row.qty;
                 resrow.amount_marged = resrow.amount_marged * row.qty;
 
+                // рассчитаем недостающие поля
 
+                // если номер элемента < 0, интерпретируем его, как номер конструкции
                 if (resrow.elm > 0) {
                   resrow.cnstr = row.characteristic.coordinates.find_rows({elm: resrow.elm})[0].cnstr;
                 }
@@ -1881,8 +2095,10 @@ $p.on('tabular_paste', (clip) => {
                   resrow.cnstr = -resrow.elm;
                 }
 
+                // ссылка на заказ
                 resrow.calc_order = row.characteristic;
 
+                // номер строки изделия в исходном заказе
                 if (!prows[row.characteristic.ref]) {
                   prows[row.characteristic.ref] = row.characteristic.calc_order.production.find_rows({characteristic: row.characteristic});
                   if (prows[row.characteristic.ref].length) {
@@ -1894,12 +2110,14 @@ $p.on('tabular_paste', (clip) => {
                 }
                 resrow.product = prows[row.characteristic.ref];
 
+                // свойства номенклатуры и группировки
                 this.material(resrow);
 
               })
             }
           })
 
+          // сворачиваем результат и сохраняем его в specification._rows
           const dimentions = [], resources = [];
           scheme.columns('ts').forEach(fld => {
             const {key} = fld
@@ -1912,6 +2130,7 @@ $p.on('tabular_paste', (clip) => {
           specification.group_by(dimentions, resources);
           specification.forEach((row) => {
 
+            // округление
             row.qty = row.qty.round(3);
             row.totqty = row.totqty.round(3);
             row.totqty1 = row.totqty1.round(3);
@@ -1925,13 +2144,18 @@ $p.on('tabular_paste', (clip) => {
         })
     },
 
+    // формирует табличный докуменнт
     generate() {
 
+      // получаем данные отчета
       return this.print_data().then((data) => {
 
+        // создаём объект табличного документа
         const doc = new $p.SpreadsheetDocument(void(0), {fill_template: this.on_fill_template.bind(this)});
 
+        // бежим по составу компоновки
         this.scheme.composition.find_rows({use: true}, (row) => {
+          // выводим фрагмент
           doc.append(this.templates(row.field), data);
         });
 
@@ -1939,6 +2163,7 @@ $p.on('tabular_paste', (clip) => {
       })
     },
 
+    // фильтрует строку спецификации
     discard(row, selection) {
       return selection.some((srow) => {
 
@@ -1974,12 +2199,14 @@ $p.on('tabular_paste', (clip) => {
       })
     },
 
+    // форма настроек отчета
     form_obj(pwnd, attr) {
 
       this._data._modified = false;
 
       const {calc_order, _manager} = this;
 
+      // окно + тулбар + закладки
       this.wnd = this.draw_tabs($p.iface.dat_blank(null, {
         width: 720,
         height: 400,
@@ -1992,9 +2219,11 @@ $p.on('tabular_paste', (clip) => {
       }));
       const {elmnts} = this.wnd;
 
+      // табчасть продукции
       elmnts.grids.production = this.draw_production(elmnts.tabs.cells("prod"));
 
 
+      // следим за изменениями варианта настроек
       this.listener = this.listener.bind(this);
       this._manager.on('update', this.listener);
 
@@ -2007,17 +2236,20 @@ $p.on('tabular_paste', (clip) => {
         return true;
       });
 
+      // установим вариант
       $p.cat.scheme_settings.get_scheme(_manager.class_name + '.specification')
         .then((scheme) => {
           this.scheme = scheme;
         });
 
+      // заполняем табчасть изделий
       this.fill_by_order();
 
       return Promise.resolve({wnd: this.wnd, o: this});
 
     },
 
+    // рисует тулбар и закладки
     draw_tabs(wnd) {
 
       const {current_user, msg, iface, utils} = $p;
@@ -2067,6 +2299,7 @@ $p.on('tabular_paste', (clip) => {
         }
       })
 
+      // поле выбора варианта
       wnd.elmnts.scheme = new $p.iface.OCombo({
         parent: wnd.cell.querySelector('[name=scheme]'),
         obj: this,
@@ -2074,6 +2307,7 @@ $p.on('tabular_paste', (clip) => {
         width: 280
       });
 
+      // закладки
       wnd.elmnts.tabs = wnd.attachTabbar({
         arrows_mode: "auto",
         tabs: [
@@ -2110,6 +2344,7 @@ $p.on('tabular_paste', (clip) => {
         obj: this.scheme,
         ts: "fields",
         reorder: true,
+        //disable_add_del: true,
         ts_captions: {
           "fields":["use","field","caption"],
           "headers":",Поле,Заголовок",
@@ -2127,6 +2362,7 @@ $p.on('tabular_paste', (clip) => {
       return cell.attachTabular({
         obj: this.scheme,
         ts: "composition",
+        //disable_add_del: true,
         reorder: true,
         ts_captions: {
           "fields":["use","field","definition"],
@@ -2174,6 +2410,7 @@ $p.on('tabular_paste', (clip) => {
       });
     },
 
+    // перезаполняет табчасть состава по данным макета
     composition_parts(refill) {
       const {composition} = this.scheme;
       if(!composition.count()){
@@ -2191,6 +2428,7 @@ $p.on('tabular_paste', (clip) => {
       }
     },
 
+    // возвращает массив шаблонов или конкретный шаблон
     templates(name) {
 
       const {children} = this.formula._template.content;
@@ -2205,8 +2443,10 @@ $p.on('tabular_paste', (clip) => {
       return res;
     },
 
+    // корректирует данные перед заполнением шаблона
     on_fill_template(template, data) {
 
+      // при выводе спецификации
       if(template.attributes.tabular && template.attributes.tabular.value == "specification"){
         const specification = data.specification.map((row) => {
           return {
@@ -2221,6 +2461,7 @@ $p.on('tabular_paste', (clip) => {
         });
         return {specification, _grouping: data._grouping}
       }
+      // при выводе продукции
       else if(template.attributes.tabular && template.attributes.tabular.value == "production"){
         const production = [];
         this.production.find_rows({use: true}, (row) => {
@@ -2235,8 +2476,10 @@ $p.on('tabular_paste', (clip) => {
       return data;
     },
 
+    // слушатель изменений реквизитов обработки
     listener(obj, fields) {
       if(obj === this && fields.hasOwnProperty('scheme') && this.wnd && this.wnd.elmnts){
+        // обновляем табчасти колонок и отбора
         const {grids, tabs} = this.wnd.elmnts;
 
         grids.columns && grids.columns.unload && grids.columns.unload();
@@ -2260,14 +2503,27 @@ $p.on('tabular_paste', (clip) => {
 
 
 
+/**
+ * Ячейка грида для отображения картинки svg и компонент,
+ * получающий и отображающий галерею эскизов объекта данных
+ *
+ * &copy; http://www.oknosoft.ru 2014-2018
+ * @author	Evgeniy Malyarov
+ *
+ * @module  widgets
+ * @submodule rsvg
+ */
 
-function eXcell_rsvg(cell){ 
-	if (cell){                
+/**
+ * Конструктор поля картинки svg
+ */
+function eXcell_rsvg(cell){ //the eXcell name is defined here
+	if (cell){                // the default pattern, just copy it
 		this.cell = cell;
 		this.grid = this.cell.parentNode.grid;
 	}
-	this.edit = function(){};  
-	this.isDisabled = function(){ return true; }; 
+	this.edit = function(){};  //read-only cell doesn't have edit method
+	this.isDisabled = function(){ return true; }; // the cell is read-only, so it's always in the disabled state
 	this.setValue=function(val){
 		this.cell.style.padding = "2px 4px";
 		this.setCValue(val ? $p.iface.scale_svg(val, 120, 0) : "нет эскиза");
@@ -2276,6 +2532,15 @@ function eXcell_rsvg(cell){
 eXcell_rsvg.prototype = new eXcell();
 window.eXcell_rsvg = eXcell_rsvg;
 
+/**
+ * ### Визуальный компонент OSvgs
+ * Получает и отображает галерею эскизов объекта данных
+ *
+ * @class OSvgs
+ * @param layout {dhtmlXLayoutObject|dhtmlXWindowsCell}
+ * @param area {HTMLElement}
+ * @constructor
+ */
 class OSvgs {
 
   constructor (layout, area, handler) {
@@ -2372,6 +2637,7 @@ class OSvgs {
     });
 
     if(!res.length){
+      // возможно, стоит показать надпись, что нет эскизов
     }
   }
 
@@ -2398,6 +2664,7 @@ class OSvgs {
 
         if(stack.length){
 
+          // Получаем идентификаторы продукций с вложениями
           let _obj = stack.pop();
           const db = $p.adapters.pouch.local.doc;
 
@@ -2467,8 +2734,18 @@ class OSvgs {
 
 $p.iface.OSvgs = OSvgs;
 
+/**
+ * Поле ввода адреса связанная с ним форма ввода адреса
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
+ *
+ * @module  wnd_oaddress
+ */
 
 
+/**
+ *  Конструктор поля ввода клиента дилера
+ */
 class eXcell_client extends eXcell {
 
   constructor(cell) {
@@ -2495,27 +2772,33 @@ class eXcell_client extends eXcell {
     const {code, ctrlKey} = e;
     const {grid} = this;
     const {iface, job_prm: {builder}} = $p;
+    // по {F4} открываем форму списка
     if(code === 'F4' || (ctrlKey && code === 'KeyF')) {
       return this.open_selection(e);
     }
+    // по {F2} открываем форму объекта
     if(code === 'F2' && builder.client_of_dealer_mode != 'string') {
       return this.open_obj(e);
     }
 
+    // если разрешена только форма, другие клавиши не обрабатываем
     if(builder.client_of_dealer_mode == 'frm') {
       return iface.cancel_bubble(e, true);
     }
 
+    // по {del} очищаем значение
     if(code === 'Delete') {
       this.setValue('')
       grid.editStop();
       return iface.cancel_bubble(e);
     }
+    // по {tab} добавляем неразрывный пробел
     if(code === 'Tab') {
       const {cell: {firstChild}} = this;
       firstChild.childNodes[0].value += '\u00A0';
       return iface.cancel_bubble(e);
     }
+    // по {enter} заканчиваем редактирование
     if(code === 'Enter') {
       grid.editStop();
       return iface.cancel_bubble(e);
@@ -2540,6 +2823,9 @@ class eXcell_client extends eXcell {
     return $p.iface.cancel_bubble(e);
   }
 
+  /**
+   * Устанавливает текст в ячейке. например, this.setCValue("<input type='button' value='"+val+"'>",val);
+   */
   setValue(val, fld) {
     const v = this.grid.get_cell_field();
     if(v && v.field && (!fld || v.field === fld) && v.obj[v.field] !== val) {
@@ -2548,6 +2834,9 @@ class eXcell_client extends eXcell {
     this.setCValue(val);
   }
 
+  /**
+   * Получает значение ячейки из поля ввода
+   */
   getValue() {
     const {cell: {firstChild}} = this;
     if(firstChild && firstChild.childNodes.length) {
@@ -2560,31 +2849,44 @@ class eXcell_client extends eXcell {
 
   }
 
+  /**
+   * Создаёт элементы управления редактора и назначает им обработчики
+   */
   edit() {
 
-    this.val = this.getValue();		
+    this.val = this.getValue();		//save current value
     this.cell.innerHTML = `<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_ofrm21" title="Открыть форму ввода по реквизитам {F2}">&nbsp;</div><div class="ref_field21" title="Выбрать из списка прежних клиентов {F4}">&nbsp;</div></div>`;
 
     const {cell: {firstChild}, val} = this;
     const ti = firstChild.childNodes[0];
     ti.value = val;
-    ti.onclick = $p.iface.cancel_bubble;		
+    ti.onclick = $p.iface.cancel_bubble;		//blocks onclick event
     ti.focus();
     ti.onkeydown = this.ti_keydown.bind(this);
     firstChild.childNodes[1].onclick = this.open_obj;
     firstChild.childNodes[2].onclick = this.open_selection;
   };
 
+  /**
+   * Вызывается при отключении редактора
+   */
   detach() {
     const val = this.getValue();
     val !== null && this.setValue(val);
-    return !$p.utils.is_equal(this.val, this.getValue());				
+    return !$p.utils.is_equal(this.val, this.getValue());				// compares the new and the old values
   }
 
 }
 window.eXcell_client = eXcell_client;
 
 
+/**
+ * Поле ввода адреса связанная с ним форма ввода адреса
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
+ *
+ * @module  wnd_oaddress
+ */
 
 class WndAddressData {
 
@@ -2603,6 +2905,7 @@ class WndAddressData {
     this._house = "";
     this._housing = "";
 
+    // если координаты есть в Расчете, используем их
     const {coordinates} = this;
     this.latitude = coordinates.length ? coordinates[0] : 0;
     this.longitude = coordinates.length ? coordinates[1] : 0;
@@ -2671,6 +2974,10 @@ class WndAddressData {
     }
   }
 
+  /**
+   * Сворачивает все поля адреса в строку
+   * @return {string}
+   */
   assemble_addr(with_flat){
     const {country, region, city, street, postal_code, house, flat} = this;
     const res = (region && region !== city ? (region + ', ') : '') +
@@ -2681,6 +2988,9 @@ class WndAddressData {
     return res.endsWith(', ') ? res.substr(0, res.length - 2) : res;
   }
 
+  /**
+   * Устанавливает поля адреса в документе
+   */
   assemble_address_fields(without_flat){
 
     const {fias} = WndAddressData;
@@ -2717,6 +3027,7 @@ class WndAddressData {
 
     let house = v.house;
     if(house){
+      // отделяем улицу от дома, корпуса и квартиры
       for(let i in fias){
         if(fias[i].type == 1){
           for(let syn of fias[i].syn){
@@ -2739,6 +3050,7 @@ class WndAddressData {
       fields += '\n<ДопАдрЭл><Номер Тип="' + house_type +  '" Значение="' + house.trim() + '"/></ДопАдрЭл>';
     }
 
+    // квартира и тип квартиры (офиса)
     let flat = v.flat;
     if(flat){
       for(let i in fias){
@@ -2772,6 +3084,12 @@ class WndAddressData {
     obj.address_fields = fields;
   }
 
+  /**
+   * обновляет текст координат и полигоны
+   * @param [wnd]
+   * @param [latitude]
+   * @param [longitude]
+   */
   refresh_coordinates(latitude, longitude){
     const v = this;
     const {wnd} = this.owner;
@@ -2779,8 +3097,10 @@ class WndAddressData {
       v.latitude = latitude;
       v.longitude = longitude;
     }
+    // если форма уже существует
     if(wnd && wnd.elmnts && wnd.elmnts.map) {
       v.latitude && wnd.elmnts.toolbar.setValue('coordinates', `${v.latitude.toFixed(8)} ${v.longitude.toFixed(8)}`);
+      // перерисовывает полигоны
       const {delivery_area, poly_area, poly_direction} = v;
       const {LatLng} = google.maps;
       for(const poly of [poly_area, poly_direction]) {
@@ -2798,6 +3118,10 @@ class WndAddressData {
     }
   }
 
+  /**
+   * Заполняет структуру адреса v по данным полей адреса документа
+   * @return {Promise.<TResult>}
+   */
   process_address_fields(){
 
     const v = this;
@@ -2869,6 +3193,7 @@ class WndAddressData {
 
       v.address_fields = res;
 
+      //
       v.region = res["СубъектРФ"] || res["Округ"] || "";
       v.city = res["Город"] || res["НаселПункт"] || "";
       v.street = (res["Улица"] || "");
@@ -2877,8 +3202,11 @@ class WndAddressData {
     return ipinfo.google_ready()
       .then(() => {
 
+        // если есть координаты $p.ipinfo, используем их, иначе - Москва
         if(!v.latitude || !v.longitude){
+          // если координаты есть в Расчете, используем их
           if(obj.shipping_address && ipinfo.ggeocoder){
+            // если есть строка адреса, пытаемся геокодировать
             ipinfo.ggeocoder.geocode({address: v.assemble_addr()}, (results, status) => {
               if (status == google.maps.GeocoderStatus.OK) {
                 const {location} = results[0].geometry;
@@ -2898,11 +3226,19 @@ class WndAddressData {
       });
   }
 
+  /**
+   * Parse a string containing a latitude, longitude pair and return them as an object.
+   * @function toLatLng
+   * @param {String} Str
+   * @return {{lat: Number, lng: Number}}
+   */
   assemble_lat_lng(str) {
+    //simple coordinates
     const simpleMatches = [];
     simpleMatches[0] = /^\s*?(-?[0-9]+\.?[0-9]+?)\s*\,\s*(-?[0-9]+\.?[0-9]+?)\s*$/.exec(str);
     simpleMatches[2] = /^\s*?(-?[0-9]+[,.]?[0-9]+?)\s*;?\s*(-?[0-9]+[,.]?[0-9]+?)\s*$/.exec(str);
     const simpleMatch = simpleMatches.find(match => match && match.length === 3);
+    //complex coordinates
     const otherMatches = [];
     otherMatches[0] = /^\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[NS]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[WE]\s*$/.exec(str);
     otherMatches[1] = /^\s*[NS]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*[EW]\s*([0-9]+)°([0-9]+)'([0-9.,]*)"?\s*$/.exec(str);
@@ -2970,21 +3306,29 @@ class WndAddressData {
 
 }
 
+/**
+ *  Окно ввода адреса
+ */
 class WndAddress {
 
   constructor(source) {
     this.obj = source.obj;
     this.pwnd = source.pwnd;
     this.grid = source.grid;
+    // реквизиты формы
     this.v = new WndAddressData(this);
     this.v.process_address_fields()
       .then(() => this.frm_create());
   }
 
+  /**
+   * ПриСозданииНаСервере
+   */
   frm_create() {
 
     const {obj, pwnd, v} = this;
 
+    // параметры открытия формы
     const options = {
       name: 'wnd_addr',
       wnd: {
@@ -3001,6 +3345,7 @@ class WndAddress {
       }
     };
 
+    // уменьшаем высоту, в случае малого фрейма
     if (pwnd && pwnd.getHeight) {
       if (options.wnd.height > pwnd.getHeight())
         options.wnd.height = pwnd.getHeight();
@@ -3009,6 +3354,8 @@ class WndAddress {
     const wnd = this.wnd = $p.iface.dat_blank(null, options.wnd);
     const {elmnts} = wnd;
 
+    //TODO: компактная кнопка выбора в заголовке формы
+    // wnd.cell.parentElement.querySelector(".dhxwin_text")
 
     elmnts.layout = wnd.attachLayout('3U');
     elmnts.cell_frm1 = elmnts.layout.cells('a');
@@ -3016,6 +3363,7 @@ class WndAddress {
     elmnts.cell_frm1.hideHeader();
     elmnts.cell_frm1.fixSize(0, 1);
 
+    // TODO: переделать на OHeadFields
     elmnts.pgrid = elmnts.cell_frm1.attachPropertyGrid();
     elmnts.pgrid.init();
     elmnts.pgrid.parse(obj._manager.get_property_grid_xml({
@@ -3051,6 +3399,7 @@ class WndAddress {
     }, "xml");
 
 
+    // начинаем следить за объектом и, его табчастью допреквизитов
     this.listener = this.listener.bind(this);
     obj._manager.on('update', this.listener);
 
@@ -3126,6 +3475,10 @@ class WndAddress {
     elmnts.cell_map = elmnts.layout.cells('c');
     elmnts.cell_map.hideHeader();
 
+    // если координаты есть в Расчете, используем их
+    // если есть строка адреса, пытаемся геокодировать
+    // если есть координаты $p.ipinfo, используем их
+    // иначе - Москва
     const {maps} = google;
     const mapParams = {
       center: new maps.LatLng(v.latitude, v.longitude),
@@ -3138,6 +3491,9 @@ class WndAddress {
     this.refresh_grid();
   }
 
+  /**
+   *	Обработчик выбора значения в свойствах (ссылочные типы)
+   */
   pgrid_on_select(selv){
     if(selv===undefined){
       return;
@@ -3146,6 +3502,9 @@ class WndAddress {
     this.delivery_area_changed();
   }
 
+  /**
+   *	Обработчик команд формы
+   */
   toolbar_click(btn_id){
     if(btn_id=="btn_select"){
       const {obj, v, wnd} = this;
@@ -3173,6 +3532,7 @@ class WndAddress {
     const {v, wnd} = this;
     const {delivery_area} = v;
 
+    // получим город и район из "района доставки"
     if(!delivery_area.empty()){
       v.street = "";
     }
@@ -3203,6 +3563,7 @@ class WndAddress {
     this.refresh_grid();
   }
 
+  // перерисовывает табчасть
   refresh_grid(){
     const {pgrid, pgrid2} = this.wnd.elmnts;
     const {region, city, street, house, flat} = this.v;
@@ -3263,9 +3624,13 @@ class WndAddress {
 
 }
 
+/**
+ *  строки ФИАС адресного классификатора
+ */
 WndAddressData.fias = {
   types: ["владение", "здание", "помещение"],
 
+  // Код, Наименование, Тип, Порядок, КодФИАС
   "1010": {name: "дом",			type: 1, order: 1, fid: 2, syn: [" д.", " д ", " дом"]},
   "1020": {name: "владение",		type: 1, order: 2, fid: 1, syn: [" вл.", " вл ", " влад.", " влад ", " владен.", " владен ", " владение"]},
   "1030": {name: "домовладение",	type: 1, order: 3, fid: 3, syn: [" домовлад"]},
@@ -3282,6 +3647,7 @@ WndAddressData.fias = {
   "2020": {name: "помещение",	type: 3, order: 4, syn: ["помещение", "пом", "помещ"]},
   "2050": {name: "комната",	type: 3, order: 5, syn: ["комн.", "комн ", "комната"]},
 
+  // Уточняющие объекты
   "10100000": {name: "Почтовый индекс"},
   "10200000": {name: "Адресная точка"},
   "10300000": {name: "Садовое товарищество"},
@@ -3292,8 +3658,15 @@ WndAddressData.fias = {
 
 }
 
+/**
+ * Конструктор структуры адреса
+ * @type {WndAddressData}
+ */
 $p.classes.WndAddressData = WndAddressData;
 
+/**
+ *  Конструктор поля ввода адреса
+ */
 class eXcell_addr extends eXcell {
 
   constructor(cell) {
@@ -3317,13 +3690,14 @@ class eXcell_addr extends eXcell {
 
   ti_keydown(e) {
     const {code, ctrlKey} = e;
-    if(e.code === 'Backspace' || e.code === 'Delete'){          
+    if(e.code === 'Backspace' || e.code === 'Delete'){          // по {del} и {bs} очищаем значение
       const {obj} = this.grid.get_cell_field();
       obj.shipping_address = '';
       obj.address_fields = '';
       this.grid.editStop();
       return $p.iface.cancel_bubble(e);
     }
+    // по {F4} открываем форму списка
     else if(code === 'F4' || code === 'F2' || (ctrlKey && code === 'KeyF')) {
       return this.open_selection(e);
     }
@@ -3353,40 +3727,62 @@ class eXcell_addr extends eXcell {
   }
 
 
+  /**
+   * Устанавливает текст в ячейке. например, this.setCValue("<input type='button' value='"+val+"'>",val);
+   */
   setValue(val) {
     this.setCValue(val);
   }
 
+  /**
+   * Получает значение ячейки из табличной части или поля объекта или допполя допобъекта, а не из грида
+   */
   getValue() {
     return this.grid.get_cell_value();
   }
 
+  /**
+   * Создаёт элементы управления редактора и назначает им обработчики
+   */
   edit() {
 
-    this.val = this.getValue();		
+    this.val = this.getValue();		//save current value
     this.cell.innerHTML = '<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_field21">&nbsp;</div></div>';
 
     const td = this.cell.firstChild;
     const ti = td.childNodes[0];
     ti.value = this.val;
-    ti.onclick = $p.iface.cancel_bubble;		
+    ti.onclick = $p.iface.cancel_bubble;		//blocks onclick event
     ti.readOnly = true;
     ti.focus();
     ti.onkeydown = this.ti_keydown.bind(this);
     td.childNodes[1].onclick = this.open_selection;
   };
 
+  /**
+   * Вызывается при отключении редактора
+   */
   detach() {
     this.setValue(this.getValue());
-    return !$p.utils.is_equal(this.val, this.getValue());				
+    return !$p.utils.is_equal(this.val, this.getValue());				// compares the new and the old values
   }
 
 }
 window.eXcell_addr = eXcell_addr;
 
 
+/**
+ * Поле ввода адреса связанная с ним форма ввода адреса
+ *
+ * &copy; Evgeniy Malyarov http://www.oknosoft.ru 2014-2018
+ *
+ * @module  wnd_oaddress
+ */
 
 
+/**
+ *  Конструктор поля ввода разрешенных систем шаблона
+ */
 class eXcell_permitted_sys extends eXcell {
 
   constructor(cell) {
@@ -3398,6 +3794,7 @@ class eXcell_permitted_sys extends eXcell {
     super(cell);
 
     this.cell = cell;
+    // this.open_selection = this.open_selection.bind(this);
     this.open_obj = this.open_obj.bind(this);
     this.edit = eXcell_permitted_sys.prototype.edit.bind(this);
     this.detach = eXcell_permitted_sys.prototype.detach.bind(this);
@@ -3415,6 +3812,11 @@ class eXcell_permitted_sys extends eXcell {
     const td = this.cell.firstChild;
     const ti = td.childNodes[0];
     ti.readOnly = true;
+    // по {F4} открываем форму списка
+    // if(code === 'F4' || (ctrlKey && code === 'KeyF')) {
+    //   return this.open_selection(e);
+    // }
+    // по {F2} открываем форму объекта, другие клавиши не обрабатываем
     return code === 'F2' ? this.open_obj(e) : iface.cancel_bubble(e, true);
   }
 
@@ -3428,11 +3830,17 @@ class eXcell_permitted_sys extends eXcell {
     return $p.iface.cancel_bubble(e);
   }
 
+  /**
+   * Устанавливает текст в ячейке. например, this.setCValue("<input type='button' value='"+val+"'>",val);
+   */
   setValue(val) {
     const v = this.getValue();
     this.setCValue(v);
   }
 
+  /**
+   * Получает значение ячейки из поля ввода
+   */
   getValue() {
 
     const {cell: {firstChild}} = this;
@@ -3453,9 +3861,12 @@ class eXcell_permitted_sys extends eXcell {
     }
   }
 
+  /**
+   * Создаёт элементы управления редактора и назначает им обработчики
+   */
   edit() {
 
-    this.val = this.getValue(); 
+    this.val = this.getValue(); //save current value
     this.cell.innerHTML = `<div class="ref_div21"><input type="text" class="dhx_combo_edit" style="height: 20px;"><div class="ref_ofrm21" title="Открыть форму ввода по реквизитам {F2}">&nbsp;</div></div>`;
 
     const {
@@ -3467,16 +3878,19 @@ class eXcell_permitted_sys extends eXcell {
     const ti = firstChild.childNodes[0];
     ti.value = val;
     ti.readOnly = true;
-    ti.onclick = $p.iface.cancel_bubble; 
+    ti.onclick = $p.iface.cancel_bubble; //blocks onclick event
     ti.focus();
     ti.onkeydown = this.ti_keydown.bind(this);
     firstChild.childNodes[1].onclick = this.open_obj;
       }
 
+  /**
+   * Вызывается при отключении редактора
+   */
   detach() {
     const val = this.getValue();
     val !== null && this.setValue(val);
-    return true; 
+    return true; /*!$p.utils.is_equal(this.val, this.getValue()); // compares the new and the old values*/
   }
 
 }

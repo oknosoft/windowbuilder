@@ -7,7 +7,6 @@
 const gulp = require('gulp'),
 	base64 = require('gulp-base64'),
 	concat = require('gulp-concat'),
-  strip = require('gulp-strip-comments'),
 	rename = require('gulp-rename'),
 	resources = require('./scripts/resource-concat.js'),
 	umd = require('gulp-umd'),
@@ -23,7 +22,6 @@ gulp.task('build-iface', function(){
 		'./src/widgets/*.js',
 	])
 		.pipe(concat('wnd_debug.js'))
-    .pipe(strip())
 		.pipe(umd({
 			exports: function(file) {
 				return undefined;
@@ -40,7 +38,6 @@ gulp.task('build-lib', function(){
 		'./data/merged_wb_tips.js'
 	])
 		.pipe(concat('windowbuilder.js'))
-    .pipe(strip())
 		.pipe(umd({
 			exports: function(file) {
 				return 'Editor';
