@@ -578,6 +578,7 @@ class EditorAccordion {
         }
       }
     });
+    _editor.eve.on('set_inset', this.on_set_inset.bind(this));
 
     /**
      * слои в аккордионе
@@ -754,6 +755,16 @@ class EditorAccordion {
   tool_activated(tool) {
     if(tool.constructor.ToolWnd) {
       this._tool.setActive();
+    }
+  }
+
+  on_set_inset(elm) {
+    const {_grid} = elm._attr;
+    if(_grid && _grid._obj === elm) {
+      _grid.attach({
+        obj: elm,
+        oxml: elm.oxml
+      });
     }
   }
 
