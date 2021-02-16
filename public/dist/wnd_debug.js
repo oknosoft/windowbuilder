@@ -1345,14 +1345,16 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                   // заполняем продукцию копией данных текущей строки
                   characteristic._mixin(row.characteristic._obj, null,
                     'ref,name,calc_order,product,leading_product,leading_elm,origin,partner'.split(','), true);
-
-                  // при необходимости, установим признак необходимости перезаполнить параметры изделия и фурнитуры
+                  characteristic._data._is_new = true;
+                  return characteristic.save();
+                })
+                .then((cx) => {
+                  // при необходимости, установим признак перезаполнить параметры изделия и фурнитуры
                   if(calc_order.refill_props) {
-                    characteristic._data.refill_props = true;
+                    cx._data.refill_props = true;
                   }
-
                   // открываем рисовалку
-                  handlers.handleNavigate(`/builder/${characteristic.ref}`);
+                  handlers.handleNavigate(`/builder/${cx.ref}`);
                 });
             }
             else {
