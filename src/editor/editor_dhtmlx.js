@@ -444,7 +444,7 @@ class Editor extends $p.EditorInvisible {
                 return project.load_stamp(base_block, false, true)
                   .then(() => {
                     if(refill) {
-                      !sys.empty() && project.set_sys(sys, params);
+                      !sys.empty() && project.set_sys(sys, params, refill);
                       _dp._data._loading = false;
                       if(!clr.empty()){
                         ox.clr = clr;
