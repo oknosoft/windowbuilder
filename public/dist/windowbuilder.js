@@ -1540,7 +1540,7 @@ class Editor extends $p.EditorInvisible {
                 return project.load_stamp(base_block, false, true)
                   .then(() => {
                     if(refill) {
-                      !sys.empty() && project.set_sys(sys, params);
+                      !sys.empty() && project.set_sys(sys, params, refill);
                       _dp._data._loading = false;
                       if(!clr.empty()){
                         ox.clr = clr;
@@ -7588,9 +7588,18 @@ class ToolRuler extends ToolElement {
       }
       else {
         // Hit test points
-        const hit = this.project.hitPoints(event.point, 16, false, true);
-        if (hit && hit.item.parent instanceof Editor.ProfileItem) {
-          this.hitItem = hit;
+        let hit = this.project.hitPoints(event.point, 16, false, true);
+        if (hit) {
+          if(hit.item.parent instanceof Editor.ProfileItem) {
+            this.hitItem = hit;
+          }
+        }
+        else if (this.mode === 2) {
+          hit = this.project.hitTest(event.point, {fill: true, stroke: true, tolerance: 20});
+          // размерные линии сами разберутся со своими курсорами
+          if (hit && hit.item.parent instanceof Editor.DimensionLine) {
+            return true;
+          }
         }
       }
     }
