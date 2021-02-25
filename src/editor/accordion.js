@@ -507,12 +507,14 @@ class EditorAccordion {
       titles[index+1].title = tab.title;
     });
 
+    const {iface, msg, ui} = $p;
+
     /**
      * ячейка для размещения свойств элемента
      */
     this.elm = this.tabbar.cells('elm');
     this.elm._toolbar = this.elm.attachToolbar();
-    this.elm._otoolbar = new $p.iface.OTooolBar({
+    this.elm._otoolbar = new iface.OTooolBar({
       wrapper: this.elm.cell,
       width: '100%',
       height: '28px',
@@ -521,18 +523,18 @@ class EditorAccordion {
       class_name: "",
       name: 'aling_bottom',
       buttons: [
-        {name: 'left', css: 'tb_align_left', tooltip: $p.msg.align_node_left, float: 'left'},
-        {name: 'bottom', css: 'tb_align_bottom', tooltip: $p.msg.align_node_bottom, float: 'left'},
-        {name: 'top', css: 'tb_align_top', tooltip: $p.msg.align_node_top, float: 'left'},
-        {name: 'right', css: 'tb_align_right', tooltip: $p.msg.align_node_right, float: 'left'},
-        {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: $p.msg.align_all, float: 'left'},
+        {name: 'left', css: 'tb_align_left', tooltip: msg.align_node_left, float: 'left'},
+        {name: 'bottom', css: 'tb_align_bottom', tooltip: msg.align_node_bottom, float: 'left'},
+        {name: 'top', css: 'tb_align_top', tooltip: msg.align_node_top, float: 'left'},
+        {name: 'right', css: 'tb_align_right', tooltip: msg.align_node_right, float: 'left'},
+        {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: msg.align_all, float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
-        {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_elm, float: 'left'},
-        {name: 'glass_spec', text: '<i class="fa fa-list-ul fa-fw"></i>', tooltip: $p.msg.glass_spec + ' ' + $p.msg.to_elm, float: 'left'},
+        {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_elm, float: 'left'},
+        {name: 'glass_spec', text: '<i class="fa fa-list-ul fa-fw"></i>', tooltip: msg.glass_spec + ' ' + msg.to_elm, float: 'left'},
         {name: 'sep_1', text: '', float: 'left'},
-        {name: 'arc', css: 'tb_cursor-arc-r', tooltip: $p.msg.bld_arc, float: 'left'},
+        {name: 'arc', css: 'tb_cursor-arc-r', tooltip: msg.bld_arc, float: 'left'},
 
-        {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: $p.msg.del_elm, float: 'right', paddingRight: '18px'},
+        {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: msg.del_elm, float: 'right', paddingRight: '18px'},
         {name: 'spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию элемента', float: 'right'},
       ],
       image_path: "/imgs/",
@@ -576,7 +578,7 @@ class EditorAccordion {
      */
     this._layers = this.tabbar.cells('lay');
     this._layers._toolbar = this._layers.attachToolbar();
-    this._layers._otoolbar = new $p.iface.OTooolBar({
+    this._layers._otoolbar = new iface.OTooolBar({
       wrapper: this._layers.cell,
       width: '100%',
       height: '28px',
@@ -587,11 +589,11 @@ class EditorAccordion {
       image_path: '/imgs/',
       buttons: [
         {name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'},
-        {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: $p.msg.bld_new_stv, float: 'left'},
+        {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: msg.bld_new_stv, float: 'left'},
         {name: 'nested_layer', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить вложенное изделие', float: 'left'},
         {name: 'virtual_layer', text: '<i class="fa fa-file-excel-o fa-fw"></i>', tooltip: 'Вставить виртуальный слой', float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
-        {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
+        {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_product, float: 'left'},
 
         {name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'},
 
@@ -604,13 +606,23 @@ class EditorAccordion {
         case 'virtual_layer':
           const fillings = _editor.project.getItems({class: Editor.Filling, selected: true});
           if(fillings.length) {
-            fillings[0].create_leaf(name);
+            if(name === 'nested_layer') {
+              ui.dialogs.input_value({
+                type: 'cat.production_params',
+                title: 'Уточните систему вложенного изделия',
+                initialValue: _editor.project.ox.sys})
+                .then((sys) => fillings[0].create_leaf(name, sys))
+                .catch(() => null);
+            }
+            else {
+              fillings[0].create_leaf(name);
+            }
           }
           else {
-            $p.msg.show_msg({
+            msg.show_msg({
               type: 'alert-warning',
-              text: $p.msg.bld_new_stv_no_filling,
-              title: $p.msg.bld_new_stv
+              text: msg.bld_new_stv_no_filling,
+              title: msg.bld_new_stv
             });
           }
           break;
@@ -636,7 +648,7 @@ class EditorAccordion {
           break;
 
         default:
-          $p.msg.show_msg(name);
+          msg.show_msg(name);
           break;
         }
 
@@ -659,7 +671,7 @@ class EditorAccordion {
         {id: "info", type: "text", text: ""},
       ],
     });
-    this._stv._otoolbar = new $p.iface.OTooolBar({
+    this._stv._otoolbar = new iface.OTooolBar({
       wrapper: this._stv.cell,
       width: '100%',
       height: '28px',
@@ -686,7 +698,7 @@ class EditorAccordion {
           break;
 
           default:
-            $p.msg.show_msg(name);
+            msg.show_msg(name);
             break;
         }
 
@@ -700,7 +712,7 @@ class EditorAccordion {
      */
     this._prod = this.tabbar.cells('prod');
     this._prod._toolbar = this._prod.attachToolbar();
-    this._prod._otoolbar = new $p.iface.OTooolBar({
+    this._prod._otoolbar = new iface.OTooolBar({
       wrapper: this._prod.cell,
       width: '100%',
       height: '28px',
@@ -710,7 +722,7 @@ class EditorAccordion {
       name: 'bottom',
       image_path: '/imgs/',
       buttons: [
-        {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: $p.msg.additional_inserts + ' ' + $p.msg.to_product, float: 'left'},
+        {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_product, float: 'left'},
         {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
 
       ], onclick: (name) => {
@@ -728,7 +740,7 @@ class EditorAccordion {
             break;
 
           default:
-            $p.msg.show_msg(name);
+            msg.show_msg(name);
             break;
         }
 
