@@ -26,8 +26,8 @@
   },
   "homepage": "https://light.oknosoft.ru/",
   "proxy2": "https://develop.ecookna.ru/",
-  "proxy1": "https://start.ecookna.ru/",
-  "proxy": "http://localhost:3016/",
+  "proxy": "https://start.ecookna.ru/",
+  "proxy1": "http://localhost:3016/",
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
     "@material-ui/lab": "^4.0.0-alpha.57",
@@ -42,9 +42,9 @@
     "metadata-redux": "2.0.24-beta.3",
     "metadata-superlogin": "2.0.24-beta.3",
     "react-highlight-words": "^0.17",
-    "wb-core": "github:oknosoft/windowbuilder-core#ffb977dbdee7bc2f9fadc08ba2142f9dba2d1d49",
+    "wb-core": "github:oknosoft/windowbuilder-core#20e7d4fd4383b7a0ef14b654a1b4d9263aea668a",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#0f2e3a4705e69226d17c134a76009b0636af5eb5"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#e7c07a1aba03f5b39a80bdba955e6d31f23d25d6"
   },
   "devDependencies": {
     "@babel/core": "7.9.0",
