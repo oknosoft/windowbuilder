@@ -801,8 +801,14 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           return production.cells(id, ind).setDisabled(disabled);
         }
       }
+
+      // если вложенное изделие - блокируем все поля
+      if(row.characteristic.leading_product.calc_order === o) {
+        production.cells(id, ind).setDisabled(true);
+      }
+
       // если выбрана номенклатура
-      if (['nom', 'characteristic'].includes(production.columnIds[ind])) {
+      else if (['nom', 'characteristic'].includes(production.columnIds[ind])) {
         production.cells(id, ind).setDisabled(!row.characteristic.calc_order.empty());
       }
     }
