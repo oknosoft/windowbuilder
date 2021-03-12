@@ -7,7 +7,7 @@ $p.doc.calc_order.aggregate_stat = $p.wsql.alasql.compile(
    from ? group by state, department, doc, nom, sys`);
 
 $p.doc.calc_order.on('after_save', function (doc) {
-  const {production, obj_delivery_state, department, _manager: {adapter, aggregate_stat}} = doc;
+  const {production, obj_delivery_state, department, partner, _manager: {adapter, aggregate_stat}} = doc;
   const {current_user} = $p;
   if(obj_delivery_state == 'Шаблон' || !production.count() || !current_user || current_user.branch.empty()) {
     return;
@@ -30,6 +30,7 @@ $p.doc.calc_order.on('after_save', function (doc) {
     stat.push({
       state,
       department: department.ref,
+      partner: partner.ref,
       doc: doc.ref,
       nom: row.nom.ref,
       sys: (row.characteristic.sys.empty() ? sys : row.characteristic.sys).ref,
