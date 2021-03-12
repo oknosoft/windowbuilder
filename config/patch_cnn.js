@@ -13,9 +13,7 @@ export const predefined = {
     host: 'https://start.ecookna.ru/',
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
-    templates: false,
     keys: keys21,
-    use_ram: false,
     ram_indexer: false,
   },
   'ecookna.': {
@@ -23,7 +21,6 @@ export const predefined = {
     host: 'https://zakaz.ecookna.ru/',
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
-    templates: true,
     keys: keys21,
   },
   'sandbox1.oknagc.': {
@@ -31,7 +28,6 @@ export const predefined = {
     host: 'http://sandbox1.oknagc.ru/',
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
-    templates: false,
     keys: keys21,
     use_ram: true,
     ram_indexer: false,
@@ -41,7 +37,6 @@ export const predefined = {
     host: 'https://sandbox2.oknagc.ru/',
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
-    templates: false,
     keys: keys21,
     use_ram: true,
     ram_indexer: false,
@@ -50,7 +45,6 @@ export const predefined = {
     zone: 21,
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
-    templates: true,
     keys: {google: ''},
   },
   'rusokon.': {
@@ -63,18 +57,14 @@ export const predefined = {
     host: 'https://start.kaleva.ru/',
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
-    templates: false,
     keys: keys21,
-    use_ram: false,
     ram_indexer: false,
   },
   'kaleva.ru:2019': {
     zone: 8,
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
-    templates: false,
     keys: keys21,
-    use_ram: false,
     ram_indexer: false,
   },
   'kaleva.ru:2021': {
@@ -82,9 +72,7 @@ export const predefined = {
     host: 'https://start.kaleva.ru/',
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
-    templates: false,
     keys: keys21,
-    use_ram: false,
     ram_indexer: false,
   },
   'kaleva.': {
@@ -131,7 +119,7 @@ export function patch_cnn() {
     const prm = predefined[elm];
     if(location.host.match(elm)) {
       prm.zone && wsql.get_user_param('zone') != prm.zone && wsql.set_user_param('zone', prm.zone);
-      'log_level,splash,templates,keys'.split(',').forEach((name) => {
+      'log_level,splash,keys'.split(',').forEach((name) => {
         if(prm.hasOwnProperty(name)) {
           if(typeof job_prm[name] === 'object') {
             Object.assign(job_prm[name], prm[name]);
