@@ -43,6 +43,7 @@ export default function ($p) {
     glass_spec: 'Состав заполнения',
     glass_invalid_elm: 'Укажите заполнение на эскизе',
     glass_invalid_type: 'Запрещено изменять состав сэндвичей',
+    glass_invalid_chain: 'Неверный состав заполнения',
 
     to_contour: 'в контур',
     to_elm: 'в элемент',

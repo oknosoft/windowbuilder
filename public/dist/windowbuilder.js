@@ -2402,22 +2402,15 @@ class GlassInserts {
 
     const elm = glasses.length && glasses[0];
 
-    const {EditorInvisible, msg, enm, iface, injected_data} = $p;
+    const {EditorInvisible, msg, ui, enm, iface, injected_data} = $p;
 
     if(!(elm instanceof EditorInvisible.Filling)) {
-      return msg.show_msg({
-        type: 'alert-info',
-        text: msg.glass_invalid_elm,
-        title: msg.glass_spec
-      });
+
+      return ui.dialogs.alert({title: msg.glass_spec, text: msg.glass_invalid_elm});
     }
 
     if(elm.nom.elm_type === enm.elm_types.Заполнение) {
-      return msg.show_msg({
-        type: 'alert-info',
-        text: msg.glass_invalid_type,
-        title: msg.glass_spec
-      });
+      return ui.dialogs.alert({title: msg.glass_spec, text: msg.glass_invalid_type});
     }
 
     this.elm = elm;
@@ -2459,10 +2452,29 @@ class GlassInserts {
   }
 
   onclose() {
+    const {msg, ui, job_prm} = $p;
     const {grids} = this.wnd.elmnts;
     const {elm, glasses} = this;
     const {glass_specification} = elm.project.ox;
     grids.inserts && grids.inserts.editStop();
+
+    // проверяем состав
+    const chain = glass_specification.find_rows({elm: elm.elm}).map(({_row}) => _row);
+    const {glass_chains} = job_prm.builder;
+    if(glass_chains && glass_chains.length) {
+      let ok;
+      for(const chains of glass_chains) {
+        if(chains.length === chain.length && chain.every(({inset}, index) => {
+          return inset.insert_glass_type === chains[index];
+        })) {
+          ok = true;
+          break;
+        }
+      }
+      if(!ok) {
+        ui.dialogs.alert({title: msg.glass_invalid_chain, text: chain.map(({inset}) => inset.insert_glass_type.synonym).join('-')});
+      }
+    }
 
     // очищаем незаполненные строки табличной части
     glass_specification.clear({elm: elm.elm, inset: $p.utils.blank.guid});
@@ -2471,7 +2483,7 @@ class GlassInserts {
     for(let i = 1; i < glasses.length; i++) {
       const selm = glasses[i];
       glass_specification.clear({elm: selm.elm});
-      glass_specification.find_rows({elm: elm.elm}, (row) => {
+      chain.forEach((row) => {
         glass_specification.add({
           elm: selm.elm,
           inset: row.inset,
