@@ -54,8 +54,8 @@ module.exports = function settings(prm = {}) {
     // объявляем номер демо-зоны
     zone_demo: 1,
 
-    // по умолчанию, работаем в старом режиме с couchdb-ram, но можем переключить
-    use_ram: true,
+    // по умолчанию, работаем в режиме auth-proxy
+    use_ram: false,
 
     // если use_meta === false, не используем базу meta в рантайме - см.: https://github.com/oknosoft/metadata.js/issues/255
     use_meta: false,
