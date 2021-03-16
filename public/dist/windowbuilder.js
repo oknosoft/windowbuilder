@@ -4499,13 +4499,17 @@ class ToolLayImpost extends ToolElement {
   }
 
   oxml() {
-    const {profile: {_manager, elm_type}} = this;
+    const {_manager, elm_type, inset_by_x, inset_by_y} = this.profile;
     const {form} = _manager.metadata();
     const oxml = form && form.obj && form.obj.head && $p.utils._clone(form.obj.head);
     if(oxml && elm_type === $p.enm.elm_types.Раскладка) {
       if(oxml[' '] && !oxml[' '].includes('region')) {
         oxml[' '].push('region');
       }
+    }
+    const index = oxml && oxml[' '].indexOf('split');
+    if(index && (inset_by_x.lay_split_types || inset_by_y.lay_split_types)) {
+      oxml[' '][index] = {id: 'split', path: 'o.split', synonym: 'Тип деления', type: 'ro'};
     }
     return oxml;
   }
@@ -4617,6 +4621,8 @@ class ToolLayImpost extends ToolElement {
       return path;
     };
 
+    const {lay_split_types, positions} = $p.enm;
+
     function get_points(p1, p2) {
 
       let res = {
@@ -4681,8 +4687,8 @@ class ToolLayImpost extends ToolElement {
 
         // в зависимости от типа деления, рисуем прямые или разорванные отрезки
         if (!by_y.length || profile.split.empty() ||
-          profile.split == $p.enm.lay_split_types.ДелениеГоризонтальных ||
-          profile.split == $p.enm.lay_split_types.КрестПересечение) {
+          profile.split == lay_split_types.ДелениеГоризонтальных ||
+          profile.split == lay_split_types.КрестПересечение) {
 
           if (pts = get_points([by_x[i], bounds.bottom], [by_x[i], bounds.top]))
             get_path([
@@ -4728,8 +4734,8 @@ class ToolLayImpost extends ToolElement {
 
         // в зависимости от типа деления, рисуем прямые или разорванные отрезки
         if (!by_x.length || profile.split.empty() ||
-          profile.split == $p.enm.lay_split_types.ДелениеВертикальных ||
-          profile.split == $p.enm.lay_split_types.КрестПересечение) {
+          profile.split == lay_split_types.ДелениеВертикальных ||
+          profile.split == lay_split_types.КрестПересечение) {
 
           if (pts = get_points([bounds.left, by_y[i]], [bounds.right, by_y[i]]))
             get_path([
@@ -4771,7 +4777,7 @@ class ToolLayImpost extends ToolElement {
     }
 
     if (stepy) {
-      if (profile.align_by_y == $p.enm.positions.Центр) {
+      if (profile.align_by_y == positions.Центр) {
 
         base = bounds.top + bounds.height / 2;
         if (county % 2) {
@@ -4796,7 +4802,7 @@ class ToolLayImpost extends ToolElement {
             by_y.push(pos);
         }
 
-      } else if (profile.align_by_y == $p.enm.positions.Верх) {
+      } else if (profile.align_by_y == positions.Верх) {
 
         if (hit) {
           for (i = 1; i <= county; i++) {
@@ -4812,7 +4818,7 @@ class ToolLayImpost extends ToolElement {
           }
         }
 
-      } else if (profile.align_by_y == $p.enm.positions.Низ) {
+      } else if (profile.align_by_y == positions.Низ) {
 
         if (hit) {
           for (i = 1; i <= county; i++) {
@@ -4831,7 +4837,7 @@ class ToolLayImpost extends ToolElement {
     }
 
     if (stepx) {
-      if (profile.align_by_x == $p.enm.positions.Центр) {
+      if (profile.align_by_x == positions.Центр) {
 
         base = bounds.left + bounds.width / 2;
         if (countx % 2) {
@@ -4856,7 +4862,7 @@ class ToolLayImpost extends ToolElement {
             by_x.push(pos);
         }
 
-      } else if (profile.align_by_x == $p.enm.positions.Лев) {
+      } else if (profile.align_by_x == positions.Лев) {
 
         if (hit) {
           for (i = 1; i <= countx; i++) {
@@ -4873,7 +4879,7 @@ class ToolLayImpost extends ToolElement {
         }
 
 
-      } else if (profile.align_by_x == $p.enm.positions.Прав) {
+      } else if (profile.align_by_x == positions.Прав) {
 
         if (hit) {
           for (i = 1; i <= countx; i++) {
@@ -4892,7 +4898,7 @@ class ToolLayImpost extends ToolElement {
     }
 
     base = 0;
-    if (profile.split == $p.enm.lay_split_types.ДелениеВертикальных) {
+    if (profile.split == lay_split_types.ДелениеВертикальных) {
       do_y();
       do_x();
     } else {
@@ -4984,15 +4990,36 @@ class ToolLayImpost extends ToolElement {
 
   // при изменении типа элемента, чистим отбор по цвету
   elm_type_change(obj, fields) {
-    if (fields.hasOwnProperty('inset_by_x') || fields.hasOwnProperty('inset_by_y') || fields.hasOwnProperty('elm_type')) {
-      const {profile, sys, _grid} = this;
+    let reattach, touchx = true;
+    const {profile, sys, _grid} = this;
+    if ('inset_by_x' in fields || 'inset_by_y' in fields || 'elm_type' in fields) {
       delete profile._elm_type_clrs;
       this.elm_type_clrs(profile, sys);
-      _grid && _grid.attach({
-        obj: profile,
-        oxml: this.oxml(),
-      });
+      reattach = true;
     }
+    if('inset_by_y' in fields) {
+      const {pair, split_type} = obj.inset_by_y;
+      if(!split_type.empty()) {
+        obj.split = split_type;
+      }
+      if(!pair.empty()) {
+        obj.inset_by_x = pair;
+        touchx = false;
+      }
+    }
+    if(touchx && 'inset_by_x' in fields) {
+      const {pair, split_type} = obj.inset_by_x;
+      if(!split_type.empty()) {
+        obj.split = split_type;
+      }
+      if(!pair.empty()) {
+        obj.inset_by_y = pair;
+      }
+    }
+    reattach && _grid && _grid.attach({
+      obj: profile,
+      oxml: this.oxml(),
+    });
   }
 
   choice_links_clr() {
