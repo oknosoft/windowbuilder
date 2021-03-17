@@ -616,12 +616,25 @@ class EditorAccordion {
           const fillings = _editor.project.getItems({class: Editor.Filling, selected: true});
           if(fillings.length) {
             if(name === 'nested_layer') {
-              ui.dialogs.input_value({
-                type: 'cat.production_params',
-                title: 'Уточните систему вложенного изделия',
-                initialValue: _editor.project.ox.sys})
-                .then((sys) => fillings[0].create_leaf(name, sys))
+              ui.dialogs.templates_nested()
+                .then((selected) => {
+                  if(selected === true) {
+                    const {cat: {templates}, job_prm} = $p;
+                    const _obj = templates._select_template;
+                    const {templates_nested} = job_prm.builder;
+                    if(templates_nested && templates_nested.includes(_obj.calc_order)) {
+                      fillings[0].create_leaf(name);
+                    }
+                  }
+                })
                 .catch(() => null);
+
+              // ui.dialogs.input_value({
+              //   type: 'cat.production_params',
+              //   title: 'Уточните систему вложенного изделия',
+              //   initialValue: _editor.project.ox.sys})
+              //   .then((sys) => fillings[0].create_leaf(name, sys))
+              //   .catch(() => null);
             }
             else {
               fillings[0].create_leaf(name);
