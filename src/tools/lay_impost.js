@@ -92,6 +92,8 @@ class ToolLayImpost extends ToolElement {
       // параметры отбора для выбора цвета
       tool.choice_links_clr();
 
+      // параметры отбора типа деления
+      tool.choice_params_split();
 
       // параметры отбора для выбора вставок
       profile._metadata('inset_by_x').choice_links = profile._metadata('inset_by_y').choice_links = [{
@@ -112,6 +114,8 @@ class ToolLayImpost extends ToolElement {
           }
         }],
       }];
+
+
 
       tool.wnd = $p.iface.dat_blank(tool._scope._dxw, tool.options.wnd);
 
@@ -763,8 +767,8 @@ class ToolLayImpost extends ToolElement {
     }
     if('inset_by_y' in fields) {
       const {pair, split_type} = obj.inset_by_y;
-      if(!split_type.empty()) {
-        obj.split = split_type;
+      if(split_type.length) {
+        obj.split = split_type[0];
       }
       if(!pair.empty()) {
         obj.inset_by_x = pair;
@@ -773,8 +777,8 @@ class ToolLayImpost extends ToolElement {
     }
     if(touchx && 'inset_by_x' in fields) {
       const {pair, split_type} = obj.inset_by_x;
-      if(!split_type.empty()) {
-        obj.split = split_type;
+      if(split_type.length) {
+        obj.split = split_type[0];
       }
       if(!pair.empty()) {
         obj.inset_by_y = pair;
@@ -801,7 +805,28 @@ class ToolLayImpost extends ToolElement {
       },
     });
 
+  }
 
+  // параметры отбора типа деления
+  choice_params_split() {
+    const {profile} = this;
+    const {choice_params} = profile._metadata('split');
+    const def = ['ДелениеГоризонтальных', 'ДелениеВертикальных', 'КрестВСтык', 'КрестПересечение'];
+    choice_params.length = 0;
+    choice_params.push({
+      name: 'ref',
+      get path() {
+        const res = [];
+        for(const fld of ['inset_by_y', 'inset_by_y']) {
+          for(const v of profile[fld].split_type) {
+            if(!res.includes(v)) {
+              res.push(v);
+            }
+          }
+        }
+        return res.length ? res : def;
+      },
+    });
   }
 
   add_profiles() {
