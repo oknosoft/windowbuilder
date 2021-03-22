@@ -116,9 +116,10 @@ class PenControls {
 
     const pos = ignore_pos || view.projectToView(event.point);
 
-    const {elm_type} = profile;
-    if(elm_type == $p.enm.elm_types.Добор || elm_type == $p.enm.elm_types.Соединитель){
-      this._cont.style.display = "none";
+    const {elm_types} = $p.enm;
+    //, elm_types.Примыкание
+    if([elm_types.Добор, elm_types.Соединитель].includes(profile.elm_type)) {
+      this._cont.style.display = 'none';
       return;
     }
     else{
@@ -473,7 +474,7 @@ class ToolPen extends ToolElement {
     const {_scope, addl_hit, profile, project} = this;
     const {
       enm: {elm_types},
-      EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, Profile, ProfileItem, Filling}
+      EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, ProfileAdjoining, Profile, ProfileItem, Filling}
     } = $p;
 
     _scope.canvas_cursor('cursor-pen-freehand');
@@ -549,6 +550,11 @@ class ToolPen extends ToolElement {
       case elm_types.Линия:
         // рисуем линию
         this.last_profile = new BaseLine({generatrix: this.path, proto: profile});
+        break;
+
+      case elm_types.Примыкание:
+        // рисуем линию
+        this.last_profile = new ProfileAdjoining({generatrix: this.path, proto: profile});
         break;
 
       default:
@@ -710,6 +716,8 @@ class ToolPen extends ToolElement {
           }
           else if (dragOut) {
 
+            const {elm_types} = $p.enm;
+
             // при отжатом shift пытаемся привязать точку к узлам или кратно 45
             let bpoint = this.point1.add(delta);
             if(!event.modifiers.shift) {
@@ -728,7 +736,7 @@ class ToolPen extends ToolElement {
             // попытаемся привязать начало пути к профилям (и или заполнениям - для раскладок) контура
             if(!this.start_binded){
 
-              if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
+              if(this.profile.elm_type == elm_types.Раскладка){
 
                 res = Editor.Onlay.prototype.bind_node(this.path.firstSegment.point, project.activeLayer.glasses(false, true));
                 if(res.binded){
@@ -737,7 +745,7 @@ class ToolPen extends ToolElement {
 
               }
               // привязка к узлам для рамы уже случилась - вяжем для импоста
-              else if(this.profile.elm_type == $p.enm.elm_types.Импост){
+              else if([elm_types.Импост, elm_types.Примыкание].includes(this.profile.elm_type)){
 
                 res = {distance: Infinity};
                 project.activeLayer.profiles.some((element) => {
@@ -768,14 +776,14 @@ class ToolPen extends ToolElement {
             }
 
             // попытаемся привязать конец пути к профилям (и или заполнениям - для раскладок) контура
-            if(this.profile.elm_type == $p.enm.elm_types.Раскладка){
+            if(this.profile.elm_type == elm_types.Раскладка){
 
               res = Editor.Onlay.prototype.bind_node(this.path.lastSegment.point, project.activeLayer.glasses(false, true));
               if(res.binded)
                 this.path.lastSegment.point = res.point;
 
             }
-            else if(this.profile.elm_type == $p.enm.elm_types.Импост){
+            else if(this.profile.elm_type == elm_types.Импост){
 
               res = {distance: Infinity};
               project.activeLayer.profiles.some((element) => {
