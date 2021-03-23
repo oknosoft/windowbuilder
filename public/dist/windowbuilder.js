@@ -6098,6 +6098,8 @@ class ToolPen extends ToolElement {
     if(this.path){
       this.path.removeSegments();
       this.path.remove();
+      this.group.removeChildren();
+      this.group.remove();
     }
     this.path = null;
     this.last_profile = null;
@@ -6148,17 +6150,15 @@ class ToolPen extends ToolElement {
     }
 
     this.last_profile = null;
+    const {elm_types} = $p.enm;
 
-    if(this.profile.elm_type == $p.enm.elm_types.Добор || this.profile.elm_type == $p.enm.elm_types.Соединитель){
-
+    if([elm_types.Добор, elm_types.Соединитель, elm_types.Примыкание].includes(this.profile.elm_type)) {
       // для доборов и соединителей, создаём элемент, если есть addl_hit
-      if(this.addl_hit){
-
+      if(this.addl_hit) {
       }
-
-    }else{
-
-      if(this.mode == 'continue'){
+    }
+    else {
+      if(this.mode == 'continue') {
         // для профилей и раскладок, начинаем рисовать
         this.mode = 'create';
         this.start_binded = false;
@@ -6216,6 +6216,14 @@ class ToolPen extends ToolElement {
           layer && layer.notify && layer.notify({profiles: [rama], points: []}, _scope.consts.move_points);
         });
       }
+      else if(profile.elm_type == elm_types.Примыкание) {
+        const adjoining = new ProfileAdjoining({
+          generatrix: addl_hit.generatrix,
+          proto: profile,
+          parent: addl_hit.profile,
+          side: addl_hit.side
+        });
+      }
     }
     else if(this.mode == 'create' && this.path) {
 
@@ -6247,11 +6255,6 @@ class ToolPen extends ToolElement {
       case elm_types.Линия:
         // рисуем линию
         this.last_profile = new BaseLine({generatrix: this.path, proto: profile});
-        break;
-
-      case elm_types.Примыкание:
-        // рисуем линию
-        this.last_profile = new ProfileAdjoining({generatrix: this.path, proto: profile});
         break;
 
       default:
@@ -6333,12 +6336,12 @@ class ToolPen extends ToolElement {
 
   on_mousemove(event) {
 
-    const {project} = this;
-
     this.hitTest(event);
 
+    const {project, addl_hit} = this;
+
     // елси есть addl_hit - рисуем прототип элемента
-    if(this.addl_hit){
+    if(addl_hit){
 
       if (!this.path){
         this.path = new paper.Path({
@@ -6347,12 +6350,18 @@ class ToolPen extends ToolElement {
           strokeScaling: false,
           guide: true
         });
+        this.group = new paper.Group([this.path]);
+        this.group.path = this.path;
       }
 
       this.path.removeSegments();
+      this.group.removeChildren();
 
-      if(this.addl_hit.glass){
+      if(addl_hit.glass){
         this.draw_addl();
+      }
+      else if(addl_hit.b && addl_hit.e){
+        this.draw_adj();
       }
       else{
         this.draw_connective();
@@ -6522,12 +6531,35 @@ class ToolPen extends ToolElement {
         this.path.removeSegments();
         this.path.remove();
         this.path = null;
+        this.group.removeChildren();
+        this.group.remove();
+        this.group = null;
       }
 
       if(event.className != 'ToolEvent') {
         project.register_update();
       }
     }
+  }
+
+  draw_adj() {
+    const {path, group, addl_hit: {b, e, profile, side}} = this;
+    const gen = side === 'outer' ?
+      profile.path.get_subpath(profile.corns(1), profile.corns(2)) :
+      profile.path.get_subpath(profile.corns(3), profile.corns(4));
+
+    // рисуем внутреннюю часть прототипа пути доборного профиля
+    const generatrix = gen.get_subpath(e.elm[e.point], b.elm[b.point]);
+    path.addSegments(generatrix.segments);
+    const sub_path = generatrix.equidistant(-8);
+    sub_path.reverse();
+    path.addSegments(sub_path.segments);
+    sub_path.removeSegments();
+    sub_path.remove();
+    path.closePath();
+
+    group.generatrix = generatrix;
+    Editor.ProfileAdjoining.prototype.redraw.call(group);
   }
 
   draw_addl() {
@@ -6634,7 +6666,6 @@ class ToolPen extends ToolElement {
               }
             }
           });
-
         });
 
         if(hit.glass){
@@ -6708,19 +6739,112 @@ class ToolPen extends ToolElement {
     }
   }
 
+  hitTest_adj({point}) {
+
+    const tolerance = 30;
+    const {project, _scope} = this;
+    const rootLayer = project.rootLayer();
+
+    if(point) {
+      this.hitItem = rootLayer.hitTest(point, {stroke: true, curves: true, tolerance});
+    }
+
+    if (this.hitItem) {
+
+      if(this.hitItem.item.parent instanceof Editor.Profile){
+        // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
+
+        const hit = {
+          point: this.hitItem.point,
+          profile: this.hitItem.item.parent
+        };
+
+        // выясним, с какой стороны примыкает профиль
+        const {inner, outer} = hit.profile.rays;
+        if(inner.getNearestPoint(point).getDistance(point, true) < outer.getNearestPoint(point).getDistance(point, true)) {
+          hit.side = 'inner';
+        }
+        else {
+          hit.side = 'outer';
+        }
+
+        // бежим по всем заполнениям и находим ребро
+        hit.profile.layer.glasses(false, true).some((glass) => {
+          return glass.profiles.some((rib, index) => {
+            if(rib.profile == hit.profile && rib.sub_path && rib.sub_path.getNearestPoint(hit.point).is_nearest(hit.point, true)) {
+              if(hit.side == 'outer' && rib.outer || hit.side == 'inner' && !rib.outer) {
+                hit.glass = glass;
+                return true;
+              }
+            }
+          });
+        });
+
+        if(!hit.glass){
+          const imposts = hit.profile.joined_imposts()[hit.side];
+          const {generatrix} = hit.profile;
+          const offset = generatrix.getOffsetOf(generatrix.getNearestPoint(hit.point));
+          const fin = imposts.length - 1;
+          if(fin < 0) {
+            hit.b = {elm: hit.profile, point: hit.side === 'inner' ? 'b' : 'e'};
+            hit.e = {elm: hit.profile, point: hit.side === 'inner' ? 'e' : 'b'};
+          }
+          else {
+            imposts.forEach((impost, index) => {
+              const ioffset = generatrix.getOffsetOf(impost.point);
+              if(index === 0 && hit.side === 'inner' && ioffset > offset) {
+                hit.b = {elm: hit.profile, point: 'b'};
+                hit.e = {elm: impost.profile, point: impost.profile.b.is_nearest(impost.point) ? 'b' : 'e'};
+              }
+              if(index === 0 && hit.side === 'outer' && ioffset > offset) {
+                hit.b = {elm: impost.profile, point: impost.profile.b.is_nearest(impost.point) ? 'b' : 'e'};
+                hit.e = {elm: hit.profile, point: 'b'};
+              }
+              if(index === fin && hit.side === 'inner' && ioffset < offset) {
+                hit.b = {elm: impost.profile, point: impost.profile.b.is_nearest(impost.point) ? 'b' : 'e'};
+                hit.e = {elm: hit.profile, point: 'e'};
+              }
+              if(index === fin && hit.side === 'outer' && ioffset < offset) {
+                hit.b = {elm: hit.profile, point: 'e'};
+                hit.e = {elm: impost.profile, point: impost.profile.b.is_nearest(impost.point) ? 'b' : 'e'};
+              }
+            });
+          }
+
+          this.addl_hit = hit;
+          _scope.canvas_cursor('cursor-pen-adjust');
+        }
+
+      }
+      else{
+        _scope.canvas_cursor('cursor-pen-freehand');
+      }
+
+    }
+    else {
+      this.hitItem = project.hitTest(point, { fill:true, visible: true, tolerance  });
+      _scope.canvas_cursor('cursor-pen-freehand');
+    }
+  }
+
   hitTest(event) {
 
     this.addl_hit = null;
     this.hitItem = null;
 
-    if(this.profile.elm_type == $p.enm.elm_types.Добор){
-      this.hitTest_addl(event);
-    }
-    else if(this.profile.elm_type == $p.enm.elm_types.Соединитель){
-      this.hitTest_connective(event);
-    }
-    else{
+    const {elm_types} = $p.enm;
 
+    switch (this.profile.elm_type) {
+    case elm_types.Добор:
+      this.hitTest_addl(event);
+      break;
+    case elm_types.Соединитель:
+      this.hitTest_connective(event);
+      break;
+    case elm_types.Примыкание:
+      this.hitTest_adj(event);
+      break;
+    default:
       const hitSize = 6;
 
       if (event.point){
@@ -8323,7 +8447,7 @@ class ToolSelectNode extends ToolElement {
         }
         else{
           let do_select = false;
-          if(path.parent instanceof Editor.GeneratrixElement && !(path instanceof Editor.ProfileAddl)){
+          if(path.parent instanceof Editor.GeneratrixElement && !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining)){
             for (let j = 0; j < path.segments.length; j++) {
               segment = path.segments[j];
               if (segment.selected){
@@ -8429,7 +8553,7 @@ class ToolSelectNode extends ToolElement {
           return true;
         }
         else if(path.parent instanceof Editor.GeneratrixElement){
-          if(path instanceof Editor.ProfileAddl){
+          if(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining){
             path.removeChildren();
             path.remove();
           }
