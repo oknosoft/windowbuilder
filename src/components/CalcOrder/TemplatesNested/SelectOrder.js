@@ -12,7 +12,6 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 
 
-
 export default function SelectOrder({onChange, _obj, templates_nested}) {
   if(!templates_nested || !templates_nested.length) {
     return <>
@@ -29,7 +28,7 @@ export default function SelectOrder({onChange, _obj, templates_nested}) {
   return <FormControl fullWidth title="Укажите заказ">
     <InputLabel>Расчет-заказ шаблонов</InputLabel>
     <Select
-      value={_obj.calc_order.ref}
+      value={templates_nested.includes(_obj.calc_order.ref) ? _obj.calc_order.ref : ''}
       onChange={({target}) => {
         _obj.calc_order = target.value;
         onChange(_obj.calc_order);

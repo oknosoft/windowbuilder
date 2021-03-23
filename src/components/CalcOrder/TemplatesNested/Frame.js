@@ -41,7 +41,7 @@ function TemplatesFrame(props) {
 }
 
 TemplatesFrame.propTypes = {
-  handleSelect: PropTypes.func.isRequired,
+  handleOk: PropTypes.func.isRequired,
 };
 
 export default TemplatesFrame;

@@ -614,18 +614,25 @@ class EditorAccordion {
                     const _obj = templates._select_template;
                     const {templates_nested} = job_prm.builder;
                     if(templates_nested && templates_nested.includes(_obj.calc_order)) {
-                      fillings[0].create_leaf(name);
+                      let {layer} = fillings[0];
+                      // если текущий слой уже является вложенным - перезаполняем содержимое из шаблона
+                      if(layer instanceof Editor.ContourNestedContent) {
+                        while (layer) {
+                          layer = layer.layer;
+                          if(layer instanceof Editor.ContourNested) {
+                            break;
+                          }
+                        }
+                        layer.load_stamp();
+                      }
+                      else {
+                        // создаём новое вложенное изделие
+                        fillings[0].create_leaf(name);
+                      }
                     }
                   }
                 })
-                .catch(() => null);
-
-              // ui.dialogs.input_value({
-              //   type: 'cat.production_params',
-              //   title: 'Уточните систему вложенного изделия',
-              //   initialValue: _editor.project.ox.sys})
-              //   .then((sys) => fillings[0].create_leaf(name, sys))
-              //   .catch(() => null);
+                .catch((err) => null);
             }
             else {
               fillings[0].create_leaf(name);
