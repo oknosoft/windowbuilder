@@ -29,7 +29,6 @@ export const predefined = {
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
     keys: keys21,
-    use_ram: true,
     ram_indexer: false,
   },
   'sandbox2.oknagc.': {
@@ -38,7 +37,6 @@ export const predefined = {
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
     keys: keys21,
-    use_ram: true,
     ram_indexer: false,
   },
   'localhost': {

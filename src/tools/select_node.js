@@ -415,7 +415,7 @@ class ToolSelectNode extends ToolElement {
         }
         else{
           let do_select = false;
-          if(path.parent instanceof Editor.GeneratrixElement && !(path instanceof Editor.ProfileAddl)){
+          if(path.parent instanceof Editor.GeneratrixElement && !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining)){
             for (let j = 0; j < path.segments.length; j++) {
               segment = path.segments[j];
               if (segment.selected){
@@ -521,7 +521,7 @@ class ToolSelectNode extends ToolElement {
           return true;
         }
         else if(path.parent instanceof Editor.GeneratrixElement){
-          if(path instanceof Editor.ProfileAddl){
+          if(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining){
             path.removeChildren();
             path.remove();
           }
