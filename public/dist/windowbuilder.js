@@ -623,11 +623,25 @@ class EditorAccordion {
                     const _obj = templates._select_template;
                     const {templates_nested} = job_prm.builder;
                     if(templates_nested && templates_nested.includes(_obj.calc_order)) {
-                      fillings[0].create_leaf(name);
+                      let {layer} = fillings[0];
+                      if(layer instanceof Editor.ContourNestedContent) {
+                        while (layer) {
+                          layer = layer.layer;
+                          if(layer instanceof Editor.ContourNested) {
+                            break;
+                          }
+                        }
+                        layer.load_stamp();
+                      }
+                      else {
+                        fillings[0].create_leaf(name);
+                      }
                     }
                   }
                 })
-                .catch(() => null);
+                .catch((err) => {
+                  console.log(err);
+                });
 
               // ui.dialogs.input_value({
               //   type: 'cat.production_params',
