@@ -1,0 +1,56 @@
+{
+  "parser": "babel-eslint", // https://github.com/babel/babel-eslint,
+  "parserOptions": {
+    "ecmaVersion": 7,
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true,
+      "jsx": true
+    },
+    "sourceType": "module"
+  },
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "plugins": [
+    "react"
+  ],
+  "settings": {
+    "react": {
+      "pragma": "React",  // Pragma to use, default to "React"
+      "version": "16.0", // React version, default to the latest React stable release
+    },
+  },
+  "globals": {
+    "$p": true,
+    "global": true,
+    "moment": true,
+    "alasql": true,
+    "process": true,
+    "paper": true,
+    "expect": true,
+  },
+  "extends": ["eslint:recommended", "plugin:react/recommended"],
+  "rules": {
+    "strict": [2, "global"],
+    "max-len": [1, 160, 2],
+    "no-empty": 1,
+    "no-undef": 1,
+    "no-unused-vars": 1,
+    "semi": [1, "always"],
+    "semi-spacing": [1, {"before": false, "after": true}],
+    "no-case-declarations": 1,
+    "no-console": 0,
+    "no-extra-semi": 1,
+    "no-prototype-builtins": 0,
+    "no-unexpected-multiline": 1,
+    "no-useless-escape": 1,
+    "no-mixed-spaces-and-tabs": 1,
+    "quotes": [0, "single", "avoid-escape"],
+    "indent": [0, 2, { "SwitchCase": 1 }],
+    "react/prop-types": 1,
+    "react/display-name": 1,
+    "react/no-find-dom-node": 1,
+    "react/jsx-key": 1,
+  }
+}
