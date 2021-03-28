@@ -471,11 +471,13 @@ class ToolPen extends ToolElement {
 
   on_mouseup(event) {
 
-    const {_scope, addl_hit, profile, project} = this;
+    const {_scope, addl_hit, profile, project, group} = this;
     const {
       enm: {elm_types},
       EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, ProfileAdjoining, Profile, ProfileItem, Filling}
     } = $p;
+
+    group.removeChildren();
 
     _scope.canvas_cursor('cursor-pen-freehand');
 
@@ -521,7 +523,8 @@ class ToolPen extends ToolElement {
       }
       else if(profile.elm_type == elm_types.Примыкание) {
         const adjoining = new ProfileAdjoining({
-          generatrix: addl_hit.generatrix,
+          b: addl_hit.b,
+          e: addl_hit.e,
           proto: profile,
           parent: addl_hit.profile,
           side: addl_hit.side
@@ -847,18 +850,15 @@ class ToolPen extends ToolElement {
 
   draw_adj() {
     const {path, group, addl_hit: {b, e, profile, side}} = this;
-    const gen = side === 'outer' ?
-      profile.path.get_subpath(profile.corns(1), profile.corns(2)) :
-      profile.path.get_subpath(profile.corns(3), profile.corns(4));
 
     // рисуем внутреннюю часть прототипа пути доборного профиля
-    const generatrix = gen.get_subpath(e.elm[e.point], b.elm[b.point]);
+    const generatrix = profile.rays[side].get_subpath(e.elm[e.point], b.elm[b.point]);
     path.addSegments(generatrix.segments);
-    const sub_path = generatrix.equidistant(-8);
-    sub_path.reverse();
-    path.addSegments(sub_path.segments);
-    sub_path.removeSegments();
-    sub_path.remove();
+    // const sub_path = generatrix.equidistant(-8);
+    // sub_path.reverse();
+    // path.addSegments(sub_path.segments);
+    // sub_path.removeSegments();
+    // sub_path.remove();
     path.closePath();
 
     group.generatrix = generatrix;
@@ -1092,26 +1092,51 @@ class ToolPen extends ToolElement {
             hit.b = {elm: hit.profile, point: hit.side === 'inner' ? 'b' : 'e'};
             hit.e = {elm: hit.profile, point: hit.side === 'inner' ? 'e' : 'b'};
           }
+          else if(fin === 0) {
+            const impost = imposts[0];
+            const ioffset = generatrix.getOffsetOf(impost.point);
+            if(hit.side === 'inner' && ioffset > offset) {
+              hit.b = {elm: hit.profile, point: 'b'};
+              hit.e = {elm: impost.profile, point: impost.profile.b.is_nearest(impost.point) ? 'b' : 'e'};
+            }
+            else if(hit.side === 'outer' && ioffset > offset) {
+              hit.b = {elm: impost.profile, point: impost.profile.b.is_nearest(impost.point) ? 'b' : 'e'};
+              hit.e = {elm: hit.profile, point: 'b'};
+            }
+            else if(hit.side === 'inner' && ioffset < offset) {
+              hit.b = {elm: impost.profile, point: impost.profile.b.is_nearest(impost.point) ? 'b' : 'e'};
+              hit.e = {elm: hit.profile, point: 'e'};
+            }
+            else if(hit.side === 'outer' && ioffset < offset) {
+              hit.b = {elm: hit.profile, point: 'e'};
+              hit.e = {elm: impost.profile, point: impost.profile.b.is_nearest(impost.point) ? 'b' : 'e'};
+            }
+          }
           else {
-            imposts.forEach((impost, index) => {
-              const ioffset = generatrix.getOffsetOf(impost.point);
-              if(index === 0 && hit.side === 'inner' && ioffset > offset) {
-                hit.b = {elm: hit.profile, point: 'b'};
-                hit.e = {elm: impost.profile, point: impost.profile.b.is_nearest(impost.point) ? 'b' : 'e'};
-              }
-              if(index === 0 && hit.side === 'outer' && ioffset > offset) {
-                hit.b = {elm: impost.profile, point: impost.profile.b.is_nearest(impost.point) ? 'b' : 'e'};
-                hit.e = {elm: hit.profile, point: 'b'};
-              }
-              if(index === fin && hit.side === 'inner' && ioffset < offset) {
-                hit.b = {elm: impost.profile, point: impost.profile.b.is_nearest(impost.point) ? 'b' : 'e'};
-                hit.e = {elm: hit.profile, point: 'e'};
-              }
-              if(index === fin && hit.side === 'outer' && ioffset < offset) {
-                hit.b = {elm: hit.profile, point: 'e'};
-                hit.e = {elm: impost.profile, point: impost.profile.b.is_nearest(impost.point) ? 'b' : 'e'};
-              }
-            });
+            let i0 = imposts[0];
+            let ifin = imposts[fin];
+            let offset0 = generatrix.getOffsetOf(i0.point);
+            let offsetfin = generatrix.getOffsetOf(ifin.point);
+            if(offset0 > offsetfin) {
+              [i0, ifin] = [ifin, i0];
+              [offset0, offsetfin] = [offset0, offsetfin];
+            }
+            if(hit.side === 'inner' && offset0 > offset) {
+              hit.b = {elm: hit.profile, point: 'b'};
+              hit.e = {elm: i0.profile, point: i0.profile.b.is_nearest(i0.point) ? 'b' : 'e'};
+            }
+            else if(hit.side === 'outer' && offset0 > offset) {
+              hit.b = {elm: i0.profile, point: i0.profile.b.is_nearest(i0.point) ? 'b' : 'e'};
+              hit.e = {elm: hit.profile, point: 'b'};
+            }
+            else if(hit.side === 'inner' && offsetfin < offset) {
+              hit.b = {elm: ifin.profile, point: ifin.profile.b.is_nearest(ifin.point) ? 'b' : 'e'};
+              hit.e = {elm: hit.profile, point: 'e'};
+            }
+            else if(hit.side === 'outer' && offsetfin < offset) {
+              hit.b = {elm: hit.profile, point: 'e'};
+              hit.e = {elm: ifin.profile, point: ifin.profile.b.is_nearest(ifin.point) ? 'b' : 'e'};
+            }
           }
 
           this.addl_hit = hit;

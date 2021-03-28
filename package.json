@@ -1,6 +1,6 @@
 {
   "name": "windowbuilder",
-  "version": "2.1.255",
+  "version": "2.1.256",
   "description": "Order dealer for windows and stained glass",
   "repository": {
     "type": "git",
@@ -42,7 +42,7 @@
     "metadata-redux": "2.0.24-beta.3",
     "metadata-superlogin": "2.0.24-beta.3",
     "react-highlight-words": "^0.17",
-    "wb-core": "github:oknosoft/windowbuilder-core#2a360f2210c71031028ffcb7ac49264c542117d4",
+    "wb-core": "github:oknosoft/windowbuilder-core#312bd1f0ea3baaa8d37509f6ad6935e76efadc3a",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
     "wb-forms": "github:oknosoft/windowbuilder-forms#0d120e797ed648e2963099b162978f8db0d9513e"
   },
