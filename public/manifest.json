@@ -1,0 +1,20 @@
+{
+  "lang": "ru",
+  "name": "CRM для Заказа дилера",
+  "short_name": "CRM",
+  "description": "Управление заказами и проектами",
+  "icons": [
+    {
+      "src": "./imgs/fav-okn144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    }],
+  "background_color": "#ffffff",
+  "splash_screens": [{
+    "src": "./imgs/splash.gif",
+    "sizes": "256x64"
+  }],
+  "scope": "/",
+  "start_url": "/",
+  "display": "standalone"
+}

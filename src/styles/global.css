@@ -1,0 +1,118 @@
+@font-face {
+  font-family: 'GOST type B';
+  src: url('imgs/gost_b.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+strong, b, h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+}
+
+body {
+  color: rgba(0, 0, 0, 0.87);
+  margin: 0;
+  font-size: 0.95rem;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-weight: 400;
+  line-height: 1.43;
+  letter-spacing: 0.01071em;
+  overflow: overlay;
+}
+
+.fa {
+  font-size: smaller;
+}
+
+.gl.margin {
+  margin: 8px;
+}
+
+.gl.margint20 {
+  margin: 8px;
+  margin-top: 20px;
+}
+
+.gl.padding8 {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.gl.marginr {
+  margin-right: 8px;
+}
+
+.gl.disabled { pointer-events: none; opacity: 0.4}
+
+.fullscreen {
+  background-color: #fafafa;
+  overflow: auto;
+}
+
+[class*="tb_"] {
+  background-repeat: no-repeat;
+  background-position-top: 4px;
+  width: 24px;
+  height: 24px;
+}
+
+.tb_icon-hand {background-image: url(imgs/icon-hand.png);}
+.tb_icon-arrow-white {background-image: url(imgs/icon-arrow-white.png);}
+.tb_cursor-zoom {background-image: url(imgs/cursor-zoom.png);}
+.tb_cursor-pen-freehand {background-image: url(imgs/cursor-pen-freehand.png);}
+.tb_cursor-lay-impost {background-image: url(imgs/cursor-lay-impost.png);}
+.tb_cursor-arc-r {background-image: url(imgs/cursor-arc-r.png);}
+.tb_cursor-cut {background-image: url(imgs/cursor-cut.png);}
+.tb_cursor-uncut {background-image: url(imgs/cursor-uncut.png);}
+.tb_cursor-hv {background-image: url(imgs/cursor-hv.png);}
+.tb_cursor-vh {background-image: url(imgs/cursor-vh.png);}
+.tb_cursor-diagonal {background-image: url(imgs/cursor-diagonal.png);}
+.tb_ruler_ui {background-image: url(imgs/ruler_ui.png);}
+.tb_stamp {background-image: url(imgs/stamp.png);}
+.tb_grid {background-image: url(imgs/grid.png);}
+.tb_line {background-image: url(imgs/line.png);}
+.tb_text {background-image: url(imgs/text.png);}
+.tb_stulp_flap {background-image: url(imgs/stulp-flap.png);}
+.tb_align_bottom {background-image: url(imgs/align_bottom.png); opacity: 0.9;}
+.tb_align_left {background-image: url(imgs/align_left.png); opacity: 0.9;}
+.tb_align_right {background-image: url(imgs/align_right.png); opacity: 0.9;}
+.tb_align_top {background-image: url(imgs/align_top.png); opacity: 0.9;}
+.tb_align_vert {background-image: url(imgs/align_vert.png); opacity: 0.9;}
+.tb_align_hor {background-image: url(imgs/align_hor.png); opacity: 0.9;}
+
+/* курсоры построителя*/
+.cursor-pen-freehand    { cursor: url(imgs/cursor-pen-freehand.png) 5 2, default; }
+.cursor-lay-impost      { cursor: url(imgs/cursor-lay-impost.png) 7 7, default; }
+.cursor-arrow-cut       { cursor: url(imgs/cursor-arrow-cut.png) 1 1, default; }
+.cursor-arrow-do-cut    { cursor: url(imgs/cursor-arrow-do-cut.png) 1 1, default; }
+.cursor-arrow-do-uncut  { cursor: url(imgs/cursor-arrow-do-uncut.png) 1 1, default; }
+.cursor-arrow-lay       { cursor: url(imgs/cursor-arrow-lay.png) 1 1, default; }
+.cursor-arrow-ruler     { cursor: url(imgs/cursor-arrow-ruler.png) 3 1, default; }
+.cursor-arrow-ruler-light { cursor: url(imgs/cursor-arrow-ruler-light.png) 3 1, default; }
+.cursor-arrow-ruler-dis { cursor: url(imgs/cursor-arrow-ruler-dis.png) 3 1, default; }
+.cursor-pen-adjust      { cursor: url(imgs/cursor-pen-adjust.png) 5 2, default; }
+.cursor-zoom-in         { cursor: url(imgs/cursor-zoom-in.png) 7 7, default; }
+.cursor-zoom-out        { cursor: url(imgs/cursor-zoom-out.png) 7 7, default; }
+.cursor-hand            { cursor: url(imgs/cursor-hand.png) 10 10, default; }
+.cursor-hand-grab       { cursor: url(imgs/cursor-hand-grab.png) 10 10, default; }
+.cursor-arc             { cursor: url(imgs/cursor-arc-r.png) 6 10, default; }
+.cursor-arc-arrow       { cursor: url(imgs/cursor-arc-r-active.png) 3 7, default; }
+.cursor-arrow-black     { cursor: url(imgs/cursor-arrow-black.png) 2 2, default; }
+.cursor-arrow-black-point { cursor: url(imgs/cursor-arrow-black-point.png) 2 2, default; }
+.cursor-arrow-black-shape { cursor: url(imgs/cursor-arrow-black-shape.png) 2 2, default; }
+.cursor-arrow-white     { cursor: url(imgs/cursor-arrow-white.png) 2 2, default; }
+.cursor-arrow-white-point { cursor: url(imgs/cursor-arrow-white-point.png) 2 2, default; }
+.cursor-arrow-white-shape { cursor: url(imgs/cursor-arrow-white-shape.png) 2 2, default; }
+.cursor-arrow-small     { cursor: url(imgs/cursor-arrow-small.png) 2 2, default; }
+.cursor-arrow-small-point { cursor: url(imgs/cursor-arrow-small-point.png) 2 2, default; }
+.cursor-text            { cursor: url(imgs/cursor-text.png) 2 2, default; }
+.cursor-text-add        { cursor: url(imgs/cursor-text-add.png) 2 2, default; }
+.cursor-text-select     { cursor: url(imgs/cursor-text-select.png) 2 2, default; }
+.cursor-stulp-flap     { cursor: url(imgs/cursor-stulp-flap.png) 1 1, default; }

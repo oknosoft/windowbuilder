@@ -1,0 +1,57 @@
+
+
+.sz_input {
+  position: absolute;
+  background: white;
+  padding: 4px;
+  width: 4rem;
+  text-align: center;
+  border: none;
+}
+
+.mousepos {
+	position: absolute;
+	left: 4px;
+	bottom: 4px;
+	background: rgba(255,255,255,.8);
+	font-size: 90%;
+	padding: 0px 4px;
+}
+
+.toppos {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  background: rgba(255,255,255,.8);
+  padding: 0px 4px;
+  font-size: larger;
+  cursor: help;
+}
+
+.ortpos {
+  transform: rotate(15deg);
+}
+
+.errpos {
+  color: #d9534f;
+}
+
+.pen_cont {
+	position: absolute;
+	font-size: 90%;
+	padding: 0;
+}
+.pen_cont input{
+	width: 60px;
+	border: none;
+	margin: 0 8px 4px 4px;
+}
+.pen_cont input[type=button]{
+	width: 100%;
+}
+.pen_cont table, .pen_cont tr, .pen_cont td{
+	margin: 0;
+	padding: 0;
+	border: none;
+	border-collapse: collapse;
+}
