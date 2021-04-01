@@ -656,8 +656,7 @@ class ToolPen extends ToolElement {
           strokeScaling: false,
           guide: true
         });
-        this.group = new paper.Group([this.path]);
-        this.group.path = this.path;
+        this.group = new paper.Group();
       }
 
       this.path.removeSegments();
@@ -862,7 +861,7 @@ class ToolPen extends ToolElement {
     path.closePath();
 
     group.generatrix = generatrix;
-    Editor.ProfileAdjoining.prototype.redraw.call(group);
+    Editor.ProfileAdjoining.prototype.redraw.call(group, 'compact');
   }
 
   draw_addl() {
