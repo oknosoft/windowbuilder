@@ -401,6 +401,8 @@ class ToolPen extends ToolElement {
     if(this.path){
       this.path.removeSegments();
       this.path.remove();
+    }
+    if(this.group){
       this.group.removeChildren();
       this.group.remove();
     }
@@ -477,7 +479,7 @@ class ToolPen extends ToolElement {
       EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, ProfileAdjoining, Profile, ProfileItem, Filling}
     } = $p;
 
-    group.removeChildren();
+    group && group.removeChildren();
 
     _scope.canvas_cursor('cursor-pen-freehand');
 
@@ -656,12 +658,11 @@ class ToolPen extends ToolElement {
           strokeScaling: false,
           guide: true
         });
-        this.group = new paper.Group([this.path]);
-        this.group.path = this.path;
+        this.group = new paper.Group();
       }
 
       this.path.removeSegments();
-      this.group.removeChildren();
+      this.group && this.group.removeChildren();
 
       if(addl_hit.glass){
         this.draw_addl();
@@ -834,11 +835,11 @@ class ToolPen extends ToolElement {
 
       }
       else{
-        this.path.removeSegments();
-        this.path.remove();
+        this.path && this.path.removeSegments();
+        this.path && this.path.remove();
         this.path = null;
-        this.group.removeChildren();
-        this.group.remove();
+        this.group && this.group.removeChildren();
+        this.group && this.group.remove();
         this.group = null;
       }
 
@@ -862,7 +863,7 @@ class ToolPen extends ToolElement {
     path.closePath();
 
     group.generatrix = generatrix;
-    Editor.ProfileAdjoining.prototype.redraw.call(group);
+    Editor.ProfileAdjoining.prototype.redraw.call(group, 'compact');
   }
 
   draw_addl() {
