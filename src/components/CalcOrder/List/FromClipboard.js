@@ -5,12 +5,12 @@ import Dialog from 'metadata-react/App/Dialog';
 
 import {makeStyles} from '@material-ui/core/styles';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles({
   text: {
     width: 'calc(100% - 8px)',
     height: 80,
   },
-}));
+});
 
 const presentation = (raw) => {
   const date = moment(raw.date);
@@ -24,7 +24,7 @@ export default function FromClipboard({queryClose}) {
   const [enable_copy, setCopy] = React.useState(false);
   const [descr, setDescr] = React.useState('');
   const onPaste = async ({clipboardData}) => {
-    const wrong = 'В буфере обмена нет корректных данных о заказе'
+    const wrong = 'В буфере обмена нет корректных данных о заказе';
     try {
       const text = clipboardData.getData('text/plain');
       const raw = JSON.parse(text);
@@ -67,3 +67,7 @@ export default function FromClipboard({queryClose}) {
     />
   </Dialog>;
 }
+
+FromClipboard.propTypes = {
+  queryClose: PropTypes.func.isRequired,
+};
