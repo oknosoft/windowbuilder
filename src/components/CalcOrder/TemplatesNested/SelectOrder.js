@@ -41,3 +41,9 @@ export default function SelectOrder({onChange, _obj, templates_nested}) {
     </Select>
   </FormControl>
 }
+
+SelectOrder.propTypes = {
+  _obj: PropTypes.object.isRequired,
+  templates_nested: PropTypes.object,
+  onChange: PropTypes.func.isRequired,
+};

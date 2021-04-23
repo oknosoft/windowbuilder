@@ -12,7 +12,7 @@ class StulpFlapWnd extends React.Component {
     $p.dp.builder_pen.off({update: this.onDataChange});
   }
 
-  onDataChange = (obj, fields) => {
+  onDataChange = (obj /*, fields */) => {
     if(obj === this.props.editor.tool._obj) {
       this.forceUpdate();
     }

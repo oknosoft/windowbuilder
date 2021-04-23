@@ -28,5 +28,5 @@ export default function ({ui}) {
       timeout: 180000,
       Component: TemplatesFrame,
     });
-  }
-};
+  };
+}

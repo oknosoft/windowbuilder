@@ -337,7 +337,7 @@
 
       // если вложенное изделие - блокируем все поля
       else if(row.characteristic.leading_product.calc_order === o) {
-        if(!['discount_percent', 'discount_percent_internal', 'price_internal', 'amount_internal'].includes(production.columnIds[ind])) {
+        if(!['discount_percent', 'discount_percent_internal', 'price_internal', 'amount_internal', 'note'].includes(production.columnIds[ind])) {
           production.cells(id, ind).setDisabled(true);
         }
       }

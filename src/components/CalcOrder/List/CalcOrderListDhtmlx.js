@@ -1,5 +1,5 @@
 import React from 'react';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import DhtmlxCell from '../../DhtmlxCell';
 import WindowSizer from 'metadata-react/WindowSize';
 import LoadingModal from 'metadata-react/DumbLoader/LoadingModal';
@@ -55,7 +55,7 @@ class CalcOrderList extends DhtmlxCell {
     const {doc: {calc_order}, ui: {dialogs}} = $p;
     const doc = calc_order.get(raw.ref);
     return navigator.clipboard.writeText(JSON.stringify(raw))
-      .then((res) => {
+      .then(() => {
         this.setState({loading: false}, () => dialogs.alert({
           title: 'Экспорт данных',
           text: <><i>{doc.presentation}</i> скопирован в буфер обмена</>,
@@ -74,7 +74,7 @@ class CalcOrderList extends DhtmlxCell {
     this.setState({import_start: true});
   };
 
-  import_fin = (err) => {
+  import_fin = () => {
     this.setState({import_start: false});
   };
 
@@ -93,6 +93,14 @@ class CalcOrderList extends DhtmlxCell {
 }
 
 CalcOrderList.rname = 'CalcOrderList';
+
+CalcOrderList.propTypes = {
+  dialog: PropTypes.object.isRequired,
+  location: PropTypes.object,
+  state_filter: PropTypes.object,
+  handleNavigate: PropTypes.func.isRequired,
+  handleIfaceState: PropTypes.func.isRequired,
+};
 
 export default WindowSizer(withIface(CalcOrderList));
 
