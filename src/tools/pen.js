@@ -998,47 +998,38 @@ class ToolPen extends ToolElement {
 
   hitTest_connective(event) {
 
-    const hitSize = 16;
     const {project, _scope} = this;
     const rootLayer = project.rootLayer();
 
     if (event.point){
-      this.hitItem = rootLayer.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
+      this.hitItem = rootLayer.hitTest(event.point, ToolPen.root_match(rootLayer));
     }
 
-    if (this.hitItem) {
+    if(this.hitItem){
+      // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
 
-      if(this.hitItem.item.parent instanceof Editor.ProfileItem && !(this.hitItem.item.parent instanceof Editor.Onlay)){
-        // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
+      const hit = {
+        point: this.hitItem.point,
+        profile: this.hitItem.item.parent
+      };
 
-        const hit = {
-          point: this.hitItem.point,
-          profile: this.hitItem.item.parent
-        };
-
-        // выясним, с какой стороны примыкает профиль
-        if(hit.profile.rays.inner.getNearestPoint(event.point).getDistance(event.point, true) <
-          hit.profile.rays.outer.getNearestPoint(event.point).getDistance(event.point, true)){
-          hit.side = "inner";
-        }
-        else{
-          hit.side = "outer";
-        }
-
-        // для соединителей, нас интересуют только внешние рёбра
-        if(hit.side == "outer"){
-          this.addl_hit = hit;
-          _scope.canvas_cursor('cursor-pen-adjust');
-        }
-
+      // выясним, с какой стороны примыкает профиль
+      if(hit.profile.rays.inner.getNearestPoint(event.point).getDistance(event.point, true) <
+        hit.profile.rays.outer.getNearestPoint(event.point).getDistance(event.point, true)){
+        hit.side = "inner";
       }
       else{
-        _scope.canvas_cursor('cursor-pen-freehand');
+        hit.side = "outer";
+      }
+
+      // для соединителей, нас интересуют только внешние рёбра
+      if(hit.side == "outer"){
+        this.addl_hit = hit;
+        _scope.canvas_cursor('cursor-pen-adjust');
       }
 
     }
-    else {
-      this.hitItem = project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+    else{
       _scope.canvas_cursor('cursor-pen-freehand');
     }
   }
@@ -1512,6 +1503,20 @@ class ToolPen extends ToolElement {
     this.project.getItems({class: Editor.Contour}).forEach((l) => {
       l.opacity = (l == activeLayer || reset) ? 1 : 0.5;
     });
+  }
+
+  static root_match(layer) {
+    return {
+      stroke:true,
+      curves:true,
+      tolerance: 20,
+      match(item) {
+        const {parent} = item.item;
+        if(parent instanceof Editor.ProfileItem && !(parent instanceof Editor.Onlay)){
+          return parent.layer === layer;
+        }
+      },
+    }
   }
 
 }
