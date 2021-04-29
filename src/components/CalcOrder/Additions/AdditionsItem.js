@@ -25,6 +25,7 @@ export default class AdditionsItem extends Component {
       onCellSelected={onCellSelected}
       minHeight={minHeight}
       hideToolbar
+      denyReorder
     />;
   }
 

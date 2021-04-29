@@ -31,7 +31,7 @@
   "proxy": "http://localhost:3016/",
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
-    "@material-ui/lab": "^4.0.0-alpha.57",
+    "@material-ui/lab": "^4.0.0-alpha.58",
     "@turf/points-within-polygon": "^6.3",
     "dxf-writer": "^1.8",
     "md5-file": "^5.0",
@@ -43,8 +43,9 @@
     "metadata-redux": "2.0.24-beta.4",
     "metadata-superlogin": "2.0.24-beta.4",
     "react-highlight-words": "^0.17",
+    "react-virtualized-auto-sizer": "^1.0.5",
     "react-window": "^1.8.6",
-    "wb-core": "github:oknosoft/windowbuilder-core#53fb9ee4ab2e5d7acfe1af3c41f2ce72ca4689d2",
+    "wb-core": "github:oknosoft/windowbuilder-core#66ea20e77c1f06c9028c41edaabbd3ab4c1bc53d",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
     "wb-forms": "github:oknosoft/windowbuilder-forms#0d120e797ed648e2963099b162978f8db0d9513e"
   },
