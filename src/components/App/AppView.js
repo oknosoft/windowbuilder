@@ -88,7 +88,9 @@ class AppRoot extends Component {
       user,
       title,
       idle,
-      disable: ['google'],
+      pfilter(key) {
+        return key !== 'google'
+      }
     };
 
     return [

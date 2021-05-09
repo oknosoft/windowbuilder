@@ -7,7 +7,6 @@ import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
-import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 
@@ -39,7 +38,7 @@ export default function SelectOrder({onChange, _obj, templates_nested}) {
         <Typography component="span" variant="caption">{` ${order.number_doc}`}</Typography>
       </MenuItem>)}
     </Select>
-  </FormControl>
+  </FormControl>;
 }
 
 SelectOrder.propTypes = {

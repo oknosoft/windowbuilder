@@ -109,7 +109,7 @@ export default function ({Editor, enm}) {
     const res = {can_use: true};
 
     /* Значения из параметров документа расчёт заказ */
-    const snow_region_val = (calc_order._extra('snow_region') || "I").toString();
+    const snow_region_val = (calc_order._extra('snow_region') || "I").toString(); /* eslint-disable-line */
     const wind_region_val = (calc_order._extra('wind_region') || "I").toString();
     const type_of_terrain_val = (calc_order._extra('type_of_terrain') || "A").toString();
     const mounting_height_val = calc_order._extra('mounting_height') || 0;
