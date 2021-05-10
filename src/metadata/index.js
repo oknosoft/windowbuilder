@@ -46,7 +46,7 @@ patch_cnn();
 meta_init($p);
 
 // запускаем проверку единственности экземпляра
-$p.utils.single_instance_checker.init();
+//$p.utils.single_instance_checker.init();
 
 // скрипт инициализации в привязке к store приложения
 export function init(store) {
