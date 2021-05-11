@@ -41,7 +41,6 @@ class Sysparams extends React.Component {
     const {obj, state} = this;
     let txt_row = '';
 
-    const {_obj} = this;
     state._obj.sys_profile.forEach(({sys}) => {
       if(txt_row) {
         txt_row += ',';
@@ -55,10 +54,6 @@ class Sysparams extends React.Component {
     this.handleCancel();
   };
 
-  handleErrClose = () => {
-    this.setState({msg: null});
-  };
-
   handleValueChange(_fld) {
     return (event, value) => {
       const {_obj} = this.state;
@@ -69,7 +64,7 @@ class Sysparams extends React.Component {
 
   render() {
 
-    const {handleCancel, handleOk, handleErrClose, state: {_obj, msg}, scheme} = this;
+    const {handleCancel, handleOk, state: {_obj}, scheme} = this;
 
     return <Dialog
       open

@@ -6,7 +6,7 @@
  * Created by Evgeniy Malyarov on 07.03.2019.
  */
 
-import RepParams from '../../components/CalcOrder/List/Params';
+import RepParams from 'wb-forms/dist/CalcOrder/FrmList/Params';
 
 export default function ({doc, dp, utils, DocCalc_order}) {
   const {calc_order: _mgr} = doc;

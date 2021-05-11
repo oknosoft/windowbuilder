@@ -92,7 +92,7 @@ export function patch_prm(settings) {
     settings(prm);
     for (const elm in predefined) {
       if(location.host.match(elm)) {
-        'zone,use_ram,ram_indexer'.split(',').forEach((name) => {
+        'zone,ram_indexer'.split(',').forEach((name) => {
           if(predefined[elm].hasOwnProperty(name)) {
             prm[name] = predefined[elm][name];
           }
@@ -128,5 +128,10 @@ export function patch_cnn() {
         }
       });
     }
+  }
+
+  if(job_prm.use_ram) {
+    wsql.set_user_param('use_ram', false);
+    job_prm.use_ram = false;
   }
 }

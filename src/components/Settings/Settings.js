@@ -80,7 +80,7 @@ class Settings extends Component {
     }
 
     this.state = {
-      zone, couch_path, enable_save_pwd, couch_direct, ram_indexer, use_ram: job_prm.use_ram, hide_price,
+      zone, couch_path, enable_save_pwd, couch_direct, ram_indexer, hide_price,
       confirm_reset: false, surcharge_internal, discount_percent_internal, surcharge_disabled
     };
   }
@@ -146,7 +146,7 @@ class Settings extends Component {
   render() {
     const {classes} = this.props;
     const {
-      zone, couch_path, enable_save_pwd, couch_direct, ram_indexer, use_ram, confirm_reset, hide_price,
+      zone, couch_path, enable_save_pwd, couch_direct, ram_indexer, confirm_reset, hide_price,
       surcharge_internal, discount_percent_internal, surcharge_disabled
     } = this.state;
 
@@ -202,18 +202,6 @@ class Settings extends Component {
               label="Использовать Indexer Postgres"
             />
             <FormHelperText style={{marginTop: -4}}>Новый источник данных для динсписков</FormHelperText>
-          </FormControl>
-
-          <FormControl>
-            <FormControlLabel
-              control={<Switch
-                onChange={(event, checked) => this.setState({use_ram: checked})}
-                checked={Boolean(use_ram)}/>}
-              label={use_ram ? "Данные ram в IDB браузера" : "Динамический mdm на сервере"}
-            />
-            <FormHelperText style={{marginTop: -4}}>{
-              use_ram ? "Классический режим - справочники в pouchdb" : "Новый режим - mdm auth-proxy"
-            }</FormHelperText>
           </FormControl>
 
         </FormGroup>
