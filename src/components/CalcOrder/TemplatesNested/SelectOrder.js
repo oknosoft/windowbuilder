@@ -20,7 +20,7 @@ export default function SelectOrder({onChange, _obj, templates_nested}) {
   if(templates_nested.length === 1) {
     if(_obj.calc_order != templates_nested[0]) {
       _obj.calc_order = templates_nested[0];
-      onChange(_obj.calc_order);
+      Promise.resolve().then(() => onChange(_obj.calc_order));
     }
     return null;
   }
@@ -43,6 +43,6 @@ export default function SelectOrder({onChange, _obj, templates_nested}) {
 
 SelectOrder.propTypes = {
   _obj: PropTypes.object.isRequired,
-  templates_nested: PropTypes.object,
+  templates_nested: PropTypes.array,
   onChange: PropTypes.func.isRequired,
 };

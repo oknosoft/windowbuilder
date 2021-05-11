@@ -38,7 +38,7 @@ class Settings extends Component {
   constructor(props) {
     super(props);
     const {zone, couch_path, enable_save_pwd, couch_direct, ram_indexer} = props;
-    const {wsql, job_prm, cat, current_user, pricing} = $p;
+    const {wsql, cat, current_user, pricing} = $p;
 
     let hide_price;
     if(wsql.get_user_param('hide_price_dealer')) {

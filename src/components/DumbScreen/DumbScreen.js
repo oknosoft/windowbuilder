@@ -5,12 +5,16 @@ import Repl from './Repl';
 class DumbScreen extends Component {
 
   renderRepl(footer) {
-    let {repl} = this.props;
+    let {repl, page} = this.props;
     const res = [];
     for (const dbs in repl) {
       if(!repl[dbs].end_time) {
         res.push(<Repl key={dbs} info={repl[dbs]}/>);
       }
+    }
+    if(!res.length && page && page.docs_written < page.total_rows) {
+      const info = {db: 'ram', docs_read: page.docs_written, pending: page.total_rows - page.docs_written};
+      res.push(<Repl key={'ram'} info={info}/>);
     }
     if(!res.length && footer) {
       res.push(<div key="footer">{footer}</div>);
