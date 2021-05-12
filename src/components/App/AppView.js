@@ -89,7 +89,7 @@ class AppRoot extends Component {
       title,
       idle,
       pfilter(key) {
-        return key !== 'google'
+        return key !== 'google';
       }
     };
 

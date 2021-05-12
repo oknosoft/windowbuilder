@@ -39,9 +39,14 @@ export const predefined = {
     keys: keys21,
     ram_indexer: false,
   },
-  'localhost': {
+  'localhost:3000': {
     zone: 21,
     splash: {css: 'splash21', title: false},
+    log_level: 'warn',
+    keys: {google: ''},
+  },
+  'localhost:3030': {
+    zone: 23,
     log_level: 'warn',
     keys: {google: ''},
   },
