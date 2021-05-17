@@ -21,6 +21,9 @@ function TemplatesFrame(props) {
     setOrder(order);
   };
   const handleFin = () => {
+    if(!step) {
+      return setStep(1);
+    }
     if(_obj.base_block.empty() || _obj.base_block.calc_order !== _obj.calc_order) {
       return alert('Не выбрано изделие-шаблон');
     }
@@ -30,12 +33,21 @@ function TemplatesFrame(props) {
     <SelectOrder _obj={_obj} onChange={orderChange} templates_nested={templates_nested} />
     <div style={{paddingTop: 8}}>
       {step === 0 && templates_nested.includes(order) && <SelectFigure handleNext={() => setStep(1)} />}
-      {step === 1 && templates_nested.includes(order) && <SelectSys handleNext={handleFin} />}
+      {step === 1 && templates_nested.includes(order) && <SelectSys handleNext={handleFin} lock />}
     </div>
     <DialogActions>
-      <Button disabled={step != 1} onClick={() => setStep(0)}>Назад</Button>
+      <Button
+        variant="contained"
+        disabled={step === 0}
+        onClick={() => setStep(0)}
+      >Назад</Button>
+      <Button
+        variant="contained"
+        color="primary"
+        //disabled={step != 1}
+        onClick={handleFin}
+      >{step ? 'Ок' : 'Далее'}</Button>
       <div style={{flex: 1}}></div>
-      <Button disabled={step != 1} onClick={handleFin}>Ок</Button>
     </DialogActions>
   </>;
 }

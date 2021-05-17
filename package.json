@@ -29,7 +29,7 @@
   "proxy2": "https://start.ecookna.ru/",
   "proxy3": "https://start.kaleva.ru/",
   "proxy": "https://info.tmk-online.ru/",
-  "proxy4": "http://localhost:3016/",
+  "proxy5": "http://localhost:3016/",
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
     "@turf/points-within-polygon": "^6.3",
@@ -43,9 +43,9 @@
     "metadata-redux": "2.0.25-beta.1",
     "metadata-superlogin": "2.0.25-beta.1",
     "react-highlight-words": "^0.17",
-    "wb-core": "github:oknosoft/windowbuilder-core#55743aca9cb2f26e099e917e0c5440c784218432",
+    "wb-core": "github:oknosoft/windowbuilder-core#2ebaae7e72d873d83eca3934dc93a85c242687ef",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#a934a652361621740b6d3e181e9d1e4daa1377a8"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#701960fce2ea621aad7d6a50e78663c3a32c616c"
   },
   "devDependencies": {
     "@babel/core": "7.9.0",

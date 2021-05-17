@@ -703,23 +703,35 @@ class EditorAccordion {
       buttons: [
         {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'},
         {name: 'spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию фурнитуры', float: 'right'},
+        {name: 'down', text: '<i class="fa fa-arrow-down fa-fw"></i>', tooltip: 'Сдвинуть по Z ниже', float: 'right'},
+        {name: 'up', text: '<i class="fa fa-arrow-up fa-fw"></i>', tooltip: 'Сдвинуть по Z выше', float: 'right'},
       ], onclick: (name) => {
 
-        switch(name) {
+        switch (name) {
 
-          case 'refill':
-            const {_obj} = this.stv._grid;
-            _obj.furn.refill_prm(_obj);
-            this.stv.reload();
-            break;
+        case 'refill':
+          const {_obj} = this.stv._grid;
+          _obj.furn.refill_prm(_obj);
+          this.stv.reload();
+          break;
 
         case 'spec':
           _editor.layer_spec();
           break;
 
-          default:
-            msg.show_msg(name);
-            break;
+        case 'up':
+        case 'down':
+          const {activeLayer} = _editor.project;
+          if(activeLayer && activeLayer.bring) {
+            activeLayer.bring(name);
+            activeLayer.activate(true);
+          }
+
+          break;
+
+        default:
+          msg.show_msg(name);
+          break;
         }
 
         return false;
