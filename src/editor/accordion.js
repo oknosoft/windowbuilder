@@ -30,29 +30,28 @@ class SchemeLayers {
     });
 
     // гасим-включаем слой по чекбоксу
-    this.tree.attachEvent("onCheck", (id, state) => {
-      const cnstr = Number(id);
-      if(cnstr) {
-        const contour = editor.project.getItem({cnstr});
-        if(contour){
-          contour.hidden = !state;
-        }
+    this.tree.attachEvent('onCheck', (key, state) => {
+      const {project} = editor;
+      const contour = project.getItem({class: Editor.Contour, key});
+      if(contour) {
+        contour.hidden = !state;
       }
       else {
-        editor.project.ox.builder_props = {[id]: state};
-        editor.project.register_change(true);
+        project.ox.builder_props = {[key]: state};
+        project.register_change(true);
       }
-      editor.project.register_update();
+      project.register_update();
     });
 
     // делаем выделенный слой активным
-    this.tree.attachEvent("onSelect", (id, mode) => {
+    this.tree.attachEvent('onSelect', (key, mode) => {
       if(!mode){
         return;
       }
-      const contour = editor.project.getItem({cnstr: Number(id)});
+      const {project} = editor;
+      const contour = project.getItem({class: Editor.Contour, key});
       if(contour){
-        if(editor.project.activeLayer != contour){
+        if(project.activeLayer != contour){
           contour.activate(true);
         }
         set_text(contour.presentation());
@@ -78,7 +77,7 @@ class SchemeLayers {
 
   layer_activated(contour) {
     const {tree} = this;
-    if(contour && !(contour instanceof Editor.ContourNestedContent) && contour.cnstr && tree && tree.getSelectedId && contour.cnstr != tree.getSelectedId()){
+    if(contour && contour.key && tree && tree.getSelectedId && contour.key != tree.getSelectedId()){
       // если выделено несколько створок, переносим выделение на раму
       const layers = [];
       const {project} = this.editor;
@@ -100,8 +99,8 @@ class SchemeLayers {
         }
       }
 
-      if(tree.items[contour.cnstr]){
-        tree.selectItem(contour.cnstr);
+      if(tree.items[contour.key]){
+        tree.selectItem(contour.key);
         this._set_text(contour.presentation());
       }
     }
@@ -114,7 +113,7 @@ class SchemeLayers {
     const {tree} = this;
     if(tree && tree.setItemText){
       const text = contour.presentation(bounds);
-      tree.setItemText(contour.cnstr, text);
+      tree.setItemText(contour.key, text);
       if(contour.project.activeLayer == contour){
         this._set_text(text);
       }
@@ -122,8 +121,8 @@ class SchemeLayers {
   }
 
   load_layer(layer) {
-    this.tree.addItem(layer.cnstr, layer.presentation(), layer.parent ? layer.parent.cnstr : 0);
-    this.tree.checkItem(layer.cnstr);
+    this.tree.addItem(layer.key, layer.presentation(), layer.parent ? layer.parent.key : 0);
+    this.tree.checkItem(layer.key);
     layer.contours.forEach((l) => this.load_layer(l));
   }
 
@@ -136,7 +135,7 @@ class SchemeLayers {
       tree.clearAll();
       project.contours.forEach((layer) => {
         this.load_layer(layer);
-        tree.openItem(layer.cnstr);
+        tree.openItem(layer.key);
       });
 
       const props = {
@@ -159,21 +158,21 @@ class SchemeLayers {
 
   drop_layer() {
     const {tree, editor: {project}} = this;
-    let cnstr = tree.getSelectedId(), l;
-    if(cnstr){
-      l = project.getItem({cnstr: Number(cnstr)});
+    let key = tree.getSelectedId(), l;
+    if(key){
+      l = project.getItem({class: Editor.Contour, key});
     }
     else if(l = project.activeLayer){
-      cnstr = l.cnstr;
+      key = l.key;
     }
-    if(cnstr && l){
-      tree.deleteItem(cnstr);
-      cnstr = l.parent ? l.parent.cnstr : 0;
+    if(key && l){
+      tree.deleteItem(key);
+      key = l.parent && l.parent.key;
       l.remove();
       setTimeout(() => {
         project.zoom_fit();
-        if(cnstr){
-          tree.selectItem(cnstr);
+        if(key){
+          tree.selectItem(key);
         }
       }, 100);
     }

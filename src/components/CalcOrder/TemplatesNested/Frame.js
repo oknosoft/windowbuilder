@@ -15,15 +15,10 @@ const {templates_nested} = job_prm.builder;
 
 function TemplatesFrame(props) {
   const [order, setOrder] = React.useState(_obj.calc_order);
-  const [step, setStep] = React.useState(0);
   const orderChange = (order) => {
-    setStep(0);
     setOrder(order);
   };
   const handleFin = () => {
-    if(!step) {
-      return setStep(1);
-    }
     if(_obj.base_block.empty() || _obj.base_block.calc_order !== _obj.calc_order) {
       return alert('Не выбрано изделие-шаблон');
     }
@@ -32,21 +27,18 @@ function TemplatesFrame(props) {
   return <>
     <SelectOrder _obj={_obj} onChange={orderChange} templates_nested={templates_nested} />
     <div style={{paddingTop: 8}}>
-      {step === 0 && templates_nested.includes(order) && <SelectFigure handleNext={() => setStep(1)} />}
-      {step === 1 && templates_nested.includes(order) && <SelectSys handleNext={handleFin} lock />}
+      <SelectFigure handleNext={handleFin} />
     </div>
     <DialogActions>
       <Button
         variant="contained"
-        disabled={step === 0}
-        onClick={() => setStep(0)}
+        disabled
       >Назад</Button>
       <Button
         variant="contained"
         color="primary"
-        //disabled={step != 1}
         onClick={handleFin}
-      >{step ? 'Ок' : 'Далее'}</Button>
+      >Ок</Button>
       <div style={{flex: 1}}></div>
     </DialogActions>
   </>;
