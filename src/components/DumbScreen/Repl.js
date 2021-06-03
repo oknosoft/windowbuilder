@@ -5,7 +5,7 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 
 class Repl extends Progress {
 
-  componentDidUpdate(prevProps, prevState, prevContext) {
+  componentDidUpdate() {
     const {state: {completed}, props: {info}} = this;
     const percent = !info.text && !info.index && info.docs_read * 100 /(info.docs_read + info.pending);
     percent && completed !== percent && this.setState({completed: percent});

@@ -6,7 +6,6 @@ import DialogActions from '@material-ui/core/DialogActions';
 
 import SelectOrder from './SelectOrder';
 import SelectFigure from 'wb-forms/dist/CalcOrder/Templates/SelectFigure';
-import SelectSys from 'wb-forms/dist/CalcOrder/Templates/SelectSys';
 
 
 const {cat: {templates}, job_prm} = $p;
@@ -14,7 +13,7 @@ const _obj = templates._select_template;
 const {templates_nested} = job_prm.builder;
 
 function TemplatesFrame(props) {
-  const [order, setOrder] = React.useState(_obj.calc_order);
+  const [order, setOrder] = React.useState(_obj.calc_order); /* eslint-disable-line */
   const orderChange = (order) => {
     setOrder(order);
   };
