@@ -3,7 +3,7 @@
  */
 
 $p.doc.calc_order.aggregate_stat = $p.wsql.alasql.compile(
-  `select state, department, doc, nom, sys, sum(quantity) quantity, sum(s) s, sum(amount) amount
+  `select state, department, doc, nom, sys, max(partner) partner, sum(quantity) quantity, sum(s) s, sum(amount) amount
    from ? group by state, department, doc, nom, sys`);
 
 $p.doc.calc_order.on('after_save', function (doc) {

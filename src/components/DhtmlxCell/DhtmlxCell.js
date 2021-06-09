@@ -79,14 +79,16 @@ class DhtmlxCell extends Component {
   checkSizes(props) {
     const {windowHeight, windowWidth} = props;
     const {el, layout} = this;
-    const height = (windowHeight > 480 ? windowHeight - 52 : 428).toFixed() + 'px';
-    const width = (windowWidth > 800 ? windowWidth - (height < 500 ? 20 : 0) : 800).toFixed() + 'px';
-    if (el.style.height != height || el.style.width != width) {
-      el.style.height = height;
-      el.style.width = width;
-      if (layout) {
-        layout.setSizes();
-        this.onReize();
+    if(el && layout) {
+      const height = (windowHeight > 480 ? windowHeight - 52 : 428).toFixed() + 'px';
+      const width = (windowWidth > 800 ? windowWidth - (height < 500 ? 20 : 0) : 800).toFixed() + 'px';
+      if (el.style.height != height || el.style.width != width) {
+        el.style.height = height;
+        el.style.width = width;
+        if (layout) {
+          layout.setSizes();
+          this.onReize();
+        }
       }
     }
   }

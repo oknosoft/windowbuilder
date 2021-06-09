@@ -7,6 +7,7 @@
  */
 
 import RepParams from 'wb-forms/dist/CalcOrder/FrmList/Params';
+import RevsDetales from '../../components/CalcOrder/RevsDetales';
 
 export default function ({doc, dp, utils, DocCalc_order}) {
   const {calc_order: _mgr} = doc;
@@ -26,6 +27,10 @@ export default function ({doc, dp, utils, DocCalc_order}) {
 
     RepParams: {
       value: RepParams,
+    },
+
+    RevsDetales: {
+      value: RevsDetales,
     },
 
     by_number_doc: {

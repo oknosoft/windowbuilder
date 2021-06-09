@@ -26,8 +26,8 @@
   },
   "homepage": "https://light.oknosoft.ru/",
   "proxy1": "https://develop.ecookna.ru/",
-  "proxy2": "https://start.ecookna.ru/",
-  "proxy": "https://zakaz.kaleva.ru:2019/",
+  "proxy": "https://dvlp.ecookna.ru/",
+  "proxy3": "https://zakaz.kaleva.ru:2019/",
   "proxy4": "https://info.tmk-online.ru/",
   "proxy5": "http://localhost:3016/",
   "dependencies": {
@@ -43,9 +43,9 @@
     "metadata-redux": "2.0.25-beta.2",
     "metadata-superlogin": "2.0.25-beta.2",
     "react-highlight-words": "^0.17",
-    "wb-core": "github:oknosoft/windowbuilder-core#6926371cb9fe3057e010c75c13ba2b1f94a4fa11",
+    "wb-core": "github:oknosoft/windowbuilder-core#953510f64c9304719cd396f7fd8edfc81f5959f0",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#701960fce2ea621aad7d6a50e78663c3a32c616c"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#608f82149459c7ccd22a7cd5da1f81d04671e7d5"
   },
   "devDependencies": {
     "@babel/core": "7.9.0",
