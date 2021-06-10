@@ -20,8 +20,6 @@ class DhtmlxCell extends Component {
 
   componentDidMount() {
 
-    this.checkSizes(this.props);
-
     const {el} = this;
     this.layout = new dhtmlXLayoutObject({
 
@@ -45,6 +43,7 @@ class DhtmlxCell extends Component {
         },
       ],
     });
+    this.checkSizes(this.props);
 
     if (!$p.iface.w) {
       $p.iface.w = new dhtmlXWindows();
@@ -76,8 +75,7 @@ class DhtmlxCell extends Component {
 
   }
 
-  checkSizes(props) {
-    const {windowHeight, windowWidth} = props;
+  checkSizes({windowHeight, windowWidth}) {
     const {el, layout} = this;
     if(el && layout) {
       const height = (windowHeight > 480 ? windowHeight - 52 : 428).toFixed() + 'px';

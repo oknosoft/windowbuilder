@@ -412,7 +412,7 @@ class Editor extends $p.EditorInvisible {
       this.handlers = handlers;
       const {params} = handlers.props.match;
       const {project} = this;
-      const {order, action} = $p.utils.prm();
+      const {order, action, skip} = $p.utils.prm();
       if(params.ref) {
         project.load(params.ref)
           .then(() => {
@@ -434,7 +434,17 @@ class Editor extends $p.EditorInvisible {
             if(isNaN(row.quantity)) {
               row.quantity = 1;
             }
-            if(action === 'refill' || action === 'new') {
+
+            if(skip) {
+              const {refill, sys, clr, params} = $p.cat.templates._select_template;
+              if(!sys.empty()) {
+                project.set_sys(sys, params, refill);
+              }
+              if(!clr.empty()) {
+                ox.clr = clr;
+              }
+            }
+            else if(action === 'refill' || action === 'new') {
               const {EditorInvisible: {BuilderElement, Onlay, Filling}, cat: {templates}, utils: {blank}} = $p;
               const {base_block, refill, sys, clr, params} = templates._select_template;
               if(!base_block.empty()) {
