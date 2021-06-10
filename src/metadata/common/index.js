@@ -5,7 +5,7 @@ import i18ru from './i18n.ru';
 import scale_svg from './scale_svg';
 import tools from '../tools';
 import static_load from './static_load';
-import templates_nested from '../../components/CalcOrder/TemplatesNested/dhtmlx';
+import templates_nested from 'wb-forms/dist/CalcOrder/TemplatesNested/dhtmlx';
 import {event_src} from 'metadata-superlogin/proxy/events';
 import qs from 'qs';
 
