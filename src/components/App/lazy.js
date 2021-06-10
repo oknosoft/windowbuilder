@@ -13,6 +13,7 @@ export const lazy = {
   DataTree: stub,
   DataObj: stub,
   FrmReport: stub,
+  FrmObj: stub,
 };
 
 import('metadata-react/DynList')
@@ -26,6 +27,10 @@ import('metadata-react/DynList')
   })
   .then(module => {
     lazy.DataObj = module.default;
+    return import('metadata-react/FrmObj');
+  })
+  .then(module => {
+    lazy.FrmObj = module.default;
     return import('metadata-react/FrmReport');
   })
   .then(module => {
