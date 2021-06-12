@@ -79,7 +79,7 @@ class ClientOfDealerSearch extends Component {
 
 ClientOfDealerSearch.propTypes = {
   classes: PropTypes.object.isRequired,
-  dialog: PropTypes.object.isRequired,
+  dialog: PropTypes.object,
   handlers: PropTypes.object.isRequired,
   handleCalck: PropTypes.func.isRequired,
   handleCancel: PropTypes.func.isRequired,

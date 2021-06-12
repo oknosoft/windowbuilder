@@ -74,7 +74,7 @@ export default class AdditionsGroups extends React.Component {
 }
 
 AdditionsGroups.propTypes = {
-  dialog: PropTypes.object.isRequired,
+  dialog: PropTypes.object,
 };
 
 

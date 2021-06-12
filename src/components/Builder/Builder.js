@@ -7,6 +7,7 @@ import {withIface} from 'metadata-redux';
 
 import {Prompt} from 'react-router-dom';
 import ToolWnd from './ToolWnds/ToolWnd';
+import {lazy} from '../App/lazy';
 
 class Builder extends DhtmlxCell {
 
@@ -52,9 +53,13 @@ class Builder extends DhtmlxCell {
   }
 
   render() {
+    const {match, dialog, ...other} = this.props;
+    const Dialog = dialog && dialog.ref && dialog.Component;
+
     return <div>
       <Prompt when message={this.prompt} />
       <div ref={el => this.el = el}/>
+      {Dialog && <Dialog handlers={this.handlers} dialog={dialog} owner={this} />}
     </div>;
   }
 

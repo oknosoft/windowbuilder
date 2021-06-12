@@ -4,19 +4,24 @@ import ReactDataGrid from 'react-data-grid';
 import {withStyles} from '@material-ui/styles';
 import Proto from 'wb-forms/dist/ObjHistory/RevsDetales';
 
-const styles = (theme) => ({
+export const styles = (theme) => ({
   root: {
     flexGrow: 1,
     marginRight: theme.spacing(),
   },
+  empty: {
+    margin: 'auto',
+    marginTop: 50,
+    textAlign: 'center',
+  }
 });
 
-const DateFormatter = ({value}) => {
+export const DateFormatter = ({value}) => {
   const values = moment(value).format(moment._masks.date_time).split(' ');
   return <div>{values[0]}<small>{` ${values[1]}`}</small></div>;
 };
 
-const NomFormatter = ({value}) => {
+export const NomFormatter = ({value}) => {
   const nom = $p.cat.nom.get(value);
   return nom.presentation;
 };
@@ -40,6 +45,8 @@ const columns_prod = [
   {key: 'amount', name: 'Сумма', width: 80, resizable: true},
 ];
 
+const EmptyRowsView = (classes) => () => <div className={classes.empty}>Укажите строку версии заказа (слева)</div>;
+
 class RevsDetales extends Proto {
 
   revs_rows(src) {
@@ -60,6 +67,19 @@ class RevsDetales extends Proto {
     }
     return Promise.resolve(rows);
   }
+
+  handleCx = (idx, {characteristic}) => {
+    const _mgr = $p.cat.characteristics;
+    const {props} = this;
+    _mgr.get(characteristic, 'promise').then((obj) => {
+      if(!obj || obj.empty() || obj.calc_order !== props.obj) {
+        console.log(characteristic);
+      }
+      else {
+        props.changeObj({obj, _mgr});
+      }
+    });
+  };
 
   render() {
     let {state: {rows, production}, props: {classes}} = this;
@@ -83,6 +103,8 @@ class RevsDetales extends Proto {
             columns={columns_prod}
             rowGetter={i => production[i]}
             rowsCount={production.length}
+            onRowDoubleClick={this.handleCx}
+            emptyRowsView={EmptyRowsView(classes)}
           />
         </Grid>
       </Grid>

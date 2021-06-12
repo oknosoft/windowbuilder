@@ -214,7 +214,8 @@ class Editor extends $p.EditorInvisible {
         {name: 'dxf', text: 'DXF', tooltip: 'Экспорт в DXF', float: 'left', width: '30px'},
         {name: 'fragment', text: 'F', tooltip: 'Фрагмент', float: 'left', width: '20px'},
 
-        {name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть без сохранения', float: 'right'}
+        {name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть без сохранения', float: 'right'},
+        {name: 'history', text: '<i class="fa fa-history fa-fw"></i>', tooltip: 'История', float: 'right'}
 
 
       ], onclick: function (name) {
@@ -266,6 +267,12 @@ class Editor extends $p.EditorInvisible {
 
         case 'dxf':
           $p.md.emit('dxf', _editor.project);
+          break;
+
+        case 'history':
+          const {ox} = _editor.project;
+          const tmp = {ref: ox.ref, _mgr: ox._manager, cmd: {hfields: null, db: null, area: 'Builder'}};
+          $p.dp.buyers_order.open_component(pwnd, tmp, handlers, 'ObjHistory', tmp.cmd.area);
           break;
 
         case 'fragment':

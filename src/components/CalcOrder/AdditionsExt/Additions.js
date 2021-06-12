@@ -65,7 +65,7 @@ class Additions extends React.Component {
 }
 
 Additions.propTypes = {
-  dialog: PropTypes.object.isRequired,
+  dialog: PropTypes.object,
 };
 
 export default Additions;

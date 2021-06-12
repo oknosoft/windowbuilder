@@ -108,7 +108,7 @@ class Inbox extends Progress {
 }
 
 Inbox.propTypes = {
-  dialog: PropTypes.object.isRequired,
+  dialog: PropTypes.object,
 };
 
 export default Inbox;
