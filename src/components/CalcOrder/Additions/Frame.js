@@ -94,7 +94,7 @@ class ParametricFrame extends React.Component {
 ParametricFrame.propTypes = {
   Content: PropTypes.oneOfType([PropTypes.object, PropTypes.func]).isRequired,
   title: PropTypes.string.isRequired,
-  dialog: PropTypes.object.isRequired,
+  dialog: PropTypes.object,
   actions: PropTypes.object,
   handlers: PropTypes.object.isRequired,
   handleCalck: PropTypes.func.isRequired,

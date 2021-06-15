@@ -95,9 +95,9 @@ class CalcOrderList extends DhtmlxCell {
 CalcOrderList.rname = 'CalcOrderList';
 
 CalcOrderList.propTypes = {
-  dialog: PropTypes.object.isRequired,
+  dialog: PropTypes.object,
   location: PropTypes.object,
-  state_filter: PropTypes.object,
+  state_filter: PropTypes.string,
   handleNavigate: PropTypes.func.isRequired,
   handleIfaceState: PropTypes.func.isRequired,
 };

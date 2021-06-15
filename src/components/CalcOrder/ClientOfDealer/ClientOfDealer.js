@@ -141,7 +141,7 @@ class ClientOfDealer extends Component {
 }
 
 ClientOfDealer.propTypes = {
-  dialog: PropTypes.object.isRequired,
+  dialog: PropTypes.object,
   handlers: PropTypes.object.isRequired,
   handleCalck: PropTypes.func.isRequired,
   handleCancel: PropTypes.func.isRequired,

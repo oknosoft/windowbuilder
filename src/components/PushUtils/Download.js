@@ -67,7 +67,7 @@ class Download extends Progress {
 }
 
 Download.propTypes = {
-  dialog: PropTypes.object.isRequired,
+  dialog: PropTypes.object,
   handleCancel: PropTypes.func.isRequired,
 };
 

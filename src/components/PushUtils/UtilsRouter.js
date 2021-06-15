@@ -99,7 +99,7 @@ class UtilsRouter extends Component {
 }
 
 UtilsRouter.propTypes = {
-  dialog: PropTypes.object.isRequired,
+  dialog: PropTypes.object,
   handlers: PropTypes.object.isRequired,
   handleCalck: PropTypes.func.isRequired,
   handleCancel: PropTypes.func.isRequired,

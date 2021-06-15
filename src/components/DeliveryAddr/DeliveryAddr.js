@@ -349,7 +349,7 @@ class DeliveryAddr extends Component {
 }
 
 DeliveryAddr.propTypes = {
-  dialog: PropTypes.object.isRequired,
+  dialog: PropTypes.object,
   delivery: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
   handlers: PropTypes.object.isRequired,

@@ -150,7 +150,7 @@ class Share extends Component {
 }
 
 Share.propTypes = {
-  dialog: PropTypes.object.isRequired,
+  dialog: PropTypes.object,
 };
 
 export default Share;
