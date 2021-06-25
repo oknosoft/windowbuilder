@@ -147,7 +147,7 @@ class Editor extends $p.EditorInvisible {
      * @type OTooolBar
      * @private
      */
-    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '350px',
+    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '376px',
       image_path: '/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
@@ -159,7 +159,7 @@ class Editor extends $p.EditorInvisible {
         {name: 'cut', css: 'tb_cursor-cut', tooltip: 'Тип соединения'},
         {name: 'fx', text: '<i class="fa fa-magic fa-fw"></i>', tooltip: 'Действия', sub:
             {
-              width: '120px',
+              width: '124px',
               height:'28px',
               align: 'hor',
               buttons: [
@@ -171,8 +171,9 @@ class Editor extends $p.EditorInvisible {
             }},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
         {name: 'stulp_flap', css: 'tb_stulp_flap', tooltip: 'Штульповые створки'},
-        {name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
+        {name: 'vitrazh', text: '<i class="fa fa-film"></i>', tooltip: 'Витраж'},
         {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'},
+        {name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
       ],
       onclick: (name) => _editor.select_tool(name),
       on_popup: (popup, bdiv) => {
@@ -403,6 +404,11 @@ class Editor extends $p.EditorInvisible {
      * Вставка штульповых створок
      */
     new Editor.ToolStulpFlap();
+
+    /**
+     * Рисование витража
+     */
+    new Editor.ToolVitrazh();
 
     /**
      * Таблица координат

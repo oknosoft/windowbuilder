@@ -1,16 +1,16 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import DataField from 'metadata-react/DataField';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
 import withStyles, {extClasses} from 'metadata-react/DataField/stylesPropertyGrid';
+import VitrazhTabs from './VitrazhTabs';
 
 function VitrazhWnd({editor, classes}) {
   const {tool} = editor;
-  const {profile} = tool;
+  const {_obj} = tool;
   const ext = extClasses(classes);
-  return <div>
-    <DataField _obj={profile} _fld="elm_type" extClasses={ext} fullWidth/>
-  </div>;
+  return <VitrazhTabs _obj={_obj} ext={ext}/>;
 }
 
 VitrazhWnd.propTypes = {
