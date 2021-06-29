@@ -8,12 +8,35 @@
 
 import ToolWnd from '../../components/Builder/ToolWnds/VitrazhWnd';
 
-export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {builder_pen}, cat: {characteristics}, utils, ui: {dialogs}}) {
+export default function tool_vitrazh ({Editor, classes: {BaseDataObj}, dp: {builder_lay_impost}, cat: {characteristics}, utils, ui: {dialogs}}) {
 
   const {ToolElement, Filling, Profile} = Editor;
   const {Path} = Object.getPrototypeOf(Editor).prototype;
 
   class ToolVitrazh extends ToolElement {
+
+    constructor() {
+      super();
+      Object.assign(this, {
+        options: {name: 'vitrazh'},
+        _obj: null,
+      });
+      this.on({
+        activate: this.on_activate,
+        deactivate: this.on_deactivate,
+      });
+    }
+
+    on_activate() {
+      super.on_activate('cursor-text-select');
+      const {options, project} = this;
+      this._scope.tb_left.select(options.name);
+      this._obj = builder_lay_impost.create();
+    }
+
+    on_deactivate() {
+      this._obj = null;
+    }
 
   }
 
