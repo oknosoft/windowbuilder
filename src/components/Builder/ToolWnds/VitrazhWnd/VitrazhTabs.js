@@ -4,8 +4,13 @@ import PropTypes from 'prop-types';
 import {Tabs} from 'wb-forms/dist/Common/AntTabs';
 import Tab from '@material-ui/core/Tab';
 import Dimensions from './Dimensions';
+import Sizes from './Sizes';
 
-export default function VitrazhTabs({_obj, ext}) {
+export default function VitrazhTabs({editor, ext}) {
+
+  const {tool} = editor;
+  const {_obj} = tool;
+
   const [value, setValue] = React.useState(0);
 
   const handleChange = (event, newValue) => {
@@ -25,8 +30,8 @@ export default function VitrazhTabs({_obj, ext}) {
         <Tab label="Высоты" />
       </Tabs>
       {value === 0 && <Dimensions _obj={_obj} ext={ext}/>}
-      {value === 1 && <div>Размеры по ширине</div>}
-      {value === 2 && <div>Размеры по высоте</div>}
+      {value === 1 && <Sizes _obj={_obj} elm={0}/>}
+      {value === 2 && <Sizes _obj={_obj} elm={1}/>}
     </div>
   );
 }

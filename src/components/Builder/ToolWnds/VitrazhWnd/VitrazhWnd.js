@@ -7,10 +7,8 @@ import withStyles, {extClasses} from 'metadata-react/DataField/stylesPropertyGri
 import VitrazhTabs from './VitrazhTabs';
 
 function VitrazhWnd({editor, classes}) {
-  const {tool} = editor;
-  const {_obj} = tool;
   const ext = extClasses(classes);
-  return <VitrazhTabs _obj={_obj} ext={ext}/>;
+  return <VitrazhTabs editor={editor} ext={ext}/>;
 }
 
 VitrazhWnd.propTypes = {
