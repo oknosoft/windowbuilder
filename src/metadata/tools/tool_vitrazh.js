@@ -34,21 +34,7 @@ export default function tool_vitrazh ({Editor, classes: {BaseDataObj}, dp: {buil
       _scope.tb_left && _scope.tb_left.select(options.name);
       if(!project._attr._vitrazh) {
         const obj = builder_lay_impost.create();
-        if(!project.contours.length) {
-          Editor.Contour.create({project});
-        }
-        const {bounds, l_dimensions} = project.contours[0];
-        obj.w = bounds.width;
-        obj.h = bounds.height;
-        for(const dl of l_dimensions.ihor.sizes()) {
-          obj.sizes.add({elm: 1, sz: dl.size});
-          obj.elm_by_y++;
-        }
-        for(const dl of l_dimensions.ivert.sizes()) {
-          obj.sizes.add({elm: 0, sz: dl.size});
-          obj.elm_by_x++;
-        }
-        project._attr._vitrazh = obj;
+        obj.init_vitrazh(project, Editor);
       }
       this._obj = project._attr._vitrazh;
     }
