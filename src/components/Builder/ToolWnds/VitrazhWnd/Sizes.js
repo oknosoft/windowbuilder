@@ -1,9 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import ReactDataGrid from 'react-data-grid';
+import {SzEditor, SzFormatter} from './SzCell';
 
 const columns = [
-  {key: 'sz', name: 'Размер'}
+  {key: 'sz', name: 'Размер', editor: SzEditor, formatter: SzFormatter}
 ];
 
 export default function Sizes({_obj, elm}) {
@@ -17,5 +18,6 @@ export default function Sizes({_obj, elm}) {
     columns={columns}
     rowGetter={i => rows[i]}
     rowsCount={rows.length}
+    enableCellSelect
   />;
 }
