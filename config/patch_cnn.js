@@ -16,6 +16,22 @@ export const predefined = {
     keys: keys21,
     ram_indexer: false,
   },
+  'develop.ecookna.ru:2111': {
+    zone: 11,
+    host: 'https://develop.ecookna.ru:2111/',
+    splash: {css: 'splash21', title: false},
+    log_level: 'warn',
+    keys: keys21,
+    ram_indexer: false,
+  },
+  'develop.ecookna.ru': {
+    zone: 10,
+    host: 'https://develop.ecookna.ru/',
+    splash: {css: 'splash21', title: false},
+    log_level: 'warn',
+    keys: keys21,
+    ram_indexer: false,
+  },
   'ecookna.': {
     zone: 21,
     host: 'https://zakaz.ecookna.ru/',
@@ -105,6 +121,7 @@ export function patch_prm(settings) {
         if(predefined[elm].host && !predefined[elm].host.match(elm)) {
           location.replace(predefined[elm].host);
         }
+        break;
       }
     }
     return prm;
@@ -132,6 +149,7 @@ export function patch_cnn() {
           }
         }
       });
+      break;
     }
   }
 
