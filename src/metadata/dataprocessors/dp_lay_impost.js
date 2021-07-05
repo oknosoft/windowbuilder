@@ -37,6 +37,8 @@ export default function ($p) {
       const {bounds, l_dimensions} = project.contours[0];
       this.w = bounds.width;
       this.h = bounds.height;
+      // надо переделать с умом, чтобы на старте дроби и или * подставлялись,
+      // а миллиметры только для ячеек, размер которых существенно выбивается из ряда
       for(const dl of l_dimensions.ihor.sizes()) {
         this.sizes.add({elm: 1, sz: dl.size});
         this.elm_by_y++;
@@ -80,6 +82,7 @@ export default function ($p) {
 
       return {hor, vert};
     }
+
   }
 
   class DpBuilderLayImpostSizesRow extends $p.DpBuilder_lay_impostSizesRow {
