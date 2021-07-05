@@ -3,20 +3,13 @@ import Grid from '@material-ui/core/Grid';
 import ReactDataGrid from 'react-data-grid';
 import {withStyles} from '@material-ui/styles';
 import Proto from 'wb-forms/dist/ObjHistory/RevsDetales';
-import {DateFormatter, NomFormatter, styles} from '../CalcOrder/RevsDetales';
+import Left from './Left';
+import {styles} from '../CalcOrder/RevsDetales';
 
 const PropFormatter = ({value}) => value ? value.presentation : '';
 
 const EmptyRowsView = (classes) => () => <div className={classes.empty}>Укажите строку версии продукции (слева)</div>;
 
-const columns_doc = [
-  {key: 'date', name: 'Дата', width: 140, resizable: true, formatter: DateFormatter},
-  {key: 'user', name: 'Автор', resizable: true},
-  {key: 'owner', name: 'Номенклатура', resizable: true, formatter: NomFormatter},
-  {key: 'x', name: 'X', width: 70, resizable: true},
-  {key: 'y', name: 'Y', width: 70, resizable: true},
-  {key: 's', name: 'S', width: 70, resizable: true},
-];
 
 const columns_prop = [
   {key: 'cnstr', name: 'Слой', width: 70, resizable: true},
@@ -47,6 +40,11 @@ class RevsDetales extends Proto {
     return props.isRoot;
   };
 
+  set_params = ({rowIdx}) => {
+    const {params, svg} = this.state.rows[rowIdx];
+    this.setState({params, svg});
+  };
+
   filter_params(tx, tparams) {
     const res = [];
     if(tparams) {
@@ -64,7 +62,7 @@ class RevsDetales extends Proto {
     const rows = [];
     const tx = $p.cat.characteristics.create({}, false, true);
 
-    for(const {timestamp, _rev, owner, params, x, y, s} of src) {
+    for(const {timestamp, _rev, owner, params, specification, x, y, s, svg} of src) {
       if(timestamp) {
         const row = {
           _rev,
@@ -75,6 +73,7 @@ class RevsDetales extends Proto {
           x,
           y,
           s,
+          svg,
         };
         rows.push(row);
       }
@@ -85,21 +84,14 @@ class RevsDetales extends Proto {
   };
 
   render() {
-    let {state: {rows, params}, props: {classes}} = this;
+    let {state: {rows, params, svg}, props: {classes}} = this;
     if(!params) {
       params = [];
     }
     return rows ? <div className={classes.root}>
       <Grid container spacing={1}>
         <Grid item sm={12} md={5}>
-          <ReactDataGrid
-            columns={columns_doc}
-            rowGetter={i => rows[i]}
-            rowsCount={rows.length}
-            onCellSelected={({rowIdx}) => {
-              this.setState({params: rows[rowIdx].params});
-            }}
-          />
+          <Left rows={rows} set_params={this.set_params} svg={svg}/>
         </Grid>
         <Grid item sm={12} md={7}>
           <ReactDataGrid
