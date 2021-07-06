@@ -43,6 +43,32 @@ export default function tool_vitrazh ({Editor, classes: {BaseDataObj}, dp: {buil
       this._obj = null;
     }
 
+    /**
+     * Двигает профили в соответствии с массивами размеров
+     * @param {number[]} hor
+     * @param {number[]} vert
+     */
+    apply_sizes({hor, vert}) {
+
+    }
+
+    /**
+     * Добавляет к изделию ряд ячеек
+     * при необходимости, добавляет или растягивает профили
+     * @param {('left'|'right'|'top'|'bottom')} pos
+     */
+    add_section(pos) {
+
+    }
+
+    /**
+     * Удаляет секцию. При необходимости, удаляет или укорачивает профили
+     * @param {('left'|'right'|'top'|'bottom')} pos
+     */
+    remove_section(pos) {
+
+    }
+
   }
 
   ToolVitrazh.ToolWnd = ToolWnd;
