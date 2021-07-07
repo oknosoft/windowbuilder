@@ -236,17 +236,24 @@ class StvProps {
     const attr = {
       obj: obj,
       oxml: {
-        "Фурнитура": ["furn", "direction", "h_ruch"],
-        "Параметры": []
+        Фурнитура: ['furn'],
+        Параметры: []
       },
-      ts: "params",
-      ts_title: "Параметры",
+      ts: 'params',
+      ts_title: 'Параметры',
       selection: {
         cnstr: obj.cnstr || -9999,
         inset: $p.utils.blank.guid,
         hide: {not: true}
       }
     };
+
+    if(obj.layer) {
+      attr.oxml.Фурнитура.push('direction', 'h_ruch');
+    }
+    if(obj.project._dp.sys.show_flipped) {
+      attr.oxml.Фурнитура.push('flipped');
+    }
 
     // создаём или переподключаем грид
     if(!this._grid){
@@ -2487,22 +2494,21 @@ class GlassInserts {
 
     this.wnd.elmnts.grids.inserts = this.wnd.attachTabular({
       obj: project.ox,
-      ts: "glass_specification",
+      ts: 'glass_specification',
       selection: {elm: elm.elm},
-      toolbar_struct: injected_data["toolbar_glass_inserts.xml"],
+      toolbar_struct: injected_data['toolbar_glass_inserts.xml'],
       ts_captions: {
-        fields: ["inset", "clr"],
-        headers: "Вставка,Цвет",
-        widths: "*,*",
-        min_widths: "100,100",
-        aligns: "",
-        sortings: "na,na",
-        types: "ref,ref"
+        fields: ['inset', 'clr'],
+        headers: 'Вставка,Цвет',
+        widths: '*,*',
+        min_widths: '100,100',
+        aligns: '',
+        sortings: 'na,na',
+        types: 'ref,ref'
       }
     });
-    this.wnd.attachEvent("onClose", this.onclose.bind(this));
-
-    this.wnd.getAttachedToolbar().attachEvent("onclick", this.btn_click.bind(this));
+    this.wnd.attachEvent('onClose', this.onclose.bind(this));
+    this.wnd.getAttachedToolbar().attachEvent('onclick', this.btn_click.bind(this));
   }
 
   onclose() {

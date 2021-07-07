@@ -227,17 +227,24 @@ class StvProps {
     const attr = {
       obj: obj,
       oxml: {
-        "Фурнитура": ["furn", "direction", "h_ruch"],
-        "Параметры": []
+        Фурнитура: ['furn'],
+        Параметры: []
       },
-      ts: "params",
-      ts_title: "Параметры",
+      ts: 'params',
+      ts_title: 'Параметры',
       selection: {
         cnstr: obj.cnstr || -9999,
         inset: $p.utils.blank.guid,
         hide: {not: true}
       }
     };
+
+    if(obj.layer) {
+      attr.oxml.Фурнитура.push('direction', 'h_ruch');
+    }
+    if(obj.project._dp.sys.show_flipped) {
+      attr.oxml.Фурнитура.push('flipped');
+    }
 
     // создаём или переподключаем грид
     if(!this._grid){
