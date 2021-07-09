@@ -36,22 +36,21 @@ class GlassInserts {
 
     this.wnd.elmnts.grids.inserts = this.wnd.attachTabular({
       obj: project.ox,
-      ts: "glass_specification",
+      ts: 'glass_specification',
       selection: {elm: elm.elm},
-      toolbar_struct: injected_data["toolbar_glass_inserts.xml"],
+      toolbar_struct: injected_data['toolbar_glass_inserts.xml'],
       ts_captions: {
-        fields: ["inset", "clr"],
-        headers: "Вставка,Цвет",
-        widths: "*,*",
-        min_widths: "100,100",
-        aligns: "",
-        sortings: "na,na",
-        types: "ref,ref"
+        fields: ['inset', 'clr'],
+        headers: 'Вставка,Цвет',
+        widths: '*,*',
+        min_widths: '100,100',
+        aligns: '',
+        sortings: 'na,na',
+        types: 'ref,ref'
       }
     });
-    this.wnd.attachEvent("onClose", this.onclose.bind(this));
-
-    this.wnd.getAttachedToolbar().attachEvent("onclick", this.btn_click.bind(this));
+    this.wnd.attachEvent('onClose', this.onclose.bind(this));
+    this.wnd.getAttachedToolbar().attachEvent('onclick', this.btn_click.bind(this));
   }
 
   onclose() {
