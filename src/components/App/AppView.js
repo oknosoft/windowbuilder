@@ -43,7 +43,8 @@ class AppRoot extends Component {
   }
 
   componentDidMount() {
-    $p.ui.dialogs.init({handleIfaceState: this.props.handleIfaceState, lazy});
+    const {handleNavigate, handleIfaceState} = this.props;
+    $p.ui.dialogs.init({handleIfaceState, handleNavigate, lazy});
     let comp;
     if($p.wsql.get_user_param('ram_indexer')) {
       comp = import('wb-forms/dist/CalcOrder/FrmList/CalcOrderList');

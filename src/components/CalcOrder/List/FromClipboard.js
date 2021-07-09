@@ -12,9 +12,19 @@ const useStyles = makeStyles({
   },
 });
 
+const wrong = 'В буфере обмена нет корректных данных о заказе';
+const processing = 'Обработка данных...\nДлительная операция';
+
 const presentation = (raw) => {
-  const date = moment(raw.date);
-  return `Расчет-заказ №${raw.number_doc} от ${date.format('LL')}`;
+  if(raw && typeof raw === 'string') {
+    return raw;
+  }
+  if(raw && raw.date && raw.number_doc) {
+    const date = moment(raw.date);
+    return `Расчет-заказ №${raw.number_doc} от ${date.format('LL')}
+cтрок: ${raw.production.length}, сумма: ${raw.doc_amount}, автор: ${$p.cat.users.get(raw.manager).toString()}`;
+  }
+  return '';
 };
 
 export default function FromClipboard({queryClose}) {
@@ -22,29 +32,68 @@ export default function FromClipboard({queryClose}) {
   const classes = useStyles();
   const [enable_clone, setClone] = React.useState(false);
   const [enable_copy, setCopy] = React.useState(false);
-  const [descr, setDescr] = React.useState('');
+  const [raw, setRaw] = React.useState({});
+
   const onPaste = async ({clipboardData}) => {
-    const wrong = 'В буфере обмена нет корректных данных о заказе';
+
     try {
       const text = clipboardData.getData('text/plain');
-      const raw = JSON.parse(text);
-      if(raw.ref && raw.class_name === 'doc.calc_order') {
-        setDescr(presentation(raw));
+      const tmp = JSON.parse(text);
+      if(tmp.ref && tmp.class_name === 'doc.calc_order') {
+        setRaw(tmp);
+        // если заказ существует в текущем кластере - разрешаем только копирование
+        // если сохраненного заказа нет и у пользователя мощная роль - разрешаем клон
+        // TODO: на время отладки, проверку делаем только в текущей базе
+        const {current_user, doc: {calc_order}} = $p;
+        const doc = await calc_order.get(tmp.ref, 'promise');
+        setCopy(true);
+        if(doc.is_new() &&
+          (current_user.role_available('СогласованиеРасчетовЗаказов') ||
+            current_user.role_available('РедактированиеЦен') ||
+            current_user.roles.includes('doc_full'))) {
+          setClone(true);
+        }
       }
       else {
-        setDescr(wrong);
+        setRaw(wrong);
       }
     }
     catch (e) {
-      setDescr(wrong);
+      setRaw(wrong);
     }
   };
   const onKeyDown = (e) => {
     if(e.key === 'Backspace' || e.key === 'Delete') {
       e.preventDefault();
       e.stopPropagation();
-      setDescr('');
+      setRaw({});
+      setClone(false);
+      setCopy(false);
     }
+  };
+
+  const copy = () => {
+    const src = raw;
+    Object.defineProperty(src, 'refill_props', {
+      value: true,
+      enumerable: false,
+      configurable: true,
+    });
+    setRaw(processing);
+    const {doc: {calc_order}, ui: {dialogs}} = $p;
+    calc_order
+      .clone(src)
+      .then((doc) => {
+        queryClose();
+        dialogs.handleNavigate(`/doc.calc_order/${doc.ref}`);
+      })
+      .catch((e) => {
+        setRaw(e.message);
+      });
+  };
+
+  const clone = () => {
+    queryClose();
   };
 
   return <Dialog
@@ -52,18 +101,18 @@ export default function FromClipboard({queryClose}) {
     title="Импорт заказа"
     onClose={queryClose}
     actions={[
-      <Button key="clone" onClick={queryClose} disabled={!enable_clone}>Вставить клон</Button>,
-      <Button key="copy" onClick={queryClose} disabled={!enable_copy}>Создать копию</Button>,
+      <Button key="clone" onClick={clone} disabled={!enable_clone}>Вставить клон</Button>,
+      <Button key="copy" onClick={copy} disabled={!enable_copy}>Создать копию</Button>,
       <Button key="cancel" onClick={queryClose} color="primary">Закрыть</Button>
     ]}
   >
     <textarea
-      readOnly
       className={classes.text}
       placeholder="Вставьте сюда содержимое буфера обмена..."
-      value={descr}
+      value={presentation(raw)}
       onPaste={onPaste}
       onKeyDown={onKeyDown}
+      onChange={() => null}
     />
   </Dialog>;
 }
