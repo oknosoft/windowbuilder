@@ -16,6 +16,14 @@ class GlassInserts {
       return ui.dialogs.alert({title: msg.glass_spec, text: msg.glass_invalid_type});
     }
 
+    if(elm.inset.empty()){
+      return $p.msg.show_msg({
+        type: "alert-info",
+        text: 'Укажите вставку для заполнения',
+        title: $p.msg.glass_spec
+      });
+    }
+
     this.elm = elm;
     this.glasses = glasses;
 
