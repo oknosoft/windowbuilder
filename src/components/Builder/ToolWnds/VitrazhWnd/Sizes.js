@@ -21,3 +21,8 @@ export default function Sizes({_obj, elm}) {
     enableCellSelect
   />;
 }
+
+Sizes.propTypes = {
+  _obj: PropTypes.object.isRequired,
+  elm: PropTypes.number,
+};

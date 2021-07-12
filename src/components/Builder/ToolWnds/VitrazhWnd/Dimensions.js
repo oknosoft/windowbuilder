@@ -13,3 +13,9 @@ export default function Dimensions({_obj, ext}) {
   </div>;
 
 }
+
+Dimensions.propTypes = {
+  _obj: PropTypes.object.isRequired,
+  ext: PropTypes.object,
+};
+

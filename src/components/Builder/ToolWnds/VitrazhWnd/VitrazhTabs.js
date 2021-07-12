@@ -35,3 +35,8 @@ export default function VitrazhTabs({editor, ext}) {
     </div>
   );
 }
+
+VitrazhTabs.propTypes = {
+  editor: PropTypes.object.isRequired,
+  ext: PropTypes.object,
+};

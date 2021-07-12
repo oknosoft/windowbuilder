@@ -9,10 +9,9 @@
 // http://localhost:3000/builder/b0b0fcf0-d593-11eb-8d4e-01b541f37852
 import ToolWnd from '../../components/Builder/ToolWnds/VitrazhWnd';
 
-export default function tool_vitrazh ({Editor, classes: {BaseDataObj}, dp: {builder_lay_impost}, cat: {characteristics}, utils, ui: {dialogs}}) {
+export default function tool_vitrazh ({Editor, dp: {builder_lay_impost}}) {
 
-  const {ToolElement, Filling, Profile} = Editor;
-  const {Path} = Object.getPrototypeOf(Editor).prototype;
+  const {ToolElement} = Editor;
 
   class ToolVitrazh extends ToolElement {
 

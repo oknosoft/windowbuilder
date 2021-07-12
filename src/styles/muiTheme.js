@@ -1,8 +1,8 @@
-import {createMuiTheme} from '@material-ui/core/styles';
+import {createTheme} from '@material-ui/core/styles';
 import teal from '@material-ui/core/colors/blueGrey';
 
 
-const theme = createMuiTheme({
+const theme = createTheme({
 
   palette: {
     primary: teal, // Purple and green play nicely together.

@@ -1,7 +1,6 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import DataGrid from 'react-data-grid';
-
-console.log(DataGrid.editors);
 
 function SzFormatter({value}) {
   // пустое значение или *, отображаем, как *
@@ -10,6 +9,10 @@ function SzFormatter({value}) {
   }
   return <div>{value}</div>;
 }
+
+SzFormatter.propTypes = {
+  value: PropTypes.any,
+};
 
 class SzEditor extends DataGrid.editors.SimpleTextEditor {
 
