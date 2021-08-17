@@ -9,22 +9,26 @@ export default function ($p) {
   const {positions} = $p.enm;
 
   class DpBuilderLayImpost extends $p.DpBuilder_lay_impost {
-
+    /*комментируем новый код есть варианты доработать
+    до  работоспособного состояния*/
     // при смене типа элемента, устанавливаем вставки по умолчанию
-    value_change(field, type, value) {
-      if(field == 'elm_type') {
-        const {project} = paper;
-        this.inset_by_y = project.default_inset({
-          elm_type: value,
-          pos: positions.ЦентрГоризонталь
-        });
-        this.inset_by_x = project.default_inset({
-          elm_type: value,
-          pos: positions.ЦентрВертикаль
-        });
-        this.rama_impost = project._dp.sys.inserts([value]);
-      }
-    }
+    /*в текущем контектсе передается строка
+    далее по контексту требуется обект перечисления
+    */
+    // value_change(field, type, value) {
+    //   if(field == 'elm_type') {
+    //     const {project} = paper;
+    //     this.inset_by_y = project.default_inset({
+    //       elm_type: value,
+    //       pos: positions.ЦентрГоризонталь
+    //     });
+    //     this.inset_by_x = project.default_inset({
+    //       elm_type: value,
+    //       pos: positions.ЦентрВертикаль
+    //     });
+    //     this.rama_impost = project._dp.sys.inserts([value]);
+    //   }
+    // }
 
     // начальное заполнение, когда обработку создали из инструмента Витраж
     init_vitrazh() {
@@ -99,5 +103,3 @@ export default function ($p) {
   $p.DpBuilder_lay_impostSizesRow = DpBuilderLayImpostSizesRow;
 
 }
-
-
