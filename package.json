@@ -19,21 +19,21 @@
     "windows calculator"
   ],
   "author": "Evgeniy Malyarov <info@oknosoft.ru> (http://www.oknosoft.ru)",
-  "license": "SEE LICENSE IN LICENSE.en.md",
+  "license": "SEE LICENSE IN LICENSE.md",
   "private": true,
   "bugs": {
     "url": "https://github.com/oknosoft/windowbuilder/issues"
   },
   "homepage": "https://light.oknosoft.ru/",
-  "proxy": "https://develop.ecookna.ru/",
+  "proxy1": "https://develop.ecookna.ru/",
   "proxy2": "https://dvlp.ecookna.ru/",
   "proxy3": "https://zakaz.kaleva.ru:2019/",
-  "proxy4": "https://info.tmk-online.ru/",
+  "proxy": "https://info.tmk-online.ru/",
   "proxy5": "http://localhost:3016/",
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
-    "@turf/points-within-polygon": "^6.4",
-    "dxf-writer": "^1.9",
+    "@turf/points-within-polygon": "^6.5",
+    "dxf-writer": "^1.10",
     "md5-file": "^5.0",
     "metadata-abstract-ui": "2.0.25-beta.4",
     "metadata-core": "2.0.25-beta.4",
@@ -43,9 +43,10 @@
     "metadata-redux": "2.0.25-beta.4",
     "metadata-superlogin": "2.0.25-beta.4",
     "react-highlight-words": "^0.17",
-    "wb-core": "github:oknosoft/windowbuilder-core#cc7b70a1516c0700174a5b9754ea62f367d40900",
+    "wb-core": "github:oknosoft/windowbuilder-core#3514715306f7d6b9b216f69554e6fd6e2cf50963",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#8112473d5eabf1f76f8f39c76583cf0589c076d8"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#8112473d5eabf1f76f8f39c76583cf0589c076d8",
+    "print": "file:../ecookna"
   },
   "devDependencies": {
     "@babel/core": "7.9.0",

@@ -35,4 +35,10 @@ export default function ($p) {
   common($p);
   export_dxf($p);
   documents($p);
+
+  // подключаем печатные формы
+  import('print')
+    .then((module) => {
+      module.default($p);
+    });
 }
