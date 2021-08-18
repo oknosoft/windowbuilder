@@ -6,29 +6,9 @@
 
 export default function ($p) {
 
-  const {positions} = $p.enm;
+  const {dp, enm: {positions}} = $p;
 
   class DpBuilderLayImpost extends $p.DpBuilder_lay_impost {
-    /*комментируем новый код есть варианты доработать
-    до  работоспособного состояния*/
-    // при смене типа элемента, устанавливаем вставки по умолчанию
-    /*в текущем контектсе передается строка
-    далее по контексту требуется обект перечисления
-    */
-    // value_change(field, type, value) {
-    //   if(field == 'elm_type') {
-    //     const {project} = paper;
-    //     this.inset_by_y = project.default_inset({
-    //       elm_type: value,
-    //       pos: positions.ЦентрГоризонталь
-    //     });
-    //     this.inset_by_x = project.default_inset({
-    //       elm_type: value,
-    //       pos: positions.ЦентрВертикаль
-    //     });
-    //     this.rama_impost = project._dp.sys.inserts([value]);
-    //   }
-    // }
 
     // начальное заполнение, когда обработку создали из инструмента Витраж
     init_vitrazh() {
@@ -62,7 +42,6 @@ export default function ($p) {
       if(paper.tool === this) {
         return;
       }
-
     }
 
     /**
@@ -101,5 +80,23 @@ export default function ($p) {
 
   $p.DpBuilder_lay_impost = DpBuilderLayImpost;
   $p.DpBuilder_lay_impostSizesRow = DpBuilderLayImpostSizesRow;
+
+  dp.builder_lay_impost.on({
+
+    value_change(attr, obj) {
+      if(attr.field == 'elm_type') {
+        const {project} = paper;
+        obj.inset_by_y = project.default_inset({
+          elm_type: obj.elm_type,
+          pos: positions.ЦентрГоризонталь
+        });
+        obj.inset_by_x = project.default_inset({
+          elm_type: obj.elm_type,
+          pos: positions.ЦентрВертикаль
+        });
+        obj.rama_impost = project._dp.sys.inserts([obj.elm_type]);
+      }
+    }
+  });
 
 }

@@ -1,3 +1,4 @@
+
 /**
  * ### Модификаторы обработки _builder_pen_
  *
@@ -9,14 +10,15 @@
  */
 
 
-export default function ({dp,enm}) {
+export default function ({dp}) {
 
   dp.builder_pen.on({
 
     value_change(attr, obj) {
       if(attr.field == 'elm_type') {
-        obj.inset = paper.project.default_inset({elm_type: obj.elm_type});
-        obj.rama_impost = paper.project._dp.sys.inserts([obj.elm_type]);
+        const {project} = paper;
+        obj.inset = project.default_inset({elm_type: obj.elm_type});
+        obj.rama_impost = project._dp.sys.inserts([obj.elm_type]);
         obj.inset.clr_group.default_clr(obj);
       }
       if(attr.field == 'inset') {
@@ -25,22 +27,5 @@ export default function ({dp,enm}) {
     },
 
   });
-
-  dp.builder_lay_impost.on({
-
-   value_change(attr, obj) {
-     if(attr.field == 'elm_type') {
-       obj.inset_by_y = paper.project.default_inset({
-         elm_type: obj.elm_type,
-         pos: enm.positions.ЦентрГоризонталь
-       });
-       obj.inset_by_x = paper.project.default_inset({
-         elm_type: obj.elm_type,
-         pos: enm.positions.ЦентрВертикаль
-       });
-       obj.rama_impost = paper.project._dp.sys.inserts([obj.elm_type]);
-     }
-   }
- });
 
 }
