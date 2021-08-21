@@ -43,9 +43,9 @@
     "metadata-redux": "2.0.25-beta.4",
     "metadata-superlogin": "2.0.25-beta.4",
     "react-highlight-words": "^0.17",
-    "wb-core": "github:oknosoft/windowbuilder-core#3514715306f7d6b9b216f69554e6fd6e2cf50963",
+    "wb-core": "github:oknosoft/windowbuilder-core#4454ef4e08bb731ebec026df055a6638dcc5a8c9",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#8112473d5eabf1f76f8f39c76583cf0589c076d8",
+    "wb-forms": "github:oknosoft/windowbuilder-forms#2a752e7997f2c870311401c380c932af6e7bd5cb",
     "print": "file:../ecookna"
   },
   "devDependencies": {
