@@ -25,10 +25,10 @@
     "url": "https://github.com/oknosoft/windowbuilder/issues"
   },
   "homepage": "https://light.oknosoft.ru/",
-  "proxy1": "https://develop.ecookna.ru/",
+  "proxy": "https://develop.ecookna.ru/",
   "proxy2": "https://dvlp.ecookna.ru/",
   "proxy3": "https://zakaz.kaleva.ru:2019/",
-  "proxy": "https://info.tmk-online.ru/",
+  "proxy4": "https://info.tmk-online.ru/",
   "proxy5": "http://localhost:3016/",
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
@@ -43,10 +43,9 @@
     "metadata-redux": "2.0.25-beta.4",
     "metadata-superlogin": "2.0.25-beta.4",
     "react-highlight-words": "^0.17",
-    "wb-core": "github:oknosoft/windowbuilder-core#4454ef4e08bb731ebec026df055a6638dcc5a8c9",
+    "wb-core": "github:oknosoft/windowbuilder-core#9323d0ffecbf0366d42d3fc445e76317746a839f",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#2a752e7997f2c870311401c380c932af6e7bd5cb",
-    "print": "file:../ecookna"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#7a27ed833a9ddabcc47564aa35cf3241c164ce7f"
   },
   "devDependencies": {
     "@babel/core": "7.9.0",

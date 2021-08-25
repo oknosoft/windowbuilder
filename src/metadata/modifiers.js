@@ -37,8 +37,10 @@ export default function ($p) {
   documents($p);
 
   // подключаем печатные формы
-  import('print')
-    .then((module) => {
-      module.default($p);
-    });
+  const s = document.createElement('script');
+  s.type = 'module';
+  s.src = '/dist/print/index.js';
+  s.async = true;
+  document.head.appendChild(s);
+
 }
