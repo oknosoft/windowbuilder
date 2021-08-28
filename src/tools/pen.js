@@ -476,7 +476,7 @@ class ToolPen extends ToolElement {
     const {_scope, addl_hit, profile, project, group} = this;
     const {
       enm: {elm_types},
-      EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, ProfileAdjoining, Profile, ProfileItem, Filling}
+      EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, ProfileCut, ProfileAdjoining, Profile, ProfileItem, Filling}
     } = $p;
 
     group && group.removeChildren();
@@ -563,6 +563,11 @@ class ToolPen extends ToolElement {
       case elm_types.Линия:
         // рисуем линию
         this.last_profile = new BaseLine({generatrix: this.path, proto: profile});
+        break;
+
+      case elm_types.Сечение:
+        // рисуем линию
+        this.last_profile = new ProfileCut({generatrix: this.path, proto: profile});
         break;
 
       default:

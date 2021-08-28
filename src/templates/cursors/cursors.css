@@ -9,6 +9,7 @@
 .cursor-arrow-ruler-light { cursor: url(cursor-arrow-ruler-light.png) 3 1, default; }
 .cursor-arrow-ruler-dis { cursor: url(cursor-arrow-ruler-dis.png) 3 1, default; }
 .cursor-pen-adjust      { cursor: url(cursor-pen-adjust.png) 5 2, default; }
+.cursor-profile-cut     { cursor: url(cursor-profile-cut.png) 13 1, default; }
 .cursor-zoom-in         { cursor: url(cursor-zoom-in.png) 7 7, default; }
 .cursor-zoom-out        { cursor: url(cursor-zoom-out.png) 7 7, default; }
 .cursor-hand            { cursor: url(cursor-hand.png) 10 10, default; }

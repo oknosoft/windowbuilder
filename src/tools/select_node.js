@@ -90,7 +90,7 @@ class ToolSelectNode extends ToolElement {
 
     if (this.hitItem && !event.modifiers.alt) {
 
-      if(this.hitItem.item instanceof paper.PointText) {
+      if(this.hitItem.item instanceof paper.PointText && !this.hitItem.item instanceof Editor.PathUnselectable) {
         return;
       }
 
@@ -108,7 +108,8 @@ class ToolSelectNode extends ToolElement {
         else {
           if (event.modifiers.shift) {
             item.selected = !item.selected;
-          } else {
+          }
+          else {
             project.deselectAll();
             item.selected = true;
           }
@@ -128,7 +129,8 @@ class ToolSelectNode extends ToolElement {
       else if (this.hitItem.type == 'segment') {
         if (event.modifiers.shift) {
           this.hitItem.segment.selected = !this.hitItem.segment.selected;
-        } else {
+        }
+        else {
           if (!this.hitItem.segment.selected){
             project.deselect_all_points();
             project.deselectAll();
@@ -267,7 +269,6 @@ class ToolSelectNode extends ToolElement {
     this.mouseDown = false;
     this.changed && project.register_change(true);
   }
-
 
   mousedrag(event) {
 
@@ -584,11 +585,11 @@ class ToolSelectNode extends ToolElement {
     if (point) {
 
       // отдаём предпочтение выделенным ранее элементам
-      this.hitItem = project.hitTest(point, {selected: true, fill: true, tolerance: hitSize});
+      this.hitItem = project.hitTest(point, {selected: true, fill: true, stroke: true, tolerance: hitSize});
 
       // во вторую очередь - тем элементам, которые не скрыты
       if (!this.hitItem){
-        this.hitItem = project.hitTest(point, {fill: true, visible: true, tolerance: hitSize});
+        this.hitItem = project.hitTest(point, {visible: true, fill: true, stroke: true, tolerance: hitSize});
       }
 
       // Hit test selected handles
@@ -618,6 +619,9 @@ class ToolSelectNode extends ToolElement {
 
         if (hitItem.item.parent instanceof Editor.DimensionLine) {
           // размерные линии сами разберутся со своими курсорами
+        }
+        else if (hitItem.item instanceof Editor.TextUnselectable || hitItem.item.parent instanceof Editor.ProfileCut) {
+          this._scope.canvas_cursor('cursor-profile-cut');     // сечение
         }
         else if (hitItem.item instanceof paper.PointText) {
           !(hitItem.item instanceof Editor.EditableText) && this._scope.canvas_cursor('cursor-text');     // указатель с черным Т
