@@ -24,7 +24,7 @@ export const predefined = {
     keys: keys21,
     ram_indexer: false,
   },
-  'develop.ecookna.ru': {
+  'develop.ecookna.': {
     zone: 10,
     host: 'https://develop.ecookna.ru/',
     splash: {css: 'splash21', title: false},
@@ -74,6 +74,22 @@ export const predefined = {
   'start.kaleva.': {
     zone: 8,
     host: 'https://start.kaleva.ru/',
+    splash: {css: 'splash21', title: false},
+    log_level: 'warn',
+    keys: keys21,
+    ram_indexer: false,
+  },
+  'phototech.oknosoft.': {
+    zone: 22,
+    host: 'https://start.phototech.ru/',
+    splash: {css: 'splash21', title: false},
+    log_level: 'warn',
+    keys: keys21,
+    ram_indexer: false,
+  },
+  'start.phototech.': {
+    zone: 22,
+    host: 'https://start.phototech.ru/',
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
     keys: keys21,

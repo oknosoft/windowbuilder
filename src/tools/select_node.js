@@ -578,33 +578,38 @@ class ToolSelectNode extends ToolElement {
 
   hitTest({point}) {
 
-    const hitSize = 6;
+    const tolerance = 12;
     const {project} = this._scope;
     this.hitItem = null;
 
     if (point) {
 
       // отдаём предпочтение выделенным ранее элементам
-      this.hitItem = project.hitTest(point, {selected: true, fill: true, stroke: true, tolerance: hitSize});
+      this.hitItem = project.hitTest(point, {selected: true, fill: true, stroke: true, tolerance});
 
       // во вторую очередь - тем элементам, которые не скрыты
       if (!this.hitItem){
-        this.hitItem = project.hitTest(point, {visible: true, fill: true, stroke: true, tolerance: hitSize});
+        this.hitItem = project.hitTest(point, {visible: true, fill: true, stroke: true, tolerance});
       }
 
       // Hit test selected handles
-      let hit = project.hitTest(point, {selected: true, handles: true, tolerance: hitSize});
+      let hit = project.hitTest(point, {selected: true, handles: true, tolerance});
       if (hit){
         this.hitItem = hit;
       }
 
       // Hit test points
-      hit = project.hitPoints(point, 16, true);
+      hit = project.hitPoints(point, 18, true);
 
       if (hit) {
         if (hit.item.parent instanceof Editor.ProfileItem) {
           if (hit.item.parent.generatrix === hit.item){
             this.hitItem = hit;
+          }
+          else if(hit.item.parent instanceof Editor.ProfileCut) {
+            this.hitItem = hit;
+            hit.item = hit.item.parent.generatrix;
+            hit.segment = hit.item.firstSegment.point.is_nearest(hit.point, true) ? hit.item.firstSegment : hit.item.lastSegment;
           }
         }
         else{
