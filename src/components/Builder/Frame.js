@@ -11,7 +11,7 @@ import PropTypes from 'prop-types';
 import {withStyles} from '@material-ui/core/styles';
 import grey from '@material-ui/core/colors/grey';
 import {Prompt} from 'react-router-dom';
-import {Resize, ResizeHorizon} from 'react-resize-layout';
+import {Resize, ResizeHorizon} from 'metadata-react/Resize';
 import Toolbar from './Toolbar';
 import Builder from './Builder';
 import ControlsAservice from './ControlsAservice';

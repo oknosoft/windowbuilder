@@ -19,25 +19,25 @@ import IconAlarm from '@material-ui/icons/AccessAlarmOutlined';
 const items = [
   {
     text: 'Проекты',
-    navigate: 'projects/list',
+    navigate: '/project/list',
     need_user: true,
     Icon: IconBusiness,
   },
   {
     text: 'Лиды',
-    navigate: 'leads/list',
+    navigate: '/lead/list',
     need_user: true,
     Icon: IconContactPhone,
   },
   {
     text: 'Заказы',
-    navigate: 'order/list',
+    navigate: '/order/list',
     need_user: true,
     Icon: IconBusinessCenter,
   },
   {
     text: 'Планирование',
-    navigate: 'plan',
+    navigate: '/plan',
     need_user: true,
     Icon: IconAlarm,
   },
@@ -46,18 +46,18 @@ const items = [
   },
   {
     text: 'Настройки',
-    navigate: 'settings',
+    navigate: '/settings',
     need_meta: true,
     Icon: IconSettings,
   },
   {
     text: 'Справка',
-    navigate: 'help',
+    navigate: '/help',
     Icon: IconHelp
   },
   {
     text: 'О программе',
-    navigate: 'about',
+    navigate: '/about',
     Icon: IconInfo
   }
 ];

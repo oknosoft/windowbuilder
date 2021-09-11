@@ -5,6 +5,7 @@ import {createBrowserHistory} from 'history';
 import Toolbar from './Toolbar';
 import Builder from '../Builder';
 import Templates from '../CalcOrder/Templates';
+import CalcOrderList from '../CalcOrder/List';
 
 
 const history = createBrowserHistory();
@@ -31,6 +32,10 @@ class AppRouter extends React.Component {
         <Route
           path="/templates"
           render={this.routeComponent(Templates)}
+        />
+        <Route
+          path="/order/list"
+          render={this.routeComponent(CalcOrderList)}
         />
         <Route>
           <Toolbar />

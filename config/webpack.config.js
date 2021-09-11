@@ -728,7 +728,7 @@ module.exports = function (webpackEnv) {
           extensions: ['js', 'mjs', 'jsx', 'ts', 'tsx'],
           formatter: require.resolve('react-dev-utils/eslintFormatter'),
           eslintPath: require.resolve('eslint'),
-          emitWarning: isEnvDevelopment && emitErrorsAsWarnings,
+          failOnError: !(isEnvDevelopment && emitErrorsAsWarnings),
           context: paths.appSrc,
           cache: true,
           cacheLocation: path.resolve(
