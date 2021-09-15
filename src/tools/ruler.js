@@ -264,6 +264,11 @@ class RulerWnd {
           // Prevent the key event from bubbling
           return $p.iface.cancel_bubble(ev);
 
+      case 86:        // v - zoom_fit
+        tool.project.zoom_fit();
+        tool.project.view.update();
+        break;
+
       }
       return $p.iface.cancel_bubble(ev);
     }

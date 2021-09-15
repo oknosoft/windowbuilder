@@ -5696,7 +5696,8 @@ class ToolPan extends ToolElement {
       mousemove: this.hitTest,
 
       keydown(event) {
-        const rootLayer = this._scope.project.rootLayer();
+        const {project} = this;
+        const rootLayer = project.rootLayer();
         switch (event.key) {
           case 'left':
             rootLayer.move(new paper.Point(-10, 0));
@@ -5709,6 +5710,10 @@ class ToolPan extends ToolElement {
             break;
           case 'down':
             rootLayer.move(new paper.Point(0, 10));
+            break;
+        case 'v':
+            project.zoom_fit();
+            project.view.update();
             break;
         }
       },
@@ -7540,6 +7545,11 @@ class RulerWnd {
           // Prevent the key event from bubbling
           return $p.iface.cancel_bubble(ev);
 
+      case 86:        // v - zoom_fit
+        tool.project.zoom_fit();
+        tool.project.view.update();
+        break;
+
       }
       return $p.iface.cancel_bubble(ev);
     }
@@ -8205,7 +8215,7 @@ class ToolSelectNode extends ToolElement {
 
     if (this.hitItem && !event.modifiers.alt) {
 
-      if(this.hitItem.item instanceof paper.PointText && !this.hitItem.item instanceof Editor.PathUnselectable) {
+      if(this.hitItem.item instanceof paper.PointText && !(this.hitItem.item instanceof Editor.PathUnselectable)) {
         return;
       }
 
@@ -8682,6 +8692,10 @@ class ToolSelectNode extends ToolElement {
     }
     else if (key == 'down') {
       project.move_points(new paper.Point(0, step));
+    }
+    else if (key == 'v') {
+      project.zoom_fit();
+      project.view.update();
     }
   }
 

@@ -90,7 +90,7 @@ class ToolSelectNode extends ToolElement {
 
     if (this.hitItem && !event.modifiers.alt) {
 
-      if(this.hitItem.item instanceof paper.PointText && !this.hitItem.item instanceof Editor.PathUnselectable) {
+      if(this.hitItem.item instanceof paper.PointText && !(this.hitItem.item instanceof Editor.PathUnselectable)) {
         return;
       }
 
@@ -567,6 +567,10 @@ class ToolSelectNode extends ToolElement {
     }
     else if (key == 'down') {
       project.move_points(new paper.Point(0, step));
+    }
+    else if (key == 'v') {
+      project.zoom_fit();
+      project.view.update();
     }
   }
 

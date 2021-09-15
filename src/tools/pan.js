@@ -114,7 +114,8 @@ class ToolPan extends ToolElement {
       mousemove: this.hitTest,
 
       keydown(event) {
-        const rootLayer = this._scope.project.rootLayer();
+        const {project} = this;
+        const rootLayer = project.rootLayer();
         switch (event.key) {
           case 'left':
             rootLayer.move(new paper.Point(-10, 0));
@@ -127,6 +128,10 @@ class ToolPan extends ToolElement {
             break;
           case 'down':
             rootLayer.move(new paper.Point(0, 10));
+            break;
+        case 'v':
+            project.zoom_fit();
+            project.view.update();
             break;
         }
       },
