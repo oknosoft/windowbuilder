@@ -26,9 +26,9 @@
   },
   "homepage": "https://light.oknosoft.ru/",
   "proxy1": "https://develop.ecookna.ru/",
-  "proxy2": "https://dvlp.ecookna.ru/",
+  "proxy": "https://dvlp.ecookna.ru/",
   "proxy3": "https://zakaz.kaleva.ru:2019/",
-  "proxy": "https://info.tmk-online.ru/",
+  "proxy4": "https://info.tmk-online.ru/",
   "proxy5": "http://localhost:3016/",
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
@@ -43,7 +43,7 @@
     "metadata-redux": "2.0.26-beta.2",
     "metadata-superlogin": "2.0.26-beta.2",
     "react-highlight-words": "^0.17",
-    "wb-core": "github:oknosoft/windowbuilder-core#4d932b14187da6c0024697690205a1ab826d0f5b",
+    "wb-core": "github:oknosoft/windowbuilder-core#87558861b0bf6910ecb0a24d54ccbea1fb279051",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
     "wb-forms": "github:oknosoft/windowbuilder-forms#7a27ed833a9ddabcc47564aa35cf3241c164ce7f"
   },
