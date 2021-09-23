@@ -1409,6 +1409,7 @@ class Editor extends $p.EditorInvisible {
           break;
 
         case 'open_spec':
+          _editor.project.deselectAll(); 
           _editor.project.ox.form_obj();
           break;
 
@@ -8475,8 +8476,8 @@ class ToolSelectNode extends ToolElement {
     }
   }
 
-  wheelEnd(event) {
-    if(event.key !== 'r' && event.key !== 'к') {
+  wheelEnd({event}) {
+    if(event.code !== 'KeyR') {
       return;
     }
     const {wheel, _scope: {project, _undo}} = this;
@@ -8494,7 +8495,7 @@ class ToolSelectNode extends ToolElement {
       .then((angle) => {
         const delta = angle - init_angle;
         if(delta) {
-          for(const root of project.contours) {
+          for (const root of project.contours) {
             root.rotate(delta, center);
           }
           //project.l_dimensions.rotate(delta, center);
@@ -8504,7 +8505,7 @@ class ToolSelectNode extends ToolElement {
         project.load_stamp(obx, true);
       })
       .catch(() => {
-        for(const root of project.contours) {
+        for (const root of project.contours) {
           root.rotate(0, center);
         }
         _undo.back();
@@ -8512,13 +8513,14 @@ class ToolSelectNode extends ToolElement {
   }
 
   keydown(event) {
+    //console.log(`key_code ${event.event.code} key ${event.key}`);
 
     const {project} = this._scope;
-    const {key, modifiers} = event;
+    const {modifiers, event: {code}} = event;
     const step = modifiers.shift ? 1 : 10;
     let j, segment, index, point, handle;
 
-    if (key == '+' || key == 'insert') {
+    if ('NumpadAdd,Insert'.includes(code)) {
 
       for(let path of project.selectedItems){
         // при зажатом space добавляем элемент иначе - узел
@@ -8575,7 +8577,8 @@ class ToolSelectNode extends ToolElement {
 
 
     } // удаление сегмента или элемента
-    else if (key == '-' || key == 'delete' || key == 'backspace') {
+
+    else if ('Delete,NumpadSubtract,Backspace'.includes(code)) {
 
       if(event.event && event.event.target && ['textarea', 'input'].includes(event.event.target.tagName.toLowerCase())) {
         return;
@@ -8618,9 +8621,6 @@ class ToolSelectNode extends ToolElement {
             return;
           }
           remove.remove();
-          // for(let i = 0; i < gen.segments.length; i++) {
-          //   save.generatrix.add(gen.segments[i]);
-          // }
           save.generatrix.join(gen);
           const profile = pt.profile;
           const pp = pt.profile_point;
@@ -8630,9 +8630,6 @@ class ToolSelectNode extends ToolElement {
             cnn.profile = save;
             cnn.profile_point = npp;
           }
-          // if(save.generatrix.hasHandles()) {
-          //   save.generatrix.simplify(0.4);
-          // }
           save.rays.clear(true);
           return;
         }
@@ -8681,19 +8678,19 @@ class ToolSelectNode extends ToolElement {
       return false;
 
     }
-    else if (key == 'left') {
+    else if ('ArrowLeft,Numpad4'.includes(code)) {
       project.move_points(new paper.Point(-step, 0));
     }
-    else if (key == 'right') {
+    else if ('ArrowRight,Numpad6'.includes(code)) {
       project.move_points(new paper.Point(step, 0));
     }
-    else if (key == 'up') {
+    else if ('ArrowUp,Numpad8'.includes(code)) {
       project.move_points(new paper.Point(0, -step));
     }
-    else if (key == 'down') {
+    else if ('ArrowDown,Numpad2'.includes(code)) {
       project.move_points(new paper.Point(0, step));
     }
-    else if (key == 'v') {
+    else if (code === 'KeyV') {
       project.zoom_fit();
       project.view.update();
     }

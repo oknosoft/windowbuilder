@@ -350,8 +350,8 @@ class ToolSelectNode extends ToolElement {
     }
   }
 
-  wheelEnd(event) {
-    if(event.event.code === 'KeyR') {
+  wheelEnd({event}) {
+    if(event.code !== 'KeyR') {
       return;
     }
     const {wheel, _scope: {project, _undo}} = this;
@@ -369,7 +369,7 @@ class ToolSelectNode extends ToolElement {
       .then((angle) => {
         const delta = angle - init_angle;
         if(delta) {
-          for(const root of project.contours) {
+          for (const root of project.contours) {
             root.rotate(delta, center);
           }
           //project.l_dimensions.rotate(delta, center);
@@ -379,7 +379,7 @@ class ToolSelectNode extends ToolElement {
         project.load_stamp(obx, true);
       })
       .catch(() => {
-        for(const root of project.contours) {
+        for (const root of project.contours) {
           root.rotate(0, center);
         }
         _undo.back();
@@ -390,7 +390,7 @@ class ToolSelectNode extends ToolElement {
     //console.log(`key_code ${event.event.code} key ${event.key}`);
 
     const {project} = this._scope;
-    const { modifiers,event:{code}} = event;
+    const {modifiers, event: {code}} = event;
     const step = modifiers.shift ? 1 : 10;
     let j, segment, index, point, handle;
 
@@ -495,9 +495,6 @@ class ToolSelectNode extends ToolElement {
             return;
           }
           remove.remove();
-          // for(let i = 0; i < gen.segments.length; i++) {
-          //   save.generatrix.add(gen.segments[i]);
-          // }
           save.generatrix.join(gen);
           const profile = pt.profile;
           const pp = pt.profile_point;
@@ -507,9 +504,6 @@ class ToolSelectNode extends ToolElement {
             cnn.profile = save;
             cnn.profile_point = npp;
           }
-          // if(save.generatrix.hasHandles()) {
-          //   save.generatrix.simplify(0.4);
-          // }
           save.rays.clear(true);
           return;
         }
