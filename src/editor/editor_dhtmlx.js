@@ -263,6 +263,7 @@ class Editor extends $p.EditorInvisible {
           break;
 
         case 'open_spec':
+          _editor.project.deselectAll(); 
           _editor.project.ox.form_obj();
           break;
 
