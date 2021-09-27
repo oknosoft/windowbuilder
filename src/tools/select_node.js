@@ -78,7 +78,7 @@ class ToolSelectNode extends ToolElement {
 
   mousedown(event) {
 
-    const {project, consts} = this._scope;
+    const {project, consts, eve} = this._scope;
 
     this.mode = null;
     this.changed = false;
@@ -120,7 +120,7 @@ class ToolSelectNode extends ToolElement {
             this.originalContent = this._scope.capture_selection_state();
 
             if(item.layer){
-              this.eve.emit("layer_activated", item.layer);
+              eve.emit("layer_activated", item.layer);
             }
           }
         }
@@ -163,18 +163,21 @@ class ToolSelectNode extends ToolElement {
       // подключаем диадог свойств элемента
       if(item instanceof Editor.ProfileItem || item instanceof Editor.Filling){
         item.attache_wnd(this._scope._acc.elm);
+        eve.emit_async('elm_activated', item);
         this.profile = item;
       }
 
       this._scope.clear_selection_bounds();
 
-    } else {
+    }
+    else {
       // Clicked on and empty area, engage box select.
       this.mouseStartPos = event.point.clone();
       this.mode = 'box-select';
 
       if(!event.modifiers.shift && this.profile){
         this.profile.detache_wnd();
+        eve.emit_async('elm_activated', null);
         delete this.profile;
       }
 

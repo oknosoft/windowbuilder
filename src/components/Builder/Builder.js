@@ -14,6 +14,11 @@ class Builder extends DhtmlxCell {
     super.componentDidMount();
     const {cell, handlers} = this;
     this._editor = new $p.Editor(cell, handlers);
+    const {_acc} = this._editor;
+    _acc.tabbar.attachEvent('onSelect', (tab) => {
+      this._editor.eve.emit('react', tab === 'tool');
+      return true;
+    });
     render(<ToolWnd editor={this._editor}/>, this._editor._acc._tool.cell);
   }
 
