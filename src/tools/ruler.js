@@ -167,7 +167,7 @@ class RulerWnd {
       },
       getPosition: (v) => {
         let {offsetLeft, offsetTop} = v;
-        while (v = v.offsetParent) {
+        while (v = v.offsetParent) { /* eslint-disable-line */
           offsetLeft += v.offsetLeft;
           offsetTop += v.offsetTop;
         }
@@ -580,16 +580,17 @@ class ToolRuler extends ToolElement {
 
       },
 
-      keydown (event) {
-        const {event: {code}} = event;
+      keydown(event) {
+        const {code, target} = event.event;
         // удаление размерной линии
-            if (['Delete','NumpadSubtract','Backspace'].includes(code)) {
+        if(['Delete', 'NumpadSubtract', 'Backspace'].includes(code)) {
 
-          if (event.event && event.event.target && ['textarea', 'input'].indexOf(event.event.target.tagName.toLowerCase()) != -1)
+          if(target && ['textarea', 'input'].includes(target.tagName.toLowerCase())) {
             return;
+          }
 
           this.project.selectedItems.some((path) => {
-            if (path.parent instanceof Editor.DimensionLineCustom) {
+            if(path.parent instanceof Editor.DimensionLineCustom) {
               path.parent.remove();
               return true;
             }
@@ -605,30 +606,30 @@ class ToolRuler extends ToolElement {
 
   }
 
-  hitTest(event) {
+  hitTest({point}) {
 
     this.hitItem = null;
     this.hitPoint = null;
 
-    if (event.point) {
+    if (point) {
 
       // если режим - расстояние между элементами, ловим профили, а точнее - заливку путей
       if (!this.mode) {
-        this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: 10});
+        this.hitItem = this.project.hitTest(point, {fill: true, tolerance: 10});
       }
       if (this.mode === 4) {
-        this.hitItem = this.project.hitTest(event.point, {stroke: true, tolerance: 20});
+        this.hitItem = this.project.hitTest(point, {stroke: true, tolerance: 20});
       }
       else {
         // Hit test points
-        let hit = this.project.hitPoints(event.point, 16, false, true);
+        let hit = this.project.hitPoints(point, 16, false, true);
         if (hit) {
           if(hit.item.parent instanceof Editor.ProfileItem) {
             this.hitItem = hit;
           }
         }
         else if (this.mode === 2) {
-          hit = this.project.hitTest(event.point, {fill: true, stroke: true, tolerance: 20});
+          hit = this.project.hitTest(point, {fill: true, stroke: true, tolerance: 20});
           // размерные линии сами разберутся со своими курсорами
           if (hit && hit.item.parent instanceof Editor.DimensionLine) {
             return true;
@@ -641,10 +642,10 @@ class ToolRuler extends ToolElement {
       if (this.mode) {
         this._scope.canvas_cursor('cursor-arrow-white-point');
         if (this.mode === 4) {
-          this.hitPoint = this.hitItem.item.getNearestPoint(event.point);
+          this.hitPoint = this.hitItem.item.getNearestPoint(point);
         }
         else {
-          this.hitPoint = this.hitItem.item.parent.select_corn(event.point);
+          this.hitPoint = this.hitItem.item.parent.select_corn(point);
         }
       }
     }
@@ -696,7 +697,7 @@ class ToolRuler extends ToolElement {
 
   }
 
-  add_hit_item(event) {
+  add_hit_item({modifiers}) {
 
     const item = this.hitItem.item.parent;
 
@@ -712,7 +713,7 @@ class ToolRuler extends ToolElement {
 
     }
     else if (paper.Key.isDown('2') || paper.Key.isDown('b') ||
-      event.modifiers.shift || (this.selected.a.length && !this.selected.b.length)) {
+      modifiers.shift || (this.selected.a.length && !this.selected.b.length)) {
 
       if (this.selected.b.indexOf(item) == -1) {
         this.selected.b.push(item);

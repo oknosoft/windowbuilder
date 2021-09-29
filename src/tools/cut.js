@@ -46,8 +46,8 @@ class ToolCut extends ToolElement{
     });
   }
 
-  keydown(event) {
-    if (event.event.code === 'Escape') {
+  keydown({event}) {
+    if(event.code === 'Escape') {
       this.remove_cont();
       this._scope.canvas_cursor('cursor-arrow-cut');
     }
@@ -57,11 +57,11 @@ class ToolCut extends ToolElement{
    * по mouseup, выделяем/снимаем выделение профилей
    * @param event
    */
-  mouseup(event) {
-    const hitItem = this.project.hitTest(event.point, {fill: true, stroke: false, segments: false});
+  mouseup({point, modifiers}) {
+    const hitItem = this.project.hitTest(point, {fill: true, stroke: false, segments: false});
     if(hitItem && hitItem.item.parent instanceof Editor.Profile) {
       let item = hitItem.item.parent;
-      if(event.modifiers.shift) {
+      if(modifiers.shift) {
         item.selected = !item.selected;
       }
       else {
@@ -77,7 +77,6 @@ class ToolCut extends ToolElement{
 
     this.remove_cont();
     this._scope.canvas_cursor('cursor-arrow-cut');
-
   }
 
   /**
@@ -389,13 +388,13 @@ class ToolCut extends ToolElement{
     return true;
   }
 
-  hitTest(event) {
+  hitTest({point}) {
 
     const hitSize = 30;
     this.hitItem = null;
 
-    if (event.point) {
-      this.hitItem = this.project.hitTest(event.point, { ends: true, tolerance: hitSize });
+    if (point) {
+      this.hitItem = this.project.hitTest(point, { ends: true, tolerance: hitSize });
     }
 
     if (this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem) {
@@ -404,7 +403,7 @@ class ToolCut extends ToolElement{
       if(profile.parent === activeLayer) {
         const {profiles} = activeLayer;
         const {b, e} = profile;
-        const selected = {profiles, profile, point: b.getDistance(event.point) < e.getDistance(event.point) ? 'b' : 'e'};
+        const selected = {profiles, profile, point: b.getDistance(point) < e.getDistance(point) ? 'b' : 'e'};
         const nodes = magnetism.filter(selected);
         if(this.nodes_different(nodes)) {
           this.remove_cont();

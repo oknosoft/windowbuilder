@@ -414,11 +414,11 @@ class ToolPen extends ToolElement {
   }
 
   on_keydown(event) {
-      const {event: {code}} = event;
+    const {event: {code, target}} = event;
     // удаление сегмента или элемента
-    if (['Delete','NumpadSubtract','Backspace'].includes(code)) {
+    if(['Delete', 'NumpadSubtract', 'Backspace'].includes(code)) {
 
-      if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1){
+      if(target && ['textarea', 'input'].includes(target.tagName.toLowerCase())) {
         return;
       }
 
@@ -436,8 +436,8 @@ class ToolPen extends ToolElement {
       event.stop();
       return false;
 
-    }else if(event.key == 'escape'){
-
+    }
+    else if(code == 'Escape'){
       if(this.path){
         this.path.remove();
         this.path = null;
@@ -447,11 +447,11 @@ class ToolPen extends ToolElement {
     }
   }
 
-  on_mousedown(event) {
+  on_mousedown({event}) {
     this.project.deselectAll();
 
-    if(event.event && event.event.which && event.event.which > 1){
-      return this.on_keydown({key: 'escape'});
+    if(event && event.which && event.which > 1){
+      return this.on_keydown({event: {code: 'Escape'}});
     }
 
     this.last_profile = null;
@@ -471,7 +471,7 @@ class ToolPen extends ToolElement {
     }
   }
 
-  on_mouseup(event) {
+  on_mouseup({event, modifiers}) {
 
     const {_scope, addl_hit, profile, project, group} = this;
     const {
@@ -483,8 +483,8 @@ class ToolPen extends ToolElement {
 
     _scope.canvas_cursor('cursor-pen-freehand');
 
-    if(event.event && event.event.which && event.event.which > 1){
-      return this.on_keydown({key: 'escape'});
+    if(event && event.which && event.which > 1){
+      return this.on_keydown({event: {code: 'Escape'}});
     }
 
     this.check_layer();
@@ -587,14 +587,14 @@ class ToolPen extends ToolElement {
         }, 50);
       }
     }
-    else if (this.hitItem && this.hitItem.item && (event.modifiers.shift || event.modifiers.control || event.modifiers.option)) {
+    else if (this.hitItem && this.hitItem.item && (modifiers.shift || modifiers.control || modifiers.option)) {
 
       let item = this.hitItem.item.parent;
-      if(event.modifiers.space && item.nearest && item.nearest()) {
+      if(modifiers.space && item.nearest && item.nearest()) {
         item = item.nearest();
       }
 
-      if(event.modifiers.shift) {
+      if(modifiers.shift) {
         item.selected = !item.selected;
       }
       else {
@@ -693,21 +693,25 @@ class ToolPen extends ToolElement {
           return;
         }
 
-        if (this.mode == 'create') {
+        if(this.mode == 'create') {
           dragOut = true;
-          if (this.currentSegment.index > 0)
-            dragIn = true;
-        } else  if (this.mode == 'close') {
+          dragIn = this.currentSegment.index > 0;
+        }
+        else if(this.mode == 'close') {
           dragIn = true;
           invert = true;
-        } else  if (this.mode == 'continue') {
+        }
+        else if(this.mode == 'continue') {
           dragOut = true;
-        } else if (this.mode == 'adjust') {
+        }
+        else if(this.mode == 'adjust') {
           dragOut = true;
-        } else  if (this.mode == 'join') {
+        }
+        else if(this.mode == 'join') {
           dragIn = true;
           invert = true;
-        } else  if (this.mode == 'convert') {
+        }
+        else if(this.mode == 'convert') {
           dragIn = true;
           dragOut = true;
         }
@@ -935,13 +939,13 @@ class ToolPen extends ToolElement {
 
   }
 
-  hitTest_addl(event) {
+  hitTest_addl({point}) {
 
     const hitSize = 16;
     const {project, _scope} = this;
 
-    if (event.point){
-      this.hitItem = project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
+    if (point){
+      this.hitItem = project.hitTest(point, { stroke:true, curves:true, tolerance: hitSize });
     }
 
     if (this.hitItem) {
@@ -956,8 +960,8 @@ class ToolPen extends ToolElement {
         };
 
         // выясним, с какой стороны примыкает профиль
-        if(hit.profile.rays.inner.getNearestPoint(event.point).getDistance(event.point, true) <
-          hit.profile.rays.outer.getNearestPoint(event.point).getDistance(event.point, true)){
+        if(hit.profile.rays.inner.getNearestPoint(point).getDistance(point, true) <
+          hit.profile.rays.outer.getNearestPoint(point).getDistance(point, true)){
           hit.side = "inner";
         }
         else{
@@ -995,19 +999,19 @@ class ToolPen extends ToolElement {
 
     } else {
 
-      this.hitItem = project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+      this.hitItem = project.hitTest(point, { fill:true, visible: true, tolerance: hitSize  });
       _scope.canvas_cursor('cursor-pen-freehand');
     }
 
   }
 
-  hitTest_connective(event) {
+  hitTest_connective({point}) {
 
     const {project, _scope} = this;
     const rootLayer = project.rootLayer();
 
-    if (event.point){
-      this.hitItem = rootLayer.hitTest(event.point, ToolPen.root_match(rootLayer));
+    if (point){
+      this.hitItem = rootLayer.hitTest(point, ToolPen.root_match(rootLayer));
     }
 
     if(this.hitItem){
@@ -1019,8 +1023,8 @@ class ToolPen extends ToolElement {
       };
 
       // выясним, с какой стороны примыкает профиль
-      if(hit.profile.rays.inner.getNearestPoint(event.point).getDistance(event.point, true) <
-        hit.profile.rays.outer.getNearestPoint(event.point).getDistance(event.point, true)){
+      if(hit.profile.rays.inner.getNearestPoint(point).getDistance(point, true) <
+        hit.profile.rays.outer.getNearestPoint(point).getDistance(point, true)){
         hit.side = "inner";
       }
       else{

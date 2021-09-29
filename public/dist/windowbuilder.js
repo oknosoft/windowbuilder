@@ -3308,7 +3308,7 @@ class ToolArc extends ToolElement{
     r.layer.notify({profiles: [r.parent], points: []}, this._scope.consts.move_points);
   }
 
-  mousedown(event) {
+  mousedown({modifiers, point}) {
 
     let b, e, r;
 
@@ -3320,14 +3320,14 @@ class ToolArc extends ToolElement{
 
       this.mode = this.hitItem.item.parent.generatrix;
 
-      if (event.modifiers.control || event.modifiers.option){
+      if (modifiers.control || modifiers.option){
         // при зажатом ctrl или alt строим правильную дугу
 
         b = this.mode.firstSegment.point;
         e = this.mode.lastSegment.point;
         r = (b.getDistance(e) / 2) + 0.00001;
 
-        this.do_arc(this.mode, event.point.arc_point(b.x, b.y, e.x, e.y, r, event.modifiers.option, false));
+        this.do_arc(this.mode, point.arc_point(b.x, b.y, e.x, e.y, r, modifiers.option, false));
 
         //undo.snapshot("Move Shapes");
         r = this.mode;
@@ -3335,19 +3335,16 @@ class ToolArc extends ToolElement{
 
       }
       // при зажатом space удаляем кривизну
-      else if(event.modifiers.space) {
+      else if(modifiers.space) {
         this.reset_arc(r = this.mode);
       }
-
       else {
         this.project.deselectAll();
-
         r = this.mode;
         r.selected = true;
         this.project.deselect_all_points();
-        this.mouseStartPos = event.point.clone();
+        this.mouseStartPos = point.clone();
         this.originalContent = this._scope.capture_selection_state();
-
       }
 
       this.timer && clearTimeout(this.timer);
@@ -3357,7 +3354,8 @@ class ToolArc extends ToolElement{
         this.eve.emit("layer_activated", r.layer);
       }, 10);
 
-    }else{
+    }
+    else{
       //tool.detache_wnd();
       this.project.deselectAll();
     }
@@ -3390,54 +3388,46 @@ class ToolArc extends ToolElement{
 
   }
 
-  mousedrag(event) {
+  mousedrag({point}) {
     if (this.mode) {
-
       this.changed = true;
-
       this._scope.canvas_cursor('cursor-arrow-small');
-
-      this.do_arc(this.mode, event.point);
-
-      //this.mode.layer.redraw();
-
+      this.do_arc(this.mode, point);
     }
   }
 
-  keydown(event) {
+  keydown({modifiers, event: {code}}) {
 
     const {project} = this._scope;
     if(project.selectedItems.length === 1) {
-      const {key, modifiers} = event;
       const step = modifiers.shift ? 1 : 10;
       const {parent} = project.selectedItems[0];
 
-      if(parent instanceof Editor.Profile && ['left', 'right', 'up', 'down'].includes(key)) {
+      if(parent instanceof Editor.Profile && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(code)) {
         const {generatrix} = parent;
 
-        if(event.modifiers.space){
+        if(modifiers.space){
           return this.reset_arc(generatrix);
         }
 
-        const point = generatrix.getPointAt(generatrix.length/2);
-        if (key == 'left') {
+        const point = generatrix.getPointAt(generatrix.length / 2);
+        if('ArrowLeft' === code) {
           this.do_arc(generatrix, point.add(-step, 0));
         }
-        else if (key == 'right') {
+        else if('ArrowRight' === code) {
           this.do_arc(generatrix, point.add(step, 0));
         }
-        else if (key == 'up') {
+        else if('ArrowUp' === code) {
           this.do_arc(generatrix, point.add(0, -step));
         }
-        else if (key == 'down') {
+        else if('ArrowDown' === code) {
           this.do_arc(generatrix, point.add(0, step));
         }
 
         this.timer && clearTimeout(this.timer);
         this.timer = setTimeout(() => {
-          //generatrix.layer.redraw();
           parent.attache_wnd(this._scope._acc.elm);
-          this.eve.emit("layer_activated", parent.layer);
+          this.eve.emit('layer_activated', parent.layer);
         }, 100);
       }
     }
@@ -3463,16 +3453,16 @@ class ToolArc extends ToolElement{
     element.layer.notify({profiles: [element.parent], points: []}, this._scope.consts.move_points);
   }
 
-  hitTest(event) {
+  hitTest({point}) {
 
     const hitSize = 6;
     this.hitItem = null;
 
-    if(event.point) {
-      this.hitItem = this.project.hitTest(event.point, {fill: true, stroke: true, selected: true, tolerance: hitSize});
+    if(point) {
+      this.hitItem = this.project.hitTest(point, {fill: true, stroke: true, selected: true, tolerance: hitSize});
     }
     if(!this.hitItem) {
-      this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: hitSize});
+      this.hitItem = this.project.hitTest(point, {fill: true, tolerance: hitSize});
     }
 
     if(this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem
@@ -3489,7 +3479,6 @@ class ToolArc extends ToolElement{
 }
 
 Editor.ToolArc = ToolArc;
-
 
 
 /**
@@ -3887,8 +3876,8 @@ class ToolCut extends ToolElement{
     });
   }
 
-  keydown(event) {
-    if (event.key == 'escape') {
+  keydown({event}) {
+    if(event.code === 'Escape') {
       this.remove_cont();
       this._scope.canvas_cursor('cursor-arrow-cut');
     }
@@ -3898,11 +3887,11 @@ class ToolCut extends ToolElement{
    * по mouseup, выделяем/снимаем выделение профилей
    * @param event
    */
-  mouseup(event) {
-    const hitItem = this.project.hitTest(event.point, {fill: true, stroke: false, segments: false});
+  mouseup({point, modifiers}) {
+    const hitItem = this.project.hitTest(point, {fill: true, stroke: false, segments: false});
     if(hitItem && hitItem.item.parent instanceof Editor.Profile) {
       let item = hitItem.item.parent;
-      if(event.modifiers.shift) {
+      if(modifiers.shift) {
         item.selected = !item.selected;
       }
       else {
@@ -3918,7 +3907,6 @@ class ToolCut extends ToolElement{
 
     this.remove_cont();
     this._scope.canvas_cursor('cursor-arrow-cut');
-
   }
 
   /**
@@ -4230,13 +4218,13 @@ class ToolCut extends ToolElement{
     return true;
   }
 
-  hitTest(event) {
+  hitTest({point}) {
 
     const hitSize = 30;
     this.hitItem = null;
 
-    if (event.point) {
-      this.hitItem = this.project.hitTest(event.point, { ends: true, tolerance: hitSize });
+    if (point) {
+      this.hitItem = this.project.hitTest(point, { ends: true, tolerance: hitSize });
     }
 
     if (this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem) {
@@ -4245,7 +4233,7 @@ class ToolCut extends ToolElement{
       if(profile.parent === activeLayer) {
         const {profiles} = activeLayer;
         const {b, e} = profile;
-        const selected = {profiles, profile, point: b.getDistance(event.point) < e.getDistance(event.point) ? 'b' : 'e'};
+        const selected = {profiles, profile, point: b.getDistance(point) < e.getDistance(point) ? 'b' : 'e'};
         const nodes = magnetism.filter(selected);
         if(this.nodes_different(nodes)) {
           this.remove_cont();
@@ -4264,7 +4252,6 @@ class ToolCut extends ToolElement{
 }
 
 Editor.ToolCut = ToolCut;
-
 
 
 /**
@@ -6164,11 +6151,11 @@ class ToolPen extends ToolElement {
   }
 
   on_keydown(event) {
-
+    const {event: {code, target}} = event;
     // удаление сегмента или элемента
-    if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+    if(['Delete', 'NumpadSubtract', 'Backspace'].includes(code)) {
 
-      if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1){
+      if(target && ['textarea', 'input'].includes(target.tagName.toLowerCase())) {
         return;
       }
 
@@ -6186,8 +6173,8 @@ class ToolPen extends ToolElement {
       event.stop();
       return false;
 
-    }else if(event.key == 'escape'){
-
+    }
+    else if(code == 'Escape'){
       if(this.path){
         this.path.remove();
         this.path = null;
@@ -6197,11 +6184,11 @@ class ToolPen extends ToolElement {
     }
   }
 
-  on_mousedown(event) {
+  on_mousedown({event}) {
     this.project.deselectAll();
 
-    if(event.event && event.event.which && event.event.which > 1){
-      return this.on_keydown({key: 'escape'});
+    if(event && event.which && event.which > 1){
+      return this.on_keydown({event: {code: 'Escape'}});
     }
 
     this.last_profile = null;
@@ -6221,7 +6208,7 @@ class ToolPen extends ToolElement {
     }
   }
 
-  on_mouseup(event) {
+  on_mouseup({event, modifiers}) {
 
     const {_scope, addl_hit, profile, project, group} = this;
     const {
@@ -6233,8 +6220,8 @@ class ToolPen extends ToolElement {
 
     _scope.canvas_cursor('cursor-pen-freehand');
 
-    if(event.event && event.event.which && event.event.which > 1){
-      return this.on_keydown({key: 'escape'});
+    if(event && event.which && event.which > 1){
+      return this.on_keydown({event: {code: 'Escape'}});
     }
 
     this.check_layer();
@@ -6337,14 +6324,14 @@ class ToolPen extends ToolElement {
         }, 50);
       }
     }
-    else if (this.hitItem && this.hitItem.item && (event.modifiers.shift || event.modifiers.control || event.modifiers.option)) {
+    else if (this.hitItem && this.hitItem.item && (modifiers.shift || modifiers.control || modifiers.option)) {
 
       let item = this.hitItem.item.parent;
-      if(event.modifiers.space && item.nearest && item.nearest()) {
+      if(modifiers.space && item.nearest && item.nearest()) {
         item = item.nearest();
       }
 
-      if(event.modifiers.shift) {
+      if(modifiers.shift) {
         item.selected = !item.selected;
       }
       else {
@@ -6443,21 +6430,25 @@ class ToolPen extends ToolElement {
           return;
         }
 
-        if (this.mode == 'create') {
+        if(this.mode == 'create') {
           dragOut = true;
-          if (this.currentSegment.index > 0)
-            dragIn = true;
-        } else  if (this.mode == 'close') {
+          dragIn = this.currentSegment.index > 0;
+        }
+        else if(this.mode == 'close') {
           dragIn = true;
           invert = true;
-        } else  if (this.mode == 'continue') {
+        }
+        else if(this.mode == 'continue') {
           dragOut = true;
-        } else if (this.mode == 'adjust') {
+        }
+        else if(this.mode == 'adjust') {
           dragOut = true;
-        } else  if (this.mode == 'join') {
+        }
+        else if(this.mode == 'join') {
           dragIn = true;
           invert = true;
-        } else  if (this.mode == 'convert') {
+        }
+        else if(this.mode == 'convert') {
           dragIn = true;
           dragOut = true;
         }
@@ -6685,13 +6676,13 @@ class ToolPen extends ToolElement {
 
   }
 
-  hitTest_addl(event) {
+  hitTest_addl({point}) {
 
     const hitSize = 16;
     const {project, _scope} = this;
 
-    if (event.point){
-      this.hitItem = project.hitTest(event.point, { stroke:true, curves:true, tolerance: hitSize });
+    if (point){
+      this.hitItem = project.hitTest(point, { stroke:true, curves:true, tolerance: hitSize });
     }
 
     if (this.hitItem) {
@@ -6706,8 +6697,8 @@ class ToolPen extends ToolElement {
         };
 
         // выясним, с какой стороны примыкает профиль
-        if(hit.profile.rays.inner.getNearestPoint(event.point).getDistance(event.point, true) <
-          hit.profile.rays.outer.getNearestPoint(event.point).getDistance(event.point, true)){
+        if(hit.profile.rays.inner.getNearestPoint(point).getDistance(point, true) <
+          hit.profile.rays.outer.getNearestPoint(point).getDistance(point, true)){
           hit.side = "inner";
         }
         else{
@@ -6745,19 +6736,19 @@ class ToolPen extends ToolElement {
 
     } else {
 
-      this.hitItem = project.hitTest(event.point, { fill:true, visible: true, tolerance: hitSize  });
+      this.hitItem = project.hitTest(point, { fill:true, visible: true, tolerance: hitSize  });
       _scope.canvas_cursor('cursor-pen-freehand');
     }
 
   }
 
-  hitTest_connective(event) {
+  hitTest_connective({point}) {
 
     const {project, _scope} = this;
     const rootLayer = project.rootLayer();
 
-    if (event.point){
-      this.hitItem = rootLayer.hitTest(event.point, ToolPen.root_match(rootLayer));
+    if (point){
+      this.hitItem = rootLayer.hitTest(point, ToolPen.root_match(rootLayer));
     }
 
     if(this.hitItem){
@@ -6769,8 +6760,8 @@ class ToolPen extends ToolElement {
       };
 
       // выясним, с какой стороны примыкает профиль
-      if(hit.profile.rays.inner.getNearestPoint(event.point).getDistance(event.point, true) <
-        hit.profile.rays.outer.getNearestPoint(event.point).getDistance(event.point, true)){
+      if(hit.profile.rays.inner.getNearestPoint(point).getDistance(point, true) <
+        hit.profile.rays.outer.getNearestPoint(point).getDistance(point, true)){
         hit.side = "inner";
       }
       else{
@@ -7279,8 +7270,6 @@ class ToolPen extends ToolElement {
 Editor.ToolPen = ToolPen;
 
 
-
-
 /**
  * Относительное позиционирование и сдвиг
  * Created 25.08.2015<br />
@@ -7449,7 +7438,7 @@ class RulerWnd {
       },
       getPosition: (v) => {
         let {offsetLeft, offsetTop} = v;
-        while (v = v.offsetParent) {
+        while (v = v.offsetParent) { /* eslint-disable-line */
           offsetLeft += v.offsetLeft;
           offsetTop += v.offsetTop;
         }
@@ -7862,16 +7851,17 @@ class ToolRuler extends ToolElement {
 
       },
 
-      keydown (event) {
-
+      keydown(event) {
+        const {code, target} = event.event;
         // удаление размерной линии
-        if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+        if(['Delete', 'NumpadSubtract', 'Backspace'].includes(code)) {
 
-          if (event.event && event.event.target && ['textarea', 'input'].indexOf(event.event.target.tagName.toLowerCase()) != -1)
+          if(target && ['textarea', 'input'].includes(target.tagName.toLowerCase())) {
             return;
+          }
 
           this.project.selectedItems.some((path) => {
-            if (path.parent instanceof Editor.DimensionLineCustom) {
+            if(path.parent instanceof Editor.DimensionLineCustom) {
               path.parent.remove();
               return true;
             }
@@ -7887,30 +7877,30 @@ class ToolRuler extends ToolElement {
 
   }
 
-  hitTest(event) {
+  hitTest({point}) {
 
     this.hitItem = null;
     this.hitPoint = null;
 
-    if (event.point) {
+    if (point) {
 
       // если режим - расстояние между элементами, ловим профили, а точнее - заливку путей
       if (!this.mode) {
-        this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: 10});
+        this.hitItem = this.project.hitTest(point, {fill: true, tolerance: 10});
       }
       if (this.mode === 4) {
-        this.hitItem = this.project.hitTest(event.point, {stroke: true, tolerance: 20});
+        this.hitItem = this.project.hitTest(point, {stroke: true, tolerance: 20});
       }
       else {
         // Hit test points
-        let hit = this.project.hitPoints(event.point, 16, false, true);
+        let hit = this.project.hitPoints(point, 16, false, true);
         if (hit) {
           if(hit.item.parent instanceof Editor.ProfileItem) {
             this.hitItem = hit;
           }
         }
         else if (this.mode === 2) {
-          hit = this.project.hitTest(event.point, {fill: true, stroke: true, tolerance: 20});
+          hit = this.project.hitTest(point, {fill: true, stroke: true, tolerance: 20});
           // размерные линии сами разберутся со своими курсорами
           if (hit && hit.item.parent instanceof Editor.DimensionLine) {
             return true;
@@ -7923,10 +7913,10 @@ class ToolRuler extends ToolElement {
       if (this.mode) {
         this._scope.canvas_cursor('cursor-arrow-white-point');
         if (this.mode === 4) {
-          this.hitPoint = this.hitItem.item.getNearestPoint(event.point);
+          this.hitPoint = this.hitItem.item.getNearestPoint(point);
         }
         else {
-          this.hitPoint = this.hitItem.item.parent.select_corn(event.point);
+          this.hitPoint = this.hitItem.item.parent.select_corn(point);
         }
       }
     }
@@ -7978,7 +7968,7 @@ class ToolRuler extends ToolElement {
 
   }
 
-  add_hit_item(event) {
+  add_hit_item({modifiers}) {
 
     const item = this.hitItem.item.parent;
 
@@ -7994,7 +7984,7 @@ class ToolRuler extends ToolElement {
 
     }
     else if (paper.Key.isDown('2') || paper.Key.isDown('b') ||
-      event.modifiers.shift || (this.selected.a.length && !this.selected.b.length)) {
+      modifiers.shift || (this.selected.a.length && !this.selected.b.length)) {
 
       if (this.selected.b.indexOf(item) == -1) {
         this.selected.b.push(item);
@@ -8121,8 +8111,6 @@ class ToolRuler extends ToolElement {
 }
 
 Editor.ToolRuler = ToolRuler;
-
-
 
 
 /**
@@ -8516,10 +8504,8 @@ class ToolSelectNode extends ToolElement {
   }
 
   keydown(event) {
-    //console.log(`key_code ${event.event.code} key ${event.key}`);
-
     const {project} = this._scope;
-    const {modifiers, event: {code}} = event;
+    const {modifiers, event: {code, target}} = event;
     const step = modifiers.shift ? 1 : 10;
     let j, segment, index, point, handle;
 
@@ -8581,9 +8567,9 @@ class ToolSelectNode extends ToolElement {
 
     } // удаление сегмента или элемента
 
-    else if ('Delete,NumpadSubtract,Backspace'.includes(code)) {
+    else if (['Delete','NumpadSubtract','Backspace'].includes(code)) {
 
-      if(event.event && event.event.target && ['textarea', 'input'].includes(event.event.target.tagName.toLowerCase())) {
+      if(target && ['textarea', 'input'].includes(target.tagName.toLowerCase())) {
         return;
       }
 
@@ -8681,16 +8667,16 @@ class ToolSelectNode extends ToolElement {
       return false;
 
     }
-    else if ('ArrowLeft,Numpad4'.includes(code)) {
+    else if (code === 'ArrowLeft') {
       project.move_points(new paper.Point(-step, 0));
     }
-    else if ('ArrowRight,Numpad6'.includes(code)) {
+    else if (code === 'ArrowRight') {
       project.move_points(new paper.Point(step, 0));
     }
-    else if ('ArrowUp,Numpad8'.includes(code)) {
+    else if (code === 'ArrowUp') {
       project.move_points(new paper.Point(0, -step));
     }
-    else if ('ArrowDown,Numpad2'.includes(code)) {
+    else if (code === 'ArrowDown') {
       project.move_points(new paper.Point(0, step));
     }
     else if (code === 'KeyV') {
@@ -8843,12 +8829,12 @@ class ToolText extends ToolElement {
         this._scope.hide_selection_bounds();
       },
 
-      mousedown(event) {
+      mousedown({point}) {
         this.text = null;
         this.changed = false;
 
         this.project.deselectAll();
-        this.mouseStartPos = event.point.clone();
+        this.mouseStartPos = point.clone();
 
         if(this.hitItem) {
 
@@ -8881,11 +8867,11 @@ class ToolText extends ToolElement {
 
       },
 
-      mousedrag(event) {
+      mousedrag({point, modifiers}) {
 
         if (this.text) {
-          let delta = event.point.subtract(this.mouseStartPos);
-          if(event.modifiers.shift) {
+          let delta = point.subtract(this.mouseStartPos);
+          if(modifiers.shift) {
             delta = delta.snap_to_angle();
           }
           this.text.move_points(this.textStartPos.add(delta));
@@ -8894,11 +8880,12 @@ class ToolText extends ToolElement {
 
       mousemove: this.hitTest,
 
-      keydown(event) {
+      keydown({event}) {
+        const {code, target} = event;
 
-        if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+        if (['Delete','NumpadSubtract','Backspace'].includes(code)) {
 
-          if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1){
+          if(target && ['textarea', 'input'].includes(target.tagName.toLowerCase())) {
             return;
           }
 
@@ -8917,17 +8904,17 @@ class ToolText extends ToolElement {
     });
   }
 
-  hitTest(event) {
+  hitTest({point}) {
     const hitSize = 6;
     const {project} = this;
 
     // хит над текстом обрабатываем особо
-    this.hitItem = project.hitTest(event.point, {class: Editor.FreeText, bounds: true, fill: true, stroke: true, tolerance: hitSize});
+    this.hitItem = project.hitTest(point, {class: Editor.FreeText, bounds: true, fill: true, stroke: true, tolerance: hitSize});
     if(!this.hitItem) {
-      this.hitItem = project.hitTest(event.point, {fill: true, stroke: false, tolerance: hitSize});
+      this.hitItem = project.hitTest(point, {fill: true, stroke: false, tolerance: hitSize});
     }
     if(!this.hitItem) {
-      const hit = project.hitTest(event.point, {fill: false, stroke: true, tolerance: hitSize});
+      const hit = project.hitTest(point, {fill: false, stroke: true, tolerance: hitSize});
       if(hit && hit.item.parent instanceof Editor.Sectional) {
         this.hitItem = hit;
       }
@@ -8955,7 +8942,6 @@ class ToolText extends ToolElement {
 }
 
 Editor.ToolText = ToolText;
-
 
 $p.injected_data._mixin({"tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Элемент и узел</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и рычаги узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n        <li>Добавить новый элемент, делением текущего<br />(кнопка {+} при нажатой кнопке {пробел})</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
 return Editor;

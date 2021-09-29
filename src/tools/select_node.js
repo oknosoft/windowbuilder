@@ -390,10 +390,8 @@ class ToolSelectNode extends ToolElement {
   }
 
   keydown(event) {
-    //console.log(`key_code ${event.event.code} key ${event.key}`);
-
     const {project} = this._scope;
-    const {modifiers, event: {code}} = event;
+    const {modifiers, event: {code, target}} = event;
     const step = modifiers.shift ? 1 : 10;
     let j, segment, index, point, handle;
 
@@ -457,7 +455,7 @@ class ToolSelectNode extends ToolElement {
 
     else if (['Delete','NumpadSubtract','Backspace'].includes(code)) {
 
-      if(event.event && event.event.target && ['textarea', 'input'].includes(event.event.target.tagName.toLowerCase())) {
+      if(target && ['textarea', 'input'].includes(target.tagName.toLowerCase())) {
         return;
       }
 

@@ -46,12 +46,12 @@ class ToolText extends ToolElement {
         this._scope.hide_selection_bounds();
       },
 
-      mousedown(event) {
+      mousedown({point}) {
         this.text = null;
         this.changed = false;
 
         this.project.deselectAll();
-        this.mouseStartPos = event.point.clone();
+        this.mouseStartPos = point.clone();
 
         if(this.hitItem) {
 
@@ -84,11 +84,11 @@ class ToolText extends ToolElement {
 
       },
 
-      mousedrag(event) {
+      mousedrag({point, modifiers}) {
 
         if (this.text) {
-          let delta = event.point.subtract(this.mouseStartPos);
-          if(event.modifiers.shift) {
+          let delta = point.subtract(this.mouseStartPos);
+          if(modifiers.shift) {
             delta = delta.snap_to_angle();
           }
           this.text.move_points(this.textStartPos.add(delta));
@@ -97,12 +97,12 @@ class ToolText extends ToolElement {
 
       mousemove: this.hitTest,
 
-      keydown(event) {
-        const {event: {code}} = event;
+      keydown({event}) {
+        const {code, target} = event;
 
         if (['Delete','NumpadSubtract','Backspace'].includes(code)) {
 
-          if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1){
+          if(target && ['textarea', 'input'].includes(target.tagName.toLowerCase())) {
             return;
           }
 
@@ -121,17 +121,17 @@ class ToolText extends ToolElement {
     });
   }
 
-  hitTest(event) {
+  hitTest({point}) {
     const hitSize = 6;
     const {project} = this;
 
     // хит над текстом обрабатываем особо
-    this.hitItem = project.hitTest(event.point, {class: Editor.FreeText, bounds: true, fill: true, stroke: true, tolerance: hitSize});
+    this.hitItem = project.hitTest(point, {class: Editor.FreeText, bounds: true, fill: true, stroke: true, tolerance: hitSize});
     if(!this.hitItem) {
-      this.hitItem = project.hitTest(event.point, {fill: true, stroke: false, tolerance: hitSize});
+      this.hitItem = project.hitTest(point, {fill: true, stroke: false, tolerance: hitSize});
     }
     if(!this.hitItem) {
-      const hit = project.hitTest(event.point, {fill: false, stroke: true, tolerance: hitSize});
+      const hit = project.hitTest(point, {fill: false, stroke: true, tolerance: hitSize});
       if(hit && hit.item.parent instanceof Editor.Sectional) {
         this.hitItem = hit;
       }

@@ -69,7 +69,7 @@ class ToolArc extends ToolElement{
     r.layer.notify({profiles: [r.parent], points: []}, this._scope.consts.move_points);
   }
 
-  mousedown(event) {
+  mousedown({modifiers, point}) {
 
     let b, e, r;
 
@@ -81,14 +81,14 @@ class ToolArc extends ToolElement{
 
       this.mode = this.hitItem.item.parent.generatrix;
 
-      if (event.modifiers.control || event.modifiers.option){
+      if (modifiers.control || modifiers.option){
         // при зажатом ctrl или alt строим правильную дугу
 
         b = this.mode.firstSegment.point;
         e = this.mode.lastSegment.point;
         r = (b.getDistance(e) / 2) + 0.00001;
 
-        this.do_arc(this.mode, event.point.arc_point(b.x, b.y, e.x, e.y, r, event.modifiers.option, false));
+        this.do_arc(this.mode, point.arc_point(b.x, b.y, e.x, e.y, r, modifiers.option, false));
 
         //undo.snapshot("Move Shapes");
         r = this.mode;
@@ -96,19 +96,16 @@ class ToolArc extends ToolElement{
 
       }
       // при зажатом space удаляем кривизну
-      else if(event.modifiers.space) {
+      else if(modifiers.space) {
         this.reset_arc(r = this.mode);
       }
-
       else {
         this.project.deselectAll();
-
         r = this.mode;
         r.selected = true;
         this.project.deselect_all_points();
-        this.mouseStartPos = event.point.clone();
+        this.mouseStartPos = point.clone();
         this.originalContent = this._scope.capture_selection_state();
-
       }
 
       this.timer && clearTimeout(this.timer);
@@ -118,7 +115,8 @@ class ToolArc extends ToolElement{
         this.eve.emit("layer_activated", r.layer);
       }, 10);
 
-    }else{
+    }
+    else{
       //tool.detache_wnd();
       this.project.deselectAll();
     }
@@ -151,54 +149,46 @@ class ToolArc extends ToolElement{
 
   }
 
-  mousedrag(event) {
+  mousedrag({point}) {
     if (this.mode) {
-
       this.changed = true;
-
       this._scope.canvas_cursor('cursor-arrow-small');
-
-      this.do_arc(this.mode, event.point);
-
-      //this.mode.layer.redraw();
-
+      this.do_arc(this.mode, point);
     }
   }
 
-  keydown(event) {
+  keydown({modifiers, event: {code}}) {
 
     const {project} = this._scope;
     if(project.selectedItems.length === 1) {
-      const {modifiers,event:{code}} = event;
       const step = modifiers.shift ? 1 : 10;
       const {parent} = project.selectedItems[0];
 
       if(parent instanceof Editor.Profile && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(code)) {
         const {generatrix} = parent;
 
-        if(event.modifiers.space){
+        if(modifiers.space){
           return this.reset_arc(generatrix);
         }
 
-        const point = generatrix.getPointAt(generatrix.length/2);
-        if ('ArrowLeft'===code) {
+        const point = generatrix.getPointAt(generatrix.length / 2);
+        if('ArrowLeft' === code) {
           this.do_arc(generatrix, point.add(-step, 0));
         }
-        else if ('ArrowRight'===code) {
+        else if('ArrowRight' === code) {
           this.do_arc(generatrix, point.add(step, 0));
         }
-        else if ('ArrowUp'===code) {
+        else if('ArrowUp' === code) {
           this.do_arc(generatrix, point.add(0, -step));
         }
-        else if ('ArrowDown'===code) {
+        else if('ArrowDown' === code) {
           this.do_arc(generatrix, point.add(0, step));
         }
 
         this.timer && clearTimeout(this.timer);
         this.timer = setTimeout(() => {
-          //generatrix.layer.redraw();
           parent.attache_wnd(this._scope._acc.elm);
-          this.eve.emit("layer_activated", parent.layer);
+          this.eve.emit('layer_activated', parent.layer);
         }, 100);
       }
     }
@@ -224,16 +214,16 @@ class ToolArc extends ToolElement{
     element.layer.notify({profiles: [element.parent], points: []}, this._scope.consts.move_points);
   }
 
-  hitTest(event) {
+  hitTest({point}) {
 
     const hitSize = 6;
     this.hitItem = null;
 
-    if(event.point) {
-      this.hitItem = this.project.hitTest(event.point, {fill: true, stroke: true, selected: true, tolerance: hitSize});
+    if(point) {
+      this.hitItem = this.project.hitTest(point, {fill: true, stroke: true, selected: true, tolerance: hitSize});
     }
     if(!this.hitItem) {
-      this.hitItem = this.project.hitTest(event.point, {fill: true, tolerance: hitSize});
+      this.hitItem = this.project.hitTest(point, {fill: true, tolerance: hitSize});
     }
 
     if(this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem
