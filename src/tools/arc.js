@@ -169,11 +169,11 @@ class ToolArc extends ToolElement{
 
     const {project} = this._scope;
     if(project.selectedItems.length === 1) {
-      const {key, modifiers} = event;
+      const {modifiers,event:{code}} = event;
       const step = modifiers.shift ? 1 : 10;
       const {parent} = project.selectedItems[0];
 
-      if(parent instanceof Editor.Profile && ['left', 'right', 'up', 'down'].includes(key)) {
+      if(parent instanceof Editor.Profile && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(code)) {
         const {generatrix} = parent;
 
         if(event.modifiers.space){
@@ -181,16 +181,16 @@ class ToolArc extends ToolElement{
         }
 
         const point = generatrix.getPointAt(generatrix.length/2);
-        if (key == 'left') {
+        if ('ArrowLeft'===code) {
           this.do_arc(generatrix, point.add(-step, 0));
         }
-        else if (key == 'right') {
+        else if ('ArrowRight'===code) {
           this.do_arc(generatrix, point.add(step, 0));
         }
-        else if (key == 'up') {
+        else if ('ArrowUp'===code) {
           this.do_arc(generatrix, point.add(0, -step));
         }
-        else if (key == 'down') {
+        else if ('ArrowDown'===code) {
           this.do_arc(generatrix, point.add(0, step));
         }
 
@@ -250,4 +250,3 @@ class ToolArc extends ToolElement{
 }
 
 Editor.ToolArc = ToolArc;
-

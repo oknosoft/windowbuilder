@@ -47,7 +47,7 @@ class ToolCut extends ToolElement{
   }
 
   keydown(event) {
-    if (event.key == 'escape') {
+    if (event.event.code === 'Escape') {
       this.remove_cont();
       this._scope.canvas_cursor('cursor-arrow-cut');
     }
@@ -423,4 +423,3 @@ class ToolCut extends ToolElement{
 }
 
 Editor.ToolCut = ToolCut;
-

@@ -414,9 +414,9 @@ class ToolPen extends ToolElement {
   }
 
   on_keydown(event) {
-
+      const {event: {code}} = event;
     // удаление сегмента или элемента
-    if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+    if (['Delete','NumpadSubtract','Backspace'].includes(code)) {
 
       if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1){
         return;
@@ -1527,5 +1527,3 @@ class ToolPen extends ToolElement {
 }
 
 Editor.ToolPen = ToolPen;
-
-

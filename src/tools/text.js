@@ -98,8 +98,9 @@ class ToolText extends ToolElement {
       mousemove: this.hitTest,
 
       keydown(event) {
+        const {event: {code}} = event;
 
-        if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+        if (['Delete','NumpadSubtract','Backspace'].includes(code)) {
 
           if(event.event && event.event.target && ["textarea", "input"].indexOf(event.event.target.tagName.toLowerCase())!=-1){
             return;
@@ -158,4 +159,3 @@ class ToolText extends ToolElement {
 }
 
 Editor.ToolText = ToolText;
-
