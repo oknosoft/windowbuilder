@@ -581,9 +581,9 @@ class ToolRuler extends ToolElement {
       },
 
       keydown (event) {
-
+        const {event: {code}} = event;
         // удаление размерной линии
-        if (event.key == '-' || event.key == 'delete' || event.key == 'backspace') {
+            if (['Delete','NumpadSubtract','Backspace'].includes(code)) {
 
           if (event.event && event.event.target && ['textarea', 'input'].indexOf(event.event.target.tagName.toLowerCase()) != -1)
             return;
@@ -839,5 +839,3 @@ class ToolRuler extends ToolElement {
 }
 
 Editor.ToolRuler = ToolRuler;
-
-

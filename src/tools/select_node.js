@@ -455,7 +455,7 @@ class ToolSelectNode extends ToolElement {
 
     } // удаление сегмента или элемента
 
-    else if ('Delete,NumpadSubtract,Backspace'.includes(code)) {
+    else if (['Delete','NumpadSubtract','Backspace'].includes(code)) {
 
       if(event.event && event.event.target && ['textarea', 'input'].includes(event.event.target.tagName.toLowerCase())) {
         return;
@@ -555,16 +555,16 @@ class ToolSelectNode extends ToolElement {
       return false;
 
     }
-    else if ('ArrowLeft,Numpad4'.includes(code)) {
+    else if (code === 'ArrowLeft') {
       project.move_points(new paper.Point(-step, 0));
     }
-    else if ('ArrowRight,Numpad6'.includes(code)) {
+    else if (code === 'ArrowRight') {
       project.move_points(new paper.Point(step, 0));
     }
-    else if ('ArrowUp,Numpad8'.includes(code)) {
+    else if (code === 'ArrowUp') {
       project.move_points(new paper.Point(0, -step));
     }
-    else if ('ArrowDown,Numpad2'.includes(code)) {
+    else if (code === 'ArrowDown') {
       project.move_points(new paper.Point(0, step));
     }
     else if (code === 'KeyV') {
