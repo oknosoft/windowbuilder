@@ -23,14 +23,14 @@
   "dependencies": {
     "@material-ui/lab": "^4.0.0-alpha.60",
     "md5-file": "^5.0",
-    "metadata-abstract-ui": "2.0.26-beta.2",
-    "metadata-core": "2.0.26-beta.2",
-    "metadata-pouchdb": "2.0.26-beta.2",
-    "metadata-react": "2.0.26-beta.2",
-    "metadata-superlogin": "2.0.26-beta.2",
-    "react-data-grid": "7.0.0-beta.5",
+    "metadata-abstract-ui": "2.0.26-beta.3",
+    "metadata-core": "2.0.26-beta.3",
+    "metadata-pouchdb": "2.0.26-beta.3",
+    "metadata-react": "2.0.26-beta.3",
+    "metadata-superlogin": "2.0.26-beta.3",
+    "react-data-grid": "7.0.0-beta.7",
     "react-router-dom": "^5.3",
-    "wb-core": "github:oknosoft/windowbuilder-core#523614269d314af11ab665b86a364ecf0ec5ce90",
+    "wb-core": "github:oknosoft/windowbuilder-core#d2462f206cc897e69c71d21ea44e7f4b7f7c3d75",
     "wb-forms": "github:oknosoft/windowbuilder-forms#32b577e51f105e2dac56bea9612ac74e51b5879d"
   },
   "devDependencies": {
@@ -98,7 +98,8 @@
     "webpack": "4.44.2",
     "webpack-dev-server": "3.11.1",
     "webpack-manifest-plugin": "2.2.0",
-    "workbox-webpack-plugin": "5.1.4"
+    "workbox-webpack-plugin": "5.1.4",
+    "worker-plugin": "^3.2.0"
   },
   "scripts": {
     "start": "node scripts/start.js",

@@ -13,12 +13,12 @@ const {dependencies} = require(path.resolve(__dirname, '../package.json'));
 const repos = [
   {
     local: 'wb-core',
-    remote: 'D:\\WORK\\0KNOSOFT\\UniServer\\www\\builder2\\windowbuilder-core',
+    remote: '..\\windowbuilder-core',
     dir: 'dist',
   },
   {
     local: 'wb-forms',
-    remote: 'D:\\WORK\\0KNOSOFT\\UniServer\\www\\builder2\\windowbuilder-forms',
+    remote: '..\\windowbuilder-forms',
     dir: 'dist',
   },
 ];
@@ -26,7 +26,7 @@ const repos = [
 for(const local of Object.keys(dependencies).filter(v => /^metadata-/.test(v))) {
   repos.push({
     local,
-    remote: `D:\\WORK\\0KNOSOFT\\UniServer\\www\\builder2\\git-osde\\packages\\${local}`,
+    remote: `..\\metadata\\packages\\${local}`,
     dir: '',
   });
 }
