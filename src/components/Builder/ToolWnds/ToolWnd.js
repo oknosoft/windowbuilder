@@ -10,9 +10,7 @@ import PropTypes from 'prop-types';
 import {Provider} from 'react-redux';
 import {ThemeProvider} from '@material-ui/styles';
 import Typography from '@material-ui/core/Typography';
-import {Tabs} from 'wb-forms/dist/Common/AntTabs';
-import Tab from '@material-ui/core/Tab';
-import Controls from '../Controls';
+
 
 // тема для material-ui
 import theme from '../../../styles/muiTheme';
@@ -30,7 +28,6 @@ class ToolWnd extends React.Component {
       layer: null,
       tool: null,
       type: 'root',
-      index: 0,
       visible: false,
     };
   }
@@ -80,21 +77,12 @@ class ToolWnd extends React.Component {
   };
 
   render() {
-    const {props: {editor}, state: {elm, layer, tool, type, index, visible}} = this;
+    const {props: {editor}, state: {elm, layer, tool, type, visible}} = this;
     const Wnd = (tool && (tool.ToolWnd || tool.constructor.ToolWnd)) || Stub;
     return <Provider store={store}>
       <ThemeProvider theme={theme}>
         <div style={{overflowX: 'hidden', overflowY: 'auto'}}>
-          {visible && [
-            <Tabs key="tabs" value={index} onChange={(event, index) => this.setState({index})}>
-              <Tab label="tool"/>
-              <Tab label="tree"/>
-              <Tab label="props"/>
-            </Tabs>,
-            index === 0 && <Wnd key="tool" editor={editor} />,
-            index === 1 && "Дерево - пока не подключено",
-            index === 2 && <Controls key="elm" editor={editor} type={type} elm={elm} layer={layer}/>,
-          ]}
+          {visible && <Wnd editor={editor} type={type} elm={elm} layer={layer} />}
         </div>
       </ThemeProvider>
     </Provider>;

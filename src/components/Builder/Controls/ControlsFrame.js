@@ -3,6 +3,7 @@
  */
 
 import React from 'react';
+import PropTypes from "prop-types";
 import ProductProps from './ProductProps';
 import LayerProps from './LayerProps';
 import ElmProps from './ElmProps';
@@ -98,12 +99,19 @@ class ControlsFrame extends React.Component {
     case 'grp':
       return <GrpProps key={`e-${elm.elm}`} elm={elm}/>;
     case 'layer':
-      return <LayerProps key={`l-${layer.cnstr}`} ox={ox} layer={layer}/>
+      return <LayerProps key={`l-${layer.cnstr}`} ox={ox} layer={layer}/>;
     default:
       return <ProductProps _dp={_dp} ox={ox}/>;
     }
   }
 }
+
+ControlsFrame.propTypes = {
+  editor: PropTypes.object.isRequired,
+  type: PropTypes.string,
+  elm: PropTypes.object,
+  layer: PropTypes.object,
+};
 
 export default ControlsFrame;
 

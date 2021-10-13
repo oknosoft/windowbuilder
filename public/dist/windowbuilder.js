@@ -803,7 +803,7 @@ class EditorAccordion {
   }
 
   tool_activated(tool) {
-    if(tool.constructor.ToolWnd) {
+    if(!(tool instanceof ToolSelectNode) && tool.constructor.ToolWnd) {
       this._tool.setActive();
     }
   }

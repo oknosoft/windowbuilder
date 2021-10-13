@@ -5,12 +5,13 @@
  */
 
 import TextWnd from '../../components/Builder/ToolWnds/TextWnd';
+import Controls from '../../components/Builder/Controls';
 import tool_stulp_flap from './tool_stulp_flap';
 import tool_vitrazh from './tool_vitrazh';
 
 export default function ($p) {
-
   tool_stulp_flap($p);
   tool_vitrazh($p);
   $p.Editor.ToolText.ToolWnd = TextWnd;
+  $p.Editor.ToolSelectNode.ToolWnd = Controls;
 }

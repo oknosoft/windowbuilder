@@ -1,5 +1,6 @@
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
 import Bar from './Bar';
 import ElmInsets from './ElmInsets';
@@ -50,3 +51,8 @@ export default function ProfileProps({elm, fields}) {
     <ElmInsets elm={elm}/>
   </>;
 }
+
+ProfileProps.propTypes = {
+  elm: PropTypes.object.isRequired,
+  fields: PropTypes.object.isRequired,
+};

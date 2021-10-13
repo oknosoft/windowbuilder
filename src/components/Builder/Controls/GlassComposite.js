@@ -6,6 +6,8 @@ import TabularSection from 'metadata-react/TabularSection';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import RemoveIcon from '@material-ui/icons/DeleteOutline';
 import IconButton from '@material-ui/core/IconButton';
+import Toolbar from '@material-ui/core/Toolbar';
+
 
 export default class GlassComposite extends React.Component {
 
@@ -48,16 +50,17 @@ export default class GlassComposite extends React.Component {
     this.defferedUpdate();
   };
 
+  Toolbar = (props) => {
+    const {classes, width} = props;
+    return <Toolbar disableGutters style={{width: width || '100%'}}>
+      <IconButton key="btn_add" title="Добавить вставку" onClick={this.handleAdd}><AddIcon /></IconButton>
+      <IconButton key="btn_del" title="Удалить строку" onClick={this.handleRemove}><RemoveIcon /></IconButton>
+    </Toolbar>;
+  };
+
   handleRef = (el) => {
     this._grid = el;
   };
-
-  btns() {
-    return [
-      <IconButton key="btn_add" title="Добавить вставку" onClick={this.handleAdd}><AddIcon /></IconButton>,
-      <IconButton key="btn_del" title="Удалить строку" onClick={this.handleRemove}><RemoveIcon /></IconButton>,
-    ];
-  }
 
   render() {
 
@@ -65,22 +68,34 @@ export default class GlassComposite extends React.Component {
 
     return <>
       <Bar>Составной пакет</Bar>
-      {this.scheme ? <div style={{height: '100%'}}>
-        <TabularSection
-          ref={this.handleRef}
-          _obj={elm.ox}
-          _meta={this._meta}
-          _tabular="glass_specification"
-          scheme={this.scheme}
-          filter={this.filter}
-          minHeight={260}
-          denyAddDel
-          denyReorder
-          btns={this.btns()}
-          //onCellSelected={this.rowUpdate}
-          //onRowUpdated={this.defferedUpdate}
-        />
-      </div>
+      {this.scheme ? <>
+        <div style={{height: 320}}>
+          <TabularSection
+            ref={this.handleRef}
+            _obj={elm.ox}
+            _meta={this._meta}
+            _tabular="glass_specification"
+            scheme={this.scheme}
+            filter={this.filter}
+            denyAddDel
+            denyReorder
+            Toolbar={this.Toolbar}
+          />
+        </div>
+          <div style={{height: 200}}>
+            <TabularSection
+              ref={this.handleRef}
+              _obj={elm.ox}
+              _meta={this._meta}
+              _tabular="glass_specification"
+              scheme={this.scheme}
+              filter={this.filter}
+              denyAddDel
+              denyReorder
+              Toolbar={this.Toolbar}
+            />
+          </div>
+      </>
       :
         <Typography color="error">
           {`Не найден элемент scheme_settings {obj: "cat.characteristics.glass_specification", name: "glass_specification.main"}`}
