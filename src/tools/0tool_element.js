@@ -50,7 +50,7 @@ class ToolElement extends Editor.ToolElement {
           this.options.wnd = {};
         }
         this.wnd.wnd_options(this.options.wnd);
-        $p.wsql.save_options("editor", this.options);
+        $p.wsql.save_options('editor', this.options);
         this.wnd.close();
       }
 
@@ -60,7 +60,7 @@ class ToolElement extends Editor.ToolElement {
   }
 
   on_close(wnd) {
-    wnd && wnd.cell && setTimeout(() => this._scope.tools[1].activate());
+    wnd && wnd.cell && setTimeout(() => this._scope && this._scope.tools[1].activate());
     return true;
   }
 

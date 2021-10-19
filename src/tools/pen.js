@@ -542,17 +542,20 @@ class ToolPen extends ToolElement {
       switch (profile.elm_type) {
       case elm_types.Раскладка:
         // находим заполнение под линией
+        const {length} = this.path;
+        const pt1 = this.path.getPointAt(length * 0.1);
+        const pt2 = this.path.getPointAt(length * 0.9);
         project.activeLayer.glasses(false, true).some((glass) => {
-          if(glass.contains(this.path.firstSegment.point) && glass.contains(this.path.lastSegment.point)){
-            new Onlay({
-              generatrix: this.path,
-              proto: profile,
-              parent: glass
-            });
+          if(glass.contains(pt1) && glass.contains(pt2)){
+            new Onlay({generatrix: this.path, proto: profile, parent: glass});
             this.path = null;
             return true;
           }
         });
+        if(this.path) {
+          this.path.remove();
+          this.path = null;
+        }
         break;
 
       case elm_types.Водоотлив:

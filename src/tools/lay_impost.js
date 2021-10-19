@@ -1088,9 +1088,7 @@ class ToolLayImpost extends ToolElement {
     });
 
     if (!this.hitItem)
-      setTimeout(() => {
-        this._scope.tools[1].activate();
-      }, 100);
+      setTimeout(() => this._scope && this._scope.tools[1].activate(), 100);
   }
 }
 
