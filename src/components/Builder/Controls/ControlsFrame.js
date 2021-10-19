@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import PropTypes from "prop-types";
+import PropTypes from 'prop-types';
 import ProductProps from './ProductProps';
 import LayerProps from './LayerProps';
 import ElmProps from './ElmProps';
@@ -84,7 +84,7 @@ class ControlsFrame extends React.Component {
     this.forceUpdate();
   };
 
-  dp_listener = (obj, fields) => {
+  dp_listener = (/* obj, fields */) => {
 
   };
 

@@ -46,7 +46,6 @@ class ElmInsetProps extends React.Component {
       return null;
     }
     const {Editor} = $p;
-    const ox = row._owner._owner;
     const isProfile = elm instanceof Editor.ProfileItem;
     if(isProfile) {
       const _obj = row.region ? elm.region(row.region) : elm;
@@ -59,7 +58,7 @@ class ElmInsetProps extends React.Component {
       _obj.elm_props(row.inset).forEach(({ref}) => {
         const _fld = row.region ? ref : (row.inset.ref + ref);
         content.push(<PropField key={_fld} fullWidth _obj={_obj} _fld={_fld} _meta={fields[ref]} get_ref={this.ref_fn(_fld)}/>);
-      })
+      });
       return content;
     }
     return 'ElmInsetProps';

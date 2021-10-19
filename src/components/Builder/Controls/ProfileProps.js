@@ -8,7 +8,7 @@ import Grid from '@material-ui/core/Grid';
 
 export default function ProfileProps({elm, fields}) {
   const {info, elm_type, project: {_scope}} = elm;
-  const props = elm.elm_props();
+  const eprops = elm.elm_props();
   return <>
     <Bar>{`${elm_type} ${info}`}</Bar>
     <PropField fullWidth _obj={elm} _fld="inset" _meta={fields.inset}/>
@@ -44,9 +44,9 @@ export default function ProfileProps({elm, fields}) {
       </Grid>
       <PropField fullWidth _obj={elm} _fld="cnn2" _meta={fields.cnn2}/>
     </div>
-    {props.length ? <>
+    {eprops.length ? <>
       <Bar>Свойства</Bar>
-      {props.map(({ref}, ind) => <PropField key={`ap-${ind}`} fullWidth _obj={elm} _fld={ref} _meta={fields[ref]}/>)}
+      {eprops.map(({ref}, ind) => <PropField key={`ap-${ind}`} fullWidth _obj={elm} _fld={ref} _meta={fields[ref]}/>)}
     </> : null}
     <ElmInsets elm={elm}/>
   </>;

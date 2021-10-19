@@ -3220,7 +3220,7 @@ class ToolElement extends Editor.ToolElement {
           this.options.wnd = {};
         }
         this.wnd.wnd_options(this.options.wnd);
-        $p.wsql.save_options("editor", this.options);
+        $p.wsql.save_options('editor', this.options);
         this.wnd.close();
       }
 
@@ -3230,7 +3230,7 @@ class ToolElement extends Editor.ToolElement {
   }
 
   on_close(wnd) {
-    wnd && wnd.cell && setTimeout(() => this._scope.tools[1].activate());
+    wnd && wnd.cell && setTimeout(() => this._scope && this._scope.tools[1].activate());
     return true;
   }
 
@@ -5372,9 +5372,7 @@ class ToolLayImpost extends ToolElement {
     });
 
     if (!this.hitItem)
-      setTimeout(() => {
-        this._scope.tools[1].activate();
-      }, 100);
+      setTimeout(() => this._scope && this._scope.tools[1].activate(), 100);
   }
 }
 
@@ -6279,17 +6277,20 @@ class ToolPen extends ToolElement {
       switch (profile.elm_type) {
       case elm_types.Раскладка:
         // находим заполнение под линией
+        const {length} = this.path;
+        const pt1 = this.path.getPointAt(length * 0.1);
+        const pt2 = this.path.getPointAt(length * 0.9);
         project.activeLayer.glasses(false, true).some((glass) => {
-          if(glass.contains(this.path.firstSegment.point) && glass.contains(this.path.lastSegment.point)){
-            new Onlay({
-              generatrix: this.path,
-              proto: profile,
-              parent: glass
-            });
+          if(glass.contains(pt1) && glass.contains(pt2)){
+            new Onlay({generatrix: this.path, proto: profile, parent: glass});
             this.path = null;
             return true;
           }
         });
+        if(this.path) {
+          this.path.remove();
+          this.path = null;
+        }
         break;
 
       case elm_types.Водоотлив:
