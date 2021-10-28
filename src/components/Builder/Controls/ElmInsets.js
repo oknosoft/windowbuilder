@@ -83,7 +83,6 @@ export default class ElmInsets extends React.Component {
   };
 
 
-
   render() {
 
     const {props: {elm}, state: {row, inset}} = this;

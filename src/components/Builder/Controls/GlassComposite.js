@@ -7,6 +7,7 @@ import AddIcon from '@material-ui/icons/AddCircleOutline';
 import RemoveIcon from '@material-ui/icons/DeleteOutline';
 import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
+import GlassLayerProps from './GlassLayerProps';
 
 
 export default class GlassComposite extends React.Component {
@@ -20,7 +21,7 @@ export default class GlassComposite extends React.Component {
         this.scheme = scheme;
       }
     });
-    this.state = {row: null, inset: null};
+    this.state = {row: null};
   }
 
   filter = (collection) => {
@@ -62,9 +63,16 @@ export default class GlassComposite extends React.Component {
     this._grid = el;
   };
 
+  handleCellSelected = (sel, row) => {
+    if(!row && sel && sel.hasOwnProperty('rowIdx')) {
+      row = this._grid.rowGetter(sel.rowIdx);
+    }
+    this.setState({row});
+  };
+
   render() {
 
-    const {elm} = this.props;
+    const {props: {elm}, state: {row}}  = this;
 
     return <>
       <Bar>Составной пакет</Bar>
@@ -80,21 +88,10 @@ export default class GlassComposite extends React.Component {
             denyAddDel
             denyReorder
             Toolbar={this.Toolbar}
+            onCellSelected={this.handleCellSelected}
           />
         </div>
-          <div style={{height: 200}}>
-            <TabularSection
-              ref={this.handleRef}
-              _obj={elm.ox}
-              _meta={this._meta}
-              _tabular="glass_specification"
-              scheme={this.scheme}
-              filter={this.filter}
-              denyAddDel
-              denyReorder
-              Toolbar={this.Toolbar}
-            />
-          </div>
+        <GlassLayerProps elm={elm} row={row}/>
       </>
       :
         <Typography color="error">
