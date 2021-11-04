@@ -3,5 +3,6 @@
   <item type="buttonSelect"   id="bs"  text="Скидки производителя"  title="Режим" openAll="true">
     <item type="button" id="discount_percent" text="Скидки производителя" />
     <item type="button" id="discount_percent_internal" text="Скидки дилера" />
+    <item type="button" id="extra_charge_external" text="Наценки дилера" />
   </item>
 </toolbar>
