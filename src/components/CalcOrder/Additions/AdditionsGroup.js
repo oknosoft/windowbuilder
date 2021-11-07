@@ -12,11 +12,12 @@ import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import ListItemText from '@material-ui/core/ListItemText';
 import IconButton from '@material-ui/core/IconButton';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
+import CopyIcon from '@material-ui/icons/FileCopyOutlined';
 import RemoveIcon from '@material-ui/icons/Delete';
 import Divider from '@material-ui/core/Divider';
 import Collapse from '@material-ui/core/Collapse';
 import withStyles from './styles';
-import {handleAdd, handleRemove} from './connect';
+import {handleAdd, handleCopy, handleRemove} from './connect';
 
 
 class AdditionsGroup extends React.Component {
@@ -25,6 +26,7 @@ class AdditionsGroup extends React.Component {
     super(props);
     this.selectedRow = null;
     this.handleAdd = handleAdd.bind(this);
+    this.handleCopy = handleCopy.bind(this);
     this.handleRemove = handleRemove.bind(this);
     this.state = {count: props.count};
   }
@@ -76,7 +78,7 @@ class AdditionsGroup extends React.Component {
 
   render() {
 
-    const {props, state: {count}, handleAdd, handleRemove} = this;
+    const {props, state: {count}} = this;
     const {Renderer, group, dp, classes, scheme, meta} = props;
     const {ref, presentation} = group;
     const style = {flex: 'initial'};
@@ -91,8 +93,9 @@ class AdditionsGroup extends React.Component {
 
     return <div style={style}>
       <ListItem disableGutters className={classes.listitem}>
-        <IconButton title="Добавить строку" onClick={handleAdd}><AddIcon/></IconButton>
-        <IconButton title="Удалить строку" disabled={!count} onClick={handleRemove}><RemoveIcon/></IconButton>
+        <IconButton title="Добавить строку" onClick={this.handleAdd}><AddIcon/></IconButton>
+        <IconButton title="Скопировать строку" onClick={this.handleCopy}><CopyIcon/></IconButton>
+        <IconButton title="Удалить строку" disabled={!count} onClick={this.handleRemove}><RemoveIcon/></IconButton>
         <ListItemText classes={count ? {primary: classes.groupTitle} : {}} primary={presentation}/>
         <ListItemSecondaryAction className={classes.secondary}>{count ? `${pieces()} шт` : ''}</ListItemSecondaryAction>
       </ListItem>

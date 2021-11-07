@@ -31,6 +31,7 @@
   "proxy4": "https://info.tmk-online.ru/",
   "proxy5": "http://localhost:3016/",
   "proxy6": "https://quick.ecookna.ru/",
+  "proxy7": "https://crystallit.oknosoft.ru/",
   "dependencies": {
     "@jscad/openjscad": "^1.6.1",
     "@turf/points-within-polygon": "^6.5",
@@ -44,7 +45,7 @@
     "metadata-redux": "2.0.26-beta.4",
     "metadata-superlogin": "2.0.26-beta.4",
     "react-highlight-words": "^0.17",
-    "wb-core": "github:oknosoft/windowbuilder-core#fcd804f6f2d8a9320f9c644060a982e402eb68c4",
+    "wb-core": "github:oknosoft/windowbuilder-core#7b1cba3b73c05ef6ba51e1f170df1ea580a61db3",
     "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
     "wb-forms": "github:oknosoft/windowbuilder-forms#83c70d839787eaa4640f57bba0304a5b35ecb455"
   },
