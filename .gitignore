@@ -8,11 +8,10 @@
 build/
 data/
 doc/out/
-lib/
+public/dist/print/
 public/dist/dhtmlx_debug.js
 public/templates/
 public/ram/
-src/metadata-ui
 src/templates/imgs
 src/templates/printing_plates/20160408/
 src/templates/printing_plates/invoice_signature.png
@@ -24,3 +23,4 @@ zarchive/
 node_modules
 package-lock.json
 *.log
+
