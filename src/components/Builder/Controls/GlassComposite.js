@@ -33,22 +33,36 @@ export default class GlassComposite extends React.Component {
     return res;
   };
 
-  defferedUpdate = () => {
-    setTimeout(() => {
-      this.forceUpdate();
-    }, 100);
-  };
-
   handleAdd = () => {
-    const {ox, elm} = this.props.elm;
-    /* eslint-disable-next-line */
+    const {_grid, props} = this;
+    const {ox, elm} = props.elm;
+
     const row = ox.glass_specification.add({elm});
-    this.defferedUpdate();
+
+    //selectRow
+    if(_grid) {
+      _grid.handleFilterChange();
+      for (let i = 0; i < row.row; i++) {
+        if(_grid.rowGetter(i) === row) {
+          setTimeout(() => _grid._grid.selectCell({rowIdx: i, idx: 0}, true));
+          break;
+        }
+      }
+    }
   };
 
   handleRemove = () => {
-    this._grid.handleRemove();
-    this.defferedUpdate();
+    const {_grid, props} = this;
+    if(_grid) {
+      const {selected} = _grid.state;
+      if(selected && selected.hasOwnProperty('rowIdx')) {
+        _grid.handleRemove();
+        props.elm.project.register_change(true);
+        _grid.rowGetter(0) && setTimeout(() => {
+          _grid._grid.selectCell({rowIdx: 0, idx: 0}, false);
+        });
+      }
+    }
   };
 
   Toolbar = (props) => {
