@@ -103,6 +103,48 @@ export function handleAdd() {
   }
 }
 
+export function handleCopy() {
+  const {props, tabular, state, selectedRow} = this;
+  if(tabular && selectedRow){
+
+    const {_data} = tabular.state._tabular._owner;
+    _data._loading = true;
+    const row = tabular.state._tabular.add({
+      inset: selectedRow.inset,
+      clr: selectedRow.clr,
+      len: selectedRow.len,
+      depth: selectedRow.depth,
+      height: selectedRow.height,
+      quantity: 1
+    }, false, props.ProductionRow);
+    for(const {ref} of selectedRow.inset.used_params().filter(({is_calculated}) => !is_calculated)) {
+      row[ref] = selectedRow[ref];
+    }
+    tabular.cache_actual = false;
+    _data._loading = false;
+
+    this.setState({
+      count: this.state.count + 1,
+    });
+
+    //selectRow
+    for(let i = 0; i < row.row; i++) {
+      if(tabular.rowGetter(i) === row) {
+        setTimeout(() => tabular._grid.selectCell({rowIdx: i, idx: 0}, true));
+        break;
+      }
+    }
+
+  }
+  else{
+    $p.msg.show_msg({
+      type: 'alert-info',
+      text: `Укажите строку для копирования (${props.group})`,
+      title: 'Копирование строки',
+    });
+  }
+}
+
 export function handleRemove() {
   const {props, tabular, state, selectedRow} = this;
   if(tabular && selectedRow){
@@ -125,7 +167,7 @@ export function handleRemove() {
     $p.msg.show_msg({
       type: 'alert-info',
       text: `Укажите строку для удаления (${props.group})`,
-      title: 'Удаление строки'
+      title: 'Удаление строки',
     });
   }
 }
