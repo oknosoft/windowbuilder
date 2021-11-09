@@ -94,7 +94,7 @@ class AdditionsGroup extends React.Component {
     return <div style={style}>
       <ListItem disableGutters className={classes.listitem}>
         <IconButton title="Добавить строку" onClick={this.handleAdd}><AddIcon/></IconButton>
-        <IconButton title="Скопировать строку" onClick={this.handleCopy}><CopyIcon/></IconButton>
+        <IconButton title="Скопировать строку" disabled={!count} onClick={this.handleCopy}><CopyIcon/></IconButton>
         <IconButton title="Удалить строку" disabled={!count} onClick={this.handleRemove}><RemoveIcon/></IconButton>
         <ListItemText classes={count ? {primary: classes.groupTitle} : {}} primary={presentation}/>
         <ListItemSecondaryAction className={classes.secondary}>{count ? `${pieces()} шт` : ''}</ListItemSecondaryAction>
