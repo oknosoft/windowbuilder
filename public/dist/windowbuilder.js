@@ -1636,17 +1636,31 @@ class Editor extends $p.EditorInvisible {
             $p.ui.dialogs.snack({message: err.message, timeout: 10});
           });
       }
+
+      $p.CatCharacteristicsGlass_specificationRow.prototype.value_change = function (field, type, value) {
+        // для вставок состава, перезаполняем параметры
+        const {_obj} = this;
+        if(field === 'inset' && value != this.inset) {
+          _obj.inset = value ? value.valueOf() : $p.utils.blank.guid;
+          const {inset, dop} = this;
+          const {product_params} = inset;
+          const params = {};
+          inset.used_params().forEach((param) => {
+            if((!param.is_calculated || param.show_calculated)) {
+              const def = product_params.find({param});
+              if(def) {
+                params[param.valueOf()] = param.fetch_type(def.value);
+              }
+            }
+          });
+          this.dop = Object.assign(dop, {params});
+        }
+        project && project.register_change(true);
+      };
     }
 
     // излучаем событие при создании экземпляра рисовалки
     $p.md.emit('drawer_created', this);
-
-    $p.CatCharacteristicsGlass_specificationRow.prototype.value_change = (field, type, value) => {
-      // для вставок состава заполнения
-      if(field == 'inset' && this.project) {
-        this.project.register_change(true);
-      }
-    };
 
   }
 

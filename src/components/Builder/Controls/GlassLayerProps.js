@@ -33,7 +33,7 @@ class GlassLayerProps extends React.Component {
     const {fields} = _obj._metadata;
     const content = [<PropField fullWidth key={`aip-clr-${row.row}`} _obj={_obj} _fld="clr" _meta={fields.clr} empty_text="Авто"/>];
     for(const prm of row.inset.used_params()) {
-      const {ref} = prm
+      const {ref} = prm;
       content.push(<PropField key={`${ref}-${row.row}`} fullWidth _obj={_obj} _fld={ref} _meta={fields[ref]} get_ref={this.ref_fn(ref)}/>);
     }
     return content;
