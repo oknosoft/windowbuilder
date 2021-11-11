@@ -24,6 +24,21 @@ export default class GlassComposite extends React.Component {
     this.state = {row: null};
   }
 
+  componentDidMount() {
+    $p.cat.characteristics.on('update', this.value_change);
+  }
+
+  componentWillUnmount() {
+    $p.cat.characteristics.off('update', this.value_change);
+  }
+
+  value_change = (obj, flds) => {
+    if(obj instanceof $p.CatCharacteristicsGlass_specificationRow && 'inset' in flds) {
+      const {project} = this.props.elm;
+      project && project.register_change(true);
+    }
+  };
+
   filter = (collection) => {
     const {elm} = this.props.elm;
     const res = [];
