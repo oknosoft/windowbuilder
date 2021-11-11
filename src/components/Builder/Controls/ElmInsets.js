@@ -13,6 +13,7 @@ import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
 import Bar from './Bar';
 import ElmInsetProps from './ElmInsetProps';
+import RegionEditor from './ElmInsetRegion';
 
 export default class ElmInsets extends React.Component {
 
@@ -82,6 +83,14 @@ export default class ElmInsets extends React.Component {
     this.setState({row, inset: (!row || row.inset.empty()) ? null : row.inset});
   };
 
+  // установим для колонки "Ряд", индивидуальный элемент управления
+  handleColumnsChange = ({scheme, columns}) => {
+    const region = columns.find(({key}) => key === 'region');
+    if(region) {
+      region.editor = RegionEditor;
+    }
+  };
+
 
   render() {
 
@@ -110,6 +119,7 @@ export default class ElmInsets extends React.Component {
               hideToolbar
               denyReorder
               onCellSelected={this.handleCellSelected}
+              columnsChange={this.handleColumnsChange}
               //onRowUpdated={this.defferedUpdate}
             />
           </div>

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import PropTypes from "prop-types";
+import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
 import LinkedProps from 'wb-forms/dist/Common/LinkedProps';
 

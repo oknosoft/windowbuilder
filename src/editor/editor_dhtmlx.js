@@ -495,13 +495,6 @@ class Editor extends $p.EditorInvisible {
     // излучаем событие при создании экземпляра рисовалки
     $p.md.emit('drawer_created', this);
 
-    $p.CatCharacteristicsGlass_specificationRow.prototype.value_change = (field, type, value) => {
-      // для вставок состава заполнения
-      if(field == 'inset' && this.project) {
-        this.project.register_change(true);
-      }
-    };
-
   }
 
   set_text() {
@@ -1239,7 +1232,6 @@ class Editor extends $p.EditorInvisible {
   unload() {
     const {tool, tools, tb_left, tb_top, _acc, _undo, _pwnd, project} = this;
 
-    $p.CatCharacteristicsGlass_specificationRow.prototype.value_change = null;
     $p.cat.characteristics.off('del_row', this.on_del_row);
     $p.off('alert', this.on_alert);
     document.body.removeEventListener('keydown', this.on_keydown);

@@ -12,16 +12,16 @@ import PropField from 'metadata-react/DataField/PropField';
 
 class GlassLayerProps extends React.Component {
 
-  constructor(props, context) {
-    super(props, context);
-    this._refs = {};
-  }
-
-  ref_fn(fld) {
-    return (el) => {
-      this._refs[fld] = el;
-    };
-  }
+  // constructor(props, context) {
+  //   super(props, context);
+  //   this._refs = {};
+  // }
+  //
+  // ref_fn(fld) {
+  //   return (el) => {
+  //     this._refs[fld] = el;
+  //   };
+  // }
 
   render() {
     const {elm, row} = this.props;
@@ -31,10 +31,11 @@ class GlassLayerProps extends React.Component {
 
     const _obj = elm.region(row);
     const {fields} = _obj._metadata;
-    const content = [<PropField fullWidth key={`aip-clr-${row.row}`} _obj={_obj} _fld="clr" _meta={fields.clr} empty_text="Авто"/>];
+    $p.cat.clrs.selection_exclude_service(fields.clr, row.inset);
+    const content = [<PropField fullWidth key={`clr-${row.inset.ref}`} _obj={_obj} clr={_obj.clr} _fld="clr" _meta={fields.clr} empty_text="Авто"/>];
     for(const prm of row.inset.used_params()) {
-      const {ref} = prm
-      content.push(<PropField key={`${ref}-${row.row}`} fullWidth _obj={_obj} _fld={ref} _meta={fields[ref]} get_ref={this.ref_fn(ref)}/>);
+      const {ref} = prm;
+      content.push(<PropField key={`${ref}-${row.row}`} fullWidth _obj={_obj} _fld={ref} _meta={fields[ref]} />);//get_ref={this.ref_fn(ref)}
     }
     return content;
   }
