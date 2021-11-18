@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
 import Bar from './Bar';
 import GlassComposite from './GlassComposite';
-import Grid from '@material-ui/core/Grid';
+import Coordinates from './Coordinates';
 
 export default class GlassProps extends React.Component {
 
@@ -39,23 +39,8 @@ export default class GlassProps extends React.Component {
 
       {insert_type === insert_type._manager.Стеклопакет ? <GlassComposite elm={elm}/> : null}
 
-      <Bar position="static">Координаты</Bar>
-      <Grid container spacing={1}>
-        <Grid item>
-          <PropField _obj={elm} _fld="x1" _meta={fields.x1} read_only/>
-        </Grid>
-        <Grid item>
-          <PropField _obj={elm} _fld="y1" _meta={fields.y1} read_only/>
-        </Grid>
-      </Grid>
-      <Grid container spacing={1}>
-        <Grid item>
-          <PropField _obj={elm} _fld="x2" _meta={fields.x2} read_only/>
-        </Grid>
-        <Grid item>
-          <PropField _obj={elm} _fld="y2" _meta={fields.y2} read_only/>
-        </Grid>
-      </Grid>
+      <Coordinates elm={elm} fields={fields} read_only />
+
     </>;
   }
 }
