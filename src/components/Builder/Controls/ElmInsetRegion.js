@@ -38,3 +38,8 @@ export default class RegionEditor extends EditorBase {
     return <input value={value} onChange={this.handleChange} readOnly={region === 0}/>;
   }
 }
+
+RegionEditor.propTypes = {
+  value: PropTypes.any,
+  rowData: PropTypes.object.isRequired,
+};

@@ -124,7 +124,7 @@ export function handleCopy() {
     _data._loading = false;
 
     this.setState({
-      count: this.state.count + 1,
+      count: state.count + 1,
     });
 
     //selectRow

@@ -9,19 +9,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
+import LinkedProp from './LinkedProp';
 
 class GlassLayerProps extends React.Component {
-
-  // constructor(props, context) {
-  //   super(props, context);
-  //   this._refs = {};
-  // }
-  //
-  // ref_fn(fld) {
-  //   return (el) => {
-  //     this._refs[fld] = el;
-  //   };
-  // }
 
   render() {
     const {elm, row} = this.props;
@@ -35,7 +25,8 @@ class GlassLayerProps extends React.Component {
     const content = [<PropField fullWidth key={`clr-${row.inset.ref}`} _obj={_obj} clr={_obj.clr} _fld="clr" _meta={fields.clr} empty_text="Авто"/>];
     for(const prm of row.inset.used_params()) {
       const {ref} = prm;
-      content.push(<PropField key={`${ref}-${row.row}`} fullWidth _obj={_obj} _fld={ref} _meta={fields[ref]} />);//get_ref={this.ref_fn(ref)}
+      //<PropField key={`${ref}-${row.row}`} fullWidth _obj={_obj} _fld={ref} _meta={fields[ref]} />
+      content.push(<LinkedProp key={`${ref}-${row.row}`} param={prm} _obj={_obj} _fld={ref} fields={fields} />);
     }
     return content;
   }
