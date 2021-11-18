@@ -84,10 +84,8 @@ class ControlsFrame extends React.Component {
     this.forceUpdate();
   };
 
-  dp_listener = (/*obj, fields*/) => {
-    // if('sys' in fields) {
-    //   this.forceUpdate();
-    // }
+  dp_listener = (/* obj, fields */) => {
+
   };
 
   render() {

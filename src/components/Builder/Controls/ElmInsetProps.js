@@ -56,10 +56,10 @@ class ElmInsetProps extends React.Component {
         <PropField key="aip-cnn1" _obj={_obj} _fld="cnn1" _meta={fields.cnn1} get_ref={this.ref_fn('cnn1')} empty_text="Авто" />,
         <PropField key="aip-cnn2" _obj={_obj} _fld="cnn2" _meta={fields.cnn2} get_ref={this.ref_fn('cnn2')} empty_text="Авто" />,
       ] : [];
-      _obj.elm_props(row.inset).forEach(({ref}) => {
+      _obj.elm_props(row.inset).forEach((param) => {
+        const {ref} = param;
         const _fld = row.region ? ref : (row.inset.ref + ref);
-        // <PropField key={_fld} _obj={_obj} _fld={_fld} _meta={fields[ref]} get_ref={this.ref_fn(_fld)}/>
-        content.push(<LinkedProp key={_fld} _obj={_obj} _fld={_fld} cnstr={-elm.elm} inset={row.inset} fields={fields} />);
+        content.push(<LinkedProp key={_fld} _obj={_obj} _fld={_fld} param={param} cnstr={-elm.elm} inset={row.inset} fields={fields} />);
       });
       return content;
     }

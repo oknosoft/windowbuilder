@@ -16,7 +16,6 @@ class LinkedProps extends React.Component {
     const {ts, cnstr, inset} = this.props;
     const {fields} = ts._owner._metadata(ts._name);
     const res = [];
-    let notify;
 
     ts.find_rows({cnstr, inset}, (prow) => {
       const {param} = prow;
