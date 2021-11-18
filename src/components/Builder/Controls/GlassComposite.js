@@ -1,5 +1,6 @@
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import Bar from './Bar';
 import TabularSection from 'metadata-react/TabularSection';
@@ -81,7 +82,7 @@ export default class GlassComposite extends React.Component {
   };
 
   Toolbar = (props) => {
-    const {classes, width} = props;
+    const {width} = props;
     return <Toolbar disableGutters style={{width: width || '100%'}}>
       <IconButton key="btn_add" title="Добавить вставку" onClick={this.handleAdd}><AddIcon /></IconButton>
       <IconButton key="btn_del" title="Удалить строку" onClick={this.handleRemove}><RemoveIcon /></IconButton>
@@ -128,4 +129,8 @@ export default class GlassComposite extends React.Component {
         </Typography>}
     </>;
   }
+}
+
+GlassComposite.propTypes = {
+  elm: PropTypes.object, // элемент составного заполнения
 };
