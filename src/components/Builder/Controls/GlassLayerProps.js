@@ -25,7 +25,6 @@ class GlassLayerProps extends React.Component {
     const content = [<PropField fullWidth key={`clr-${row.inset.ref}`} _obj={_obj} clr={_obj.clr} _fld="clr" _meta={fields.clr} empty_text="Авто"/>];
     for(const prm of row.inset.used_params()) {
       const {ref} = prm;
-      //<PropField key={`${ref}-${row.row}`} fullWidth _obj={_obj} _fld={ref} _meta={fields[ref]} />
       content.push(<LinkedProp key={`${ref}-${row.row}`} param={prm} _obj={_obj} _fld={ref} fields={fields} />);
     }
     return content;

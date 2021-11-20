@@ -451,6 +451,7 @@ class Editor extends $p.EditorInvisible {
 
             if(skip) {
               const {refill, sys, clr, params} = $p.cat.templates._select_template;
+              ox.base_block = '';
               if(!sys.empty()) {
                 project.set_sys(sys, params, refill);
               }
