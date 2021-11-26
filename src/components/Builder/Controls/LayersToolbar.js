@@ -4,15 +4,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import {withStyles} from '@material-ui/core/styles';
 import IconButton from '@material-ui/core/IconButton';
 import Tip from 'wb-forms/dist/Common/Tip';
-
-export const useStyles = withStyles({
-  title: {
-    flexGrow: 1,
-  },
-  sp: {
-    paddingLeft: 8,
-  },
-});
+import {useStyles} from '../Toolbar/styles';
 
 // создаёт слой и оповещает мир о новых слоях
 function addLayer(/*editor*/) {

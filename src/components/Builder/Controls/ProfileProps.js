@@ -28,8 +28,7 @@ export default function ProfileProps({elm, fields}) {
     <PropField _obj={elm} _fld="cnn1" _meta={fields.cnn1} onClick={select_b}/>
     <PropField _obj={elm} _fld="cnn2" _meta={fields.cnn2} onClick={select_e}/>
     {eprops.map((param, ind) => {
-      const {ref} = param;
-      return <LinkedProp key={`ap-${ind}`} _obj={elm} _fld={ref} param={param} cnstr={-elm.elm} fields={fields} />
+      return <LinkedProp key={`ap-${ind}`} _obj={elm} _fld={param.ref} param={param} cnstr={-elm.elm} fields={fields} />;
     })}
 
     <Coordinates elm={elm} fields={fields} select_b={select_b} select_e={select_e} />

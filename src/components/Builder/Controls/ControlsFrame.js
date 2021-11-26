@@ -4,11 +4,19 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
+import {withStyles} from '@material-ui/core/styles';
+
 import ProductProps from './ProductProps';
 import LayerProps from './LayerProps';
 import ElmProps from './ElmProps';
 import GrpProps from './GrpProps';
 import PairProps from './PairProps';
+
+const styles = (theme) => ({
+  root: {
+    paddingLeft: theme.spacing() / 2,
+  },
+});
 
 class ControlsFrame extends React.Component {
 
@@ -89,20 +97,28 @@ class ControlsFrame extends React.Component {
   };
 
   render() {
-    const {editor: {project}, type, elm, layer} = this.props;
+    const {editor: {project}, type, elm, layer, classes} = this.props;
     const {_dp, ox} = project || {};
+    let panel;
     switch (type) {
     case 'elm':
-      return <ElmProps key={`e-${elm.elm}`} elm={elm} ox={ox}/>;
+      panel = <ElmProps elm={elm} ox={ox}/>;
+      break;
     case 'pair':
-      return <PairProps key={`e-${elm.elm}`} elm={elm}/>;
+      panel = <PairProps elm={elm}/>;
+      break;
     case 'grp':
-      return <GrpProps key={`e-${elm.elm}`} elm={elm}/>;
+      panel = <GrpProps elm={elm}/>;
+      break;
     case 'layer':
-      return <LayerProps key={`l-${layer.cnstr}`} ox={ox} layer={layer}/>;
+      panel = <LayerProps ox={ox} layer={layer}/>;
+      break;
     default:
-      return <ProductProps _dp={_dp} ox={ox}/>;
+      panel = <ProductProps _dp={_dp} ox={ox} project={project}/>;
     }
+    return <div className={classes.root}>
+       {panel}
+     </div>;
   }
 }
 
@@ -111,7 +127,8 @@ ControlsFrame.propTypes = {
   type: PropTypes.string,
   elm: PropTypes.object,
   layer: PropTypes.object,
+  classes: PropTypes.object,
 };
 
-export default ControlsFrame;
+export default withStyles(styles)(ControlsFrame);
 

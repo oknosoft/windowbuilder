@@ -8,7 +8,7 @@ export default class RegionEditor extends EditorBase {
   constructor(props, context) {
     super(props, context);
     const {value} = props;
-    this.state = {value, initialValue: value};
+    this.state = {value, initialValue: parseInt(value, 10)};
   }
 
   getValue() {
@@ -16,7 +16,7 @@ export default class RegionEditor extends EditorBase {
     let region = parseInt(value, 10);
     if(rowData.inset.region) {
       if(!region) {
-        region = initialValue;
+        region = initialValue || rowData.inset.region;
       }
     }
     else {

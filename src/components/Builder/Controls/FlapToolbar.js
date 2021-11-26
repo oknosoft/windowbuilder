@@ -4,7 +4,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import Tip from 'wb-forms/dist/Common/Tip';
-import {useStyles} from './LayersToolbar';
+import {useStyles} from '../Toolbar/styles';
 
 
 function FlapToolbar({editor, contour, disabled, classes}) {

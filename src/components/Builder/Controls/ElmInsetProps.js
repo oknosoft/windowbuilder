@@ -48,22 +48,35 @@ class ElmInsetProps extends React.Component {
     }
     const {Editor} = $p;
     const isProfile = elm instanceof Editor.ProfileItem;
+    const content = [];
     if(isProfile) {
       const _obj = row.region ? elm.region(row.region) : elm;
       const {fields} = _obj._metadata;
-      const content = row.region ? [
-        <PropField key="aip-clr" _obj={row} _fld="clr" empty_text="Авто"/>,
-        <PropField key="aip-cnn1" _obj={_obj} _fld="cnn1" _meta={fields.cnn1} get_ref={this.ref_fn('cnn1')} empty_text="Авто" />,
-        <PropField key="aip-cnn2" _obj={_obj} _fld="cnn2" _meta={fields.cnn2} get_ref={this.ref_fn('cnn2')} empty_text="Авто" />,
-      ] : [];
+      if(row.region) {
+        content.push(
+          <PropField key="aip-clr" _obj={row} _fld="clr" empty_text="Авто"/>,
+          <PropField key="aip-cnn1" _obj={_obj} _fld="cnn1" _meta={fields.cnn1} get_ref={this.ref_fn('cnn1')} empty_text="Авто"/>,
+          <PropField key="aip-cnn2" _obj={_obj} _fld="cnn2" _meta={fields.cnn2} get_ref={this.ref_fn('cnn2')} empty_text="Авто"/>,
+        );
+      }
       _obj.elm_props(row.inset).forEach((param) => {
         const {ref} = param;
         const _fld = row.region ? ref : (row.inset.ref + ref);
-        content.push(<LinkedProp key={_fld} _obj={_obj} _fld={_fld} param={param} cnstr={-elm.elm} inset={row.inset} fields={fields} />);
+        content.push(<LinkedProp key={_fld} _obj={_obj} _fld={_fld} param={param} cnstr={-elm.elm} inset={row.inset} fields={fields}/>);
       });
-      return content;
     }
-    return 'ElmInsetProps';
+    else if (!elm.elm) {
+      const {fields} = elm._metadata;
+      const _obj = elm.region(row);
+      for(const param of row.inset.used_params()) {
+        const {ref} = param;
+        content.push(<LinkedProp key={`prm0-${ref}`} _obj={_obj} _fld={ref} param={param} cnstr={0} inset={row.inset} fields={fields} />);
+      }
+    }
+    else {
+      content.push('ElmInsetProps');
+    }
+    return content;
   }
 }
 
