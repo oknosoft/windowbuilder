@@ -1,11 +1,9 @@
 // модификаторы планов видов характеристик
 
-// предопределенные элементы обрабатывем в init()
-//import cch_predefined_elmnts from "./cch_predefined_elmnts";
+import glasses_list from './glasses_list';
 
-// дополнительные реквизиты и сведения обрабатывем в init()
-//import cch_properties from "./cch_properties";
-
-export default function ($p) {
-	//cch_properties($p);
+export default function ({cch: {properties}, adapters: {pouch}, utils}) {
+  pouch.once('pouch_data_loaded', () => {
+    glasses_list({properties, utils});
+  });
 }

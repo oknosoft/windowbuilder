@@ -7,7 +7,7 @@ import catalogs from './catalogs';
 import documents from './documents';
 //
 // модификаторы планов видов характеристик
-//import chartscharacteristics from './chartscharacteristics';
+import chartscharacteristics from './chartscharacteristics';
 //
 // модификаторы отчетов
 import reports from './reports';
@@ -35,6 +35,7 @@ export default function ($p) {
   common($p);
   export_dxf($p);
   documents($p);
+  chartscharacteristics($p);
 
   // подключаем печатные формы
   const s = document.createElement('script');

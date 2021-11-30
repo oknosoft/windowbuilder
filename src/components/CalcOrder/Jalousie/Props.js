@@ -4,7 +4,7 @@ import Typography from '@material-ui/core/Typography';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import AspectRatioIcon from '@material-ui/icons/AspectRatio';
-import Tip from 'wb-forms/dist/Common/Tip';
+import Tip from 'metadata-react/App/Tip';
 import Prop from './Prop';
 import SelectSizes from './SelectSizes';
 

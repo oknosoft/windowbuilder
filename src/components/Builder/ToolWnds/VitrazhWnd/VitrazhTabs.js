@@ -1,7 +1,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Tabs} from 'wb-forms/dist/Common/AntTabs';
+import {Tabs} from 'metadata-react/App/AntTabs';
 import Tab from '@material-ui/core/Tab';
 import Dimensions from './Dimensions';
 import Sizes from './Sizes';
