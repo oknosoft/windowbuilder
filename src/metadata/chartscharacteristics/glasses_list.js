@@ -20,10 +20,13 @@ export default function ({properties, utils}) {
       const inset = (typeof origin !== 'number' && origin) || utils.blank.guid;
       let value = [];
       if(params) {
-        params.find_rows({param: this, region: 0, cnstr, inset}, ({txt_row}) => {
-          if(txt_row) {
+        params.find_rows({param: this, region: 0, cnstr, inset}, (row) => {
+          if(row.value && typeof row.value === 'string') {
             try {
-              value = JSON.parse(txt_row);
+              const tmp = JSON.parse(row.value);
+              if(Array.isArray(tmp)) {
+                value = tmp;
+              }
             }
             catch (e) {}
           }
@@ -36,6 +39,9 @@ export default function ({properties, utils}) {
     glasses_list.set_pvalue = function ({ox, cnstr, elm, origin, value}) {
       const {product_params, params} = ox;
       const inset = (typeof origin !== 'number' && origin) || utils.blank.guid;
+      if(!Array.isArray(value)) {
+        value = [];
+      }
       if(params) {
         let prow;
         params.find_rows({param: this, region: 0, cnstr, inset}, (row) => {
@@ -45,7 +51,7 @@ export default function ({properties, utils}) {
         if(!prow) {
           prow = params.add({param: this, region: 0, cnstr, inset});
         }
-        prow.txt_row = JSON.stringify(value);
+        prow.value = JSON.stringify(value);
       }
       return true;
     };

@@ -9,7 +9,7 @@ import Input from '@material-ui/core/Input';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import PropField from 'metadata-react/DataField/PropField';
-import useStyles from './stylesAccordion';
+import useStyles from 'wb-forms/dist/Common/stylesAccordion';
 
 export default function Coordinates({elm, fields, read_only, select_b, select_e}) {
   const {x1, y1, x2, y2} = elm;

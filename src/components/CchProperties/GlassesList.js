@@ -63,3 +63,9 @@ export default function GlassesList({_meta, _obj, _fld, ...other}) {
     </Dialog>
   </>;
 }
+
+GlassesList.propTypes = {
+  _meta: PropTypes.object.isRequired,
+  _obj: PropTypes.object.isRequired,
+  _fld: PropTypes.object.isRequired,
+};
