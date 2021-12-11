@@ -6,6 +6,8 @@ import Bar from './Bar';
 import TabularSection from 'metadata-react/TabularSection';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import RemoveIcon from '@material-ui/icons/DeleteOutline';
+import ArrowUpIcon from '@material-ui/icons/ArrowUpward';
+import ArrowDownIcon from '@material-ui/icons/ArrowDownward';
 import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
 import GlassLayerProps from './GlassLayerProps';
@@ -68,12 +70,12 @@ export default class GlassComposite extends React.Component {
   };
 
   handleRemove = () => {
-    const {_grid, props} = this;
+    const {_grid, props: {elm}} = this;
     if(_grid) {
       const {selected} = _grid.state;
       if(selected && selected.hasOwnProperty('rowIdx')) {
         _grid.handleRemove();
-        props.elm.project.register_change(true);
+        elm.project.register_change(true);
         _grid.rowGetter(0) && setTimeout(() => {
           _grid._grid.selectCell({rowIdx: 0, idx: 0}, false);
         });
@@ -81,11 +83,30 @@ export default class GlassComposite extends React.Component {
     }
   };
 
+  handleUp = () => {
+    const {_grid, props: {elm}} = this;
+    if(_grid) {
+      _grid.handleUp();
+      elm.project.register_change(true);
+    }
+  };
+
+  handleDown = () => {
+    const {_grid, props: {elm}} = this;
+    if(_grid) {
+      _grid.handleDown();
+      elm.project.register_change(true);
+    }
+  };
+
   Toolbar = (props) => {
     const {width} = props;
     return <Toolbar disableGutters style={{width: width || '100%'}}>
-      <IconButton key="btn_add" title="Добавить вставку" onClick={this.handleAdd}><AddIcon /></IconButton>
-      <IconButton key="btn_del" title="Удалить строку" onClick={this.handleRemove}><RemoveIcon /></IconButton>
+      <IconButton title="Добавить вставку" onClick={this.handleAdd}><AddIcon /></IconButton>
+      <IconButton title="Удалить строку" onClick={this.handleRemove}><RemoveIcon /></IconButton>
+      <IconButton disabled>|</IconButton>
+      <IconButton title="Переместить вверх" onClick={this.handleUp}><ArrowUpIcon/></IconButton>
+      <IconButton title="Переместить вниз" onClick={this.handleDown}><ArrowDownIcon/></IconButton>
     </Toolbar>;
   };
 
@@ -116,7 +137,6 @@ export default class GlassComposite extends React.Component {
             scheme={this.scheme}
             filter={this.filter}
             denyAddDel
-            denyReorder
             Toolbar={this.Toolbar}
             onCellSelected={this.handleCellSelected}
           />
