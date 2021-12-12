@@ -11,6 +11,7 @@ import LayerProps from './LayerProps';
 import ElmProps from './ElmProps';
 import GrpProps from './GrpProps';
 import PairProps from './PairProps';
+import GlassProps from './GlassProps';
 
 const styles = (theme) => ({
   root: {
@@ -99,16 +100,17 @@ class ControlsFrame extends React.Component {
   render() {
     const {editor: {project}, type, elm, layer, classes} = this.props;
     const {_dp, ox} = project || {};
-    let panel;
+    const {Filling} = $p.EditorInvisible;
+    let panel, force_elm;
     switch (type) {
     case 'elm':
       panel = <ElmProps elm={elm} ox={ox}/>;
       break;
     case 'pair':
-      panel = <PairProps elm={elm}/>;
+      panel = elm.every((elm) => elm instanceof Filling) ? <GlassProps elm={elm} ox={ox}/> : <PairProps elm={elm}/>;
       break;
     case 'grp':
-      panel = <GrpProps elm={elm}/>;
+      panel = elm.every((elm) => elm instanceof Filling) ? <GlassProps elm={elm} ox={ox}/> : <GrpProps elm={elm}/>;
       break;
     case 'layer':
       panel = <LayerProps ox={ox} layer={layer}/>;

@@ -136,6 +136,7 @@ export default class GlassComposite extends React.Component {
             _tabular="glass_specification"
             scheme={this.scheme}
             filter={this.filter}
+            disable_cache
             denyAddDel
             Toolbar={this.Toolbar}
             onCellSelected={this.handleCellSelected}
