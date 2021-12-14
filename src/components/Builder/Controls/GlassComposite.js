@@ -12,6 +12,14 @@ import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
 import GlassLayerProps from './GlassLayerProps';
 
+const reflect = ({project, reflect_grp}) => {
+  if(reflect_grp) {
+    reflect_grp();
+  }
+  else if(project){
+    project.register_change(true);
+  }
+};
 
 export default class GlassComposite extends React.Component {
 
@@ -24,7 +32,6 @@ export default class GlassComposite extends React.Component {
         this.scheme = scheme;
       }
     });
-    this.state = {row: null};
   }
 
   componentDidMount() {
@@ -35,10 +42,23 @@ export default class GlassComposite extends React.Component {
     $p.cat.characteristics.off('update', this.value_change);
   }
 
+  shouldComponentUpdate({elm}) {
+    const {props, _grid} = this;
+    if(_grid && props.elm !== elm) {
+      setTimeout(() => {
+        const row = _grid.rowGetter(0);
+        if(row) {
+          props.set_row(row);
+          _grid._grid.selectCell({rowIdx: 0, idx: 0}, false);
+        }
+      });
+    }
+    return true;
+  }
+
   value_change = (obj, flds) => {
-    if(obj instanceof $p.CatCharacteristicsGlass_specificationRow && 'inset' in flds) {
-      const {project} = this.props.elm;
-      project && project.register_change(true);
+    if(obj instanceof $p.CatCharacteristicsGlass_specificationRow && ('inset' in flds || 'dop' in flds)) {
+      reflect(this.props.elm);
     }
   };
 
@@ -75,7 +95,7 @@ export default class GlassComposite extends React.Component {
       const {selected} = _grid.state;
       if(selected && selected.hasOwnProperty('rowIdx')) {
         _grid.handleRemove();
-        elm.project.register_change(true);
+        reflect(elm);
         _grid.rowGetter(0) && setTimeout(() => {
           _grid._grid.selectCell({rowIdx: 0, idx: 0}, false);
         });
@@ -87,7 +107,7 @@ export default class GlassComposite extends React.Component {
     const {_grid, props: {elm}} = this;
     if(_grid) {
       _grid.handleUp();
-      elm.project.register_change(true);
+      reflect(elm);
     }
   };
 
@@ -95,7 +115,7 @@ export default class GlassComposite extends React.Component {
     const {_grid, props: {elm}} = this;
     if(_grid) {
       _grid.handleDown();
-      elm.project.register_change(true);
+      reflect(elm);
     }
   };
 
@@ -118,12 +138,16 @@ export default class GlassComposite extends React.Component {
     if(!row && sel && sel.hasOwnProperty('rowIdx')) {
       row = this._grid.rowGetter(sel.rowIdx);
     }
-    this.setState({row});
+    this.props.set_row(row);
+  };
+
+  syncSelected = () => {
+
   };
 
   render() {
 
-    const {props: {elm}, state: {row}}  = this;
+    const {props: {elm, row}}  = this;
 
     return <>
       <Bar>Составной пакет</Bar>
@@ -154,4 +178,5 @@ export default class GlassComposite extends React.Component {
 
 GlassComposite.propTypes = {
   elm: PropTypes.object, // элемент составного заполнения
+  row: PropTypes.object, // строка состава
 };

@@ -4,6 +4,7 @@ import PropField from 'metadata-react/DataField/PropField';
 import Bar from './Bar';
 import GlassComposite from './GlassComposite';
 import Coordinates from './Coordinates';
+import Obj from '../../CalcOrder/Obj';
 
 /**
  * Виртуальное заполнение
@@ -20,6 +21,26 @@ function glassGrp(grp) {
         return (elmnts) => elmnts.every(elm => grp.includes(elm)) && grp.every(elm => elmnts.includes(elm));
       case 'hide_coordinates':
         return true;
+      case 'reflect_grp':
+        return () => {
+          const {glass_specification, _data} = target.ox;
+          _data._loading = true;
+          for(const glass of grp) {
+            if(glass !== target) {
+              glass_specification.clear({elm: glass.elm});
+              glass_specification.find_rows({elm: target.elm}, ({_obj}) => {
+                glass_specification.add({
+                  elm: glass.elm,
+                  inset: _obj.inset,
+                  clr: _obj.clr,
+                  dop: $p.utils._clone(_obj.dop),
+                });
+              });
+            }
+          }
+          _data._loading = false;
+          target.project.register_change(true);
+        };
       default:
         return target[prop];
       }
@@ -40,20 +61,23 @@ export default class GlassProps extends React.Component {
 
   constructor(props, context) {
     super(props, context);
-    this.state = {elm: glassGrp(props.elm)};
+    this.state = {elm: glassGrp(props.elm), row: null};
     this.fields = props.fields || this.state.elm.__metadata(false).fields;
   }
 
   shouldComponentUpdate({elm}) {
     const {state} = this;
+    let reset;
     if(Array.isArray(elm)) {
       if(!state.elm.equals(elm)) {
-        this.setState({elm: glassGrp(elm)});
-        return false;
+        reset = true;
       }
     }
     else if(state.elm != elm) {
-      this.setState({elm: glassGrp(elm)});
+      reset = true;
+    }
+    if(reset) {
+      this.setState({elm: glassGrp(elm), row: null});
       return false;
     }
     return true;
@@ -73,8 +97,12 @@ export default class GlassProps extends React.Component {
     this.forceUpdate();
   };
 
+  set_row = (row) => {
+    this.setState({row});
+  }
+
   render() {
-    const {state: {elm}, fields} = this;
+    const {state: {elm, row}, fields} = this;
 
     const {info, inset: {insert_type}, hide_coordinates} = elm;
     const props = elm.elm_props();
@@ -89,7 +117,7 @@ export default class GlassProps extends React.Component {
         {props.map(({ref}, ind) => <PropField key={`ap-${ind}`} _obj={elm} _fld={ref} _meta={fields[ref]}/>)}
       </> : null}
 
-      {insert_type === insert_type._manager.Стеклопакет ? <GlassComposite elm={elm}/> : null}
+      {insert_type === insert_type._manager.Стеклопакет ? <GlassComposite elm={elm} row={row} set_row={this.set_row}/> : null}
 
       {!hide_coordinates && <Coordinates elm={elm} fields={fields} read_only />}
 
