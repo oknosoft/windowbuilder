@@ -4,7 +4,6 @@ import PropField from 'metadata-react/DataField/PropField';
 import Bar from './Bar';
 import GlassComposite from './GlassComposite';
 import Coordinates from './Coordinates';
-import Obj from '../../CalcOrder/Obj';
 
 /**
  * Виртуальное заполнение

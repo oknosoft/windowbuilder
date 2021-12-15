@@ -536,7 +536,6 @@ class EditorAccordion {
         {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: msg.align_all, float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_elm, float: 'left'},
-        {name: 'glass_spec', text: '<i class="fa fa-list-ul fa-fw"></i>', tooltip: msg.glass_spec + ' ' + msg.to_elm, float: 'left'},
         {name: 'sep_1', text: '', float: 'left'},
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: msg.bld_arc, float: 'left'},
 
@@ -552,10 +551,6 @@ class EditorAccordion {
 
           case 'additional_inserts':
             _editor.additional_inserts('elm');
-            break;
-
-          case 'glass_spec':
-            _editor.glass_inserts();
             break;
 
           case 'delete':

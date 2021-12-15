@@ -40,8 +40,6 @@ const btnClick = (editor, name) => {
   // case 'arc':
   //   return () => editor.profile_radius();
   //
-  // case 'glass_spec':
-  //   return () => editor.glass_inserts();
   //
   // }
 };

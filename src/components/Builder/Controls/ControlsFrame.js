@@ -127,7 +127,7 @@ class ControlsFrame extends React.Component {
 ControlsFrame.propTypes = {
   editor: PropTypes.object.isRequired,
   type: PropTypes.string,
-  elm: PropTypes.object,
+  elm: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   layer: PropTypes.object,
   classes: PropTypes.object,
 };

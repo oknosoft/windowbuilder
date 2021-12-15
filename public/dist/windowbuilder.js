@@ -545,7 +545,6 @@ class EditorAccordion {
         {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: msg.align_all, float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_elm, float: 'left'},
-        {name: 'glass_spec', text: '<i class="fa fa-list-ul fa-fw"></i>', tooltip: msg.glass_spec + ' ' + msg.to_elm, float: 'left'},
         {name: 'sep_1', text: '', float: 'left'},
         {name: 'arc', css: 'tb_cursor-arc-r', tooltip: msg.bld_arc, float: 'left'},
 
@@ -561,10 +560,6 @@ class EditorAccordion {
 
           case 'additional_inserts':
             _editor.additional_inserts('elm');
-            break;
-
-          case 'glass_spec':
-            _editor.glass_inserts();
             break;
 
           case 'delete':
@@ -1597,6 +1592,7 @@ class Editor extends $p.EditorInvisible {
 
             if(skip) {
               const {refill, sys, clr, params} = $p.cat.templates._select_template;
+              ox.base_block = '';
               if(!sys.empty()) {
                 project.set_sys(sys, params, refill);
               }
@@ -1994,18 +1990,6 @@ class Editor extends $p.EditorInvisible {
     });
     rect.guide = true;
     return rect;
-  }
-
-  /**
-   * ### Диалог составного пакета
-   *
-   * @param [cnstr] {Number} - номер элемента или контура
-   */
-  glass_inserts(glasses){
-    if(!Array.isArray(glasses)){
-      glasses = this.project.selected_glasses();
-    }
-    return new GlassInserts(glasses);
   }
 
   fragment_spec(elm, name) {
@@ -2453,124 +2437,6 @@ Editor.BuilderElement.prototype.detache_wnd = function detache_wnd() {
   if(_grid && _grid.destructor && _grid._owner_cell){
     _grid._owner_cell.detachObject(true);
     delete this._attr._grid;
-  }
-}
-
-
-class GlassInserts {
-
-  constructor(glasses) {
-
-    const elm = glasses.length && glasses[0];
-
-    const {EditorInvisible, msg, ui, enm, iface, injected_data} = $p;
-
-    if(!(elm instanceof EditorInvisible.Filling)) {
-
-      return ui.dialogs.alert({title: msg.glass_spec, text: msg.glass_invalid_elm});
-    }
-
-    if(elm.nom.elm_type === enm.elm_types.Заполнение) {
-      return ui.dialogs.alert({title: msg.glass_spec, text: msg.glass_invalid_type});
-    }
-
-    this.elm = elm;
-    this.glasses = glasses;
-
-    const {project} = elm;
-
-    const options = {
-      name: 'glass_inserts',
-      wnd: {
-        caption: 'Составной пакет №' + elm.elm,
-        allow_close: true,
-        width: 460,
-        height: 320,
-        modal: true
-      }
-    };
-
-    this.wnd = iface.dat_blank(null, options.wnd);
-
-    this.wnd.elmnts.grids.inserts = this.wnd.attachTabular({
-      obj: project.ox,
-      ts: 'glass_specification',
-      selection: {elm: elm.elm},
-      toolbar_struct: injected_data['toolbar_glass_inserts.xml'],
-      ts_captions: {
-        fields: ['inset', 'clr'],
-        headers: 'Вставка,Цвет',
-        widths: '*,*',
-        min_widths: '100,100',
-        aligns: '',
-        sortings: 'na,na',
-        types: 'ref,ref'
-      }
-    });
-    this.wnd.attachEvent('onClose', this.onclose.bind(this));
-    this.wnd.getAttachedToolbar().attachEvent('onclick', this.btn_click.bind(this));
-  }
-
-  onclose() {
-    const {msg, ui, job_prm} = $p;
-    const {grids} = this.wnd.elmnts;
-    const {elm, glasses} = this;
-    const {glass_specification} = elm.project.ox;
-    grids.inserts && grids.inserts.editStop();
-
-    // проверяем состав
-    const chain = glass_specification.find_rows({elm: elm.elm}).map(({_row}) => _row);
-    const {glass_chains} = job_prm.builder;
-    if(glass_chains && glass_chains.length) {
-      let ok;
-      for(const chains of glass_chains) {
-        if(chains.length === chain.length && chain.every(({inset}, index) => {
-          return inset.insert_glass_type === chains[index];
-        })) {
-          ok = true;
-          break;
-        }
-      }
-      if(!ok) {
-        ui.dialogs.alert({title: msg.glass_invalid_chain, text: chain.map(({inset}) => inset.insert_glass_type.synonym).join('-')});
-      }
-    }
-
-    // очищаем незаполненные строки табличной части
-    glass_specification.clear({elm: elm.elm, inset: $p.utils.blank.guid});
-
-    // распространим изменения на все выделенные заполнения
-    for(let i = 1; i < glasses.length; i++) {
-      const selm = glasses[i];
-      glass_specification.clear({elm: selm.elm});
-      chain.forEach((row) => {
-        glass_specification.add({
-          elm: selm.elm,
-          inset: row.inset,
-          clr: row.clr
-        });
-      });
-    }
-
-    elm.project.register_change(true);
-    elm._manager.emit_async('update', elm, {inset: true});
-    return true;
-  }
-
-  btn_click(id) {
-    if(id == "btn_inset"){
-      const {project, inset, elm} = this.elm;
-      project.ox.glass_specification.clear({elm: elm});
-      inset.specification.forEach((row) => {
-        if(row.nom instanceof $p.CatInserts){
-          project.ox.glass_specification.add({
-            elm: elm,
-            inset: row.nom,
-            clr: row.clr
-          });
-        }
-      });
-    }
   }
 }
 

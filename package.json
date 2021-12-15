@@ -1,14 +1,14 @@
 {
   "name": "windowbuilder",
-  "version": "2.1.258",
+  "version": "2.1.259",
   "description": "Order dealer for windows and stained glass",
   "repository": {
     "type": "git",
     "url": "https://github.com/oknosoft/windowbuilder.git"
   },
   "engines": {
-    "node": "^12.18",
-    "npm": "^6.14"
+    "node": "^16.13",
+    "yarn": "^1.22"
   },
   "keywords": [
     "metadata",
@@ -33,51 +33,45 @@
   "proxy6": "https://quick.ecookna.ru/",
   "proxy7": "https://crystallit.oknosoft.ru/",
   "dependencies": {
-    "@jscad/openjscad": "^1.6.1",
     "@turf/points-within-polygon": "^6.5",
     "dxf-writer": "^1.12",
     "md5-file": "^5.0",
-    "metadata-abstract-ui": "2.0.26-beta.5",
-    "metadata-core": "2.0.26-beta.5",
-    "metadata-dhtmlx": "2.0.26-beta.5",
-    "metadata-pouchdb": "2.0.26-beta.5",
-    "metadata-react": "2.0.26-beta.5",
-    "metadata-redux": "2.0.26-beta.5",
-    "metadata-superlogin": "2.0.26-beta.5",
+    "metadata-abstract-ui": "2.0.27-beta.1",
+    "metadata-core": "2.0.27-beta.1",
+    "metadata-dhtmlx": "2.0.27-beta.1",
+    "metadata-pouchdb": "2.0.27-beta.1",
+    "metadata-react": "2.0.27-beta.1",
+    "metadata-redux": "2.0.27-beta.1",
+    "metadata-superlogin": "2.0.27-beta.1",
     "react-highlight-words": "^0.17",
-    "wb-core": "github:oknosoft/windowbuilder-core#61bcf7d364dc10c7f502fb945f6800d010e20e16",
-    "wb-cutting": "github:oknosoft/genetic-cutting#3a8abffb315c005ae46810903ecdfe40aae559f9",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#d70fa5382d1bc96f8458385706366371c9b49811"
+    "wb-core": "github:oknosoft/windowbuilder-core#ec6f3b6f17a309aec0d8283fbbf511ea388a46f3",
+    "wb-cutting": "github:oknosoft/genetic-cutting#da74a4a12254f351c1364e86bbf0c0454550701d",
+    "wb-forms": "github:oknosoft/windowbuilder-forms#88c3c40218afe46c133def4c48ad662fde4d8131"
   },
   "devDependencies": {
-    "@babel/core": "7.9.0",
-    "@svgr/webpack": "4.3.3",
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.5.0",
-    "@testing-library/user-event": "^7.2.1",
-    "@typescript-eslint/eslint-plugin": "^2.34.0",
-    "@typescript-eslint/parser": "^2.34.0",
-    "babel-eslint": "10.1.0",
-    "babel-jest": "^24.9.0",
-    "babel-loader": "8.1.0",
-    "babel-plugin-named-asset-import": "^0.3.6",
-    "babel-preset-react-app": "^9.1.2",
-    "camelcase": "^5.3.1",
-    "case-sensitive-paths-webpack-plugin": "2.3.0",
-    "css-loader": "3.4.2",
-    "dotenv": "8.2.0",
-    "dotenv-expand": "5.1.0",
-    "eslint": "^6.8.0",
-    "eslint-config-react-app": "^5.2.1",
-    "eslint-loader": "3.0.3",
-    "eslint-plugin-flowtype": "4.6.0",
-    "eslint-plugin-import": "2.20.1",
-    "eslint-plugin-jsx-a11y": "6.2.3",
-    "eslint-plugin-react": "7.19.0",
-    "eslint-plugin-react-hooks": "^1.6.1",
-    "file-loader": "4.3.0",
-    "fs-extra": "^8.1.0",
-    "glob": "^7.1.6",
+    "@babel/core": "^7.16.0",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.3",
+    "@svgr/webpack": "^5.5.0",
+    "@testing-library/jest-dom": "^5.16.1",
+    "@testing-library/react": "^12.1.2",
+    "@testing-library/user-event": "^13.5.0",
+    "babel-jest": "^27.4.2",
+    "babel-loader": "^8.2.3",
+    "babel-plugin-named-asset-import": "^0.3.8",
+    "babel-preset-react-app": "^10.0.1",
+    "bfj": "^7.0.2",
+    "browserslist": "^4.18.1",
+    "camelcase": "^6.2.1",
+    "case-sensitive-paths-webpack-plugin": "^2.4.0",
+    "css-loader": "^6.5.1",
+    "css-minimizer-webpack-plugin": "^3.2.0",
+    "dotenv": "^10.0.0",
+    "dotenv-expand": "^5.1.0",
+    "eslint": "^8.3.0",
+    "eslint-config-react-app": "^7.0.0",
+    "eslint-webpack-plugin": "^3.1.1",
+    "file-loader": "^6.2.0",
+    "fs-extra": "^10.0.0",
     "gulp": "^4.0",
     "gulp-base64": "^0.1",
     "gulp-concat": "^2.6",
@@ -88,37 +82,37 @@
     "gulp-umd": "^2.0",
     "gulp-util": "^3.0.8",
     "gulp-wrap": "^0.15.0",
-    "html-webpack-plugin": "4.0.0-beta.11",
-    "identity-obj-proxy": "3.0.0",
-    "jest": "24.9.0",
-    "jest-environment-jsdom-fourteen": "1.0.1",
-    "jest-resolve": "24.9.0",
-    "jest-watch-typeahead": "0.4.2",
-    "mini-css-extract-plugin": "0.9.0",
-    "optimize-css-assets-webpack-plugin": "5.0.3",
-    "pnp-webpack-plugin": "1.6.4",
-    "postcss-flexbugs-fixes": "4.1.0",
-    "postcss-loader": "3.0.0",
-    "postcss-normalize": "8.0.1",
-    "postcss-preset-env": "6.7.0",
-    "postcss-safe-parser": "4.0.1",
-    "raw-loader": "^3.1.0",
-    "react": "^16.14",
-    "react-app-polyfill": "^1.0.6",
-    "react-dev-utils": "^10.2.1",
-    "react-dom": "^16.14",
-    "resolve": "1.15.0",
-    "resolve-url-loader": "3.1.1",
-    "sass-loader": "8.0.2",
-    "semver": "6.3.0",
-    "style-loader": "0.23.1",
-    "terser-webpack-plugin": "2.3.5",
-    "ts-pnp": "1.1.6",
-    "url-loader": "2.3.0",
-    "webpack": "4.42.0",
-    "webpack-dev-server": "3.10.3",
-    "webpack-manifest-plugin": "2.2.0",
-    "workbox-webpack-plugin": "4.3.1"
+    "html-webpack-plugin": "^5.5.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^27.4.3",
+    "jest-resolve": "^27.4.2",
+    "jest-watch-typeahead": "^1.0.0",
+    "mini-css-extract-plugin": "^2.4.5",
+    "postcss": "^8.4.4",
+    "postcss-flexbugs-fixes": "^5.0.2",
+    "postcss-loader": "^6.2.1",
+    "postcss-normalize": "^10.0.1",
+    "postcss-preset-env": "^7.0.1",
+    "prompts": "^2.4.2",
+    "raw-loader": "^4.0",
+    "react": "^17.0.2",
+    "react-app-polyfill": "^3.0.0",
+    "react-dev-utils": "^12.0.0",
+    "react-dom": "^17.0.2",
+    "react-refresh": "^0.11.0",
+    "resolve": "^1.20.0",
+    "resolve-url-loader": "^4.0.0",
+    "sass-loader": "^12.3.0",
+    "semver": "^7.3.5",
+    "source-map-loader": "^3.0.0",
+    "style-loader": "^3.3.1",
+    "tailwindcss": "^3.0.2",
+    "terser-webpack-plugin": "^5.2.5",
+    "web-vitals": "^2.1.2",
+    "webpack": "^5.64.4",
+    "webpack-dev-server": "^4.6.0",
+    "webpack-manifest-plugin": "^4.0.2",
+    "workbox-webpack-plugin": "^6.4.1"
   },
   "files": [
     "LICENSE",
@@ -131,15 +125,21 @@
     "meta:link": "node scripts/meta.link.js"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
   "browserslist": {
     "production": [
-      "> 5%"
+      "> 5%",
+      "not dead",
+      "not op_mini all"
     ],
     "development": [
       "last 1 chrome version",
-      "last 1 firefox version"
+      "last 1 firefox version",
+      "last 1 safari version"
     ]
   },
   "jest": {
@@ -160,14 +160,14 @@
       "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
       "<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"
     ],
-    "testEnvironment": "jest-environment-jsdom-fourteen",
+    "testEnvironment": "jsdom",
     "transform": {
-      "^.+\\.(js|jsx|ts|tsx)$": "<rootDir>/node_modules/babel-jest",
+      "^.+\\.(js|jsx|mjs|cjs|ts|tsx)$": "<rootDir>/config/jest/babelTransform.js",
       "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
-      "^(?!.*\\.(js|jsx|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
+      "^(?!.*\\.(js|jsx|mjs|cjs|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
     },
     "transformIgnorePatterns": [
-      "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|ts|tsx)$",
+      "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs|cjs|ts|tsx)$",
       "^.+\\.module\\.(css|sass|scss)$"
     ],
     "modulePaths": [],
@@ -190,7 +190,8 @@
     "watchPlugins": [
       "jest-watch-typeahead/filename",
       "jest-watch-typeahead/testname"
-    ]
+    ],
+    "resetMocks": true
   },
   "babel": {
     "presets": [

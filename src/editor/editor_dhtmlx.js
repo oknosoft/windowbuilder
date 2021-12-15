@@ -851,18 +851,6 @@ class Editor extends $p.EditorInvisible {
     return rect;
   }
 
-  /**
-   * ### Диалог составного пакета
-   *
-   * @param [cnstr] {Number} - номер элемента или контура
-   */
-  glass_inserts(glasses){
-    if(!Array.isArray(glasses)){
-      glasses = this.project.selected_glasses();
-    }
-    return new GlassInserts(glasses);
-  }
-
   fragment_spec(elm, name) {
     const {ui: {dialogs}, cat: {characteristics}} = $p;
     if(elm) {
