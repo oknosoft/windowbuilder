@@ -47,6 +47,7 @@
     "no-console": 0,
     "no-extra-semi": 1,
     "no-prototype-builtins": 0,
+    "no-setter-return": 0,
     "no-unexpected-multiline": 1,
     "no-useless-escape": 1,
     "no-mixed-spaces-and-tabs": 1,
