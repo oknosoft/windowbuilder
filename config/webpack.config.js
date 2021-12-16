@@ -757,6 +757,8 @@ module.exports = function (webpackEnv) {
             },
           },
         }),
+      // поддержка import в воркерах
+      //new WorkerPlugin(),
     ].filter(Boolean),
     // Turn off performance processing because we utilize
     // our own hints via the FileSizeReporter

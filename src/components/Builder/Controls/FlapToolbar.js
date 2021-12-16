@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
-import Tip from 'wb-forms/dist/Common/Tip';
+import Tip from 'metadata-react/App/Tip';
 import {useStyles} from '../Toolbar/styles';
 
 

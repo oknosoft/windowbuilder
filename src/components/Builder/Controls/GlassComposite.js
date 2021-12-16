@@ -141,10 +141,6 @@ export default class GlassComposite extends React.Component {
     this.props.set_row(row);
   };
 
-  syncSelected = () => {
-
-  };
-
   render() {
 
     const {props: {elm, row}}  = this;

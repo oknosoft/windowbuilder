@@ -116,6 +116,7 @@ export default class ElmInsets extends React.Component {
               _tabular="inserts"
               scheme={this.scheme}
               filter={this.filter}
+              disable_cache
               minHeight={110}
               hideToolbar
               denyReorder

@@ -5,6 +5,7 @@
 const path = require('path');
 const fs = require('fs');
 const md5File = require('md5-file');
+const {appWebpackCache} = require('../config/paths');
 
 const localNodeModules = path.resolve(__dirname, '../node_modules');
 const {dependencies} = require(path.resolve(__dirname, '../package.json'));
@@ -81,6 +82,10 @@ for(const {local, remote, dir} of repos) {
 }
 
 
-if(!copied){
+if(copied){
+  // чистим cache webpack
+  fs.rm(appWebpackCache, {recursive: true, force: true}, () => null);
+}
+else {
   console.log(`all files match`);
 }

@@ -41,7 +41,7 @@ export default class AdditionsGroups extends React.Component {
       const group = groups.get(obj.inset.insert_type);
       group && group.forceUpdate();
     }
-  }
+  };
 
   render() {
     const {items, components, dp} = this;

@@ -10,7 +10,6 @@ process.on('unhandledRejection', err => {
 
 const path = require('path');
 const fs = require('fs-extra');
-//const glob = require('glob');
 
 const paths = require('../config/paths');
 const packageData = require('../package.json');
@@ -26,15 +25,3 @@ fs.writeFile(path.resolve(paths.appBuild + '/build.json'), build, 'utf8', functi
   }
 });
 
-const fname = path.resolve(paths.appBuild + '/sw-ext.js');
-fs.readFile(fname, 'utf8', function (error, data) {
-  fs.writeFile(fname, data.replace('%revision%', moment().format('YYYYMMDDHHmm')), 'utf8', function (err) {
-    if(err) {
-      console.log(err);
-      process.exit(1);
-    }
-    else {
-      console.log('Write sw-ext.js...');
-    }
-  });
-});

@@ -54,7 +54,7 @@ class Builder extends DhtmlxCell {
     }
     const {ox} = this._editor.project;
     return ox && ox._modified ? `Изделие ${ox.prod_name(true)} изменено.\n\nЗакрыть без сохранения?` : true;
-  }
+  };
 
   render() {
     const {dialog} = this.props;

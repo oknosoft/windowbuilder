@@ -51,7 +51,7 @@ class AdditionsGroup extends React.Component {
         });
       }
     }
-  }
+  };
 
   onCellSelected = (e) => {
     const {props: {meta}, tabular} = this;
@@ -74,7 +74,7 @@ class AdditionsGroup extends React.Component {
         this.selectedRow.tune(key, mf, column);
       }
     }
-  }
+  };
 
   render() {
 
