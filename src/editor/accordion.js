@@ -225,7 +225,7 @@ class StvProps {
     obj.refresh_prm_links();
 
     const attr = {
-      obj: obj,
+      obj,
       oxml: {
         Фурнитура: ['furn'],
         Параметры: []
@@ -305,7 +305,7 @@ class StvProps {
       if(param == value){
         return;
       }
-      const links = param.params_links({grid: _grid, obj: prow});
+      const links = param.params_links({grid: _grid, obj: prow, layer: _obj});
       const hide = links.some((link) => link.hide);
       const row = _grid.getRowById('params|'+param);
 
