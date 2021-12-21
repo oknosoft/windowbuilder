@@ -43,6 +43,9 @@ module.exports = function settings(prm = {}) {
     // расположение файлов руководства пользователя
     docs_root: 'https://raw.githubusercontent.com/oknosoft/windowbuilder/master/doc/',
 
+    // путь к 3d-рендеру
+    d3d: 'http://localhost:3003',
+
     // фильтр для репликации с CouchDB не используем
     pouch_filter: {
       meta: 'auth/meta',
