@@ -277,6 +277,20 @@ class StvProps {
     this.on_prm_change('0|0');
     this._grid.setSizes();
 
+    const ro = obj instanceof Editor.ContourNestedContent || obj instanceof Editor.ContourNested;
+    this._grid.setEditable(!ro);
+    const {buttons} = this.layout._otoolbar;
+    for(const btn in buttons) {
+      if(btn === 'spec') {
+        continue;
+      }
+      if(ro) {
+        buttons[btn].classList.add('disabledbutton');
+      }
+      else {
+        buttons[btn].classList.remove('disabledbutton');
+      }
+    }
   }
 
   on_refresh_prm_links(contour) {
@@ -772,7 +786,7 @@ class EditorAccordion {
         switch(name) {
 
           case 'refill':
-            _editor.project._dp.sys.refill_prm(_editor.project.ox);
+            _editor.project._dp.sys.refill_prm(_editor.project.ox, 0, false, _editor.project);
             this.props.reload();
             break;
 
@@ -1342,18 +1356,18 @@ class Editor extends $p.EditorInvisible {
         {name: 'stamp',  css: 'tb_stamp', tooltip: 'Загрузить из типового блока или заказа', float: 'left'},
 
         //{name: 'sep_1', text: '', float: 'left'},
-        {name: 'copy', text: '<i class="fa fa-clone fa-fw"></i>', tooltip: 'Скопировать выделенное', float: 'left'},
-        {name: 'paste', text: '<i class="fa fa-clipboard fa-fw"></i>', tooltip: 'Вставить', float: 'left'},
-        {name: 'paste_prop', text: '<i class="fa fa-paint-brush fa-fw"></i>', tooltip: 'Применить скопированные свойства', float: 'left'},
+        //{name: 'copy', text: '<i class="fa fa-clone fa-fw"></i>', tooltip: 'Скопировать выделенное', float: 'left'},
+        //{name: 'paste', text: '<i class="fa fa-clipboard fa-fw"></i>', tooltip: 'Вставить', float: 'left'},
+        //{name: 'paste_prop', text: '<i class="fa fa-paint-brush fa-fw"></i>', tooltip: 'Применить скопированные свойства', float: 'left'},
 
-        //{name: 'sep_2', text: '', float: 'left'},
+        {name: 'sep_2', text: '', float: 'left'},
         {name: 'back', text: '<i class="fa fa-undo fa-fw"></i>', tooltip: 'Шаг назад', float: 'left'},
         {name: 'rewind', text: '<i class="fa fa-repeat fa-fw"></i>', tooltip: 'Шаг вперед', float: 'left'},
 
-        //{name: 'sep_3', text: '', float: 'left'},
+        {name: 'sep_3', text: '', float: 'left'},
         {name: 'open_spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
-        //{name: 'sep_4', text: '', float: 'left'},
         {name: 'dxf', text: 'DXF', tooltip: 'Экспорт в DXF', float: 'left', width: '30px'},
+        {name: 'd3d', text: '<i class="fa fa-video-camera"></i>', tooltip: 'Открыть 3D', float: 'left', width: '30px'},
         {name: 'fragment', text: 'F', tooltip: 'Фрагмент', float: 'left', width: '20px'},
 
         {name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть без сохранения', float: 'right'},
@@ -1391,25 +1405,17 @@ class Editor extends $p.EditorInvisible {
           _editor._undo.rewind();
           break;
 
-        case 'copy':
-          //_editor._clipbrd.copy();
-          break;
-
-        case 'paste':
-          //_editor._clipbrd.paste();
-          break;
-
-        case 'paste_prop':
-          $p.msg.show_msg(name);
-          break;
-
         case 'open_spec':
           _editor.project.deselectAll();
           _editor.project.ox.form_obj();
           break;
 
         case 'dxf':
-          $p.md.emit('dxf', _editor.project);
+        case 'd3d':
+        case 'copy':
+        case 'paste':
+        case 'paste_prop':
+          $p.md.emit(name, _editor.project);
           break;
 
         case 'history':
@@ -1450,8 +1456,7 @@ class Editor extends $p.EditorInvisible {
       }
     });
 
-    this.tb_top.buttons.paste.classList.add('disabledbutton');
-    this.tb_top.buttons.paste_prop.classList.add('disabledbutton');
+    this.tb_top.buttons.d3d.classList.add('disabledbutton');
 
     this._layout.base.style.backgroundColor = '#f5f5f5';
     this.tb_top.cell.style.background = '#fff';
@@ -2427,6 +2432,21 @@ Editor.BuilderElement.prototype.attache_wnd = function attache_wnd(cell) {
       oxml: this.oxml
     });
   }
+  const ro = this.layer instanceof Editor.ContourNestedContent || this.layer instanceof Editor.ContourNested;
+  const {buttons} = this.project._scope._acc.elm._otoolbar;
+  this._attr._grid.setEditable(!ro);
+  for(const btn in buttons) {
+    if(btn === 'spec') {
+      continue;
+    }
+    if(ro) {
+      buttons[btn].classList.add('disabledbutton');
+    }
+    else {
+      buttons[btn].classList.remove('disabledbutton');
+    }
+  }
+
 }
 
 /**

@@ -32,6 +32,21 @@ Editor.BuilderElement.prototype.attache_wnd = function attache_wnd(cell) {
       oxml: this.oxml
     });
   }
+  const ro = this.layer instanceof Editor.ContourNestedContent || this.layer instanceof Editor.ContourNested;
+  const {buttons} = this.project._scope._acc.elm._otoolbar;
+  this._attr._grid.setEditable(!ro);
+  for(const btn in buttons) {
+    if(btn === 'spec') {
+      continue;
+    }
+    if(ro) {
+      buttons[btn].classList.add('disabledbutton');
+    }
+    else {
+      buttons[btn].classList.remove('disabledbutton');
+    }
+  }
+
 }
 
 /**

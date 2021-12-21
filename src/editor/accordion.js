@@ -268,6 +268,20 @@ class StvProps {
     this.on_prm_change('0|0');
     this._grid.setSizes();
 
+    const ro = obj instanceof Editor.ContourNestedContent || obj instanceof Editor.ContourNested;
+    this._grid.setEditable(!ro);
+    const {buttons} = this.layout._otoolbar;
+    for(const btn in buttons) {
+      if(btn === 'spec') {
+        continue;
+      }
+      if(ro) {
+        buttons[btn].classList.add('disabledbutton');
+      }
+      else {
+        buttons[btn].classList.remove('disabledbutton');
+      }
+    }
   }
 
   on_refresh_prm_links(contour) {
@@ -763,7 +777,7 @@ class EditorAccordion {
         switch(name) {
 
           case 'refill':
-            _editor.project._dp.sys.refill_prm(_editor.project.ox);
+            _editor.project._dp.sys.refill_prm(_editor.project.ox, 0, false, _editor.project);
             this.props.reload();
             break;
 
