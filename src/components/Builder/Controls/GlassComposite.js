@@ -42,7 +42,7 @@ export default class GlassComposite extends React.Component {
     $p.cat.characteristics.off('update', this.value_change);
   }
 
-  shouldComponentUpdate({elm}) {
+  shouldComponentUpdate({elm, row}) {
     const {props, _grid} = this;
     if(_grid && props.elm !== elm) {
       setTimeout(() => {
@@ -53,7 +53,7 @@ export default class GlassComposite extends React.Component {
         }
       });
     }
-    return true;
+    return props.elm !== elm || props.row !== row;
   }
 
   value_change = (obj, flds) => {
