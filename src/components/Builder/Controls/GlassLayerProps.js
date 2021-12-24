@@ -14,16 +14,17 @@ import LinkedProp from './LinkedProp';
 class GlassLayerProps extends React.Component {
 
   render() {
-    const {elm, row} = this.props;
+    const {elm, row, inset} = this.props;
     if(!elm || !row) {
       return null;
     }
 
     const _obj = elm.region(row);
     const {fields} = _obj._metadata;
-    $p.cat.clrs.selection_exclude_service(fields.clr, row.inset);
-    const content = [<PropField fullWidth key={`clr-${elm.elm}`} _obj={_obj} clr={_obj.clr} _fld="clr" _meta={fields.clr} empty_text="Авто"/>];
-    for(const prm of row.inset.used_params()) {
+    const {clr} = fields;
+    $p.cat.clrs.selection_exclude_service(clr, inset);
+    const content = [<PropField fullWidth key={`clr-${inset.ref}-${row.row}`} _obj={_obj} _fld="clr" _meta={clr} empty_text="Авто"/>];
+    for(const prm of inset.used_params()) {
       const {ref} = prm;
       content.push(<LinkedProp key={`${ref}-${row.row}`} param={prm} _obj={_obj} _fld={ref} fields={fields} />);
     }
@@ -36,4 +37,5 @@ export default GlassLayerProps;
 GlassLayerProps.propTypes = {
   elm: PropTypes.object, // элемент рисовалки
   row: PropTypes.object, // строка состава заполнения
+  inset: PropTypes.object, // вставка текущей строки
 };

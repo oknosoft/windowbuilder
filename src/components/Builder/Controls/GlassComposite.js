@@ -62,6 +62,7 @@ export default class GlassComposite extends React.Component {
   value_change = (obj, flds) => {
     if(obj instanceof $p.CatCharacteristicsGlass_specificationRow && ('inset' in flds || 'dop' in flds)) {
       reflect(this.props.elm);
+      this.forceUpdate();
     }
   };
 
@@ -93,15 +94,20 @@ export default class GlassComposite extends React.Component {
   };
 
   handleRemove = () => {
-    const {_grid, props: {elm}} = this;
+    const {_grid, props: {elm, set_row}} = this;
     if(_grid) {
       const {selected} = _grid.state;
       if(selected && selected.hasOwnProperty('rowIdx')) {
         _grid.handleRemove();
         reflect(elm);
-        _grid.rowGetter(0) && setTimeout(() => {
-          _grid._grid.selectCell({rowIdx: 0, idx: 0}, false);
-        });
+        if(_grid.rowGetter(0)) {
+          setTimeout(() => {
+            _grid._grid.selectCell({rowIdx: 0, idx: 0}, false);
+          });
+        }
+        else {
+          set_row(null);
+        }
       }
     }
   };
@@ -123,12 +129,17 @@ export default class GlassComposite extends React.Component {
   };
 
   handleByInset = () => {
-    const {_grid, props: {elm}} = this;
+    const {_grid, props: {elm, set_row}} = this;
     elm.set_inset(elm.inset, false, true);
     this.forceUpdate(() => {
-      _grid.rowGetter(0) && setTimeout(() => {
-        _grid._grid.selectCell({rowIdx: 0, idx: 0}, false);
-      });
+      if(_grid.rowGetter(0)) {
+        setTimeout(() => {
+          _grid._grid.selectCell({rowIdx: 0, idx: 0}, false);
+        });
+      }
+      else {
+        set_row(null);
+      }
     });
   };
 
@@ -196,7 +207,7 @@ export default class GlassComposite extends React.Component {
             onCellSelected={this.handleCellSelected}
           />
         </div>
-        <GlassLayerProps elm={elm} row={row}/>
+        <GlassLayerProps elm={elm} row={row} inset={row && row.inset}/>
       </>
       :
         <Typography color="error">
@@ -209,4 +220,5 @@ export default class GlassComposite extends React.Component {
 GlassComposite.propTypes = {
   elm: PropTypes.object, // элемент составного заполнения
   row: PropTypes.object, // строка состава
+  set_row: PropTypes.func, // метод
 };

@@ -871,7 +871,6 @@ class AdditionalInserts {
       cnstr = project.selected_elm;
       if(cnstr) {
         // добавляем параметры вставки
-        project.ox.add_inset_params(cnstr.inset, -cnstr.elm, utils.blank.guid);
         this._caption += ' элем. №' + cnstr.elm;
         cnstr = -cnstr.elm;
         this._fields.inset.choice_params[0].path = ['Элемент', 'Жалюзи'];
