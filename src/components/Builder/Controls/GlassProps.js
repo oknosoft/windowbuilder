@@ -108,7 +108,7 @@ export default class GlassProps extends React.Component {
 
     return <>
       <Bar>{`Заполнение ${info}`}</Bar>
-      <PropField _obj={elm} _fld="inset" _meta={fields.inset}/>
+      <PropField _obj={elm} _fld="inset" _meta={fields.inset} handleValueChange={() => this.set_row(null)}/>
       <PropField _obj={elm} _fld="clr" _meta={fields.clr}/>
 
       {props.length ? <>

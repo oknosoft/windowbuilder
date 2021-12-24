@@ -2,14 +2,17 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
-import Bar from './Bar';
 import TabularSection from 'metadata-react/TabularSection';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import RemoveIcon from '@material-ui/icons/DeleteOutline';
 import ArrowUpIcon from '@material-ui/icons/ArrowUpward';
 import ArrowDownIcon from '@material-ui/icons/ArrowDownward';
+import VerticalAlignBottomIcon from '@material-ui/icons/VerticalAlignBottom';
+import SaveAltIcon from '@material-ui/icons/SaveAlt';
 import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
+import Tip from 'metadata-react/App/Tip';
+import Bar from './Bar';
 import GlassLayerProps from './GlassLayerProps';
 
 const reflect = ({project, reflect_grp}) => {
@@ -44,7 +47,7 @@ export default class GlassComposite extends React.Component {
 
   shouldComponentUpdate({elm, row}) {
     const {props, _grid} = this;
-    if(_grid && props.elm !== elm) {
+    if(_grid && (props.elm !== elm || row === null)) {
       setTimeout(() => {
         const row = _grid.rowGetter(0);
         if(row) {
@@ -119,14 +122,45 @@ export default class GlassComposite extends React.Component {
     }
   };
 
+  handleByInset = () => {
+    const {_grid, props: {elm}} = this;
+    elm.set_inset(elm.inset, false, true);
+    this.forceUpdate(() => {
+      _grid.rowGetter(0) && setTimeout(() => {
+        _grid._grid.selectCell({rowIdx: 0, idx: 0}, false);
+      });
+    });
+  };
+
+  handleByChain = () => {
+
+  };
+
   Toolbar = (props) => {
     const {width} = props;
+    const {glass_chains} = $p.job_prm.builder;
     return <Toolbar disableGutters style={{width: width || '100%'}}>
-      <IconButton title="Добавить вставку" onClick={this.handleAdd}><AddIcon /></IconButton>
-      <IconButton title="Удалить строку" onClick={this.handleRemove}><RemoveIcon /></IconButton>
+      <Tip title="Добавить вставку">
+        <IconButton onClick={this.handleAdd}><AddIcon /></IconButton>
+      </Tip>
+      <Tip title="Удалить строку">
+        <IconButton onClick={this.handleRemove}><RemoveIcon /></IconButton>
+      </Tip>
       <IconButton disabled>|</IconButton>
-      <IconButton title="Переместить вверх" onClick={this.handleUp}><ArrowUpIcon/></IconButton>
-      <IconButton title="Переместить вниз" onClick={this.handleDown}><ArrowDownIcon/></IconButton>
+      <Tip title="Переместить вверх">
+        <IconButton onClick={this.handleUp}><ArrowUpIcon/></IconButton>
+      </Tip>
+      <Tip title="Переместить вниз">
+        <IconButton onClick={this.handleDown}><ArrowDownIcon/></IconButton>
+      </Tip>
+      <IconButton disabled>|</IconButton>
+      <Tip title="Заполнить по вставке">
+        <IconButton onClick={this.handleByInset}><VerticalAlignBottomIcon/></IconButton>
+      </Tip>
+      <Tip title="Заполнить по цепочке">
+        <IconButton disabled={!glass_chains || !glass_chains.length} onClick={this.handleByChain}><SaveAltIcon/></IconButton>
+      </Tip>
+
     </Toolbar>;
   };
 
@@ -143,7 +177,7 @@ export default class GlassComposite extends React.Component {
 
   render() {
 
-    const {props: {elm, row}}  = this;
+    const {elm, row}  = this.props;
 
     return <>
       <Bar>Составной пакет</Bar>
