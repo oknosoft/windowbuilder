@@ -1,9 +1,8 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import Tip from 'metadata-react/App/Tip';
-import {useStyles} from '../Toolbar/styles';
+import {useStyles} from '../../Toolbar/styles'
 
 const btnClick = (editor, name) => {
 
@@ -44,48 +43,31 @@ const btnClick = (editor, name) => {
   // }
 };
 
-function ElmToolbar({editor, elm, classes}) {
+function ProfileToolbar({editor, elm, classes}) {
   const {msg} = $p;
-  const {ProfileItem, Filling} = editor.constructor;
-  const show_divider = elm instanceof ProfileItem || elm instanceof Filling;
-  const disabled = elm ? '' : 'gl disabled';
   return <Toolbar disableGutters variant="dense">
     <Tip title={msg.align_node_left}>
-      <IconButton onClick={btnClick(editor, 'left')} className={disabled}><i className="tb_align_left" /></IconButton>
+      <IconButton onClick={btnClick(editor, 'left')}><i className="tb_align_left" /></IconButton>
     </Tip>
     <Tip title={msg.align_node_bottom}>
-      <IconButton onClick={btnClick(editor, 'bottom')} className={disabled}><i className="tb_align_bottom" /></IconButton>
+      <IconButton onClick={btnClick(editor, 'bottom')}><i className="tb_align_bottom" /></IconButton>
     </Tip>
     <Tip title={msg.align_node_top}>
-      <IconButton onClick={btnClick(editor, 'top')} className={disabled}><i className="tb_align_top" /></IconButton>
+      <IconButton onClick={btnClick(editor, 'top')}><i className="tb_align_top" /></IconButton>
     </Tip>
     <Tip title={msg.align_node_right}>
-      <IconButton onClick={btnClick(editor, 'right')} className={disabled}><i className="tb_align_right" /></IconButton>
+      <IconButton onClick={btnClick(editor, 'right')}><i className="tb_align_right" /></IconButton>
     </Tip>
     <Tip title={msg.align_all}>
       <IconButton onClick={btnClick(editor, 'all')}><i className="fa fa-arrows-alt" /></IconButton>
     </Tip>
-    {show_divider && "|"}
-    {elm instanceof ProfileItem && <Tip title={msg.bld_arc}>
-      <IconButton onClick={btnClick(editor, 'arc')}><i className="tb_cursor-arc-r" /></IconButton>
-    </Tip>}
-    {elm instanceof Filling && <Tip title={msg.glass_spec}>
-      <IconButton onClick={btnClick(editor, 'glass_spec')}><i className="fa fa-list-ul" /></IconButton>
-    </Tip>}
-    <div className={classes.title} />
+    <div className={classes.title}/>
     <Tip title={msg.elm_spec}>
-      <IconButton onClick={btnClick(editor, 'spec')} className={disabled}><i className="fa fa-table" /></IconButton>
-    </Tip>
-    <Tip title={msg.del_elm}>
-      <IconButton onClick={btnClick(editor, 'delete')} className={disabled}><i className="fa fa-trash-o" /></IconButton>
+      <IconButton onClick={btnClick(editor, 'spec')}>
+        <i className="fa fa-table" />
+      </IconButton>
     </Tip>
   </Toolbar>;
 }
 
-ElmToolbar.propTypes = {
-  editor: PropTypes.object,
-  elm: PropTypes.object,
-  classes: PropTypes.object.isRequired,
-};
-
-export default  useStyles(ElmToolbar);
+export default useStyles(ProfileToolbar);

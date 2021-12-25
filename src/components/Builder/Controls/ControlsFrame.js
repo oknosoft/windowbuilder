@@ -98,28 +98,29 @@ class ControlsFrame extends React.Component {
   };
 
   render() {
-    const {editor: {project}, type, elm, layer, classes} = this.props;
-    const {_dp, ox} = project || {};
+    const {type, classes, ...other} = this.props;
+    const {editor: {project}, elm, layer} = other;
+    other.ox = project ? project.ox : null;
     const {Filling} = $p.EditorInvisible;
     let panel, force_elm;
     switch (type) {
     case 'elm':
-      panel = <ElmProps elm={elm} ox={ox}/>;
+      panel = <ElmProps {...other}/>;
       break;
     case 'pair':
-      panel = elm.every((elm) => elm instanceof Filling) ? <GlassProps elm={elm} ox={ox}/> : <PairProps elm={elm}/>;
+      panel = elm.every((elm) => elm instanceof Filling) ? <GlassProps {...other}/> : <PairProps {...other}/>;
       break;
     case 'grp':
-      panel = elm.every((elm) => elm instanceof Filling) ? <GlassProps elm={elm} ox={ox}/> : <GrpProps elm={elm}/>;
+      panel = elm.every((elm) => elm instanceof Filling) ? <GlassProps {...other}/> : <GrpProps {...other}/>;
       break;
     case 'layer':
-      panel = <LayerProps ox={ox} layer={layer}/>;
+      panel = <LayerProps {...other}/>;
       break;
     default:
-      panel = <ProductProps _dp={_dp} ox={ox} project={project}/>;
+      panel = <ProductProps {...other}/>;
     }
     return <div className={classes.root}>
-       {panel}
+      {panel}
      </div>;
   }
 }

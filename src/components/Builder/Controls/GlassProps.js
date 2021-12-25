@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
+import GlassToolbar from './Toolbar/GlassToolbar';
 import Bar from './Bar';
 import GlassComposite from './GlassComposite';
 import Coordinates from './Coordinates';
@@ -107,7 +108,8 @@ export default class GlassProps extends React.Component {
     const props = elm.elm_props();
 
     return <>
-      <Bar>{`Заполнение ${info}`}</Bar>
+      <GlassToolbar {...this.props} elm={elm} />
+      <Bar>{`Заполнение ${elm.info}`}</Bar>
       <PropField _obj={elm} _fld="inset" _meta={fields.inset} handleValueChange={() => this.set_row(null)}/>
       <PropField _obj={elm} _fld="clr" _meta={fields.clr}/>
 

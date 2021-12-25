@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
-import ProductToolbar from './ProductToolbar';
 import LinkedProps from './LinkedProps';
 
 function Product({editor}) {
@@ -12,7 +11,6 @@ function Product({editor}) {
   const hide_dealer = wsql.get_user_param('hide_price_dealer');
   const {fields} = _dp._metadata();
   return <div>
-    <ProductToolbar project={project}/>
     <PropField _obj={_dp} _fld="sys" />
     <PropField _obj={_dp} _fld="clr" />
     <LinkedProps ts={ox.params} cnstr={0} inset={utils.blank.guid}/>

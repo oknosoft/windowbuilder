@@ -2,13 +2,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
+import ProfileToolbar from './Toolbar/ProfileToolbar';
 import Bar from './Bar';
 import ElmInsets from './ElmInsets';
 import Coordinates from './Coordinates';
 import LinkedProp from './LinkedProp';
 
-export default function ProfileProps({elm, fields}) {
-  const {info, elm_type} = elm;
+export default function ProfileProps(props) {
+  const {elm, fields} = props;
   const eprops = elm.elm_props();
   const select_b = () => {
     elm.b.selected = true;
@@ -19,7 +20,8 @@ export default function ProfileProps({elm, fields}) {
     elm.b.selected = false;
   };
   return <>
-    <Bar>{`${elm_type} ${info}`}</Bar>
+    <ProfileToolbar {...props} />
+    <Bar>{`${elm.elm_type} ${elm.info}`}</Bar>
     <PropField _obj={elm} _fld="inset" _meta={fields.inset}/>
     <PropField _obj={elm} _fld="clr" _meta={fields.clr}/>
     <PropField _obj={elm} _fld="offset" _meta={fields.offset}/>

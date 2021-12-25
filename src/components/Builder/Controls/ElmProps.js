@@ -4,14 +4,13 @@ import ProfileProps from './ProfileProps';
 import GlassProps from './GlassProps';
 import SectionalProps from './SectionalProps';
 
-export default function ElmProps({elm, ox}) {
+export default function ElmProps(props) {
+  const {elm} = props;
   const {fields} = elm.__metadata(false);
   const {ProfileItem, Filling} = $p.EditorInvisible;
   const CProps = elm instanceof ProfileItem ? ProfileProps : (elm instanceof Filling ? GlassProps : SectionalProps);
 
-  return <>
-    <CProps fields={fields} elm={elm} ox={ox}/>
-  </>;
+  return <CProps {...props} fields={fields}/>;
 }
 
 ElmProps.propTypes = {
