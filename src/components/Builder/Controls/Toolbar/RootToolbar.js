@@ -25,9 +25,7 @@ function RootToolbar({ox, _dp, project, classes}) {
       <IconButton onClick={() => _dp.sys.refill_prm(ox, 0, false, project)}><i className="fa fa-retweet" /></IconButton>
     </Tip>
     <Tip title={$p.msg.layer_spec}>
-      <IconButton onClick={() => open_spec(ox)}>
-        <i className="fa fa-table" />
-      </IconButton>
+      <IconButton onClick={() => open_spec(ox)}><i className="fa fa-table" /></IconButton>
     </Tip>
   </Toolbar>;
 }

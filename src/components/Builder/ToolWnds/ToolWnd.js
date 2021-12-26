@@ -82,7 +82,7 @@ class ToolWnd extends React.Component {
     return <Provider store={store}>
       <ThemeProvider theme={theme}>
         <div style={{overflowX: 'hidden', overflowY: 'auto'}}>
-          {visible && <Wnd editor={editor} type={type} elm={elm} layer={layer} />}
+          {visible && <Wnd editor={editor} type={type} elm={elm} layer={layer} tree_select={this.tree_select}/>}
         </div>
       </ThemeProvider>
     </Provider>;
