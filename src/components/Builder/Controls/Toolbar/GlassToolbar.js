@@ -11,6 +11,7 @@ import PropTypes from 'prop-types';
 
 
 function GlassToolbar({editor, elm, tree_select, classes}) {
+  let  {inset} = elm;
   return <Toolbar disableGutters variant="dense">
     <Tip title="Вставить вертикальный импост">
       <IconButton onClick={null}>
@@ -23,9 +24,9 @@ function GlassToolbar({editor, elm, tree_select, classes}) {
       </IconButton>
     </Tip>
     <div className={classes.title}/>
-    {elm.inset && elm.inset.note.length &&
+    {inset?.note && inset.note.length &&
       <Tip title='Информация' >
-        <InfoButton text={elm.inset.note} />
+        <InfoButton text={inset.note} />
       </Tip>
     }
     <GoLayer elm={elm} tree_select={tree_select}/>
