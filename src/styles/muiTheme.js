@@ -18,18 +18,18 @@ const theme = createTheme({
     useNextVariants: true,
   },
 
-  // overrides: {
-  //   MuiToolbar: {
-  //     root: {
-  //       minHeight: 48,
-  //     },
-  //   },
-  //   MuiAppBar: {
-  //     root: {
-  //       backgroundColor: colors.lightBlack,
-  //     }
-  //   },
-  // },
+  overrides: {
+    // MuiToolbar: {
+    //   root: {
+    //     minHeight: 48,
+    //   },
+    // },
+    MuiIconButton: {
+      root: {
+        padding: 8,
+      }
+    },
+  },
 
 });
 

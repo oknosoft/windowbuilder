@@ -1,39 +1,39 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import BorderHorizontalIcon from '@material-ui/icons/BorderHorizontal';
 import BorderVerticalIcon from '@material-ui/icons/BorderVertical';
 import Tip from 'metadata-react/App/Tip';
+import InfoButton from 'metadata-react/App/InfoButton';
 import GoLayer from './GoLayer';
 import {useStyles} from '../../Toolbar/styles';
-import InfoButton from 'metadata-react/App/InfoButton';
-import PropTypes from 'prop-types';
-
 
 function GlassToolbar({editor, elm, tree_select, classes}) {
+  const {inset} = elm;
   return <Toolbar disableGutters variant="dense">
     <Tip title="Вставить вертикальный импост">
-      <IconButton onClick={null}>
+      <IconButton disabled onClick={null}>
         <BorderVerticalIcon/>
       </IconButton>
     </Tip>
     <Tip title="Вставить горизонтальный импост">
-      <IconButton onClick={null}>
+      <IconButton disabled onClick={null}>
         <BorderHorizontalIcon/>
       </IconButton>
     </Tip>
     <div className={classes.title}/>
-    {elm.inset && elm.inset.note.length &&
-      <Tip title='Информация' >
-        <InfoButton text={elm.inset.note} />
-      </Tip>
-    }
     <GoLayer elm={elm} tree_select={tree_select}/>
     <Tip title={$p.msg.elm_spec}>
-      <IconButton onClick={() => editor.fragment_spec(elm.elm, elm.inset.toString())}>
+      <IconButton onClick={() => editor.fragment_spec(elm.elm, inset.toString())}>
         <i className="fa fa-table" />
       </IconButton>
     </Tip>
+    {inset?.note &&
+      <Tip title='Информация' >
+        <InfoButton text={inset.note} />
+      </Tip>
+    }
   </Toolbar>;
 }
 
