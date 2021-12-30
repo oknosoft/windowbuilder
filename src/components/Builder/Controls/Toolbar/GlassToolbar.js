@@ -5,7 +5,9 @@ import BorderHorizontalIcon from '@material-ui/icons/BorderHorizontal';
 import BorderVerticalIcon from '@material-ui/icons/BorderVertical';
 import Tip from 'metadata-react/App/Tip';
 import GoLayer from './GoLayer';
-import {useStyles} from '../../Toolbar/styles'
+import {useStyles} from '../../Toolbar/styles';
+import InfoButton from 'metadata-react/App/InfoButton';
+import PropTypes from 'prop-types';
 
 
 function GlassToolbar({editor, elm, tree_select, classes}) {
@@ -21,6 +23,11 @@ function GlassToolbar({editor, elm, tree_select, classes}) {
       </IconButton>
     </Tip>
     <div className={classes.title}/>
+    {elm.inset && elm.inset.note.length &&
+      <Tip title='Информация' >
+        <InfoButton text={elm.inset.note} />
+      </Tip>
+    }
     <GoLayer elm={elm} tree_select={tree_select}/>
     <Tip title={$p.msg.elm_spec}>
       <IconButton onClick={() => editor.fragment_spec(elm.elm, elm.inset.toString())}>
@@ -31,3 +38,10 @@ function GlassToolbar({editor, elm, tree_select, classes}) {
 }
 
 export default useStyles(GlassToolbar);
+
+GlassToolbar.propTypes = {
+  editor: PropTypes.object.isRequired,
+  elm: PropTypes.object.isRequired,
+  tree_select: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
+};
