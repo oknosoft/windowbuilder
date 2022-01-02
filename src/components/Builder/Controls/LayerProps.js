@@ -6,6 +6,7 @@ import LayerToolbar from './Toolbar/LayerToolbar';
 import Bar from './Bar';
 import PropField from 'metadata-react/DataField/PropField';
 import LinkedProps from 'wb-forms/dist/Common/LinkedProps';
+import FieldFurn from 'wb-forms/dist/CatFurns/Editor';
 
 export default function LayerProps(props) {
   const {layer, ox} = props;
@@ -15,7 +16,7 @@ export default function LayerProps(props) {
     <Bar>{layer.info}</Bar>
     {layer.layer ?
       <>
-        <PropField _obj={layer} _fld="furn" />
+        <FieldFurn _obj={layer} _fld="furn" fullWidth />
         <PropField _obj={layer} _fld="direction" />
         <PropField _obj={layer} _fld="h_ruch" />
         <LinkedProps ts={ox.params} cnstr={layer.cnstr} inset={blank.guid}/>
