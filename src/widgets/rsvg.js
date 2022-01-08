@@ -155,45 +155,31 @@ class OSvgs {
     reload_id && clearTimeout(reload_id);
 
     if(!area_hidden)
-      this.reload_id = setTimeout(() => {
+      this.reload_id = setTimeout(async () => {
 
         if(stack.length){
 
           // Получаем идентификаторы продукций с вложениями
           let _obj = stack.pop();
-          const db = $p.adapters.pouch.local.doc;
-
-          const keys = [];
           if(typeof _obj == 'string') {
-            const {doc} = $p.adapters.pouch.local;
-            doc.get(`doc.calc_order|${_obj}`)
-              .then(({production}) => {
-                production && production.forEach(({characteristic}) => {
-                  !$p.utils.is_empty_guid(characteristic) && keys.push(`cat.characteristics|${characteristic}`);
-                });
-                return keys.length ? doc.allDocs({keys, limit: keys.length, include_docs: true}) : {rows: keys};
-              })
-              .then(({rows}) => {
-                const adel = [];
-                rows.forEach(({id, doc}) => {
-                  if(doc && doc.svg) {
-                    const ind = keys.indexOf(id);
-                    keys[ind] = {ref: id.substr(20), svg: doc.svg};
-                  }
-                });
-                return keys.filter((v) => v.svg);
-              })
-              .then(this.draw_svgs)
-              .catch($p.record_log)
+            _obj = $p.doc.calc_order.get(_obj);
+          }
+          if(_obj.is_new()) {
+            await _obj.load();
+          }
+          if(_obj.obj_delivery_state == 'Шаблон') {
+            await _obj.load_templates();
           }
           else {
-            _obj.production.forEach(({characteristic: {ref, svg}}) => {
-              if(svg) {
-                keys.push({ref, svg});
-              }
-            });
-            this.draw_svgs(keys);
+            await _obj.load_production();
           }
+          const keys = [];
+          _obj.production.forEach(({characteristic: {ref, svg}}) => {
+            if(svg) {
+              keys.push({ref, svg});
+            }
+          });
+          this.draw_svgs(keys);
           stack.length = 0;
         }
       }, 300);

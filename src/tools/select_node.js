@@ -220,7 +220,7 @@ class ToolSelectNode extends ToolElement {
         const profiles = [];
         this._scope.paths_intersecting_rect(box).forEach((path) => {
           if(path.parent instanceof Editor.ProfileItem){
-            if(!profiles.includes(path.parent) && !(path.parent instanceof ProfileParent)){
+            if(!profiles.includes(path.parent) && !(path.parent instanceof Editor.ProfileParent)){
               profiles.push(path.parent);
               path.parent.selected = !path.parent.selected;
             }

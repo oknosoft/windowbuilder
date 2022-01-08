@@ -124,20 +124,26 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         // sort может зависеть от ...
         _sort: {
           get() {
-            // if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
-            //   const flt = elmnts.filter.get_filter();
-            //   if(flt.filter.length > 5) {
-            //     return [{class_name: 'desc'}, {date: 'desc'}, {search: 'desc'}];
-            //   }
-            // }
             return [{department: 'desc'}, {state: 'desc'}, {date: 'desc'}];
           }
         },
 
         // индекс может зависеть от ...
         _index: {
-          get() {
+          value(start, count) {
             const {filter, date_till} = elmnts.filter.get_filter();
+
+            // шаблоны берём из ОЗУ, к серверу не обращаемся
+            if(this._state === 'template') {
+              const {utils, doc: {calc_order}} = $p;
+              const res = utils._find_rows_with_sort(calc_order, {
+                _top: count,
+                _skip: start,
+                obj_delivery_state: 'Шаблон'
+              });
+              res.docs = res.docs.sort(utils.sort('date', 'desc')).map(v => Object.assign({_id: `doc.calc_order|${v.ref}`}, v._obj));
+              return Promise.resolve(res);
+            }
             // строку, в которой 11 символов, из которых не менее 6 числа, считаем номером
             if(filter.length === 11 && filter.replace(/\D/g, '').length > 5) {
               const {doc} = $p.adapters.pouch.local;

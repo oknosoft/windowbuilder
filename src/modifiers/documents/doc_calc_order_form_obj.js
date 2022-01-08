@@ -250,11 +250,16 @@
 
           (o._data._reload ? o.load() : Promise.resolve())
             .then(() => {
-              if(o._data._reload) {
-                delete o._data._reload;
-                _mgr.emit_async('rows', o, {'production': true});
+              if(o.obj_delivery_state == 'Шаблон') {
+                return o.load_templates();
               }
-              return o.load_linked_refs();
+              else {
+                if(o._data._reload) {
+                  delete o._data._reload;
+                  _mgr.emit_async('rows', o, {'production': true});
+                }
+                return o.load_linked_refs();
+              }
             })
             .then(() => {
               rsvg_reload();
