@@ -293,20 +293,26 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         // sort может зависеть от ...
         _sort: {
           get() {
-            // if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
-            //   const flt = elmnts.filter.get_filter();
-            //   if(flt.filter.length > 5) {
-            //     return [{class_name: 'desc'}, {date: 'desc'}, {search: 'desc'}];
-            //   }
-            // }
             return [{department: 'desc'}, {state: 'desc'}, {date: 'desc'}];
           }
         },
 
         // индекс может зависеть от ...
         _index: {
-          get() {
+          value(start, count) {
             const {filter, date_till} = elmnts.filter.get_filter();
+
+            // шаблоны берём из ОЗУ, к серверу не обращаемся
+            if(this._state === 'template') {
+              const {utils, doc: {calc_order}} = $p;
+              const res = utils._find_rows_with_sort(calc_order, {
+                _top: count,
+                _skip: start,
+                obj_delivery_state: 'Шаблон'
+              });
+              res.docs = res.docs.sort(utils.sort('date', 'desc')).map(v => Object.assign({_id: `doc.calc_order|${v.ref}`}, v._obj));
+              return Promise.resolve(res);
+            }
             // строку, в которой 11 символов, из которых не менее 6 числа, считаем номером
             if(filter.length === 11 && filter.replace(/\D/g, '').length > 5) {
               const {doc} = $p.adapters.pouch.local;
@@ -717,11 +723,16 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
           (o._data._reload ? o.load() : Promise.resolve())
             .then(() => {
-              if(o._data._reload) {
-                delete o._data._reload;
-                _mgr.emit_async('rows', o, {'production': true});
+              if(o.obj_delivery_state == 'Шаблон') {
+                return o.load_templates();
               }
-              return o.load_linked_refs();
+              else {
+                if(o._data._reload) {
+                  delete o._data._reload;
+                  _mgr.emit_async('rows', o, {'production': true});
+                }
+                return o.load_linked_refs();
+              }
             })
             .then(() => {
               rsvg_reload();
@@ -2671,45 +2682,31 @@ class OSvgs {
     reload_id && clearTimeout(reload_id);
 
     if(!area_hidden)
-      this.reload_id = setTimeout(() => {
+      this.reload_id = setTimeout(async () => {
 
         if(stack.length){
 
           // Получаем идентификаторы продукций с вложениями
           let _obj = stack.pop();
-          const db = $p.adapters.pouch.local.doc;
-
-          const keys = [];
           if(typeof _obj == 'string') {
-            const {doc} = $p.adapters.pouch.local;
-            doc.get(`doc.calc_order|${_obj}`)
-              .then(({production}) => {
-                production && production.forEach(({characteristic}) => {
-                  !$p.utils.is_empty_guid(characteristic) && keys.push(`cat.characteristics|${characteristic}`);
-                });
-                return keys.length ? doc.allDocs({keys, limit: keys.length, include_docs: true}) : {rows: keys};
-              })
-              .then(({rows}) => {
-                const adel = [];
-                rows.forEach(({id, doc}) => {
-                  if(doc && doc.svg) {
-                    const ind = keys.indexOf(id);
-                    keys[ind] = {ref: id.substr(20), svg: doc.svg};
-                  }
-                });
-                return keys.filter((v) => v.svg);
-              })
-              .then(this.draw_svgs)
-              .catch($p.record_log)
+            _obj = $p.doc.calc_order.get(_obj);
+          }
+          if(_obj.is_new()) {
+            await _obj.load();
+          }
+          if(_obj.obj_delivery_state == 'Шаблон') {
+            await _obj.load_templates();
           }
           else {
-            _obj.production.forEach(({characteristic: {ref, svg}}) => {
-              if(svg) {
-                keys.push({ref, svg});
-              }
-            });
-            this.draw_svgs(keys);
+            await _obj.load_production();
           }
+          const keys = [];
+          _obj.production.forEach(({characteristic: {ref, svg}}) => {
+            if(svg) {
+              keys.push({ref, svg});
+            }
+          });
+          this.draw_svgs(keys);
           stack.length = 0;
         }
       }, 300);
