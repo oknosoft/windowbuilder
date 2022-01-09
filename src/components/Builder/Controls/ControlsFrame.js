@@ -99,10 +99,10 @@ class ControlsFrame extends React.Component {
 
   render() {
     const {type, classes, ...other} = this.props;
-    const {editor: {project}, elm, layer} = other;
+    const {editor: {project}, elm} = other;
     other.ox = project ? project.ox : null;
     const {Filling} = $p.EditorInvisible;
-    let panel, force_elm;
+    let panel;
     switch (type) {
     case 'elm':
       panel = <ElmProps {...other}/>;

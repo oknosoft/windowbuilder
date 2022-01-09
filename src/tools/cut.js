@@ -122,16 +122,25 @@ class ToolCut extends ToolElement{
       for(const btn of buttons) {
         if(!btn.css.includes('tb_disable')) {
           if(btn.name === 'uncut' && !types.has(cnn_types.t) ||
-            btn.name === 'vh' && !types.has(cnn_types.ah) ||
-            btn.name === 'hv' && !types.has(cnn_types.av) ||
+            btn.name === 'vh' && !types.has(cnn_types.ah) && !types.has(cnn_types.short) ||
+            btn.name === 'hv' && !types.has(cnn_types.av) && !types.has(cnn_types.long) ||
             btn.name === 'diagonal' && !types.has(cnn_types.ad)
           ){
             btn.css += ' tb_disable';
           }
           else if(['diagonal', 'vh', 'hv'].includes(btn.name) && nodes.every(({profile, point}) => {
             const {cnn} = profile.rays[point];
-            const type = btn.name === 'diagonal' ? cnn_types.ad : (btn.name === 'vh' ? cnn_types.ah : cnn_types.av);
-            return cnn && cnn.cnn_type === type;
+            if(cnn) {
+              if(btn.name === 'diagonal') {
+                return cnn.cnn_type === cnn_types.ad;
+              }
+              else if(btn.name === 'vh') {
+                return cnn.cnn_type === cnn_types.ah || cnn.cnn_type === cnn_types.short;
+              }
+              else {
+                return cnn.cnn_type === cnn_types.av || cnn.cnn_type === cnn_types.long;
+              }
+            }
           })){
             btn.css += ' tb_disable';
           }
@@ -181,18 +190,37 @@ class ToolCut extends ToolElement{
       return;
     }
     project.deselectAll();
-    const {cnn_types, orientations} = $p.enm;
+    const {cat, enm: {cnn_types, orientations}} = $p;
     if(['diagonal', 'vh', 'hv'].includes(name)) {
+
       const type = name === 'diagonal' ? cnn_types.ad : (name === 'vh' ? cnn_types.ah : cnn_types.av);
+
       for(const {profile, point} of nodes) {
         if(point === 'b' || point === 'e') {
           const cnn = profile.rays[point];
-          const types = name === 'diagonal' ||
-            (profile.orientation === orientations.vert && name === 'hv') ||
-            (profile.orientation === orientations.hor && name === 'vh') ?
-            [type] :
-            cnn_types.acn.a.filter((v) => v !== cnn_types.ad);
-          const cnns = $p.cat.cnns.nom_cnn(profile, cnn.profile, types);
+          const types = [];
+          if(name === 'diagonal') {
+            types.push(cnn_types.ad);
+          }
+          else if(name === 'vh') {
+            types.push(cnn_types.ah);
+            if(profile.orientation === orientations.vert) {
+              types.push(cnn_types.short);
+            }
+            else {
+              types.push(cnn_types.long);
+            }
+          }
+          else {
+            types.push(cnn_types.av);
+            if(profile.orientation === orientations.hor) {
+              types.push(cnn_types.short);
+            }
+            else {
+              types.push(cnn_types.long);
+            }
+          }
+          const cnns = cat.cnns.nom_cnn(profile, cnn.profile, types);
           if(cnns.length) {
             cnn.cnn = cnns[0];
             this.project.register_change();

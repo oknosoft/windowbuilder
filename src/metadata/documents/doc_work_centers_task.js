@@ -62,7 +62,7 @@ export default function ({
                 .then((prod) => {
                   order.production.forEach((row) => {
                     // нас интересуют только продукции
-                    if(prod.indexOf(row.characteristic) === -1) {
+                    if(!prod.includes(row.characteristic)) {
                       return;
                     }
                     // и только те продукции, у которых в спецификации есть материалы к раскрою
@@ -129,7 +129,7 @@ export default function ({
                 specimen,
                 elm: row.elm,
                 nom: row.nom,
-                characteristic: row.characteristic,
+                characteristic: row.characteristic.empty() ? row.clr : row.characteristic,
                 len: (row.len * 1000).round(0),
                 width: (row.width * 1000).round(0),
                 orientation: coord.orientation,

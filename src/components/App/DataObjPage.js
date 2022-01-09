@@ -46,7 +46,7 @@ class DataObjPage extends DhtmlxCell {
       return true;
     }
     return prompt(loc);
-  }
+  };
 
   render() {
     const {match, dialog, ...other} = this.props;

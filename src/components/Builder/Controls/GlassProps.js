@@ -13,7 +13,7 @@ import Coordinates from './Coordinates';
  */
 function glassGrp(grp) {
   return Array.isArray(grp) ? new Proxy(grp[0], {
-    get(target, prop, receiver) {
+    get(target, prop /*, receiver*/) {
       switch (prop){
       case 'info':
         return `№ ${grp.map(({elm}) => elm).join(', ')} (группа)`;
@@ -45,7 +45,7 @@ function glassGrp(grp) {
         return target[prop];
       }
     },
-    set(target, prop, val, receiver) {
+    set(target, prop, val /*, receiver*/) {
       switch (prop){
       case 'info':
         break;
@@ -99,7 +99,7 @@ export default class GlassProps extends React.Component {
 
   set_row = (row) => {
     this.setState({row});
-  }
+  };
 
   render() {
     const {state: {elm, row}, fields} = this;
@@ -109,7 +109,7 @@ export default class GlassProps extends React.Component {
 
     return <>
       <GlassToolbar {...this.props} elm={elm} />
-      <Bar>{`Заполнение ${elm.info}`}</Bar>
+      <Bar>{`Заполнение ${info}`}</Bar>
       <PropField _obj={elm} _fld="inset" _meta={fields.inset} handleValueChange={() => this.set_row(null)}/>
       <PropField _obj={elm} _fld="clr" _meta={fields.clr}/>
 

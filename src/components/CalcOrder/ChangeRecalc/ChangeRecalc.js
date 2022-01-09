@@ -63,7 +63,7 @@ class ChangeRecalc extends React.Component {
         this.setState({loading: false});
         $p.ui.dialogs.alert({title, text: err.message});
       });
-  }
+  };
 
   handleCancel = () => {
     this.props.handlers.handleIfaceState({
@@ -71,7 +71,7 @@ class ChangeRecalc extends React.Component {
       name: 'dialog',
       value: null,
     });
-  }
+  };
 
   render() {
     const {state: {ready, stamp, loading}, dp, obj} = this;
