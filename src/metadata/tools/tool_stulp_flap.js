@@ -65,7 +65,8 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
      * Заполняет умолчания по системе и корректирует отбор в метаданных
      * @param sys
      */
-    by_sys({_dp, ox}) {
+    by_sys(project) {
+      const {_dp, ox} = project;
       const {inset, furn1, furn2} = this._meta.fields;
       const {Штульп: elm_type} = $p.enm.elm_types;
 

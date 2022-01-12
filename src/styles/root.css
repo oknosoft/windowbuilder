@@ -33,8 +33,11 @@ body {
     margin-left: 18mm;
     margin-right: 8mm;
     margin-top: 8mm;
+    margin-bottom: 12mm;
     font-family: Arial, Helvetica, sans-serif;
   }
+  tr.break  { break-before: always; }
+  tr.no-break  { break-before: avoid; break-inside: avoid; }
 }
 
 .splash {

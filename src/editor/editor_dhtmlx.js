@@ -147,7 +147,7 @@ class Editor extends $p.EditorInvisible {
      * @type OTooolBar
      * @private
      */
-    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '376px',
+    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '408px',
       image_path: '/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
