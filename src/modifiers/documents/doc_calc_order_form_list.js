@@ -170,8 +170,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       // картинка заказа в статусбаре
       elmnts.status_bar = wnd.attachStatusBar();
       elmnts.svgs = new $p.iface.OSvgs(wnd, elmnts.status_bar,
-        (ref, dbl) => {
-          //dbl && $p.iface.set_hash("cat.characteristics", ref, "builder")
+        async (ref, dbl) => {
+          if(dbl && elmnts.filter.custom_selection._state === 'template') {
+            const doc = $p.doc.calc_order.get(elmnts.grid.getSelectedId());
+            !doc.is_new() && await doc.load_templates();
+          }
           dbl && handlers.handleNavigate(`/builder/${ref}`);
         });
       elmnts.grid.attachEvent('onRowSelect', (rid) => elmnts.svgs.reload(rid));
@@ -185,20 +188,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         elmnts.svgs && elmnts.svgs.unload();
         dep && dep.unload();
       }
-
-      // wnd.close = (on_create) => {
-      //
-      //   if (wnd) {
-      //     wnd.getAttachedToolbar().clearAll();
-      //     wnd.detachToolbar();
-      //     wnd.detachStatusBar();
-      //     if (wnd.conf) {
-      //       wnd.conf.unloading = true;
-      //     }
-      //     wnd.detachObject(true);
-      //   }
-      //   this.frm_unload(on_create);
-      // }
 
 
       /**

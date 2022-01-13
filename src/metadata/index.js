@@ -72,7 +72,7 @@ export function init(store) {
           return load_ram($p)
             .then(() => {
               const {roles} = $p.current_user || {};
-              if(roles && roles.includes('ram_editor')) {
+              if(roles && (roles.includes('ram_editor') || roles.includes('doc_full'))) {
                 pouch.local.sync.ram = pouch.remote.ram.changes({
                   since: 'now',
                   live: true,

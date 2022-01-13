@@ -46,8 +46,8 @@ class OSvgs {
       pics_area: document.createElement('div'),
       stack: [],
       reload_id: 0,
-      area_hidden: $p.wsql.get_user_param("svgs_area_hidden", "boolean"),
-      area_text: area.querySelector(".dhx_cell_statusbar_text"),
+      area_hidden: $p.wsql.get_user_param('svgs_area_hidden', 'boolean'),
+      area_text: area.querySelector('.dhx_cell_statusbar_text'),
       onclick: this.onclick.bind(this),
       ondblclick: this.ondblclick.bind(this),
       handler: handler,
@@ -66,13 +66,13 @@ class OSvgs {
 
     area.appendChild(Object.assign(this.minmax, {
       className: 'svgs-minmax',
-      title: "Скрыть/показать панель эскизов",
+      title: 'Скрыть/показать панель эскизов',
       onclick: () => {
         this.area_hidden = !this.area_hidden;
-        $p.wsql.set_user_param("svgs_area_hidden", this.area_hidden);
+        $p.wsql.set_user_param('svgs_area_hidden', this.area_hidden);
         this.apply_area_hidden();
 
-        if(!this.area_hidden && this.stack.length){
+        if(!this.area_hidden && this.stack.length) {
           this.reload();
         }
       }
