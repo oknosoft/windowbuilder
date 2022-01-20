@@ -36,7 +36,7 @@ class ClientOfDealerSearch extends Component {
           title: $p.msg.main_title
         });
       });
-  }
+  };
 
   handleChange = (event) => {
     this.setState({search: event.target.value});

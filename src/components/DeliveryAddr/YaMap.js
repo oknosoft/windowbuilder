@@ -115,7 +115,7 @@ class YaMap extends React.Component {
     else if(this.map && !this.el) {
       this.map.destroy;
     }
-  }
+  };
 
   dragend = ({originalEvent}) => {
     const {props: {v}} = this;

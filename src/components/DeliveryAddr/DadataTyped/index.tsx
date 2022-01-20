@@ -5,12 +5,6 @@ import InputLabel from '@material-ui/core/InputLabel';
 import InputBase  from '@material-ui/core/Input';
 import './react-dadata.css';
 
-declare module 'react' {
-  interface InputHTMLAttributes<T> {
-    validate?: (value: string) => void
-  }
-}
-
 export class ReactDadata extends React.PureComponent<ReactDadata.Props, ReactDadata.State> {
 
   /**
@@ -34,14 +28,14 @@ export class ReactDadata extends React.PureComponent<ReactDadata.Props, ReactDad
       suggestionIndex: -1,
       suggestionsVisible: true,
       isValid: false
-    }
+    };
   }
 
   componentDidMount() {
     if (this.props.autoload && this.state.query) {
       this.fetchSuggestions();
     }
-  };
+  }
 
   onInputFocus = () => {
     this.setState({inputFocused: true});
@@ -84,7 +78,7 @@ export class ReactDadata extends React.PureComponent<ReactDadata.Props, ReactDad
       if (this.state.suggestionIndex >= 0) {
         const newSuggestionIndex = this.state.suggestionIndex - 1;
         const newInputQuery = newSuggestionIndex == -1 ? this.state.inputQuery : this.state.suggestions[newSuggestionIndex].value;
-        this.setState({suggestionIndex: newSuggestionIndex, query: newInputQuery})
+        this.setState({suggestionIndex: newSuggestionIndex, query: newInputQuery});
       }
     } else if (event.which == 13) {
       // Enter
@@ -193,9 +187,7 @@ export class ReactDadata extends React.PureComponent<ReactDadata.Props, ReactDad
   render() {
     const {props} = this;
     let classNames = ['react-dadata__input'];
-    if (props.className) {
-      classNames.push(props.className)
-    }
+    props.className && classNames.push(props.className);
 
     return (
       <div className="react-dadata react-dadata__container">
@@ -221,15 +213,22 @@ export class ReactDadata extends React.PureComponent<ReactDadata.Props, ReactDad
             }}
           />
         </FormControl>
-        {this.state.inputFocused && this.state.suggestionsVisible && this.state.suggestions && this.state.suggestions.length > 0 && <div className="react-dadata__suggestions">
-          <div className="react-dadata__suggestion-note">Выберите вариант или продолжите ввод</div>
-          {this.state.suggestions.map((suggestion, index) => {
-            let suggestionClass = 'react-dadata__suggestion';
-            if (index == this.state.suggestionIndex) {
-              suggestionClass += ' react-dadata__suggestion--current';
-            }
-            return <div key={suggestion.value} onMouseDown={this.onSuggestionClick.bind(this, index)} className={suggestionClass}><Highlighter highlightClassName="react-dadata--highlighted" autoEscape={true} searchWords={this.getHighlightWords()} textToHighlight={suggestion.value}/></div>
-          })}
+        {this.state.inputFocused && this.state.suggestionsVisible && this.state.suggestions && this.state.suggestions.length > 0 &&
+          <div className="react-dadata__suggestions">
+            <div className="react-dadata__suggestion-note">Выберите вариант или продолжите ввод</div>
+            {this.state.suggestions.map((suggestion, index) => {
+              let suggestionClass = 'react-dadata__suggestion';
+              if (index == this.state.suggestionIndex) {
+                suggestionClass += ' react-dadata__suggestion--current';
+              }
+              return <div key={suggestion.value} onMouseDown={this.onSuggestionClick.bind(this, index)} className={suggestionClass}>
+                <Highlighter
+                  highlightClassName="react-dadata--highlighted"
+                  autoEscape={true}
+                  searchWords={this.getHighlightWords()}
+                  textToHighlight={suggestion.value}/>
+              </div>;
+            })}
         </div>}
       </div>
     );

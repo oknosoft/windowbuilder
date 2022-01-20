@@ -1230,6 +1230,7 @@ class ToolPen extends ToolElement {
         }), proto: this.profile
       }));
     });
+    this.project.activeLayer.on_sys_changed(true);
     return profiles;
   }
 

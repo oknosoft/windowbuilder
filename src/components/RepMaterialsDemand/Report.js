@@ -82,12 +82,12 @@ class RepMaterialsDemand extends Component {
     else{
       this.props.handleNavigate(`/`);
     }
-  }
+  };
 
   handleObj = () => {
     const {ref} = this.calcOrders(true);
     this.props.handleNavigate(`/doc.calc_order/${ref || 'list'}`);
-  }
+  };
 
   ToolbarExt = () => {
     const {state} = this;

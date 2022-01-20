@@ -111,9 +111,6 @@ class ToolCut extends ToolElement{
         if(point === 'b' || point === 'e') {
           const cnn = profile.rays[point];
           const cnns = $p.cat.cnns.nom_cnn(profile, cnn.profile, nodes.length > 2 ? undefined : cnn.cnn_types);
-          // if(profile !== cnn.profile) {
-          //   cnns.push.apply(cnns, $p.cat.cnns.nom_cnn(cnn.profile, profile, nodes.length > 2 ? undefined : cnn.cnn_types));
-          // }
           for(const tcnn of cnns) {
             types.add(tcnn.cnn_type);
           }
