@@ -154,7 +154,8 @@ class OSvgs {
     ref && stack.push(ref);
     reload_id && clearTimeout(reload_id);
 
-    if(!area_hidden)
+    if(!area_hidden) {
+      const {doc: {calc_order}, adapters: {pouch}, utils} = $p;
       this.reload_id = setTimeout(async () => {
 
         if(stack.length){
@@ -162,27 +163,45 @@ class OSvgs {
           // Получаем идентификаторы продукций с вложениями
           let _obj = stack.pop();
           if(typeof _obj == 'string') {
-            _obj = $p.doc.calc_order.get(_obj);
+            _obj = calc_order.get(_obj);
           }
-          if(_obj.is_new()) {
-            await _obj.load();
-          }
-          if(_obj.obj_delivery_state == 'Шаблон') {
-            await _obj.load_templates();
-          }
-          else {
-            await _obj.load_production();
-          }
+          const body = {};
           const keys = [];
-          _obj.production.forEach(({characteristic: {ref, svg}}) => {
-            if(svg) {
+          if(!_obj.is_new()) {
+            const refs = [];
+            for (const {characteristic} of _obj.production) {
+              const {ref, svg} = characteristic;
+              if(!characteristic.is_new() && svg) {
               keys.push({ref, svg});
             }
-          });
-          this.draw_svgs(keys);
+              else if(!characteristic.empty()) {
+                refs.push(`cat.characteristics|${characteristic.ref}`);
+              }
+            }
+            body.refs = refs;
+          }
+          if(!body.refs || body.refs.length) {
+            const db = pouch.db(calc_order)
+            await pouch.fetch(`${db.name}/doc.calc_order|${_obj.ref}?svgs`, {
+              method: 'post',
+              body: JSON.stringify(body),
+            })
+              .then((res) => res.json())
+              .then((res) => {
+                if(res.ok) {
+                  keys.length = 0;
+                  for(const row of res.keys) {
+                    keys.push(row);
+                  }
+                }
+              })
+              .catch((err) => err);
+          }
+          this.draw_svgs && this.draw_svgs(keys);
           stack.length = 0;
         }
       }, 300);
+  }
   }
 
   select(ref) {
@@ -193,16 +212,16 @@ class OSvgs {
     for(let i = 0; i < children.length; i++){
       const elm = children.item(i);
       if(elm.ref == ref){
-        elm.classList.add("rsvg_selected");
+        elm.classList.add('rsvg_selected');
       }
       else{
-        elm.classList.remove("rsvg_selected");
+        elm.classList.remove('rsvg_selected');
       }
     }
   }
 
   unload() {
-    this.draw_svgs([]);
+    this.draw_svgs && this.draw_svgs([]);
     for(let fld in this){
       if(this[fld] instanceof HTMLElement && this[fld].parentNode){
         this[fld].parentNode.removeChild(this[fld]);
