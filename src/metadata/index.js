@@ -79,9 +79,11 @@ export function init(store) {
                   include_docs: true
                 })
                   .on('change', (change) => {
-                    // информируем мир об изменениях
-                    pouch.load_changes({docs: [change.doc]});
-                    pouch.emit('ram_change', change);
+                    // информируем слушателей текущего сеанса об изменениях
+                    if(change.doc.obj_delivery_state !== 'Шаблон') {
+                      pouch.load_changes({docs: [change.doc]});
+                      pouch.emit('ram_change', change);
+                    }
                   })
                   .on('error', (err) => {
                     $p.record_log(err);

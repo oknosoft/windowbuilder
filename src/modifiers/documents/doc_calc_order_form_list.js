@@ -69,17 +69,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       const dp = $p.dp.builder_price.create();
       const pos = elmnts.toolbar.getPosition('input_filter');
 
-      // кнопка поиска по номеру
-      // elmnts.toolbar.addButtonTwoState('by_number', pos, '<i class="fa fa-key fa-fw"></i>');
-      // if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
-      //   elmnts.toolbar.setItemState('by_number', true);
-      // }
-      // elmnts.toolbar.setItemToolTip('by_number', 'Режим поиска с учетом либо без учета статуса и подразделения');
-      // elmnts.toolbar.attachEvent('onStateChange', (id, state) => {
-      //   $p.wsql.set_user_param('calc_order_by_number', state);
-      //   elmnts.filter.call_event();
-      // });
-
       const txt_id = `txt_${dhx4.newId()}`;
       elmnts.toolbar.addText(txt_id, pos, '');
       const txt_div = elmnts.toolbar.objPull[elmnts.toolbar.idPrefix + txt_id].obj;
@@ -139,7 +128,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               const res = utils._find_rows_with_sort(calc_order, {
                 _top: count,
                 _skip: start,
-                obj_delivery_state: 'Шаблон'
+                obj_delivery_state: 'Шаблон',
+                _search: {
+                  fields: ['number_doc', 'note'],
+                  value: filter.replace(/\s\s/g, ' ').split(' ').filter(v => v),
+                },
               });
               res.docs = res.docs.sort(utils.sort('date', 'desc')).map(v => Object.assign({_id: `doc.calc_order|${v.ref}`}, v._obj));
               return Promise.resolve(res);

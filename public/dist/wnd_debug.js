@@ -238,17 +238,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       const dp = $p.dp.builder_price.create();
       const pos = elmnts.toolbar.getPosition('input_filter');
 
-      // кнопка поиска по номеру
-      // elmnts.toolbar.addButtonTwoState('by_number', pos, '<i class="fa fa-key fa-fw"></i>');
-      // if($p.wsql.get_user_param('calc_order_by_number', 'boolean')) {
-      //   elmnts.toolbar.setItemState('by_number', true);
-      // }
-      // elmnts.toolbar.setItemToolTip('by_number', 'Режим поиска с учетом либо без учета статуса и подразделения');
-      // elmnts.toolbar.attachEvent('onStateChange', (id, state) => {
-      //   $p.wsql.set_user_param('calc_order_by_number', state);
-      //   elmnts.filter.call_event();
-      // });
-
       const txt_id = `txt_${dhx4.newId()}`;
       elmnts.toolbar.addText(txt_id, pos, '');
       const txt_div = elmnts.toolbar.objPull[elmnts.toolbar.idPrefix + txt_id].obj;
@@ -308,7 +297,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               const res = utils._find_rows_with_sort(calc_order, {
                 _top: count,
                 _skip: start,
-                obj_delivery_state: 'Шаблон'
+                obj_delivery_state: 'Шаблон',
+                _search: {
+                  fields: ['number_doc', 'note'],
+                  value: filter.replace(/\s\s/g, ' ').split(' ').filter(v => v),
+                },
               });
               res.docs = res.docs.sort(utils.sort('date', 'desc')).map(v => Object.assign({_id: `doc.calc_order|${v.ref}`}, v._obj));
               return Promise.resolve(res);
@@ -2670,7 +2663,8 @@ class OSvgs {
     ref && stack.push(ref);
     reload_id && clearTimeout(reload_id);
 
-    if(!area_hidden)
+    if(!area_hidden) {
+      const {doc: {calc_order}, adapters: {pouch}, utils} = $p;
       this.reload_id = setTimeout(async () => {
 
         if(stack.length){
@@ -2678,27 +2672,45 @@ class OSvgs {
           // Получаем идентификаторы продукций с вложениями
           let _obj = stack.pop();
           if(typeof _obj == 'string') {
-            _obj = $p.doc.calc_order.get(_obj);
+            _obj = calc_order.get(_obj);
           }
-          if(_obj.is_new()) {
-            await _obj.load();
-          }
-          if(_obj.obj_delivery_state == 'Шаблон') {
-            await _obj.load_templates();
-          }
-          else {
-            await _obj.load_production();
-          }
+          const body = {};
           const keys = [];
-          _obj.production.forEach(({characteristic: {ref, svg}}) => {
-            if(svg) {
+          if(!_obj.is_new()) {
+            const refs = [];
+            for (const {characteristic} of _obj.production) {
+              const {ref, svg} = characteristic;
+              if(!characteristic.is_new() && svg) {
               keys.push({ref, svg});
             }
-          });
-          this.draw_svgs(keys);
+              else if(!characteristic.empty()) {
+                refs.push(`cat.characteristics|${characteristic.ref}`);
+              }
+            }
+            body.refs = refs;
+          }
+          if(!body.refs || body.refs.length) {
+            const db = pouch.db(calc_order)
+            await pouch.fetch(`${db.name}/doc.calc_order|${_obj.ref}?svgs`, {
+              method: 'post',
+              body: JSON.stringify(body),
+            })
+              .then((res) => res.json())
+              .then((res) => {
+                if(res.ok) {
+                  keys.length = 0;
+                  for(const row of res.keys) {
+                    keys.push(row);
+                  }
+                }
+              })
+              .catch((err) => err);
+          }
+          this.draw_svgs && this.draw_svgs(keys);
           stack.length = 0;
         }
       }, 300);
+  }
   }
 
   select(ref) {
@@ -2709,16 +2721,16 @@ class OSvgs {
     for(let i = 0; i < children.length; i++){
       const elm = children.item(i);
       if(elm.ref == ref){
-        elm.classList.add("rsvg_selected");
+        elm.classList.add('rsvg_selected');
       }
       else{
-        elm.classList.remove("rsvg_selected");
+        elm.classList.remove('rsvg_selected');
       }
     }
   }
 
   unload() {
-    this.draw_svgs([]);
+    this.draw_svgs && this.draw_svgs([]);
     for(let fld in this){
       if(this[fld] instanceof HTMLElement && this[fld].parentNode){
         this[fld].parentNode.removeChild(this[fld]);

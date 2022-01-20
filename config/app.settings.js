@@ -10,9 +10,16 @@ const is_node = typeof process !== 'undefined' && process.versions && process.ve
 
 module.exports = function settings(prm = {}) {
 
-  Object.defineProperty(prm, 'use_google_geo', {
-    get() {
-      return this.keys.google;
+  Object.defineProperties(prm, {
+    use_google_geo: {
+      get() {
+        return this.keys.google;
+      }
+    },
+    session_zone: {
+      get() {
+        return typeof sessionStorage === 'object' && sessionStorage.key('zone') ? sessionStorage.getItem('zone') : this.zone;
+      }
     }
   });
 
