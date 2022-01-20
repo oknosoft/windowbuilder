@@ -120,7 +120,7 @@ class ControlsFrame extends React.Component {
       panel = <ProductProps {...other}/>;
     }
     return <div className={classes.root}>
-      {panel}
+        {panel}
      </div>;
   }
 }

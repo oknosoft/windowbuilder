@@ -11,6 +11,22 @@
   background-position: 2px;
   margin-right: 4px;
 }
+[class*="tb_img"] {
+  background-position: 1px;
+  display: inline-flex;
+  min-width: 32px;
+  margin-bottom: -6px;
+  flex-shrink: 0;
+}
+
+.tb_img_cnn_ad {background-image: url(/imgs/cnn-ad.png);}
+.tb_img_cnn_i {background-image: url(/imgs/cnn-i.png);}
+.tb_img_cnn_ii {background-image: url(/imgs/cnn-ii.png);}
+.tb_img_cnn_long {background-image: url(/imgs/cnn-long.png);}
+.tb_img_cnn_short {background-image: url(/imgs/cnn-short.png);}
+.tb_img_cnn_t {background-image: url(/imgs/cnn-t.png);}
+.tb_img_cnn_xx {background-image: url(/imgs/cnn-xx.png);}
+.tb_img_cnn_xt {background-image: url(/imgs/cnn-xt.png);}
 
 /* .tb_open { background-image: url(/imgs/open.png);} */
 .tb_align_bottom { background-image: url(/imgs/align_bottom.png); opacity: 0.9;}

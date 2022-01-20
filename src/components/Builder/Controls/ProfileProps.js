@@ -7,6 +7,7 @@ import Bar from './Bar';
 import ElmInsets from './ElmInsets';
 import Coordinates from './Coordinates';
 import LinkedProp from './LinkedProp';
+import FieldEndConnection from '../../CatCnns/FieldEndConnection';
 
 export default function ProfileProps(props) {
   const {elm, fields} = props;
@@ -27,8 +28,8 @@ export default function ProfileProps(props) {
     <PropField _obj={elm} _fld="offset" _meta={fields.offset}/>
 
     <Bar>Свойства</Bar>
-    <PropField _obj={elm} _fld="cnn1" _meta={fields.cnn1} onClick={select_b}/>
-    <PropField _obj={elm} _fld="cnn2" _meta={fields.cnn2} onClick={select_e}/>
+    <FieldEndConnection elm1={elm} node="b" _fld="cnn1" onClick={select_b}/>
+    <FieldEndConnection elm1={elm} node="e" _fld="cnn2" onClick={select_e}/>
     {eprops.map((param, ind) => {
       return <LinkedProp key={`ap-${ind}`} _obj={elm} _fld={param.ref} param={param} cnstr={-elm.elm} fields={fields} />;
     })}
