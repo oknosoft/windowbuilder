@@ -34,7 +34,7 @@
   "proxy7": "https://crystallit.oknosoft.ru/",
   "dependencies": {
     "@turf/points-within-polygon": "^6.5",
-    "dxf-writer": "^1.14",
+    "dxf-writer": "^1.15",
     "md5-file": "^5.0",
     "metadata-abstract-ui": "2.0.27-beta.2",
     "metadata-core": "2.0.27-beta.2",
@@ -45,7 +45,7 @@
     "metadata-superlogin": "2.0.27-beta.2",
     "react-highlight-words": "^0.17",
     "url-join": "^4.0.1",
-    "wb-core": "github:oknosoft/windowbuilder-core#590f87f493ca5b3f46c2bcf54def35a437aab206",
+    "wb-core": "github:oknosoft/windowbuilder-core#e95555b1603c38f81bb327531c72c1e1a99168ef",
     "wb-cutting": "github:oknosoft/genetic-cutting#da74a4a12254f351c1364e86bbf0c0454550701d",
     "wb-forms": "github:oknosoft/windowbuilder-forms#5c4a4db8d0599efc96d10cedbce679c309fc1842"
   },

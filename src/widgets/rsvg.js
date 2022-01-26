@@ -158,22 +158,23 @@ class OSvgs {
       const {doc: {calc_order}, adapters: {pouch}, utils} = $p;
       this.reload_id = setTimeout(async () => {
 
-        if(stack.length){
+        if(stack.length) {
 
           // Получаем идентификаторы продукций с вложениями
           let _obj = stack.pop();
           if(typeof _obj == 'string') {
-            _obj = calc_order.get(_obj);
+            const doc = calc_order.get(_obj, true);
+            _obj = doc || {ref: _obj};
           }
           const body = {};
           const keys = [];
-          if(!_obj.is_new()) {
+          if(_obj.is_new && !_obj.is_new()) {
             const refs = [];
             for (const {characteristic} of _obj.production) {
               const {ref, svg} = characteristic;
               if(!characteristic.is_new() && svg) {
-              keys.push({ref, svg});
-            }
+                keys.push({ref, svg});
+              }
               else if(!characteristic.empty()) {
                 refs.push(`cat.characteristics|${characteristic.ref}`);
               }
@@ -201,20 +202,20 @@ class OSvgs {
           stack.length = 0;
         }
       }, 300);
-  }
+    }
   }
 
   select(ref) {
-    if(!this.pics_area){
+    if(!this.pics_area) {
       return;
     }
     const {children} = this.pics_area;
-    for(let i = 0; i < children.length; i++){
+    for (let i = 0; i < children.length; i++) {
       const elm = children.item(i);
-      if(elm.ref == ref){
+      if(elm.ref == ref) {
         elm.classList.add('rsvg_selected');
       }
-      else{
+      else {
         elm.classList.remove('rsvg_selected');
       }
     }
