@@ -452,7 +452,7 @@
       case 'btn_prod_export':
         prod_export();
         break;
-      
+
       case 'btn_spec':
         open_spec();
         break;
@@ -715,11 +715,6 @@
 
     function frm_close() {
 
-      // if(o && !location.pathname.match(/builder/)) {
-      //   // при закрыти формы не в рисовалку, выгружаем заказ и его продукции из памяти
-      //   setTimeout(o.unload.bind(o), 200);
-      // }
-
       // выгружаем из памяти всплывающие окна скидки и связанных файлов
       ['vault', 'vault_pop', 'discount', 'svgs', 'layout_header'].forEach((elm) => {
         wnd && wnd.elmnts && wnd.elmnts[elm] && wnd.elmnts[elm].unload && wnd.elmnts[elm].unload();
@@ -871,86 +866,48 @@
       $p.dp.buyers_order.open_component(wnd, {ref: o.ref, _mgr}, handlers, 'ChangeRecalc');
     }
 
-
-    
+    /**
+     * Копирует продукцию текущей строки в буфер обмена
+     */
     function prod_export() {
-      this;
       const selId = production_get_sel_index();
-      if (selId == undefined) {
+      if(selId == undefined) {
         not_production();
       }
       else {
         const row = o.production.get(selId);
-        if (row) {
-          const { owner, calc_order } = row.characteristic;
-          if (row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
+        if(row) {
+          const {owner, calc_order} = row.characteristic;
+          if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
             not_production();
           }
-          else if (row.characteristic.coordinates.count()) {
-            /*export*/
-            let obj_to_export = JSON.stringify($p.utils._mixin({}, o.production.get(production_get_sel_index()).characteristic._obj, [], 'ref,_rev,name,calc_order,product,leading_product,leading_elm,origin,partner,department,specification'.split(','),));
-            navigator.clipboard.writeText(obj_to_export);
-            $p.ui.dialogs.alert({ text: 'Скопировано в буфер обмена' })
-
-              .catch(err => {
-                console.log('Something went wrong', err);
-              });
+          else if(row.characteristic.coordinates.count()) {
+            const json = JSON.stringify($p.utils._mixin({}, row.characteristic._obj, [],
+              'ref,_rev,name,calc_order,product,leading_product,leading_elm,origin,partner,department,specification,svg'.split(',')));
+            navigator.clipboard.writeText(json)
+              .then(() => $p.ui.dialogs.alert({text: 'Скопировано в буфер обмена'}))
+              .catch(err => $p.ui.dialogs.alert({text: err.message}));
           }
           else {
             not_production();
           }
         }
       }
-      //  debugger
     }
+
+    /**
+     * Добавляет строку из буфера обмена
+     */
     function prod_import() {
-
       navigator.clipboard.readText()
-        .then(text => {
-
-
-          try {
-
-
-            var obj_import = JSON.parse(text);
+        .then((text) => JSON.parse(text))
+        .then((obj) => {
+          if(obj?.class_name !== 'cat.characteristics') {
+            throw new TypeError('В буфере обмена нет подходящих данных');
           }
-          catch (err) {
-
-            console.log(err);
-          }
-          /*проверим что разобрали пока по классу можно */
-          if (obj_import?.class_name !== "cat.characteristics") {
-            return console.log('parsing error');
-          }
-
-
-
-          /**************/
-          o.create_product_row({ grid: wnd.elmnts.grids.production, create: true })
-            .then((nrow) => {
-              const { characteristic } = nrow;
-              nrow.quantity = 1;
-              nrow.note = "";
-              // заполняем продукцию копией данных текущей строки
-              characteristic._mixin(obj_import, null,
-                'ref,name,calc_order,product,leading_product,leading_elm,origin,partner'.split(','), true);
-              characteristic._data._is_new = true;
-              return characteristic.save();
-            })
-            .then((cx) => {
-              // при необходимости, установим признак перезаполнить параметры изделия и фурнитуры
-
-              // открываем рисовалку
-              handlers.handleNavigate(`/builder/${cx.ref}`);
-            });
-          /******************/
-          // `text` содержит текст, прочитанный из буфера обмена
+          open_builder(obj);
         })
-        .catch(err => {
-          // возможно, пользователь не дал разрешение на чтение данных из буфера обмена
-          console.log('Something went wrong', err);
-        });
-
+        .catch(err => $p.ui.dialogs.alert({text: err.message}));
     }
 
     /**
@@ -959,7 +916,7 @@
      */
     function open_builder(create_new) {
 
-      if(create_new == 'clone') {
+      if(create_new === 'clone') {
         const selId = production_get_sel_index();
         if(selId == undefined) {
           not_production();
@@ -990,7 +947,7 @@
                     cx._data.refill_props = true;
                   }
                   // открываем рисовалку
-                  handlers.handleNavigate(`/builder/${cx.ref}`);
+                  handlers.handleNavigate(`/builder/${cx.ref}?order=${o.ref}`);
                 });
             }
             else {
@@ -998,15 +955,22 @@
             }
           }
         }
-
       }
+
       else if(create_new) {
         o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
           .then(({characteristic}) => {
-            //handlers.handleNavigate(`/builder/${characteristic.ref}`);
-            handlers.handleNavigate(`/templates/?order=${o.ref}&ref=${characteristic.ref}&action=new`);
+            if(typeof create_new === 'object') {
+              // заполняем продукцию сырыми данными
+              characteristic._mixin(create_new, null, 'ref,name,calc_order,product,leading_product,leading_elm,origin,partner'.split(','), true);
+              handlers.handleNavigate(`/builder/${characteristic.ref}?order=${o.ref}`);
+            }
+            else {
+              handlers.handleNavigate(`/templates/?order=${o.ref}&ref=${characteristic.ref}&action=new`);
+            }
           });
       }
+
       else {
         const selId = production_get_sel_index();
         if(selId != undefined) {
@@ -1023,11 +987,11 @@
             else if(row.characteristic.coordinates.count() == 0) {
               // возможно, это заготовка - проверим номенклатуру системы
               if(row.characteristic.leading_product.calc_order == calc_order) {
-                handlers.handleNavigate(`/builder/${row.characteristic.leading_product.ref}`);
+                handlers.handleNavigate(`/builder/${row.characteristic.leading_product.ref}?order=${o.ref}`);
               }
             }
             else {
-              handlers.handleNavigate(`/builder/${row.characteristic.ref}`);
+              handlers.handleNavigate(`/builder/${row.characteristic.ref}?order=${o.ref}`);
             }
           }
         }
