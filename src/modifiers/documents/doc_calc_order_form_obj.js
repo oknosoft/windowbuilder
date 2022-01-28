@@ -445,6 +445,14 @@
         change_recalc();
         break;
 
+      case 'btn_prod_import':
+        prod_import();
+        break;
+
+      case 'btn_prod_export':
+        prod_export();
+        break;
+      
       case 'btn_spec':
         open_spec();
         break;
@@ -861,6 +869,88 @@
      */
     function change_recalc() {
       $p.dp.buyers_order.open_component(wnd, {ref: o.ref, _mgr}, handlers, 'ChangeRecalc');
+    }
+
+
+    
+    function prod_export() {
+      this;
+      const selId = production_get_sel_index();
+      if (selId == undefined) {
+        not_production();
+      }
+      else {
+        const row = o.production.get(selId);
+        if (row) {
+          const { owner, calc_order } = row.characteristic;
+          if (row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
+            not_production();
+          }
+          else if (row.characteristic.coordinates.count()) {
+            /*export*/
+            let obj_to_export = JSON.stringify($p.utils._mixin({}, o.production.get(production_get_sel_index()).characteristic._obj, [], 'ref,_rev,name,calc_order,product,leading_product,leading_elm,origin,partner,department,specification'.split(','),));
+            navigator.clipboard.writeText(obj_to_export);
+            $p.ui.dialogs.alert({ text: 'Скопировано в буфер обмена' })
+
+              .catch(err => {
+                console.log('Something went wrong', err);
+              });
+          }
+          else {
+            not_production();
+          }
+        }
+      }
+      //  debugger
+    }
+    function prod_import() {
+
+      navigator.clipboard.readText()
+        .then(text => {
+
+
+          try {
+
+
+            var obj_import = JSON.parse(text);
+          }
+          catch (err) {
+
+            console.log(err);
+          }
+          /*проверим что разобрали пока по классу можно */
+          if (obj_import?.class_name !== "cat.characteristics") {
+            return console.log('parsing error');
+          }
+
+
+
+          /**************/
+          o.create_product_row({ grid: wnd.elmnts.grids.production, create: true })
+            .then((nrow) => {
+              const { characteristic } = nrow;
+              nrow.quantity = 1;
+              nrow.note = "";
+              // заполняем продукцию копией данных текущей строки
+              characteristic._mixin(obj_import, null,
+                'ref,name,calc_order,product,leading_product,leading_elm,origin,partner'.split(','), true);
+              characteristic._data._is_new = true;
+              return characteristic.save();
+            })
+            .then((cx) => {
+              // при необходимости, установим признак перезаполнить параметры изделия и фурнитуры
+
+              // открываем рисовалку
+              handlers.handleNavigate(`/builder/${cx.ref}`);
+            });
+          /******************/
+          // `text` содержит текст, прочитанный из буфера обмена
+        })
+        .catch(err => {
+          // возможно, пользователь не дал разрешение на чтение данных из буфера обмена
+          console.log('Something went wrong', err);
+        });
+
     }
 
     /**
