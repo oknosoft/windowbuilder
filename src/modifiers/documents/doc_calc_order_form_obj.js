@@ -899,11 +899,15 @@
      * Добавляет строку из буфера обмена
      */
     function prod_import() {
+      const err = new TypeError('В буфере обмена нет подходящих данных');
       navigator.clipboard.readText()
         .then((text) => JSON.parse(text))
+        .catch(() => {
+          throw err;
+        })
         .then((obj) => {
           if(obj?.class_name !== 'cat.characteristics') {
-            throw new TypeError('В буфере обмена нет подходящих данных');
+            throw err;
           }
           open_builder(obj);
         })
