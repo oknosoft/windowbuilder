@@ -16,10 +16,11 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
 
   class FakeStulpFlap extends BaseDataObj {
 
-    constructor() {
+    constructor(project) {
       //inset, furn1, furn2
       super({}, builder_pen, false, true);
       this._data._is_new = false;
+      this.project = project;
 
       this._meta = utils._clone(builder_pen.metadata());
       this._meta.fields.inset.synonym = 'Штульп';
@@ -33,6 +34,30 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
         this._meta.fields[fld].mandatory = true;
       }
 
+    }
+
+    /**
+     * При изменении одной фурнитуры, пересчитаем другую
+     * @param field
+     * @param type
+     * @param value
+     */
+    value_change(field, type, value) {
+      if(!['furn1', 'furn2'].includes(field)) {
+        return;
+      }
+      const {_dp, ox} = this.project;
+      const other = field === 'furn1' ? 'furn2' : 'furn1';
+      this[field] = value;
+      const shtulp_kind = this[field].shtulp_kind() === 2 ? 1 : 2;
+      if(this[other].shtulp_kind() !== shtulp_kind) {
+        _dp.sys.furns(ox).some(({furn}) => {
+          if(furn.parent === this[field].parent && furn.shtulp_kind() === shtulp_kind) {
+            this[other] = furn;
+            return true;
+          }
+        });
+      }
     }
 
 
@@ -65,8 +90,7 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
      * Заполняет умолчания по системе и корректирует отбор в метаданных
      * @param sys
      */
-    by_sys(project) {
-      const {_dp, ox} = project;
+    by_sys({_dp, ox}) {
       const {inset, furn1, furn2} = this._meta.fields;
       const {Штульп: elm_type} = $p.enm.elm_types;
 
@@ -139,29 +163,8 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
       super.on_activate('cursor-text-select');
       const {options, project} = this;
       this._scope.tb_left.select(options.name);
-      this._obj = new FakeStulpFlap();
+      this._obj = new FakeStulpFlap(project);
       this._obj.by_sys(project);
-
-      /**
-       * При изменении одной фурнитуры, пересчитаем другую
-       * @param field
-       * @param type
-       * @param value
-       */
-      this._obj.value_change = function (field, type, value) {
-        if(!['furn1', 'furn2'].includes(field)) {
-          return;
-        }
-        const {_dp, ox} = project;
-        this[field] = value;
-        const shtulp_kind = this[field].shtulp_kind() === 2 ? 1 : 2;
-        _dp.sys.furns(ox).some(({furn}) => {
-          if(furn.parent === this[field].parent && furn.shtulp_kind() === shtulp_kind) {
-            this[field === 'furn1' ? 'furn2' : 'furn1'] = furn;
-            return true;
-          }
-        });
-      };
     }
 
     on_deactivate() {

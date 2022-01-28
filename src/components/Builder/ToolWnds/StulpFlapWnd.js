@@ -4,6 +4,8 @@ import DataField from 'metadata-react/DataField';
 
 class StulpFlapWnd extends React.Component {
 
+  state = {index: 0};
+
   componentDidMount() {
     $p.dp.builder_pen.on({update: this.onDataChange});
   }
@@ -14,16 +16,17 @@ class StulpFlapWnd extends React.Component {
 
   onDataChange = (obj /*, fields */) => {
     if(obj === this.props.editor.tool._obj) {
-      this.forceUpdate();
+      this.setState({index: this.state.index + 1});
     }
   };
 
   render() {
     const {_obj} = this.props.editor.tool;
+    const {index} = this.state;
     return <div>
       <DataField _obj={_obj} _fld="inset" fullWidth/>
-      <DataField _obj={_obj} _fld="furn1" fullWidth/>
-      <DataField _obj={_obj} _fld="furn2" fullWidth/>
+      <DataField _obj={_obj} _fld="furn1" index={index} fullWidth/>
+      <DataField _obj={_obj} _fld="furn2" index={index} fullWidth/>
     </div>;
   }
 
