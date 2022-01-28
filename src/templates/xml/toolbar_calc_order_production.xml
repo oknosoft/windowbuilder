@@ -12,6 +12,8 @@
     <item id="sep_prod" type="separator"/>
     <item type="button" id="btn_recalc_row" text="&lt;i class='fa fa-repeat fa-fw'&gt;&lt;/i&gt; Пересчитать строку" />
     <item type="button" id="btn_recalc_doc" text="&lt;i class='fa fa-repeat fa-fw'&gt;&lt;/i&gt; Пересчитать заказ" />
+    <item type="button" id="btn_prod_import" text="&lt;i class='fa fa-upload fa-lg fa-fw'&gt;&lt;/i&gt; Загрузить" />
+    <item type="button" id="btn_prod_export" text="&lt;i class='fa fa-download fa-lg fa-fw'&gt;&lt;/i&gt; Выгрузить" />
     <item type="button" id="btn_change_recalc" text="&lt;i class='fa fa-random fa-fw'&gt;&lt;/i&gt; Пересчитать с заменой параметров" />
   </item>
 
