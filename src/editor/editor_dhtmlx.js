@@ -417,18 +417,11 @@ class Editor extends $p.EditorInvisible {
       this.handlers = handlers;
       const {params} = handlers.props.match;
       const {project} = this;
-      const {order, action, skip} = $p.utils.prm();
       if(params.ref) {
-        project.load(params.ref)
-          .then(() => {
-            const {ox} = project;
-            if(ox.is_new() || (order && ox.calc_order != order)) {
-              ox.calc_order = order;
-            }
-            if(ox.calc_order.is_new()) {
-              return ox.calc_order.load();
-            }
-          })
+        const {utils, doc} = $p;
+        const {order, action, skip} = utils.prm();
+        Promise.resolve()
+          .then(() => project.load(params.ref, false, order))
           .then(() => {
             const {_dp, ox} = project;
             let row = ox.calc_order.production.find(ox.ref, 'characteristic');

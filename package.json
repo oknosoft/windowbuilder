@@ -32,6 +32,7 @@
   "proxy5": "http://localhost:3016/",
   "proxy6": "https://quick.ecookna.ru/",
   "proxy7": "https://crystallit.oknosoft.ru/",
+  "proxy8": "https://start.phototech.ru/",
   "dependencies": {
     "@turf/points-within-polygon": "^6.5",
     "dxf-writer": "^1.15",
@@ -45,7 +46,7 @@
     "metadata-superlogin": "2.0.27-beta.2",
     "react-highlight-words": "^0.17",
     "url-join": "^4.0.1",
-    "wb-core": "github:oknosoft/windowbuilder-core#8744ee5991d8fbd67b0c6fe01534dc9913921df5",
+    "wb-core": "github:oknosoft/windowbuilder-core#74169a6509a390b9eccd4457ed48416bd8cc22c8",
     "wb-cutting": "github:oknosoft/genetic-cutting#da74a4a12254f351c1364e86bbf0c0454550701d",
     "wb-forms": "github:oknosoft/windowbuilder-forms#5c4a4db8d0599efc96d10cedbce679c309fc1842"
   },
