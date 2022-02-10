@@ -473,6 +473,42 @@
         $p.dp.buyers_order.open_component(wnd, {ref: o.ref, cmd: {hfields: null, db: null}, _mgr}, handlers, 'ObjHistory');
         break;
 
+      case 'btn_number':
+        const {current_user, ui} = $p;
+        if(current_user.role_available('ИзменениеТехнологическойНСИ') || current_user.role_available('СогласованиеРасчетовЗаказов')) {
+          const {_manager, obj_delivery_state, number_doc, date} = o;
+          const title = `Заказ №${number_doc} от ${moment(date).format(moment._masks.date_time)}`;
+          ui.dialogs.input_value({
+            title,
+            text: 'Новый номер',
+            type: 'string',
+            initialValue: number_doc,
+          })
+            .then((number) => {
+              if(number.length !== 11) {
+                throw new Error('Длина номера должна быть 11 символов');
+              }
+              if(number !== number_doc) {
+                const db = obj_delivery_state == 'Шаблон' ? _manager.adapter.db({cachable: 'ram'}) : _manager.adapter.db(_manager);
+                return db.query('doc/number_doc', {key: [_manager.class_name, date.getFullYear(), number]})
+                  .then((res) => {
+                    if(res.rows.length) {
+                      throw new Error(`Заказ с номером ${number} уже существует в базе за ${date.getFullYear()} год`);
+                    }
+                    o.number_doc = number;
+                    return o.save();
+                  });
+              }
+            })
+            .catch((err) => {
+              err && ui.dialogs.alert({title, text: err.message});
+            });
+        }
+        else {
+          ui.dialogs.alert({title, text: 'Недостаточно прав для изменения номера документа'});
+        }
+        break;
+
       case 'calc_order':
         clone_calc_order(o);
         break;
