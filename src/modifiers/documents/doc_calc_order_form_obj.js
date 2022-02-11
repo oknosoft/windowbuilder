@@ -61,7 +61,7 @@
           refs.push(row._obj.characteristic);
         }
       });
-      const {cat: {characteristics}, enm: {obj_delivery_states}} = $p;
+      const {cat: {characteristics}} = $p;
       characteristics.adapter.load_array(characteristics, refs, false)
         .then(() => {
 
@@ -475,9 +475,9 @@
 
       case 'btn_number':
         const {current_user, ui} = $p;
+        const {_manager, obj_delivery_state, number_doc, date} = o;
+        const title = `Заказ №${number_doc} от ${moment(date).format(moment._masks.date_time)}`;
         if(current_user.role_available('ИзменениеТехнологическойНСИ') || current_user.role_available('СогласованиеРасчетовЗаказов')) {
-          const {_manager, obj_delivery_state, number_doc, date} = o;
-          const title = `Заказ №${number_doc} от ${moment(date).format(moment._masks.date_time)}`;
           ui.dialogs.input_value({
             title,
             text: 'Новый номер',
