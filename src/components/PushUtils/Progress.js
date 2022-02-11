@@ -163,7 +163,7 @@ class Progress extends AbstractProgress {
 
   on_index = (info) => {
     this.setState({step: `Перестраиваем индекс ${info.index}...`});
-  }
+  };
 
 }
 

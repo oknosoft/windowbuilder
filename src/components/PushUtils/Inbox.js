@@ -68,7 +68,7 @@ class Inbox extends Progress {
   handleOpen = value => () => {
     this.props.handleCancel();
     this.props.handleOpen(value);
-  }
+  };
 
   render() {
     const {error, step, docs, completed, buffer} = this.state;

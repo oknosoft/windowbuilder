@@ -5,4 +5,4 @@ export default function Controls(props) {
   return <React.Suspense fallback="Загрузка...">
     <ControlsFrame {...props}/>
   </React.Suspense>;
-};
+}

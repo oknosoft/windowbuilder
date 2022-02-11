@@ -62,7 +62,7 @@ class SelectSizes extends React.Component {
       return res.then(handleClose);
     }
     $p.ui.dialogs.alert({title: 'Выбор размеров', text: 'Укажите слой для вставки жалюзи на эскизе'});
-  }
+  };
 
   render() {
     const {state: {step}, props: {obj, handleClose, sz_product}, dp, setProduct, setSizes} = this;

@@ -20,7 +20,7 @@ import withStyles, {extClasses} from 'metadata-react/DataField/stylesPropertyGri
 
 let compare = $p.utils.sort('name');
 
-function FieldEndConnection({elm1, elm2, node, _fld, fields, _meta, classes, onClick, ...props}) {
+function FieldEndConnection({elm1, elm2, node, _fld, _meta, classes, onClick, ...props}) {
 
   const ext = extClasses(classes);
 
@@ -72,8 +72,7 @@ export default withStyles(FieldEndConnection);
 
 FieldEndConnection.propTypes = {
   elm1: PropTypes.object.isRequired,
-  elm2: PropTypes.object.isRequired,
-  fields: PropTypes.object.isRequired,
+  elm2: PropTypes.object,
   node: PropTypes.string.isRequired,
   classes: PropTypes.object.isRequired,
 };

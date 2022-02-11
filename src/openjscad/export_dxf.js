@@ -2,7 +2,7 @@
  * ### Слушатель событий экспорта в dxf и открытия 3d-рендера
  */
 
-function serialize(scheme) {
+function serialize(scheme) { /* eslint-disable-line */
   return {};
 }
 

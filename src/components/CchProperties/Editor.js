@@ -8,7 +8,6 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import AutoSizer from 'react-virtualized-auto-sizer';
 import {tool, decorate} from './Tool';
 
 export default class Editor extends React.Component {
@@ -38,8 +37,6 @@ export default class Editor extends React.Component {
   }
 
   render() {
-    const {editor, props: {ox}} = this;
-
     return <canvas
       key="canvas"
       ref={(el) => this.createEditor(el, 620, 380)}

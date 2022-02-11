@@ -31,12 +31,12 @@ function decorate_select(glass){
   glass.path.strokeWidth = glass.selected ? 20 : 0;
 }
 
-function glass_mouse_enter(event){
+function glass_mouse_enter(/*event*/){
   this.path.strokeWidth = this.selected ? 20 : 10;
   this.path.dashArray = [40, 20];
 }
 
-function glass_mouse_leave(event){
+function glass_mouse_leave(/*event*/){
   this.path.strokeWidth = this.selected ? 20 : 0;
   this.path.dashArray = [];
 }

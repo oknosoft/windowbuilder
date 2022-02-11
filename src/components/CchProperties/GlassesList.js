@@ -17,7 +17,7 @@ import Dialog from 'metadata-react/App/Dialog';
 import useStyles from 'wb-forms/dist/Common/stylesAccordion';
 import Editor from './Editor';
 
-export default function GlassesList({_meta, _obj, _fld, ...other}) {
+export default function GlassesList({_meta, _obj, _fld, ...other}) { /* eslint-disable-line */
 
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
