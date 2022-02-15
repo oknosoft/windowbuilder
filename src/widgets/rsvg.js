@@ -176,7 +176,9 @@ class OSvgs {
                 keys.push({ref, svg});
               }
               else if(!characteristic.empty()) {
-                refs.push(`cat.characteristics|${characteristic.ref}`);
+                if(characteristic.is_new() || characteristic.coordinates.count()) {
+                  refs.push(`cat.characteristics|${characteristic.ref}`);
+                }
               }
             }
             body.refs = refs;

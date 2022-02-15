@@ -654,67 +654,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 
     attr.draw_tabular_sections = (o, wnd, tabular_init) => {
 
-      /**
-       * получим задействованные в заказе объекты характеристик
-       */
-      const refs = [];
-      o.production.forEach((row) => {
-        if(!$p.utils.is_empty_guid(row._obj.characteristic) && row.characteristic.is_new()) {
-          refs.push(row._obj.characteristic);
-        }
-      });
-      const {cat: {characteristics}} = $p;
-      characteristics.adapter.load_array(characteristics, refs, false)
-        .then(() => {
-
-          const footer = {
-            columns: ",,,,#stat_total,,,#stat_s,,,,,#stat_total,,,#stat_total",
-            _in_header_stat_s: function(tag,index,data){
-              const calck=function(){
-                let sum=0;
-                o.production.forEach((row) => {
-                  sum += row.s * row.quantity;
-                });
-                return sum.toFixed(2);
-              };
-              this._stat_in_header(tag, calck, index, data);
-            }
-          };
-
-          // табчасть продукции со специфическим набором кнопок
-          tabular_init('production', $p.injected_data['toolbar_calc_order_production.xml'], footer);
-          const {production} = wnd.elmnts.grids;
-          production.disable_sorting = true;
-          production.attachEvent('onRowSelect', production_select);
-          production.attachEvent('onEditCell', (stage,rId,cInd,nValue,oValue,fake) => {
-            if(stage == 2 && fake !== true){
-              if(production._edit_timer){
-                clearTimeout(production._edit_timer);
-              }
-              production._edit_timer = setTimeout(() => {
-                if(wnd && wnd.elmnts){
-                  production.callEvent('onEditCell', [2, 0, 7, null, null, true]);
-                  production.callEvent('onEditCell', [2, 0, 12, null, null, true]);
-                  production.callEvent('onEditCell', [2, 0, 15, null, null, true]);
-                }
-              }, 300);
-            }
-          });
-
-          let toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
-          toolbar.addSpacer('btn_delete');
-          toolbar.attachEvent('onclick', toolbar_click);
-
-          // табчасть планирования
-          tabular_init('planning');
-          toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
-          toolbar.addButton('btn_fill_plan', 3, 'Заполнить');
-          toolbar.attachEvent('onclick', toolbar_click);
-
-          // в зависимости от статуса
-          set_editable(o, wnd);
-
-        });
+      attr.tabular_init = tabular_init;
 
       /**
        *  статусбар с картинками
@@ -864,6 +804,55 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               }
             })
             .then(() => {
+
+              const footer = {
+                columns: ",,,,#stat_total,,,#stat_s,,,,,#stat_total,,,#stat_total",
+                _in_header_stat_s: function(tag,index,data){
+                  const calck=function(){
+                    let sum=0;
+                    o.production.forEach((row) => {
+                      sum += row.s * row.quantity;
+                    });
+                    return sum.toFixed(2);
+                  };
+                  this._stat_in_header(tag, calck, index, data);
+                }
+              };
+
+              // табчасть продукции со специфическим набором кнопок
+              attr.tabular_init('production', $p.injected_data['toolbar_calc_order_production.xml'], footer);
+              attr.tabular_init('planning');
+
+              const {production} = wnd.elmnts.grids;
+              production.disable_sorting = true;
+              production.attachEvent('onRowSelect', production_select);
+              production.attachEvent('onEditCell', (stage,rId,cInd,nValue,oValue,fake) => {
+                if(stage == 2 && fake !== true){
+                  if(production._edit_timer){
+                    clearTimeout(production._edit_timer);
+                  }
+                  production._edit_timer = setTimeout(() => {
+                    if(wnd && wnd.elmnts){
+                      production.callEvent('onEditCell', [2, 0, 7, null, null, true]);
+                      production.callEvent('onEditCell', [2, 0, 12, null, null, true]);
+                      production.callEvent('onEditCell', [2, 0, 15, null, null, true]);
+                    }
+                  }, 300);
+                }
+              });
+
+              let toolbar = wnd.elmnts.tabs.tab_production.getAttachedToolbar();
+              toolbar.addSpacer('btn_delete');
+              toolbar.attachEvent('onclick', toolbar_click);
+
+              // табчасть планирования
+              toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
+              toolbar.addButton('btn_fill_plan', 3, 'Заполнить');
+              toolbar.attachEvent('onclick', toolbar_click);
+
+              // в зависимости от статуса
+              set_editable(o, wnd);
+
               rsvg_reload();
               o._manager.on('svgs', rsvg_reload);
 
@@ -1264,10 +1253,11 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       o && o.load()
         .then(() => o.load_linked_refs())
         .then(() => {
-          const {pg_left, pg_right, grids} = wnd.elmnts;
+          const {pg_left, pg_right, grids: {production}} = wnd.elmnts;
+          const {selection} = production;
           pg_left.reload();
           pg_right.reload();
-          grids.production.selection = grids.production.selection;
+          production.selection = selection;
           wnd.set_text();
         });
     }
@@ -1598,7 +1588,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           }
         }
       }
-
       else if(create_new) {
         o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
           .then(({characteristic}) => {
@@ -2926,7 +2915,9 @@ class OSvgs {
                 keys.push({ref, svg});
               }
               else if(!characteristic.empty()) {
-                refs.push(`cat.characteristics|${characteristic.ref}`);
+                if(characteristic.is_new() || characteristic.coordinates.count()) {
+                  refs.push(`cat.characteristics|${characteristic.ref}`);
+                }
               }
             }
             body.refs = refs;
