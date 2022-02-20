@@ -268,15 +268,26 @@ Object.defineProperties($p.cat.furns, {
   get_option_list: {
     value(selection, val) {
 
-      if(window.paper && paper.project) {
-        const {characteristic, sys} = paper.project._dp;
+      let layer = selection?._attr?.obj instanceof $p.Editor.Contour ? selection._attr.obj : null;
+      let project;
+      if(layer) {
+        project = layer.project;
+      }
+      else if(window.paper && paper.project) {
+        project = paper.project;
+        layer = project.activeLayer;
+      }
+
+
+      if(project) {
+        const {characteristic, sys} = project._dp;
         const {furn} = $p.job_prm.properties;
 
         if(furn && sys && !sys.empty()){
 
           const links = furn.params_links({
             grid: {selection: {cnstr: 0}},
-            obj: {_owner: {_owner: characteristic}}
+            obj: {_owner: {_owner: characteristic}, layer}
           });
 
           if(links.length){

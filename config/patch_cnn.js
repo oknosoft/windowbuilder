@@ -79,6 +79,11 @@ export const predefined = {
     keys: keys21,
     ram_indexer: false,
   },
+  'khab': {
+    zone: 27,
+    log_level: 'warn',
+    keys: {google: ''},
+  },
   'phototech.oknosoft.': {
     zone: 22,
     host: 'https://start.phototech.ru/',
