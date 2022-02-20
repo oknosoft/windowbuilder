@@ -8094,7 +8094,7 @@ class ToolSelectNode extends ToolElement {
     }
   }
 
-  mousedown(event) {
+  mousedown({event, modifiers, point}) {
 
     const {project, consts, eve} = this._scope;
 
@@ -8102,11 +8102,11 @@ class ToolSelectNode extends ToolElement {
     this.changed = false;
     this.mouseDown = true;
 
-    if(event.event && event.event.which && event.event.which > 1){
+    if(event && event.which && event.which > 1){
       //
     }
 
-    if (this.hitItem && !event.modifiers.alt) {
+    if (this.hitItem && !modifiers.alt) {
 
       if(this.hitItem.item instanceof paper.PointText && !(this.hitItem.item instanceof Editor.PathUnselectable)) {
         return;
@@ -8114,7 +8114,7 @@ class ToolSelectNode extends ToolElement {
 
 
       let item = this.hitItem.item.parent;
-      if (event.modifiers.space && item.nearest && item.nearest()) {
+      if (modifiers.space && item.nearest && item.nearest()) {
         item = item.nearest();
       }
 
@@ -8124,7 +8124,7 @@ class ToolSelectNode extends ToolElement {
           item.selected = false;
         }
         else {
-          if (event.modifiers.shift) {
+          if (modifiers.shift) {
             item.selected = !item.selected;
           }
           else {
@@ -8134,7 +8134,7 @@ class ToolSelectNode extends ToolElement {
           if (item.selected) {
             this.mode = consts.move_shapes;
             project.deselect_all_points();
-            this.mouseStartPos = event.point.clone();
+            this.mouseStartPos = point.clone();
             this.originalContent = this._scope.capture_selection_state();
 
             if(item.layer){
@@ -8145,7 +8145,7 @@ class ToolSelectNode extends ToolElement {
 
       }
       else if (this.hitItem.type == 'segment') {
-        if (event.modifiers.shift) {
+        if (modifiers.shift) {
           this.hitItem.segment.selected = !this.hitItem.segment.selected;
         }
         else {
@@ -8157,13 +8157,13 @@ class ToolSelectNode extends ToolElement {
         }
         if (this.hitItem.segment.selected) {
           this.mode = consts.move_points;
-          this.mouseStartPos = event.point.clone();
+          this.mouseStartPos = point.clone();
           this.originalContent = this._scope.capture_selection_state();
         }
       }
       else if (this.hitItem.type == 'handle-in' || this.hitItem.type == 'handle-out') {
         this.mode = consts.move_handle;
-        this.mouseStartPos = event.point.clone();
+        this.mouseStartPos = point.clone();
         this.originalHandleIn = this.hitItem.segment.handleIn.clone();
         this.originalHandleOut = this.hitItem.segment.handleOut.clone();
 
@@ -8188,12 +8188,18 @@ class ToolSelectNode extends ToolElement {
       this._scope.clear_selection_bounds();
 
     }
+    else if (this.hitItem && modifiers.alt) {
+      project.deselectAll();
+      const {layer} = this.hitItem.item;
+      layer.activate();
+      eve.emit('elm_activated', layer);
+    }
     else {
       // Clicked on and empty area, engage box select.
-      this.mouseStartPos = event.point.clone();
+      this.mouseStartPos = point.clone();
       this.mode = 'box-select';
 
-      if(!event.modifiers.shift && this.profile){
+      if(!modifiers.shift && this.profile){
         this.profile.detache_wnd();
         eve.emit_async('elm_activated', null);
         delete this.profile;
@@ -8202,7 +8208,7 @@ class ToolSelectNode extends ToolElement {
     }
   }
 
-  mouseup(event) {
+  mouseup({modifiers, point}) {
 
     const {project, consts} = this._scope;
 
@@ -8226,14 +8232,14 @@ class ToolSelectNode extends ToolElement {
     }
     else if (this.mode == 'box-select') {
 
-      const box = new paper.Rectangle(this.mouseStartPos, event.point);
+      const box = new paper.Rectangle(this.mouseStartPos, point);
 
-      if (!event.modifiers.shift){
+      if (!modifiers.shift){
         project.deselectAll();
       }
 
       // при зажатом ctrl добавляем элемент иначе - узел
-      if (event.modifiers.control) {
+      if (modifiers.control) {
 
         const profiles = [];
         this._scope.paths_intersecting_rect(box).forEach((path) => {
@@ -8291,7 +8297,7 @@ class ToolSelectNode extends ToolElement {
     this.changed && project.register_change(true);
   }
 
-  mousedrag(event) {
+  mousedrag({modifiers, point}) {
 
     const {project, consts} = this._scope;
 
@@ -8300,8 +8306,8 @@ class ToolSelectNode extends ToolElement {
     if (this.mode == consts.move_shapes) {
       this._scope.canvas_cursor('cursor-arrow-small');
 
-      let delta = event.point.subtract(this.mouseStartPos);
-      if (!event.modifiers.shift){
+      let delta = point.subtract(this.mouseStartPos);
+      if (!modifiers.shift){
         delta = delta.snap_to_angle(Math.PI*2/4);
       }
       this._scope.restore_selection_state(this.originalContent);
@@ -8311,8 +8317,8 @@ class ToolSelectNode extends ToolElement {
     else if (this.mode == consts.move_points) {
       this._scope.canvas_cursor('cursor-arrow-small');
 
-      let delta = event.point.subtract(this.mouseStartPos);
-      if(!event.modifiers.shift) {
+      let delta = point.subtract(this.mouseStartPos);
+      if(!modifiers.shift) {
         delta = delta.snap_to_angle(Math.PI*2/4);
       }
       this._scope.restore_selection_state(this.originalContent);
@@ -8321,7 +8327,7 @@ class ToolSelectNode extends ToolElement {
     }
     else if (this.mode == consts.move_handle) {
 
-      const delta = event.point.subtract(this.mouseStartPos);
+      const delta = point.subtract(this.mouseStartPos);
       const noti = {
         type: consts.move_handle,
         profiles: [this.hitItem.item.parent],
@@ -8347,7 +8353,7 @@ class ToolSelectNode extends ToolElement {
       this._scope.purge_selection();
     }
     else if (this.mode == 'box-select') {
-      this._scope.drag_rect(this.mouseStartPos, event.point);
+      this._scope.drag_rect(this.mouseStartPos, point);
     }
   }
 

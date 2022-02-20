@@ -55,8 +55,12 @@ class ToolWnd extends React.Component {
   };
 
   elm_activated = (elm) => {
+    const {Contour} = this.props.editor.constructor;
     if(!elm) {
       this.tree_select({type: 'root', elm});
+    }
+    else if(elm instanceof Contour) {
+      this.tree_select({type: 'layer', layer: elm, elm: null});
     }
     else {
       const {selected_elements} = elm.project;
