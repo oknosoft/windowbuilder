@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Toolbar from '@material-ui/core/Toolbar';
-import IconButton from '@material-ui/core/IconButton';
+import IconButton from '../../Toolbar/IconButton';
 import Typography from '@material-ui/core/Typography';
 import Tip from 'metadata-react/App/Tip';
 import InfoButton from 'metadata-react/App/InfoButton';
@@ -21,7 +21,7 @@ function open_spec(ox) {
 }
 
 function RootToolbar({ox, _dp: {sys}, project, classes}) {
-  return <Toolbar disableGutters variant="dense">
+  return <Toolbar disableGutters>
     <Typography className={classes.title} variant="subtitle2">{ox.prod_name(true)}</Typography>
     <Tip title="Обновить параметры">
       <IconButton onClick={() => sys.refill_prm(ox, 0, false, project)}><i className="fa fa-retweet" /></IconButton>

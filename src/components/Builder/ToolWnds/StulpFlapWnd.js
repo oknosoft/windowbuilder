@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import DataField from 'metadata-react/DataField';
+import Bar from '../Controls/Bar';
+import PropField from 'metadata-react/DataField/PropField';
 
 class StulpFlapWnd extends React.Component {
 
@@ -21,13 +22,14 @@ class StulpFlapWnd extends React.Component {
   };
 
   render() {
-    const {_obj} = this.props.editor.tool;
+    const {_obj, options} = this.props.editor.tool;
     const {index} = this.state;
-    return <div>
-      <DataField _obj={_obj} _fld="inset" fullWidth/>
-      <DataField _obj={_obj} _fld="furn1" index={index} fullWidth/>
-      <DataField _obj={_obj} _fld="furn2" index={index} fullWidth/>
-    </div>;
+    return <>
+      <Bar>{options.title || options.wnd?.caption}</Bar>
+      <PropField _obj={_obj} _fld="inset"/>
+      <PropField _obj={_obj} _fld="furn1" index={index}/>
+      <PropField _obj={_obj} _fld="furn2" index={index}/>
+    </>;
   }
 
 }

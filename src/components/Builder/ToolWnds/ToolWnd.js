@@ -34,16 +34,20 @@ class ToolWnd extends React.Component {
 
   componentDidMount() {
     const {eve} = this.props.editor;
-    eve.on('tool_activated', this.tool_activated);
-    eve.on('elm_activated', this.elm_activated);
-    eve.on('react', this.visible);
+    eve.on({
+      tool_activated: this.tool_activated,
+      elm_activated: this.elm_activated,
+      react: this.visible,
+    });
   }
 
   componentWillUnmount() {
     const {eve} = this.props.editor;
-    eve.off('tool_activated', this.tool_activated);
-    eve.off('elm_activated', this.elm_activated);
-    eve.off('react', this.visible);
+    eve.off({
+      tool_activated: this.tool_activated,
+      elm_activated: this.elm_activated,
+      react: this.visible,
+    });
   }
 
   tool_activated = (tool) => {
@@ -55,8 +59,8 @@ class ToolWnd extends React.Component {
   };
 
   elm_activated = (elm) => {
-    const {Contour} = this.props.editor.constructor;
-    if(!elm) {
+    const {Contour, Scheme} = this.props.editor.constructor;
+    if(!elm || elm instanceof Scheme) {
       this.tree_select({type: 'root', elm});
     }
     else if(elm instanceof Contour) {

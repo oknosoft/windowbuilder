@@ -27,6 +27,10 @@ const theme = createTheme({
     MuiIconButton: {
       root: {
         padding: 8,
+        marginRight: 4,
+      },
+      sizeSmall: {
+        padding: 4,
       }
     },
   },

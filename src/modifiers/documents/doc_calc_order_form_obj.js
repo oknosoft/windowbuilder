@@ -205,12 +205,14 @@
 
               const footer = {
                 columns: ",,,,#stat_total,,,#stat_s,,,,,#stat_total,,,#stat_total",
-                _in_header_stat_s: function(tag,index,data){
-                  const calck=function(){
-                    let sum=0;
-                    o.production.forEach((row) => {
-                      sum += row.s * row.quantity;
-                    });
+                _in_header_stat_s: function (tag, index, data) {
+                  const calck = function () {
+                    let sum = 0;
+                    for(const row of o.production) {
+                      if(row.characteristic.leading_product.calc_order !== o) {
+                        sum += row.s * row.quantity;
+                      }
+                    }
                     return sum.toFixed(2);
                   };
                   this._stat_in_header(tag, calck, index, data);
@@ -230,12 +232,12 @@
                     clearTimeout(production._edit_timer);
                   }
                   production._edit_timer = setTimeout(() => {
-                    if(wnd && wnd.elmnts){
-                      production.callEvent('onEditCell', [2, 0, 7, null, null, true]);
-                      production.callEvent('onEditCell', [2, 0, 12, null, null, true]);
-                      production.callEvent('onEditCell', [2, 0, 15, null, null, true]);
+                    if(wnd && wnd.elmnts) {
+                      const {selection} = production;
+                      production.selection = selection;
+                      production.selectCell(rId - 1, cInd);
                     }
-                  }, 300);
+                  }, 160);
                 }
               });
 
@@ -958,6 +960,9 @@
             if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
               not_production();
             }
+            else if(row.characteristic.leading_product.calc_order == calc_order) {
+              $p.ui.dialogs.alert({title: 'Вложенное изделие', text: 'Нельзя копировать части изделия'});
+            }
             else if(row.characteristic.coordinates.count()) {
               // добавляем строку
               o.create_product_row({grid: wnd.elmnts.grids.production, create: true})
@@ -1010,14 +1015,12 @@
             if(owner === $p.job_prm.nom.foroom) {
               return open_jalousie();
             }
+            // возможно, это заготовка - проверим номенклатуру системы
+            if(row.characteristic.leading_product.calc_order == calc_order) {
+              return handlers.handleNavigate(`/builder/${row.characteristic.leading_product.ref}?order=${o.ref}`);
+            }
             if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
               not_production();
-            }
-            else if(row.characteristic.coordinates.count() == 0) {
-              // возможно, это заготовка - проверим номенклатуру системы
-              if(row.characteristic.leading_product.calc_order == calc_order) {
-                handlers.handleNavigate(`/builder/${row.characteristic.leading_product.ref}?order=${o.ref}`);
-              }
             }
             else {
               handlers.handleNavigate(`/builder/${row.characteristic.ref}?order=${o.ref}`);

@@ -224,7 +224,9 @@ class Editor extends $p.EditorInvisible {
 
         case 'save_close':
           if(_editor.project) {
-            _editor.project.save_coordinates({save: true, close: true});
+            Promise.resolve(pwnd.progressOn())
+              .then(() => _editor.project.save_coordinates({save: true, close: true}))
+              .catch(() => pwnd.progressOff());
           }
           break;
 
@@ -234,7 +236,10 @@ class Editor extends $p.EditorInvisible {
 
         case 'calck':
           if(_editor.project) {
-            _editor.project.save_coordinates({save: true});
+            pwnd.progressOn();
+            _editor.project.save_coordinates({save: true})
+              .then(() => pwnd.progressOff())
+              .catch(() => pwnd.progressOff());
           }
           break;
 

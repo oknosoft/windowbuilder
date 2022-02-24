@@ -47,7 +47,7 @@
     "metadata-superlogin": "2.0.27-beta.2",
     "react-highlight-words": "^0.17",
     "url-join": "^4.0.1",
-    "wb-core": "github:oknosoft/windowbuilder-core#c860287d9737917266f5ec09db87d050b124a1d3",
+    "wb-core": "github:oknosoft/windowbuilder-core#81b4c7b52955b4ae80651ce5a1565b751d6cd232",
     "wb-cutting": "github:oknosoft/genetic-cutting#da74a4a12254f351c1364e86bbf0c0454550701d",
     "wb-forms": "github:oknosoft/windowbuilder-forms#b1f05e2e776a4b83034e3f33265e20eabd211cfc"
   },

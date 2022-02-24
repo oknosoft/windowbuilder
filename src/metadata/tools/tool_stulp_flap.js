@@ -9,6 +9,8 @@
 
 import ToolWnd from '../../components/Builder/ToolWnds/StulpFlapWnd';
 
+const title = 'Штульповые створки';
+
 export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {builder_pen}, cat: {characteristics}, utils, ui: {dialogs}}) {
 
   const {ToolElement, Filling, Profile} = Editor;
@@ -141,7 +143,10 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
       super();
 
       Object.assign(this, {
-        options: {name: 'stulp_flap'},
+        options: {
+          name: 'stulp_flap',
+          title,
+        },
         _obj: null,
       });
 
@@ -198,23 +203,23 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
         return;
       }
       if(inset.empty()) {
-        return dialogs.alert({text: `Не указан штульп`, title: 'Штульповые створки'});
+        return dialogs.alert({text: `Не указан штульп`, title});
       }
       if(furn1.empty()) {
-        return dialogs.alert({text: `Не указана фурнитура слева`, title: 'Штульповые створки'});
+        return dialogs.alert({text: `Не указана фурнитура слева`, title});
       }
       if(furn2.empty()) {
-        return dialogs.alert({text: `Не указана фурнитура справа`, title: 'Штульповые створки'});
+        return dialogs.alert({text: `Не указана фурнитура справа`, title});
       }
       if(furn2.shtulp_kind() === furn1.shtulp_kind()) {
-        return dialogs.alert({text: `Неверное сочетание типов фурнитур (две активных, либо две пассивных)`, title: 'Штульповые створки'});
+        return dialogs.alert({text: `Неверное сочетание типов фурнитур (две активных, либо две пассивных)`, title});
       }
       // проверки закончены, строим вертикальный путь в середине заполнения
       const {top, bottom} = filling.profiles_by_side();
       if(!top || !bottom) {
         return dialogs.alert({
           text: `Не найден верхний или нижний профиль заполнения (сложная форма)`,
-          title: 'Штульповые створки'
+          title,
         });
       }
       const pt = filling.interiorPoint();
@@ -224,7 +229,7 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
       if(!pe || !pb) {
         return dialogs.alert({
           text: `Не найдено пересечение вертикальной линии через центр заполнения с профилями (сложная форма)`,
-          title: 'Штульповые створки'
+          title,
         });
       }
       path.firstSegment.point = pb;

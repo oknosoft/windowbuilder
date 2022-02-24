@@ -55,12 +55,12 @@ class ControlsFrame extends React.Component {
 
   // при активации слоя
   layer_activated = () => {
-
+    this.forceUpdate();
   };
 
   // при активации инструмента
   tool_activated = () => {
-
+    this.forceUpdate();
   };
 
   // при смене фурнитуры
@@ -99,26 +99,34 @@ class ControlsFrame extends React.Component {
 
   render() {
     const {type, classes, ...other} = this.props;
-    const {editor: {project}, elm} = other;
-    other.ox = project ? project.ox : null;
-    const {Filling} = $p.EditorInvisible;
+    const {editor: {project, tool}, elm} = other;
+    const {ToolWnd} = tool;
     let panel;
-    switch (type) {
-    case 'elm':
-      panel = <ElmProps {...other}/>;
-      break;
-    case 'pair':
-      panel = elm.every((elm) => elm instanceof Filling) ? <GlassProps {...other}/> : <PairProps {...other}/>;
-      break;
-    case 'grp':
-      panel = elm.every((elm) => elm instanceof Filling) ? <GlassProps {...other}/> : <GrpProps {...other}/>;
-      break;
-    case 'layer':
-      panel = <LayerProps {...other}/>;
-      break;
-    default:
-      panel = <ProductProps {...other}/>;
+    if(ToolWnd) {
+      panel = <ToolWnd {...other}/>;
     }
+    else {
+      other.ox = project ? project.ox : null;
+      const {Filling} = $p.EditorInvisible;
+
+      switch (type) {
+      case 'elm':
+        panel = <ElmProps {...other}/>;
+        break;
+      case 'pair':
+        panel = elm.every((elm) => elm instanceof Filling) ? <GlassProps {...other}/> : <PairProps {...other}/>;
+        break;
+      case 'grp':
+        panel = elm.every((elm) => elm instanceof Filling) ? <GlassProps {...other}/> : <GrpProps {...other}/>;
+        break;
+      case 'layer':
+        panel = <LayerProps {...other}/>;
+        break;
+      default:
+        panel = <ProductProps {...other}/>;
+      }
+    }
+
     return <div className={classes.root}>
         {panel}
      </div>;

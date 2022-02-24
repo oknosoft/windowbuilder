@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Toolbar from '@material-ui/core/Toolbar';
-import IconButton from '@material-ui/core/IconButton';
+import IconButton from '../../Toolbar/IconButton';
 import VerticalAlignTopIcon from '@material-ui/icons/VerticalAlignTop';
 import ZoomOutMapIcon from '@material-ui/icons/ZoomOutMap';
 import Tip from 'metadata-react/App/Tip';
@@ -48,10 +48,10 @@ const btnClick = (editor, name) => {
   // }
 };
 
-function ProfileToolbar({editor, elm, tree_select, classes}) {
+function ProfileToolbar({editor, elm, classes}) {
   const {msg} = $p;
   const {inset} = elm;
-  return <Toolbar disableGutters variant="dense">
+  return <Toolbar disableGutters>
     <Tip title={msg.align_node_left}>
       <IconButton onClick={btnClick(editor, 'left')}><VerticalAlignTopIcon style={{transform: 'rotate(0.75turn)'}} /></IconButton>
     </Tip>
@@ -68,7 +68,7 @@ function ProfileToolbar({editor, elm, tree_select, classes}) {
       <IconButton onClick={btnClick(editor, 'all')}><ZoomOutMapIcon /></IconButton>
     </Tip>
     <div className={classes.title}/>
-    <GoLayer elm={elm} tree_select={tree_select}/>
+    <GoLayer elm={elm} editor={editor}/>
     <Tip title={msg.elm_spec}>
       <IconButton onClick={btnClick(editor, 'spec')}>
         <i className="fa fa-table" />
@@ -85,7 +85,6 @@ function ProfileToolbar({editor, elm, tree_select, classes}) {
 ProfileToolbar.propTypes = {
   editor: PropTypes.object.isRequired,
   elm: PropTypes.object.isRequired,
-  tree_select: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
 };
 
