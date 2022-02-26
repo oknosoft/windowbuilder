@@ -18,7 +18,7 @@ const map = [
   {value: '2', text: 'Вложенное изделие'},
   {value: '3', text: 'Слой родительского изделия'},
   {value: '10', text: 'Виртуальное изделие к слою'},
-  {value: '11', text: 'Виртуальное изделие к издеклию'},
+  {value: '11', text: 'Виртуальное изделие к изделию'},
 ];
 map.get = function (v) {
   const row = this.find(({value}) => value == v);

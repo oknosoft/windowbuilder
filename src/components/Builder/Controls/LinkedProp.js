@@ -36,8 +36,7 @@ export default function LinkedProp({_obj, _fld='value', param, fields, cnstr, in
   // проверим вхождение значения в доступные и при необходимости изменим
   if (links.length) {
     const values = [];
-    if(param.linked_values(links, _obj, values)) {
-    }
+    param.linked_values(links, null, values);
     if(values.length) {
       if(values.length < 50) {
         oselect = true;
