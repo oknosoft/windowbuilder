@@ -35,7 +35,7 @@ export default function LayerKind({layer}) {
   const [kind, setKind] = React.useState(layer.kind.toFixed());
   const title = map.get(kind);
   let Icon;
-  let disabled;
+  let disabled = false;
   switch (layer.kind) {
   case 1:
     Icon = PhotoSizeSelectSmallIcon;
@@ -65,7 +65,7 @@ export default function LayerKind({layer}) {
   }
 
   return <Tip title={<><b>Тип слоя:</b><br/><i>{title}</i></>}>
-    <IconButton onClick={() => $p.ui.dialogs.input_value({
+    <IconButton disabled={disabled} onClick={() => $p.ui.dialogs.input_value({
       title: "Тип слоя",
       list: map.list(),
       initialValue: layer.kind.toFixed()
@@ -78,7 +78,7 @@ export default function LayerKind({layer}) {
       <Icon  />
     </IconButton>
   </Tip>;
-};
+}
 
 LayerKind.propTypes = {
   layer: PropTypes.object.isRequired
