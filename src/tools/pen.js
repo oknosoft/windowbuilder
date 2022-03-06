@@ -205,6 +205,7 @@ class ToolPen extends ToolElement {
           allow_close: true,
           bind_generatrix: true,
           bind_node: false,
+          bind_sys: false,
           inset: '',
           clr: ''
         }
@@ -1222,15 +1223,16 @@ class ToolPen extends ToolElement {
    */
   add_sequence(points) {
     const profiles = [];
+    const {profile, project} = this;
     points.forEach((segments) => {
       profiles.push(new Editor.Profile({
         generatrix: new paper.Path({
           strokeColor: 'black',
           segments: segments
-        }), proto: this.profile
+        }), proto: profile
       }));
     });
-    this.project.activeLayer.on_sys_changed(true);
+    profile.bind_sys && project.activeLayer.on_sys_changed(true);
     return profiles;
   }
 

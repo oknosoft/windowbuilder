@@ -226,7 +226,7 @@ class Editor extends $p.EditorInvisible {
           if(_editor.project) {
             Promise.resolve(pwnd.progressOn())
               .then(() => _editor.project.save_coordinates({save: true, close: true}))
-              .catch(() => pwnd.progressOff());
+              .catch(() => pwnd.progressOff && pwnd.progressOff());
           }
           break;
 
@@ -237,9 +237,10 @@ class Editor extends $p.EditorInvisible {
         case 'calck':
           if(_editor.project) {
             pwnd.progressOn();
-            _editor.project.save_coordinates({save: true})
-              .then(() => pwnd.progressOff())
-              .catch(() => pwnd.progressOff());
+            Promise.resolve()
+              .then(() => _editor.project.save_coordinates({save: true}))
+              .then(() => pwnd.progressOff && pwnd.progressOff())
+              .catch(() => pwnd.progressOff && pwnd.progressOff());
           }
           break;
 
@@ -840,30 +841,53 @@ class Editor extends $p.EditorInvisible {
     return rect;
   }
 
-  fragment_spec(elm, name) {
+  fragment_spec({elm, ox, name}) {
     const {ui: {dialogs}, cat: {characteristics}} = $p;
+    if(!ox) {
+      ox = this.project.ox;
+    }
     if(elm) {
       return dialogs.alert({
         timeout: 0,
         title: `Спецификация ${elm >= 0 ? 'элемента' : 'слоя'} №${Math.abs(elm)} (${name})`,
         Component: characteristics.SpecFragment,
-        props: {_obj: this.project.ox, elm},
+        props: {_obj: ox, elm},
         initFullScreen: true,
         hide_btn: true,
         noSpace: true,
       });
     }
-    dialogs.alert({text: 'Элемент не выбран', title: $p.msg.main_title});
+
   }
 
-  elm_spec() {
-    const {selected_elm: elm} = this.project;
-    this.fragment_spec(elm ? elm.elm : 0, elm && elm.inset.toString());
+  elm_spec(elm) {
+    const {ui: {dialogs}, msg} = $p;
+    if(!elm) {
+      elm = this.project.selected_elm;
+    }
+    if(elm) {
+      return this.fragment_spec({
+        elm: elm.elm,
+        ox: elm.layer.prod_ox,
+        name: elm.inset.toString(),
+      });
+    }
+    dialogs.alert({text: 'Элемент не выбран', title: msg.main_title});
   }
 
-  layer_spec() {
-    const {activeLayer} = this.project;
-    this.fragment_spec(-activeLayer.cnstr, activeLayer.furn.toString());
+  layer_spec(layer) {
+    const {ui: {dialogs}, msg} = $p;
+    if(!layer) {
+      layer = this.project.activeLayer;
+    }
+    if(layer) {
+      return this.fragment_spec({
+        elm: -layer.cnstr,
+        ox: layer.prod_ox,
+        name: layer.furn.toString(),
+      });
+    }
+    dialogs.alert({text: 'Слой не выбран', title: msg.main_title});
   }
 
   /**

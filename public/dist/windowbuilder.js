@@ -1994,30 +1994,51 @@ class Editor extends $p.EditorInvisible {
     return rect;
   }
 
-  fragment_spec(elm, name) {
+  fragment_spec({elm, ox, name}) {
     const {ui: {dialogs}, cat: {characteristics}} = $p;
+    if(!ox) {
+      ox = this.project.ox;
+    }
     if(elm) {
       return dialogs.alert({
         timeout: 0,
         title: `Спецификация ${elm >= 0 ? 'элемента' : 'слоя'} №${Math.abs(elm)} (${name})`,
         Component: characteristics.SpecFragment,
-        props: {_obj: this.project.ox, elm},
+        props: {_obj: ox, elm},
         initFullScreen: true,
         hide_btn: true,
         noSpace: true,
       });
     }
+
+  }
+
+  elm_spec(elm) {
+    if(!elm) {
+      elm = this.project.selected_elm;
+    }
+    if(elm) {
+      return this.fragment_spec({
+        elm: elm.elm,
+        ox: elm.layer.prod_ox,
+        name: elm.inset.toString(),
+      });
+    }
     dialogs.alert({text: 'Элемент не выбран', title: $p.msg.main_title});
   }
 
-  elm_spec() {
-    const {selected_elm: elm} = this.project;
-    this.fragment_spec(elm ? elm.elm : 0, elm && elm.inset.toString());
-  }
-
-  layer_spec() {
-    const {activeLayer} = this.project;
-    this.fragment_spec(-activeLayer.cnstr, activeLayer.furn.toString());
+  layer_spec(layer) {
+    if(!layer) {
+      layer = this.project.activeLayer;
+    }
+    if(layer) {
+      return this.fragment_spec({
+        elm: -layer.cnstr,
+        ox: layer.prod_ox,
+        name: layer.furn.toString(),
+      });
+    }
+    dialogs.alert({text: 'Слой не выбран', title: $p.msg.main_title});
   }
 
   /**
@@ -5847,6 +5868,7 @@ class ToolPen extends ToolElement {
           allow_close: true,
           bind_generatrix: true,
           bind_node: false,
+          bind_sys: false,
           inset: '',
           clr: ''
         }
@@ -6864,15 +6886,16 @@ class ToolPen extends ToolElement {
    */
   add_sequence(points) {
     const profiles = [];
+    const {profile, project} = this;
     points.forEach((segments) => {
       profiles.push(new Editor.Profile({
         generatrix: new paper.Path({
           strokeColor: 'black',
           segments: segments
-        }), proto: this.profile
+        }), proto: profile
       }));
     });
-    this.project.activeLayer.on_sys_changed(true);
+    profile.bind_sys && project.activeLayer.on_sys_changed(true);
     return profiles;
   }
 

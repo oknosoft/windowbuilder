@@ -33,7 +33,7 @@ function LayerToolbar({editor, layer, classes}) {
     </Tip>
     <GoLayer elm={layer} editor={editor}/>
     <Tip title={$p.msg.layer_spec}>
-      <IconButton onClick={() => editor.fragment_spec(-layer.cnstr, furn.toString())}>
+      <IconButton onClick={() => editor.layer_spec(layer)}>
         <i className="fa fa-table" />
       </IconButton>
     </Tip>

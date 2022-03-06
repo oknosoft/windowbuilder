@@ -28,10 +28,7 @@ const btnClick = (editor, name) => {
     });
   }
   else if(name === 'spec') {
-    return () => {
-      const {selected_elm: elm} = editor.project;
-      editor.fragment_spec(elm ? elm.elm : 0, elm && elm.inset.toString());
-    };
+    return () => editor.elm_spec();
   }
 
   if(['left', 'right', 'top', 'bottom', 'all'].includes(name)) {

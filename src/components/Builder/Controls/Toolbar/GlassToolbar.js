@@ -25,7 +25,7 @@ function GlassToolbar({editor, elm, classes}) {
     <div className={classes.title}/>
     <GoLayer elm={elm} editor={editor}/>
     <Tip title={$p.msg.elm_spec}>
-      <IconButton onClick={() => editor.fragment_spec(elm.elm, inset.toString())}>
+      <IconButton onClick={() => editor.elm_spec(elm)}>
         <i className="fa fa-table" />
       </IconButton>
     </Tip>
