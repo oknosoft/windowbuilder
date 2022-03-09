@@ -1380,7 +1380,7 @@ class Editor extends $p.EditorInvisible {
           if(_editor.project) {
             Promise.resolve(pwnd.progressOn())
               .then(() => _editor.project.save_coordinates({save: true, close: true}))
-              .catch(() => pwnd.progressOff());
+              .catch(() => pwnd.progressOff && pwnd.progressOff());
           }
           break;
 
@@ -1391,9 +1391,10 @@ class Editor extends $p.EditorInvisible {
         case 'calck':
           if(_editor.project) {
             pwnd.progressOn();
-            _editor.project.save_coordinates({save: true})
-              .then(() => pwnd.progressOff())
-              .catch(() => pwnd.progressOff());
+            Promise.resolve()
+              .then(() => _editor.project.save_coordinates({save: true}))
+              .then(() => pwnd.progressOff && pwnd.progressOff())
+              .catch(() => pwnd.progressOff && pwnd.progressOff());
           }
           break;
 
@@ -2014,6 +2015,7 @@ class Editor extends $p.EditorInvisible {
   }
 
   elm_spec(elm) {
+    const {ui: {dialogs}, msg} = $p;
     if(!elm) {
       elm = this.project.selected_elm;
     }
@@ -2024,10 +2026,11 @@ class Editor extends $p.EditorInvisible {
         name: elm.inset.toString(),
       });
     }
-    dialogs.alert({text: 'Элемент не выбран', title: $p.msg.main_title});
+    dialogs.alert({text: 'Элемент не выбран', title: msg.main_title});
   }
 
   layer_spec(layer) {
+    const {ui: {dialogs}, msg} = $p;
     if(!layer) {
       layer = this.project.activeLayer;
     }
@@ -2038,7 +2041,7 @@ class Editor extends $p.EditorInvisible {
         name: layer.furn.toString(),
       });
     }
-    dialogs.alert({text: 'Слой не выбран', title: $p.msg.main_title});
+    dialogs.alert({text: 'Слой не выбран', title: msg.main_title});
   }
 
   /**

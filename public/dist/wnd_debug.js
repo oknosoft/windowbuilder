@@ -79,7 +79,7 @@ Object.defineProperties($p.cat.clrs, {
         // если указаны оба цвета
         if(btn_id == 'btn_select' && !eclr.clr_in.empty() && !eclr.clr_out.empty()) {
 
-          const clr = eclr.clr_in == eclr.clr_out ? eclr.clr_in : this.get(`${eclr.clr_in.valueOf()}${eclr.clr_out.valueOf()}`);
+          const clr = eclr.clr_in == eclr.clr_out ? eclr.clr_in : this.getter(`${eclr.clr_in.valueOf()}${eclr.clr_out.valueOf()}`);
           pwnd.on_select(clr);
 
           wnd.close();
@@ -849,25 +849,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                       const {selection} = production;
                       production.selection = selection;
                       production.selectCell(rId - 1, cInd);
-
-                      // production.callEvent('onEditCell', [2, 0, 7, null, null, true]);
-                      // production.callEvent('onEditCell', [2, 0, 12, null, null, true]);
-                      // production.callEvent('onEditCell', [2, 0, 15, null, null, true]);
-                      // const {characteristic} = o.production.get(rId - 1);
-                      // if(!characteristic.empty()) {
-                      //   for (const row of o.production) {
-                      //     if(row.row !== rId && row.ordn === characteristic) {
-                      //       production.selectRow(row.row - 1);
-                      //       production.callEvent('onEditCell', [2, 0, 7, null, null, true]);
-                      //       production.callEvent('onEditCell', [2, 0, 8, null, null, true]);
-                      //       production.callEvent('onEditCell', [2, 0, 12, null, null, true]);
-                      //       production.callEvent('onEditCell', [2, 0, 15, null, null, true]);
-                      //     }
-                      //   }
-                      //
-                      // }
                     }
-                  }, 300);
+                  }, 160);
                 }
               });
 
