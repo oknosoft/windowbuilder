@@ -19,7 +19,7 @@ Object.defineProperties($p.cat.clrs, {
         // если указаны оба цвета
         if(btn_id == 'btn_select' && !eclr.clr_in.empty() && !eclr.clr_out.empty()) {
 
-          const clr = eclr.clr_in == eclr.clr_out ? eclr.clr_in : this.get(`${eclr.clr_in.valueOf()}${eclr.clr_out.valueOf()}`);
+          const clr = eclr.clr_in == eclr.clr_out ? eclr.clr_in : this.getter(`${eclr.clr_in.valueOf()}${eclr.clr_out.valueOf()}`);
           pwnd.on_select(clr);
 
           wnd.close();
