@@ -137,8 +137,7 @@ export function handleCopy() {
 
   }
   else{
-    $p.msg.show_msg({
-      type: 'alert-info',
+    $p.ui.dialogs.alert({
       text: `Укажите строку для копирования (${props.group})`,
       title: 'Копирование строки',
     });
