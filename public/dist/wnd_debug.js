@@ -624,6 +624,21 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
   const _mgr = $p.doc.calc_order;
   let _meta_patched;
 
+  function fill_btns(wnd) {
+    const toolbar = wnd.getAttachedToolbar();
+    const {cat: {formulas}, current_user: {branch}} = $p;
+    formulas.find_rows({parent: formulas.predefined('filling')}, (formula) => {
+      if(formula.params.find({param: 'destination', value: 'doc.calc_order'})) {
+        // костыльный фильтр 'filter.branch.keys.has'
+        const br_keys = formula.params.find({param: 'filter.branch.keys.has'});
+        if(br_keys && !branch.empty() && !branch.keys.find({acl_obj: br_keys._obj.value})) {
+          return;
+        }
+        toolbar.addListOption('bs_create_by_virtue', `fill_${formula.ref}`, '~', 'button', formula.name);
+      }
+    });
+  }
+
   _mgr.form_obj = function (pwnd, attr, handlers) {
 
     let o, wnd;
@@ -863,6 +878,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               toolbar.addButton('btn_fill_plan', 3, 'Заполнить');
               toolbar.attachEvent('onclick', toolbar_click);
 
+              // подключаемые действия
+              fill_btns(wnd);
+
               // в зависимости от статуса
               set_editable(o, wnd);
 
@@ -876,6 +894,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                   rsvg_click(search.ref, 0);
                 }, 200);
               }
+
+
             })
             .catch(() => {
               delete o._data._reload;
@@ -1118,8 +1138,12 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         break;
       }
 
-      if(btn_id.substr(0, 4) == 'prn_') {
+      if(btn_id.startsWith('prn_')) {
         _mgr.print(o, btn_id, wnd);
+      }
+      else if(btn_id.startsWith('fill_')) {
+        const formula = $p.cat.formulas.get(btn_id.substr(5));
+        formula && formula.execute(o);
       }
     }
 
