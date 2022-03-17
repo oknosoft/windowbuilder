@@ -692,6 +692,8 @@
 
       function do_save(post) {
 
+        wnd.progressOn();
+
         if(!wnd.elmnts.ro) {
           o.note = wnd.elmnts.cell_note.cell.querySelector('textarea').value.replace(/&nbsp;/g, ' ').replace(/<.*?>/g, '').replace(/&.{2,6};/g, '');
           wnd.elmnts.pg_left.selectRow(0);
@@ -699,6 +701,7 @@
 
         o.save(post)
           .then(() => {
+            wnd.progressOff();
             if(action == 'sent' || action == 'close') {
               close();
             }
@@ -708,6 +711,7 @@
             }
           })
           .catch((err) => {
+            wnd.progressOff();
             if(err._rev) {
               // показать диалог и обработать возврат
               dhtmlx.confirm({
