@@ -1488,7 +1488,7 @@ class Editor extends $p.EditorInvisible {
 
     // Обработчик события при удалении строки некой табчасти продукции
     this.on_del_row = this.on_del_row.bind(this);
-    $p.cat.characteristics.on("del_row", this.on_del_row);
+    $p.cat.characteristics.on('del_row', this.on_del_row);
 
     // Обработчик события проверки заполненности реквизитов
     this.on_alert = this.on_alert.bind(this);
@@ -1836,26 +1836,29 @@ class Editor extends $p.EditorInvisible {
 
       dhtmlxEvent(_canvas, "mousewheel", (evt) => {
 
+        const {view} = _editor;
+
         if(_editor.tool instanceof ToolSelectNode && (_editor.Key.isDown('r') || _editor.Key.isDown('к'))) {
           return _editor.tool.mousewheel(evt);
         }
         else if (evt.shiftKey || evt.altKey) {
           if(evt.shiftKey && !evt.deltaX){
-            _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaY, 0, 1);
+            view.center = this.changeCenter(view.center, evt.deltaY, 0, 1);
           }
           else{
-            _editor.view.center = this.changeCenter(_editor.view.center, evt.deltaX, evt.deltaY, 1);
+            view.center = this.changeCenter(view.center, evt.deltaX, evt.deltaY, 1);
           }
           return evt.preventDefault();
         }
         else if (evt.ctrlKey) {
           const mousePosition = new paper.Point(evt.offsetX, evt.offsetY);
-          const viewPosition = _editor.view.viewToProject(mousePosition);
-          const _ref1 = this.changeZoom(_editor.view.zoom, evt.deltaY, _editor.view.center, viewPosition);
-          _editor.view.zoom = _ref1[0];
-          _editor.view.center = _editor.view.center.add(_ref1[1]);
+          const viewPosition = view.viewToProject(mousePosition);
+          const {scaling} = view._decompose();
+          const [zoom, delta] = this.changeZoom(Math.abs(scaling.x), evt.deltaY, view.center, viewPosition);
+          view.scaling = [Math.sign(scaling.x) * zoom, Math.sign(scaling.y) * zoom];
+          view.center = view.center.add(delta);
           evt.preventDefault();
-          return _editor.view.draw();
+          return view.draw();
         }
       });
 
@@ -1971,8 +1974,8 @@ class Editor extends $p.EditorInvisible {
    * @return {paper.CompoundPath}
    */
   drag_rect(p1, p2) {
-    const {view} = this;
-    const half = new paper.Point(0.5 / view.zoom, 0.5 / view.zoom);
+    const zoom = Math.abs(this.view.scaling.x);
+    const half = new paper.Point(0.5 / zoom, 0.5 / zoom);
     const start = p1.add(half);
     const end = p2.add(half);
     const rect = new paper.CompoundPath();
@@ -1984,9 +1987,9 @@ class Editor extends $p.EditorInvisible {
     rect.lineTo(new paper.Point(end.x, start.y));
     rect.lineTo(end);
     rect.strokeColor = 'black';
-    rect.strokeWidth = 1.0 / view.zoom;
-    rect.dashOffset = 0.5 / view.zoom;
-    rect.dashArray = [1.0 / view.zoom, 1.0 / view.zoom];
+    rect.strokeWidth = 1.0 / zoom;
+    rect.dashOffset = 0.5 / zoom;
+    rect.dashArray = [1.0 / zoom, 1.0 / zoom];
     rect.removeOn({
       drag: true,
       up: true
