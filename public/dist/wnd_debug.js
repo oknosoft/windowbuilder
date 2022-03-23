@@ -796,6 +796,16 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       wnd.elmnts.cell_note.setHeight(100);
       wnd.elmnts.cell_note.attachHTMLString(`<textarea placeholder='Комментарий к заказу' class='textarea_editor'>${o.note}</textarea>`);
 
+      if(Array.isArray(_mgr.form_obj.on_create)) {
+        for(const method of _mgr.form_obj.on_create) {
+          try{
+            method({o, wnd});
+          }
+          catch (e) {
+
+          }
+        }
+      }
     };
 
     attr.toolbar_struct = $p.injected_data['toolbar_calc_order_obj.xml'];

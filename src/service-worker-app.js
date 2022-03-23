@@ -11,7 +11,7 @@ const dkey = new Date().toISOString().substr(0, 10);
 export default function () {
   skipWaiting();
 
-  const revision = '20220306';
+  const revision = '20220308';
 
   precacheAndRoute([
     {url: '/dist/dhtmlx.min.js', revision: null },
