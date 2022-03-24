@@ -361,7 +361,7 @@ class ToolLayImpost extends ToolElement {
       countx = profile.elm_by_x > 0 ? profile.elm_by_x.round() : Math.round(bounds.width / stepx) - 1,
       w2x = profile.inset_by_x.nom().width / 2,
       w2y = profile.inset_by_y.nom().width / 2,
-      clr = Editor.BuilderElement.clr_by_clr(profile.clr, false),
+      clr = Editor.BuilderElement.clr_by_clr.call(this, profile.clr),
       by_x = [], by_y = [], base, pos, path, i, j, pts;
 
     const get_path = (segments, b, e) => {

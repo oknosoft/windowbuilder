@@ -526,7 +526,7 @@ class Editor extends $p.EditorInvisible {
     for (const elm of this.project.getItems({class: $p.EditorInvisible.Profile})) {
       if((elm.angle_hor % 90) > 0.02) {
         if(hide) {
-          elm.path.fillColor = $p.EditorInvisible.BuilderElement.clr_by_clr.call(elm, elm._row.clr, false);
+          elm.path.fillColor = $p.EditorInvisible.BuilderElement.clr_by_clr.call(elm, elm._row.clr);
         }
         else {
           elm.path.fillColor = '#fcc';
