@@ -885,7 +885,7 @@
           if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
             return not_production();
           }
-          else if(row.characteristic.coordinates.count() == 0) {
+          else if(!row.characteristic.coordinates.count()) {
             // возможно, это подчиненная продукция
             if(row.characteristic.leading_product.calc_order == calc_order) {
               ox = row.characteristic.leading_product;
@@ -1057,7 +1057,8 @@
             if(row.characteristic.leading_product.calc_order == calc_order) {
               return handlers.handleNavigate(`/builder/${row.characteristic.leading_product.ref}?order=${o.ref}`);
             }
-            if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
+            if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory
+              || (row.characteristic.sys.empty() && !row.characteristic.coordinates.count())) {
               not_production();
             }
             else {
