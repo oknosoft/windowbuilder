@@ -1368,6 +1368,7 @@ class Editor extends $p.EditorInvisible {
         {name: 'dxf', text: 'DXF', tooltip: 'Экспорт в DXF', float: 'left', width: '30px'},
         {name: 'd3d', text: '<i class="fa fa-video-camera"></i>', tooltip: 'Открыть 3D', float: 'left', width: '30px'},
         {name: 'fragment', text: 'F', tooltip: 'Фрагмент', float: 'left', width: '20px'},
+        {name: 'mirror', text: '<i class="fa fa-exchange fa-fw"></i>', tooltip: 'Отразить', float: 'left', width: '20px'},
 
         {name: 'close', text: '<i class="fa fa-times fa-fw"></i>', tooltip: 'Закрыть без сохранения', float: 'right'},
         {name: 'history', text: '<i class="fa fa-history fa-fw"></i>', tooltip: 'История', float: 'right'}
@@ -1436,6 +1437,22 @@ class Editor extends $p.EditorInvisible {
           else {
             _editor.project.draw_fragment();
           }
+          break;
+
+        case 'mirror':
+          const mirror = !_editor.project._attr._reflected;
+          _editor.project.mirror(mirror, true)
+            .catch(() => null)
+            .then(() => {
+              const {classList} = this.buttons.mirror;
+              if(mirror) {
+                classList.add('selected');
+              }
+              else {
+                classList.remove('selected');
+              }
+              _editor.project.zoom_fit();
+            });
           break;
 
         case 'square':
