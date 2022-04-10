@@ -2623,7 +2623,7 @@ class Magnetism {
    * Двигает узел наклонного импоста для получения 0-штапика
    */
   m1() {
-
+    const {dialogs} = $p.ui;
     const {tb_left} = this.scheme._scope;
     const previous = tb_left && tb_left.get_selected();
 
@@ -2633,18 +2633,10 @@ class Magnetism {
       const {selected} = this;
 
       if(selected.break) {
-        $p.msg.show_msg({
-          type: 'alert-info',
-          text: `Выделено более одного узла`,
-          title: 'Магнит 0-штапик'
-        });
+        dialogs.alert({text: `Выделено более одного узла`, title: 'Магнит 0-штапик'});
       }
       else if(!selected.profile) {
-        $p.msg.show_msg({
-          type: 'alert-info',
-          text: `Не выделено ни одного узла профиля`,
-          title: 'Магнит 0-штапик'
-        });
+        dialogs.alert({text: `Не выделено ни одного узла профиля`, title: 'Магнит 0-штапик'});
       }
       else {
         const spoint = selected.profile[selected.point];
@@ -2659,11 +2651,7 @@ class Magnetism {
           });
 
           if(!cl) {
-            return $p.msg.show_msg({
-              type: 'alert-info',
-              text: `Не найдена строка соединения короткого ребра заполнения с профилем`,
-              title: 'Магнит 0-штапик'
-            });
+            return dialogs.alert({text: `Не найдена строка соединения короткого ребра заполнения с профилем`, title: 'Магнит 0-штапик'});
           }
 
           let pNext, pOur;
@@ -2676,19 +2664,11 @@ class Magnetism {
             pOur = next;
           }
           else {
-            return $p.msg.show_msg({
-              type: 'alert-info',
-              text: `Выделен неподходящий сегмент профиля`,
-              title: 'Магнит 0-штапик'
-            });
+            return dialogs.alert({text: `Выделен неподходящий сегмент профиля`, title: 'Магнит 0-штапик'});
           }
 
           if(!pNext.profile.nom.sizefaltz || !segm.profile.nom.sizefaltz || !pOur.profile.nom.sizefaltz) {
-            return $p.msg.show_msg({
-              type: 'alert-info',
-              text: `Не задан размер фальца примыкающих профилей`,
-              title: 'Магнит 0-штапик'
-            });
+            return dialogs.alert({text: `Не задан размер фальца примыкающих профилей`, title: 'Магнит 0-штапик'});
           }
 
           // строим линии фальца примыкающих к импосту профилей
@@ -2715,11 +2695,7 @@ class Magnetism {
           }
         }
         else {
-          $p.msg.show_msg({
-            type: 'alert-info',
-            text: `Не найдено коротких сегментов заполнений<br />в окрестности выделенной точки`,
-            title: 'Магнит 0-штапик'
-          });
+          dialogs.alert({text: `Не найдено коротких сегментов заполнений<br />в окрестности выделенной точки`, title: 'Магнит 0-штапик'});
         }
       }
     });
@@ -2751,7 +2727,7 @@ class Magnetism {
     const {contours} = scheme;
     const title = 'Импост в балконном блоке';
     if(profiles.length !== 1 || profiles[0].elm_type !== elm_types.Импост) {
-      scheme.view.on('click', on_impost_selected)
+      scheme.view.on('click', on_impost_selected);
       return dialogs.alert({text: 'Укажите один импост на эскизе', title});
     }
     const profile = profiles[0];
@@ -3906,7 +3882,7 @@ class ToolCut extends ToolElement{
         left: `${pt.x - 20}px`,
         name: 'tb_cut',
         height: '28px',
-        width: `${29 * buttons.length + 1}px`,
+        width: `${32 * buttons.length + 1}px`,
         buttons,
         onclick: this.tb_click.bind(this),
       });

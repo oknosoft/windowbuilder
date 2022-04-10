@@ -87,7 +87,6 @@ class ToolCut extends ToolElement{
     const {cnn_types} = $p.enm;
     if(!this.cont && nodes.length) {
       const point = nodes[0].profile[nodes[0].point];
-      const pt = this.project.view.projectToView(point);
 
       // определим, какие нужны кнопки
       const buttons = [];
@@ -144,13 +143,14 @@ class ToolCut extends ToolElement{
         }
       }
 
+      const pt = this.project.view.projectToView(point);
       this.cont = new $p.iface.OTooolBar({
         wrapper: this._scope._wrapper,
         top: `${pt.y + 10}px`,
         left: `${pt.x - 20}px`,
         name: 'tb_cut',
         height: '28px',
-        width: `${29 * buttons.length + 1}px`,
+        width: `${32 * buttons.length + 1}px`,
         buttons,
         onclick: this.tb_click.bind(this),
       });
