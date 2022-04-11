@@ -149,7 +149,7 @@ class ToolCut extends ToolElement{
         top: `${pt.y + 10}px`,
         left: `${pt.x - 20}px`,
         name: 'tb_cut',
-        height: '28px',
+        height: '30px',
         width: `${32 * buttons.length + 1}px`,
         buttons,
         onclick: this.tb_click.bind(this),
@@ -259,7 +259,7 @@ class ToolCut extends ToolElement{
       return;
     }
 
-    const {enm: {cnn_types}, cat} = $p;
+    const {enm: {cnn_types, orientations}, cat} = $p;
     let cnn = rack.profile.cnn_point('e');
     const base = cnn.cnn;
     cnn && cnn.profile && cnn.profile_point && cnn.profile.rays[cnn.profile_point].clear(true);
@@ -291,7 +291,13 @@ class ToolCut extends ToolElement{
         cnn.cnn = null;
       }
     }
-    const atypes = [cnn_types.ah, cnn_types.av, cnn_types.t];
+    const atypes = [cnn_types.short, cnn_types.t];
+    if(rack2.orientation === orientations.vert) {
+      atypes.push(cnn_types.ah);
+    }
+    else if(rack2.orientation === orientations.hor) {
+      atypes.push(cnn_types.av);
+    }
 
     cnn = rack2.cnn_point('b');
     if(cnn && cnn.profile === impost.profile) {
@@ -305,6 +311,23 @@ class ToolCut extends ToolElement{
       const cnns = cat.cnns.nom_cnn(rack.profile, cnn.profile, atypes);
       if(cnns.length) {
         cnn.cnn = cnns[0];
+      }
+    }
+    // соединения разрыва
+    atypes.length = 0;
+    atypes.push(cnn_types.long);
+    if(impost.profile.orientation === orientations.vert) {
+      atypes.push(cnn_types.av);
+    }
+    else if(impost.profile.orientation === orientations.hor) {
+      atypes.push(cnn_types.ah);
+    }
+    cnn = impost.profile.cnn_point(impost.point);
+    if(cnn) {
+      const cnns = cat.cnns.nom_cnn(impost.profile, rack.profile, atypes);
+      if(cnns.length) {
+        cnn.cnn = cnns[0];
+        cnn.set_cnno(cnns[0]);
       }
     }
 
@@ -398,19 +421,18 @@ class ToolCut extends ToolElement{
     if(!nodes || nn.length !== nodes.length) {
       return true;
     }
-    for(const n1 in nodes) {
+    for (const n1 of nodes) {
       let ok;
-      for(const n2 in nn) {
+      for (const n2 of nn) {
         if(n1.profile === n2.profile && n1.point === n2.point) {
           ok = true;
           break;
         }
       }
       if(!ok) {
-        return false;
-      }
-    }
     return true;
+  }
+    }
   }
 
   hitTest({point}) {
