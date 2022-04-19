@@ -15,7 +15,7 @@ class GlassLayerProps extends React.Component {
 
   render() {
     const {elm, row, inset} = this.props;
-    if(!elm || !row) {
+    if (!elm || !row) {
       return null;
     }
 
@@ -24,9 +24,9 @@ class GlassLayerProps extends React.Component {
     const {clr} = fields;
     $p.cat.clrs.selection_exclude_service(clr, inset);
     const content = [<PropField fullWidth key={`clr-${inset.ref}-${row.row}`} _obj={_obj} _fld="clr" _meta={clr} empty_text="Авто"/>];
-    for(const prm of inset.used_params()) {
+    for (const prm of inset.used_params()) {
       const {ref} = prm;
-      content.push(<LinkedProp key={`${ref}-${row.row}`} param={prm} _obj={_obj} _fld={ref} fields={fields} />);
+      content.push(<LinkedProp key={`${ref}-${row.row}`} param={prm} _obj={_obj} _fld={ref} fields={fields}/>);
     }
     return content;
   }

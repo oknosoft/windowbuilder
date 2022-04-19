@@ -104,8 +104,11 @@ export default class GlassProps extends React.Component {
   render() {
     const {state: {elm, row}, fields} = this;
 
-    const {info, inset: {insert_type}, hide_coordinates} = elm;
+    const {info, inset, hide_coordinates} = elm;
     const props = elm.elm_props();
+    //$p.cat.clrs.selection_exclude_service(fields.clr, inset);
+    fields.clr.hide_composite = true;
+    const is_composite = inset.insert_type === inset.insert_type._manager.Стеклопакет;
 
     return <>
       <GlassToolbar {...this.props} elm={elm} />
@@ -118,7 +121,7 @@ export default class GlassProps extends React.Component {
         {props.map(({ref}, ind) => <PropField key={`ap-${ind}`} _obj={elm} _fld={ref} _meta={fields[ref]}/>)}
       </> : null}
 
-      {insert_type === insert_type._manager.Стеклопакет ? <GlassComposite elm={elm} row={row} set_row={this.set_row}/> : null}
+      {is_composite ? <GlassComposite elm={elm} row={row} set_row={this.set_row}/> : null}
 
       {!hide_coordinates && <Coordinates elm={elm} fields={fields} read_only />}
 

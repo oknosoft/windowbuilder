@@ -8,12 +8,12 @@ import RemoveIcon from '@material-ui/icons/DeleteOutline';
 import ArrowUpIcon from '@material-ui/icons/ArrowUpward';
 import ArrowDownIcon from '@material-ui/icons/ArrowDownward';
 import VerticalAlignBottomIcon from '@material-ui/icons/VerticalAlignBottom';
-import SaveAltIcon from '@material-ui/icons/SaveAlt';
 import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
 import Tip from 'metadata-react/App/Tip';
 import Bar from './Bar';
 import GlassLayerProps from './GlassLayerProps';
+import CompositeChains from './GlassCompositeChains';
 
 const reflect = ({project, reflect_grp}) => {
   if(reflect_grp) {
@@ -60,7 +60,7 @@ export default class GlassComposite extends React.Component {
   }
 
   value_change = (obj, flds) => {
-    if(obj instanceof $p.CatCharacteristicsGlass_specificationRow && ('inset' in flds || 'dop' in flds || 'clr' in flds)) {
+    if(obj instanceof $p.CatCharacteristicsGlass_specificationRow && ('inset' in flds || 'dop' in flds)) {
       reflect(this.props.elm);
       this.forceUpdate();
     }
@@ -149,7 +149,7 @@ export default class GlassComposite extends React.Component {
 
   Toolbar = (props) => {
     const {width} = props;
-    const {glass_chains} = $p.job_prm.builder;
+    const {_grid, props: {elm, set_row}} = this;
     return <Toolbar disableGutters style={{width: width || '100%'}}>
       <Tip title="Добавить вставку">
         <IconButton onClick={this.handleAdd}><AddIcon /></IconButton>
@@ -168,10 +168,7 @@ export default class GlassComposite extends React.Component {
       <Tip title="Заполнить по вставке">
         <IconButton onClick={this.handleByInset}><VerticalAlignBottomIcon/></IconButton>
       </Tip>
-      <Tip title="Заполнить по цепочке">
-        <IconButton disabled={!glass_chains || !glass_chains.length} onClick={this.handleByChain}><SaveAltIcon/></IconButton>
-      </Tip>
-
+      <CompositeChains _grid={_grid} elm={elm} set_row={set_row} />
     </Toolbar>;
   };
 

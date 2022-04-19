@@ -1,13 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Toolbar from '@material-ui/core/Toolbar';
-import IconButton from '../../Toolbar/IconButton';
+import IconButton from '@material-ui/core/IconButton';
 import VerticalAlignTopIcon from '@material-ui/icons/VerticalAlignTop';
 import ZoomOutMapIcon from '@material-ui/icons/ZoomOutMap';
 import Tip from 'metadata-react/App/Tip';
 import InfoButton from 'metadata-react/App/InfoButton';
-import {useStyles} from '../../Toolbar/styles';
+import SmallButton from '../../Toolbar/IconButton';
 import GoLayer from './GoLayer';
+import {useStyles} from '../../Toolbar/styles';
 
 const btnClick = (editor, name) => {
 
@@ -50,19 +51,19 @@ function ProfileToolbar({editor, elm, classes}) {
   const {inset} = elm;
   return <Toolbar disableGutters>
     <Tip title={msg.align_node_left}>
-      <IconButton onClick={btnClick(editor, 'left')}><VerticalAlignTopIcon style={{transform: 'rotate(0.75turn)'}} /></IconButton>
+      <SmallButton onClick={btnClick(editor, 'left')}><VerticalAlignTopIcon style={{transform: 'rotate(0.75turn)'}} /></SmallButton>
     </Tip>
     <Tip title={msg.align_node_bottom}>
-      <IconButton onClick={btnClick(editor, 'bottom')}><VerticalAlignTopIcon style={{transform: 'rotate(0.5turn)'}} /></IconButton>
+      <SmallButton onClick={btnClick(editor, 'bottom')}><VerticalAlignTopIcon style={{transform: 'rotate(0.5turn)'}} /></SmallButton>
     </Tip>
     <Tip title={msg.align_node_top}>
-      <IconButton onClick={btnClick(editor, 'top')}><VerticalAlignTopIcon /></IconButton>
+      <SmallButton onClick={btnClick(editor, 'top')}><VerticalAlignTopIcon /></SmallButton>
     </Tip>
     <Tip title={msg.align_node_right}>
-      <IconButton onClick={btnClick(editor, 'right')}><VerticalAlignTopIcon style={{transform: 'rotate(0.25turn)'}} /></IconButton>
+      <SmallButton onClick={btnClick(editor, 'right')}><VerticalAlignTopIcon style={{transform: 'rotate(0.25turn)'}} /></SmallButton>
     </Tip>
     <Tip title={msg.align_all}>
-      <IconButton onClick={btnClick(editor, 'all')}><ZoomOutMapIcon /></IconButton>
+      <SmallButton onClick={btnClick(editor, 'all')}><ZoomOutMapIcon /></SmallButton>
     </Tip>
     <div className={classes.title}/>
     <GoLayer elm={elm} editor={editor}/>

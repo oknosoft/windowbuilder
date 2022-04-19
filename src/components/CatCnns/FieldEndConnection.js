@@ -12,15 +12,15 @@ import PropTypes from 'prop-types';
 import FormControl from '@material-ui/core/FormControl';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
-import InputAdornment from '@material-ui/core/InputAdornment';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 
 import withStyles, {extClasses} from 'metadata-react/DataField/stylesPropertyGrid';
 
-let compare = $p.utils.sort('name');
+const {enm: {cnn_types: {acn}}, utils} = $p;
+const compare = utils.sort('name');
 
-function FieldEndConnection({elm1, elm2, node, _fld, _meta, classes, onClick, ...props}) {
+function FieldEndConnection({elm1, elm2, node, _fld, classes, onClick, ...props}) {
 
   const ext = extClasses(classes);
 
@@ -32,7 +32,7 @@ function FieldEndConnection({elm1, elm2, node, _fld, _meta, classes, onClick, ..
   if(!_fld) {
     _fld = node === 'b' ? 'cnn1' : 'cnn2';
   }
-  const list = $p.cat.cnns.nom_cnn(elm1, elm2, $p.enm.cnn_types.acn.a, false, undefined, cnn_point);
+  const list = $p.cat.cnns.nom_cnn(elm1, elm2, elm2 ? acn.a : acn.i, false, undefined, cnn_point);
 
   const other = cnn_point.find_other();
   if(other && other.profile === elm2) {
@@ -46,8 +46,8 @@ function FieldEndConnection({elm1, elm2, node, _fld, _meta, classes, onClick, ..
   }
   list.sort(compare);
 
-  const p2 = elm2.b.is_nearest(cnn_point.point, true) ? 'b' : (elm2.e.is_nearest(cnn_point.point, true) ? 'e' : 't');
-  const synonym = `Соедин ${elm1.elm}${node} -> ${elm2.elm}${p2}`;
+  const p2 = elm2 ? (elm2.b.is_nearest(cnn_point.point, true) ? 'b' : (elm2.e.is_nearest(cnn_point.point, true) ? 'e' : 't')) : 'Пустота';
+  const synonym = `Соедин ${elm1.elm}${node} -> ${elm2 ? elm2.elm : ''}${p2}`;
 
   const onChange = ({target}) => {
     elm1[_fld] = target.value;
@@ -65,7 +65,7 @@ function FieldEndConnection({elm1, elm2, node, _fld, _meta, classes, onClick, ..
         {v.toString()}
       </MenuItem>)}
     </Select>
-  </FormControl>
+  </FormControl>;
 }
 
 export default withStyles(FieldEndConnection);
@@ -73,6 +73,8 @@ export default withStyles(FieldEndConnection);
 FieldEndConnection.propTypes = {
   elm1: PropTypes.object.isRequired,
   elm2: PropTypes.object,
+  onClick: PropTypes.func,
   node: PropTypes.string.isRequired,
+  _fld: PropTypes.string,
   classes: PropTypes.object.isRequired,
 };

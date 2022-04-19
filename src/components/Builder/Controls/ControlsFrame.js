@@ -9,9 +9,12 @@ import {withStyles} from '@material-ui/core/styles';
 import ProductProps from './ProductProps';
 import LayerProps from './LayerProps';
 import ElmProps from './ElmProps';
+import ElmInsets from './ElmInsets';
 import GrpProps from './GrpProps';
 import PairProps from './PairProps';
 import GlassProps from './GlassProps';
+import OrderProps from './OrderProps';
+import BProps from './BProps';
 
 const styles = (theme) => ({
   root: {
@@ -121,6 +124,18 @@ class ControlsFrame extends React.Component {
         break;
       case 'layer':
         panel = <LayerProps {...other}/>;
+        break;
+      case 'order':
+        panel = <OrderProps {...other}/>;
+        break;
+      case 'settings':
+        panel = <BProps {...other}/>;
+        break;
+      case 'ins':
+        if(!other.elm) {
+          other.elm = new project.constructor.FakePrmElm(project);
+        }
+        panel = <ElmInsets {...other}/>;
         break;
       default:
         panel = <ProductProps {...other}/>;

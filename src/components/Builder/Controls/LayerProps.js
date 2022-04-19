@@ -14,15 +14,18 @@ export default function LayerProps(props) {
   return <>
     <LayerToolbar {...props}/>
     <Bar>{layer.info}</Bar>
-    {layer.layer ?
+    {layer.own_sys ?
+      <>
+        <PropField _obj={layer} _fld="sys" />
+        <LinkedProps ts={layer.prms} cnstr={layer.cnstr} inset={blank.guid} layer={layer}/>
+      </>
+      :
       <>
         <FieldFurn _obj={layer} _fld="furn" fullWidth />
         <PropField _obj={layer} _fld="direction" />
         <PropField _obj={layer} _fld="h_ruch" />
         <LinkedProps ts={ox.params} cnstr={layer.cnstr} inset={blank.guid}/>
       </>
-      :
-      <Typography>Рамный слой не имеет свойств фурнитуры</Typography>
     }
   </>;
 }
