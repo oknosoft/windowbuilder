@@ -21,11 +21,6 @@ import proxy_login, {load_ram, load_common} from 'metadata-superlogin/proxy';
 // загружаем metadata.transition и экспортируем $p глобально
 import $p from 'metadata-dhtmlx';
 
-if (process.env.NODE_ENV === 'development') {
-  import('pouchdb-debug')
-    .then((module) => $p.classes.PouchDB.plugin(module.default));
-}
-
 // подключаем react-специфичные методы
 import plugin_react from 'metadata-react/plugin';
 plugin_react.constructor.call($p);
