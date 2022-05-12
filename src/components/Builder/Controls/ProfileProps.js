@@ -38,9 +38,7 @@ export default function ProfileProps(props) {
       {eprops.map((param, ind) => {
         return <LinkedProp key={`ap-${ind}`} _obj={elm} _fld={param.ref} param={param} cnstr={-elm.elm} fields={fields} />;
       })}
-
       <Coordinates elm={elm} fields={fields} select_b={select_b} select_e={select_e} />
-
       <ElmInsets elm={elm}/>
     </>}
 

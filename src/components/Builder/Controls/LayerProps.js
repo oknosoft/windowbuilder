@@ -16,7 +16,7 @@ export default function LayerProps(props) {
     <Bar>{layer.info}</Bar>
     {layer.own_sys ?
       <>
-        <PropField _obj={layer} _fld="sys" />
+        <PropField _obj={layer} _fld="sys" read_only={[10, 11].includes(layer.kind)} />
         <LinkedProps ts={layer.prms} cnstr={layer.cnstr} inset={blank.guid} layer={layer}/>
       </>
       :

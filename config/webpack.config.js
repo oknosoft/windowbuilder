@@ -189,6 +189,8 @@ module.exports = function (webpackEnv) {
 
   return {
     target: ['browserslist'],
+    // Webpack noise constrained to errors and warnings
+    stats: 'errors-warnings',
     mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
     // Stop compilation early in production
     bail: isEnvProduction,
@@ -677,7 +679,8 @@ module.exports = function (webpackEnv) {
         fs.existsSync(swSrc) &&
         new WorkboxWebpackPlugin.InjectManifest({
           swSrc,
-          dontCacheBustURLsMatching: /(\.[0-9a-f]{8}\.|^\/a\/|^\/auth\/|^\/adm\/)/,
+          dontCacheBustURLsMatching: new RegExp('(^/auth/|^/adm/|^/user/|^/couchdb/|^/help/|^/r/|^/a/|\.[0-9a-f]{8}\.)'),
+
           exclude: [/\.map$/, /asset-manifest\.json$/, /LICENSE/],
           // Bump up the default maximum size (2mb) that's precached,
           // to make lazy-loading failure scenarios less likely.

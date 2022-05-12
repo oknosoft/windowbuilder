@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Toolbar from '@material-ui/core/Toolbar';
 import BorderHorizontalIcon from '@material-ui/icons/BorderHorizontal';
 import BorderVerticalIcon from '@material-ui/icons/BorderVertical';
+import OpenWithIcon from '@material-ui/icons/OpenWith';
 import Tip from 'metadata-react/App/Tip';
 import InfoButton from 'metadata-react/App/InfoButton';
 import SmallButton from '../../Toolbar/IconButton';
@@ -11,7 +12,7 @@ import GoLayer from './GoLayer';
 import {useStyles} from '../../Toolbar/styles';
 
 function GlassToolbar({editor, elm, classes}) {
-  const {inset} = elm;
+  const {inset, reflect_grp} = elm;
   return <Toolbar disableGutters>
     <Tip title="Вставить вертикальный импост">
       <SmallButton disabled onClick={null}>
@@ -21,6 +22,11 @@ function GlassToolbar({editor, elm, classes}) {
     <Tip title="Вставить горизонтальный импост">
       <SmallButton disabled onClick={null}>
         <BorderHorizontalIcon/>
+      </SmallButton>
+    </Tip>
+    <Tip title="Уравнять">
+      <SmallButton disabled={!reflect_grp} onClick={() => editor.glass_align()}>
+        <OpenWithIcon/>
       </SmallButton>
     </Tip>
     <div className={classes.title}/>
