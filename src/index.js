@@ -3,9 +3,9 @@ import('font-awesome/css/font-awesome.min.css');
 import './styles/roboto/font.css';
 import './styles/root.css';
 
-import React from "react";
+import React from 'react';
 import PropTypes from 'prop-types';
-import {render} from 'react-dom';
+import ReactDOM from 'react-dom/client';
 
 import {Provider} from 'react-redux';
 import configureStore, {history} from './redux';
@@ -46,8 +46,10 @@ RootProvider.childContextTypes = {
   store: PropTypes.object,
 };
 
-render(<RootProvider />, document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<RootProvider />);
 
+//serviceWorker.unregister();
 serviceWorker.register({
   onUpdate() {
     if($p && $p.eve) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import {render} from 'react-dom';
+import ReactDOM from 'react-dom/client';
 // import PropTypes from 'prop-types';
 import DhtmlxCell from '../DhtmlxCell';
 import WindowSizer from 'metadata-react/WindowSize';
@@ -19,7 +19,8 @@ class Builder extends DhtmlxCell {
       this._editor.eve.emit('react', tab === 'tool');
       return true;
     });
-    render(<ToolWnd editor={this._editor}/>, this._editor._acc._tool.cell);
+    const root = ReactDOM.createRoot(this._editor._acc._tool.cell);
+    root.render(<ToolWnd editor={this._editor}/>);
   }
 
   componentWillUnmount() {
