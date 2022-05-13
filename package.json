@@ -36,7 +36,7 @@
   "proxy9": "https://start.phototech.ru/",
   "dependencies": {
     "@turf/points-within-polygon": "^6.5",
-    "dxf-writer": "^1.17",
+    "dxf-writer": "1.15",
     "md5-file": "^5.0",
     "metadata-abstract-ui": "2.0.30-beta.1",
     "metadata-core": "2.0.30-beta.1",
@@ -46,7 +46,7 @@
     "metadata-redux": "2.0.30-beta.1",
     "metadata-superlogin": "2.0.30-beta.1",
     "react-highlight-words": "^0.17",
-    "wb-core": "github:oknosoft/windowbuilder-core#f53ba4b772bde6599566010efcd322170a948742",
+    "wb-core": "github:oknosoft/windowbuilder-core#ddcd76df54765a206d184ade135f5343e55f6808",
     "wb-cutting": "github:oknosoft/genetic-cutting#da74a4a12254f351c1364e86bbf0c0454550701d",
     "wb-forms": "github:oknosoft/windowbuilder-forms#a0cebd1625d7eac10a944268796fb14f148a3f9b"
   },
