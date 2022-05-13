@@ -29,14 +29,15 @@ export default function PairProps(props) {
   const nearest1 = elm1_profile && elm2_profile && nearest(elm1, elm2, ProfileVirtual);
   const nearest2 = elm1_profile && elm2_profile && nearest(elm2, elm1, ProfileVirtual);
   const {fields} = elm1.__metadata(false);
-  const _meta1 = Object.assign({}, fields.inset, {synonym: <><span>{`Элем №${elm1.elm}\u00a0`}</span><small>{
-      elm1_profile ? elm1.pos.name : (elm1_filling ? elm1.formula() : '?')
-  }</small></>});
-  const _meta2 = Object.assign({}, fields.inset, {synonym: <><span>{`Элем №${elm2.elm}\u00a0`}</span><small>{
-      elm2_profile ? elm2.pos.name : (elm2_filling ? elm2.formula() : '?')
-  }</small></>});
+  const _meta1 = Object.assign({}, fields.inset, {synonym: <><span>{`Элем №${elm1.elm}\u00a0`}</span>
+      <small>{elm1_profile ? elm1.pos.name : (elm1_filling ? elm1.formula() : '?')}</small></>});
+  const _meta2 = Object.assign({}, fields.inset, {synonym: <><span>{`Элем №${elm2.elm}\u00a0`}</span>
+      <small>{elm2_profile ? elm2.pos.name : (elm2_filling ? elm2.formula() : '?')}</small></>});
   // а есть ли вообще соединение между этими элементами?
   const has_cnn = has_b1 || has_e1 || has_b2 || has_e2 || (elm1_profile && elm2_filling || nearest1) || (elm2_profile && elm1_filling || nearest2);
+  // для примыкающих, проверяем применимость
+  const err1 = nearest1 && elm1.cnn3?.empty?.();
+  const err2 = nearest2 && elm2.cnn3?.empty?.();
   return <>
     <PairToolbar {...props} />
     <PropField _obj={elm1} _fld="inset" _meta={_meta1} read_only={elm1_filling}/>
@@ -45,8 +46,8 @@ export default function PairProps(props) {
     {has_e1 ? <FieldEndConnection elm1={elm1} elm2={elm2} node="e" fields={fields} /> : null}
     {has_b2 ? <FieldEndConnection elm1={elm2} elm2={elm1} node="b" fields={fields} /> : null}
     {has_e2 ? <FieldEndConnection elm1={elm2} elm2={elm1} node="e" fields={fields} /> : null}
-    {(elm1_profile && elm2_filling || nearest1) ? <PropField _obj={elm1} _fld="cnn3" _meta={fields.cnn3}/> : null}
-    {(elm2_profile && elm1_filling || nearest2) ? <PropField _obj={elm2} _fld="cnn3" _meta={fields.cnn3}/> : null}
+    {(elm1_profile && elm2_filling || nearest1) ? <PropField _obj={elm1} _fld="cnn3" _meta={fields.cnn3} error={err1}/> : null}
+    {(elm2_profile && elm1_filling || nearest2) ? <PropField _obj={elm2} _fld="cnn3" _meta={fields.cnn3} error={err2}/> : null}
     {has_cnn ? null : <>
       <br/>
       <Typography color="error">Нет соединений между элементами</Typography>
