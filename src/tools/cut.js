@@ -245,9 +245,9 @@ class ToolCut extends ToolElement{
   }
 
   // делает разрыв и вставляет в него импост
-  do_cut(){
+  do_cut() {
     let impost, rack;
-    for(const node of this.nodes) {
+    for (const node of this.nodes) {
       if(node.point === 'b' || node.point === 'e') {
         impost = node;
       }
@@ -277,7 +277,7 @@ class ToolCut extends ToolElement{
     // соединения конца нового профиля из разрыва
     cnn = rack2.cnn_point('e');
     if(base && cnn && cnn.profile) {
-      if(!cnn.cnn || cnn.cnn.cnn_type !== base.cnn_type){
+      if(!cnn.cnn || cnn.cnn.cnn_type !== base.cnn_type) {
         const cnns = cat.cnns.nom_cnn(rack2, cnn.profile, [base.cnn_type]);
         if(cnns.includes(base)) {
           cnn.cnn = base;
@@ -430,8 +430,8 @@ class ToolCut extends ToolElement{
         }
       }
       if(!ok) {
-    return true;
-  }
+        return true;
+      }
     }
   }
 
