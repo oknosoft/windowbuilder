@@ -3977,9 +3977,9 @@ class ToolCut extends ToolElement{
   }
 
   // делает разрыв и вставляет в него импост
-  do_cut(){
+  do_cut() {
     let impost, rack;
-    for(const node of this.nodes) {
+    for (const node of this.nodes) {
       if(node.point === 'b' || node.point === 'e') {
         impost = node;
       }
@@ -4009,7 +4009,7 @@ class ToolCut extends ToolElement{
     // соединения конца нового профиля из разрыва
     cnn = rack2.cnn_point('e');
     if(base && cnn && cnn.profile) {
-      if(!cnn.cnn || cnn.cnn.cnn_type !== base.cnn_type){
+      if(!cnn.cnn || cnn.cnn.cnn_type !== base.cnn_type) {
         const cnns = cat.cnns.nom_cnn(rack2, cnn.profile, [base.cnn_type]);
         if(cnns.includes(base)) {
           cnn.cnn = base;
@@ -4162,8 +4162,8 @@ class ToolCut extends ToolElement{
         }
       }
       if(!ok) {
-    return true;
-  }
+        return true;
+      }
     }
   }
 
@@ -8163,8 +8163,11 @@ class ToolSelectNode extends ToolElement {
 
 
       let item = this.hitItem.item.parent;
-      if (modifiers.space && item.nearest && item.nearest()) {
-        item = item.nearest();
+      if (modifiers.space) {
+        const nearest = item?.nearest?.();
+        if(nearest) {
+          item = nearest;
+        }
       }
 
       if (item && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
@@ -8473,7 +8476,8 @@ class ToolSelectNode extends ToolElement {
       for(let path of project.selectedItems){
         // при зажатом space добавляем элемент иначе - узел
         if (modifiers.space) {
-          if(path.parent instanceof Editor.Profile){
+          if(path.parent instanceof Editor.Profile &&
+              !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)) {
 
             const cnn_point = path.parent.cnn_point('e');
             cnn_point && cnn_point.profile && cnn_point.profile.rays.clear(true);
@@ -8489,9 +8493,10 @@ class ToolSelectNode extends ToolElement {
             new Editor.Profile({generatrix: newpath, proto: path.parent});
           }
         }
-        else{
+        else if (modifiers.shift) {
           let do_select = false;
-          if(path.parent instanceof Editor.GeneratrixElement && !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining)){
+          if(path.parent instanceof Editor.GeneratrixElement &&
+              !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)){
             for (let j = 0; j < path.segments.length; j++) {
               segment = path.segments[j];
               if (segment.selected){
@@ -8516,6 +8521,19 @@ class ToolSelectNode extends ToolElement {
               paper.Path.prototype.insert.call(path, index, new paper.Segment(point, handle.negate(), handle));
             }
           }
+        }
+        else if(path.parent instanceof Editor.Profile && !path.parent.segms?.length &&
+            !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)) {
+          $p.ui.dialogs.input_value({
+            title: 'Деление профиля (связка)',
+            text: 'Укажите число сегментов',
+            type: 'number',
+            initialValue: 2,
+          })
+            .then((res) => {
+              path.parent.split_by(res);
+            })
+            .catch(() => null);
         }
       }
 
@@ -8592,7 +8610,7 @@ class ToolSelectNode extends ToolElement {
           return true;
         }
         else if(path.parent instanceof Editor.GeneratrixElement){
-          if(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining){
+          if(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment){
             path.removeChildren();
             path.remove();
           }
