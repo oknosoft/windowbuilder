@@ -475,8 +475,8 @@ class ToolSelectNode extends ToolElement {
       return false;
 
 
-    } // удаление сегмента или элемента
-
+    } 
+    // удаление сегмента или элемента
     else if (['Delete','NumpadSubtract','Backspace'].includes(code)) {
 
       if(target && ['textarea', 'input'].includes(target.tagName.toLowerCase())) {
@@ -555,7 +555,8 @@ class ToolSelectNode extends ToolElement {
                 path.removeSegment(j);
 
                 // пересчитываем
-                path.parent.x1 = path.parent.x1;
+                  const x1 = path.parent.x1;
+                  path.parent.x1 = x1;
                 break;
               }
             }
