@@ -880,15 +880,15 @@
         }
         const row = o.production.get(selId);
         if(row) {
-          const {owner, calc_order} = row.characteristic;
+          const {owner, calc_order, leading_product} = row.characteristic;
           let ox;
           if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory) {
             return not_production();
           }
           else if(!row.characteristic.coordinates.count()) {
             // возможно, это подчиненная продукция
-            if(row.characteristic.leading_product.calc_order == calc_order) {
-              ox = row.characteristic.leading_product;
+            if(leading_product.calc_order == calc_order) {
+              ox = leading_product;
             }
           }
           else {
@@ -1048,17 +1048,16 @@
         if(selId != undefined) {
           const row = o.production.get(selId);
           if(row) {
-            const {owner, calc_order} = row.characteristic;
+            const {owner, calc_order, sys, leading_product, coordinates} = row.characteristic;
             // если стоим на строке жалюзи, открываем конструктор жалюзи
             if(owner === $p.job_prm.nom.foroom) {
               return open_jalousie();
             }
             // возможно, это заготовка - проверим номенклатуру системы
-            if(row.characteristic.leading_product.calc_order == calc_order) {
-              return handlers.handleNavigate(`/builder/${row.characteristic.leading_product.ref}?order=${o.ref}`);
+            if(leading_product.calc_order == calc_order && !coordinates.find({cnstr: 1, elm_type: "Вложение"})) {
+              return handlers.handleNavigate(`/builder/${leading_product.ref}?order=${o.ref}`);
             }
-            if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory
-              || (row.characteristic.sys.empty() && !row.characteristic.coordinates.count())) {
+            if(row.characteristic.empty() || calc_order.empty() || owner.is_procedure || owner.is_accessory || (sys.empty() && !coordinates.count())) {
               not_production();
             }
             else {
