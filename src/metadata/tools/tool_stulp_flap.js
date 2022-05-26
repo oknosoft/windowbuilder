@@ -48,12 +48,17 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
       if(!['furn1', 'furn2'].includes(field)) {
         return;
       }
-      const {_dp, ox} = this.project;
+      let {_dp, ox, activeLayer} = this.project;
+      if(activeLayer) {
+        ox = activeLayer._ox;
+      }
+      const sys = activeLayer?.sys || _dp.sys;
+
       const other = field === 'furn1' ? 'furn2' : 'furn1';
       this[field] = value;
       const shtulp_kind = this[field].shtulp_kind() === 2 ? 1 : 2;
       if(this[other].shtulp_kind() !== shtulp_kind) {
-        _dp.sys.furns(ox).some(({furn}) => {
+        sys.furns(ox, activeLayer).some(({furn}) => {
           if(furn.parent === this[field].parent && furn.shtulp_kind() === shtulp_kind) {
             this[other] = furn;
             return true;
@@ -92,15 +97,19 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
      * Заполняет умолчания по системе и корректирует отбор в метаданных
      * @param sys
      */
-    by_sys({_dp, ox}) {
+    by_sys({_dp, ox, activeLayer}) {
       const {inset, furn1, furn2} = this._meta.fields;
       const {Штульп: elm_type} = $p.enm.elm_types;
+      if(activeLayer) {
+        ox = activeLayer._ox;
+      }
+      const sys = activeLayer?.sys || _dp.sys;
 
       inset.choice_params = [{
         name: 'ref',
         path: {'in': []}
       }];
-      _dp.sys.elmnts.find_rows({elm_type}, ({nom, by_default}) => {
+      sys.elmnts.find_rows({elm_type}, ({nom, by_default}) => {
         inset.choice_params[0].path.in.push(nom);
         if(by_default && this.inset.empty()) {
           this.inset = nom;
@@ -110,7 +119,7 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
         this.inset = inset.choice_params[0].path.in[0];
       }
 
-      const furns = _dp.sys.furns(ox).filter(({furn}) => furn.shtulp_kind()).map(({furn}) => furn);
+      const furns = sys.furns(ox, activeLayer).filter(({furn}) => furn.shtulp_kind()).map(({furn}) => furn);
       furn1.choice_params = [{
         name: 'ref',
         path: {'in': furns}
@@ -143,10 +152,7 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
       super();
 
       Object.assign(this, {
-        options: {
-          name: 'stulp_flap',
-          title,
-        },
+        options: {name: 'stulp_flap'},
         _obj: null,
       });
 
@@ -219,7 +225,7 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
       if(!top || !bottom) {
         return dialogs.alert({
           text: `Не найден верхний или нижний профиль заполнения (сложная форма)`,
-          title,
+          title
         });
       }
       const pt = filling.interiorPoint();
@@ -229,7 +235,7 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
       if(!pe || !pb) {
         return dialogs.alert({
           text: `Не найдено пересечение вертикальной линии через центр заполнения с профилями (сложная форма)`,
-          title,
+          title
         });
       }
       path.firstSegment.point = pb;
@@ -265,7 +271,7 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
           }
         }
       }
-      _scope.tools[1].activate();
+      _scope.tools.find(t => t.options.name === 'select_node').activate();
     }
 
   }
