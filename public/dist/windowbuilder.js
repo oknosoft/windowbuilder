@@ -8453,9 +8453,11 @@ class ToolSelectNode extends ToolElement {
           }
           //project.l_dimensions.rotate(delta, center);
         }
-        project.save_coordinates({snapshot: true, clipboard: false});
-        const obx = $p.utils._clone(project.ox._obj);
-        project.load_stamp(obx, true);
+        project.save_coordinates({snapshot: true, clipboard: false})
+          .then(() => {
+            const obx = $p.utils._clone(project.ox._obj);
+            project.load_stamp(obx, true);
+          });
       })
       .catch(() => {
         for (const root of project.contours) {
@@ -8542,7 +8544,7 @@ class ToolSelectNode extends ToolElement {
       return false;
 
 
-    } 
+    }
     // удаление сегмента или элемента
     else if (['Delete','NumpadSubtract','Backspace'].includes(code)) {
 
