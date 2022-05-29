@@ -7,11 +7,13 @@ import Bar from './Bar';
 import ElmInsets from './ElmInsets';
 import Coordinates from './Coordinates';
 import LinkedProp from './LinkedProp';
-import FieldEndConnection from '../../CatCnns/FieldEndConnection';
+import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
 import FieldInsetProfile from '../../CatInserts/FieldInsetProfile';
 
 export default function ProfileProps(props) {
-  const {elm, fields} = props;
+  const {elm, fields, editor} = props;
+  const {ProfileSegment} = editor.constructor;
+
   const eprops = elm.elm_props();
   const select_b = () => {
     elm.b.selected = true;
@@ -27,7 +29,7 @@ export default function ProfileProps(props) {
   return <>
     <ProfileToolbar {...props} />
     <Bar>{`${elm.elm_type} ${elm.info}`}</Bar>
-    <FieldInsetProfile elm={elm} disabled={locked}/>
+    <FieldInsetProfile elm={elm} disabled={locked || elm instanceof ProfileSegment}/>
     {locked ? null : <>
       <PropField _obj={elm} _fld="clr" _meta={fields.clr}/>
       <PropField _obj={elm} _fld="offset" _meta={fields.offset}/>
