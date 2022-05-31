@@ -46,7 +46,7 @@
     "metadata-redux": "2.0.30-beta.3",
     "metadata-superlogin": "2.0.30-beta.3",
     "react-highlight-words": "^0.18",
-    "wb-core": "github:oknosoft/windowbuilder-core#7bcb7853f4d21b8af1d027a22f559bbb9a2b5554",
+    "wb-core": "github:oknosoft/windowbuilder-core#2d49d7a57eeedd9c7c6c080faf8737fe4c506319",
     "wb-cutting": "github:oknosoft/genetic-cutting#da74a4a12254f351c1364e86bbf0c0454550701d",
     "wb-forms": "github:oknosoft/windowbuilder-forms#30560ab84093516501ece15a0d18012ae4605a8e"
   },
