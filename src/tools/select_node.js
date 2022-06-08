@@ -428,11 +428,11 @@ class ToolSelectNode extends ToolElement {
             new Editor.Profile({generatrix: newpath, proto: path.parent});
           }
         }
-        else if (modifiers.shift) {
-          let do_select = false;
+        else if (modifiers.shift || path.parent instanceof Editor.Sectional) {
+          let do_select = false, j;
           if(path.parent instanceof Editor.GeneratrixElement &&
               !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)){
-            for (let j = 0; j < path.segments.length; j++) {
+            for (j = 0; j < path.segments.length; j++) {
               segment = path.segments[j];
               if (segment.selected){
                 do_select = true;
@@ -449,7 +449,7 @@ class ToolSelectNode extends ToolElement {
             index = (j < (path.segments.length - 1) ? j + 1 : j);
             point = segment.curve.getPointAt(0.5, true);
             if(path.parent instanceof Editor.Sectional){
-              paper.Path.prototype.insert.call(path, index, new paper.Segment(point));
+              path.insert(index, new paper.Segment(point));
             }
             else{
               handle = segment.curve.getTangentAt(0.5, true).normalize(segment.curve.length / 4);
