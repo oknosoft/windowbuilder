@@ -20,7 +20,7 @@ class DataRoute extends Component {
     }
 
     const {current_user} = $p;
-    const _acl = current_user ? current_user.get_acl(_mgr.class_name) : 'e';
+    const _acl = current_user ? current_user.get_acl(_mgr.class_name) : 'r';
 
     const sizes = {
       windowHeight,
