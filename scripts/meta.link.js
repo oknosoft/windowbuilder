@@ -14,12 +14,12 @@ const {dependencies} = require(path.resolve(__dirname, '../package.json'));
 const repos = [
   {
     local: 'wb-core',
-    remote: '..\\windowbuilder-core',
+    remote: '..\\wb-core',
     dir: 'dist',
   },
   {
     local: 'wb-forms',
-    remote: '..\\windowbuilder-forms',
+    remote: '..\\wb-forms',
     dir: 'dist',
   },
 ];
