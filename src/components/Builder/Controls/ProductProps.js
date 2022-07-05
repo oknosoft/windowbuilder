@@ -9,8 +9,11 @@ import ElmInsets from './ElmInsets';
 export default function ProductProps(props) {
   const {ox, editor} = props;
   const {project} = editor;
-  const {_dp} = project;
-  const elm = new project.constructor.FakePrmElm(project);
+  const {_dp, constructor} = project;
+  const elm = new constructor.FakePrmElm(project);
+
+  // корректируем метаданные поля выбора цвета
+  $p.cat.clrs.selection_exclude_service(_dp._metadata('clr'), _dp);
 
   return <>
     <RootToolbar project={project} ox={ox} _dp={_dp} />
