@@ -1,6 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import MarkdownDocs from 'metadata-react/Markdown/MarkdownDocsLight';
+import Markdown from 'metadata-react/Markdown/MarkdownDocsLight';
+import {withIface} from 'metadata-redux';
+
+const MarkdownDocs = withIface(Markdown);
 
 export default function MarkdownRoute(props) {
   const [value, setValue] = React.useState('Получаем файл с сервера...');
