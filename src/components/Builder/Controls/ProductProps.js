@@ -13,12 +13,12 @@ export default function ProductProps(props) {
   const elm = new constructor.FakePrmElm(project);
 
   // корректируем метаданные поля выбора цвета
-  $p.cat.clrs.selection_exclude_service(_dp._metadata('clr'), _dp);
+  const clr_group = $p.cat.clrs.selection_exclude_service(_dp._metadata('clr'), _dp);
 
   return <>
     <RootToolbar project={project} ox={ox} _dp={_dp} />
     <PropField fullWidth _obj={_dp} _fld="sys"/>
-    <PropField fullWidth _obj={_dp} _fld="clr"/>
+    <PropField fullWidth _obj={_dp} _fld="clr" clr_group={clr_group}/>
     <LinkedProps ts={ox.params} cnstr={0} inset={elm.inset.ref}/>
 
     <ElmInsets elm={elm}/>
