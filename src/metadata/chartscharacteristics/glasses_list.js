@@ -3,7 +3,7 @@
  *
  * @module glasses_list
  *
- * Created by Evgeniy Malyarov on 29.11.2021.
+ * Created 29.11.2021.
  */
 
 export default function ({properties, utils}) {
