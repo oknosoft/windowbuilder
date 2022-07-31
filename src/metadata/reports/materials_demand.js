@@ -42,12 +42,15 @@ export default function ($p) {
           res += ' ' + characteristic.presentation;
         }
 
-        if (len && width)
-          row.sz = (1000 * len).toFixed(0) + "x" + (1000 * width).toFixed(0);
-        else if (len)
-          row.sz = + (1000 * len).toFixed(0);
-        else if (width)
-          row.sz = + (1000 * width).toFixed(0);
+        if(len && width) {
+          row.sz = (1000 * len).toFixed(0) + 'x' + (1000 * width).toFixed(0);
+        }
+        else if(len) {
+          row.sz = +(1000 * len).toFixed(0);
+        }
+        else if(width) {
+          row.sz = +(1000 * width).toFixed(0);
+        }
 
         row.nom_kind = nom.nom_kind;
         row.grouping = nom.grouping;
@@ -147,7 +150,7 @@ export default function ($p) {
 
                   // если номер элемента < 0, интерпретируем его, как номер конструкции
                   if(resrow.elm > 0) {
-                    resrow.cnstr = row.characteristic.coordinates.find_rows({elm: resrow.elm})[0].cnstr;
+                    resrow.cnstr = row.characteristic.coordinates.find({elm: resrow.elm})?.cnstr || 0;
                   }
                   else if(resrow.elm < 0) {
                     resrow.cnstr = -resrow.elm;
@@ -195,7 +198,7 @@ export default function ($p) {
 
         let pdoc;
 
-        if(!row || !row._id) {
+        if(!row._id && !row.ref) {
           if(this.calc_order.empty()) {
             return;
           }
@@ -207,34 +210,32 @@ export default function ($p) {
           }
         }
         else {
-          const ids = row._id.split('|');
-          if(ids.length < 2) {
-            return;
+          let {ref} = row;
+          if(!ref) {
+            const ids = row._id.split('|');
+            if(ids.length < 2) {
+              pdoc = Promise.resolve(this.calc_order);
+            }
+            ref = ids[1];
           }
-          pdoc = $p.doc.calc_order.get(ids[1], 'promise');
+          pdoc = $p.doc.calc_order.get(ref, 'promise');
         }
 
         return pdoc
+          .then((doc) => doc.load_linked_refs())
           .then((doc) => {
-            //this.production.clear()
+            this.calc_order = doc;
             const rows = [];
-            const refs = [];
-            doc.production.forEach((row) => {
-              if(!row.characteristic.empty()) {
+            for(const row of doc.production) {
+              if(row.characteristic.calc_order === doc) {
                 rows.push({
                   use: true,
+                  nom: row.nom,
                   characteristic: row.characteristic,
                   qty: row.quantity,
                 });
-                if(row.characteristic.is_new()) {
-                  refs.push(row.characteristic.ref);
-                }
               }
-            });
-
-            return $p.adapters.pouch.load_array($p.cat.characteristics, refs).then(() => rows);
-          })
-          .then((rows) => {
+            }
             this.production.load(rows);
             return rows;
           });
