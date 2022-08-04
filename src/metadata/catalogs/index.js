@@ -23,4 +23,22 @@ export default function ($p) {
   meta_furns($p);
 
   select_template($p);
+
+  $p.CatCharacteristics.prototype.hierarchyName = function (cnstr) {
+    const {constructions} = this;
+    // строка табчасти конструкций
+    const row = constructions.find({cnstr});
+    if(!row) {
+      return '';
+    }
+    // найдём все слои нашего уровня
+    const rows = constructions.find_rows({parent: row.parent})
+      .map((row) => row._row)
+      .sort($p.utils.sort('cnstr'));
+    let index = (rows.indexOf(row) + 1).toFixed();
+    if(row.parent) {
+      index = `${this.hierarchyName(row.parent)}.${index}`;
+    }
+    return index;
+  }
 }

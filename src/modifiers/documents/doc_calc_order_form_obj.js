@@ -1129,12 +1129,11 @@
      */
     function add_material() {
       const {production} = wnd.elmnts.grids;
-      const row = o.create_product_row({grid: production}).row - 1;
+      const {row} = o.create_product_row({grid: production});
       setTimeout(() => {
-        production.selectRow(row);
-        production.selectCell(row, production.getColIndexById('nom'), false, true, true);
+        production.selectCell(row - 1, production.getColIndexById('nom'), false, true, true);
         production.cells().open_selection();
-      });
+      }, 100);
     }
 
   };
