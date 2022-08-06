@@ -55,6 +55,8 @@ export default function ($p) {
         row.nom_kind = nom.nom_kind;
         row.grouping = nom.grouping;
         row.article = nom.article;
+        row.nom_group = nom.nom_group;
+        row.price_group = nom.price_group;
         row.material = res;
 
         return res;

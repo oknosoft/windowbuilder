@@ -123,12 +123,12 @@ class AppRoot extends Component {
               <Route exact path="/" component={CalcOrderList}/>
               <Route path="/builder/:ref([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})" component={Builder} />
               <Route path="/templates" render={(routeProps) => <Templates {...props} {...routeProps}/>}/>
-              <Route path="/:area(doc|cat|ireg|cch|rep).:name" component={DataRoute} />
+              <Route path="/:area(doc|cat|ireg|cch|rep).:name" render={(tprops) => <DataRoute {...tprops} title={title} />} />
               <Route path="/about" component={AboutPage} />
               <Route path="/help" component={HelpPage} />
-              <Route path="/login" component={(tprops) => <Login {...tprops} {...auth_props} />} />
+              <Route path="/login" render={(tprops) => <Login {...tprops} {...auth_props} />} />
               <Route path="/settings" component={Settings} />
-              <Route path="/waiting" component={(tprops) => <DumbScreen {...tprops} repl={props.repl} />} />
+              <Route path="/waiting" render={(tprops) => <DumbScreen {...tprops} repl={props.repl} />} />
               <Route component={NotFoundPage} />
             </Switch>
         ),
