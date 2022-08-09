@@ -405,10 +405,8 @@ class SchemeProps {
   scheme_snapshot(scheme, attr) {
     const {_obj, editor: {project}} = this;
     const {_calc_order_row} = scheme._attr;
-    if(_obj && scheme === project && !attr.clipboard && _calc_order_row){
-      ["price_internal","amount_internal","price","amount"].forEach((fld) => {
-        _obj[fld] = _calc_order_row[fld];
-      });
+    if(_obj && scheme === project && !attr.clipboard && _calc_order_row) {
+      ['price_internal', 'amount_internal', 'price', 'amount'].forEach((fld) => _obj[fld] = _calc_order_row[fld]);
     }
   }
 
@@ -511,23 +509,23 @@ class EditorAccordion {
         active:  true,
       },
       {
-        id: "stv",
+        id: 'stv',
         text: '<i class="fa fa-object-ungroup fa-fw"></i>',
         title: 'Свойства створки',
       },
       {
-        id: "prod",
+        id: 'prod',
         text: '<i class="fa fa-picture-o fa-fw"></i>',
         title: 'Свойства изделия',
       },
       {
-        id: "tool",
+        id: 'tool',
         text: '<i class="fa fa-wrench fa-fw"></i>',
         title: 'Свойства инструмента',
       },
     ];
     this.tabbar = cell_acc.attachTabbar({
-      arrows_mode: "auto",
+      arrows_mode: 'auto',
       tabs: tabs
     });
 
@@ -549,7 +547,7 @@ class EditorAccordion {
       height: '28px',
       top: '6px',
       left: '4px',
-      class_name: "",
+      class_name: '',
       name: 'aling_bottom',
       buttons: [
         {name: 'left', css: 'tb_align_left', tooltip: msg.align_node_left, float: 'left'},
@@ -631,7 +629,8 @@ class EditorAccordion {
           const fillings = _editor.project.getItems({class: Editor.Filling, selected: true});
           if(fillings.length) {
             if(name === 'nested_layer') {
-              ui.dialogs.templates_nested()
+              _editor.project.save_coordinates({save: true, no_recalc: true})
+                .then(() => ui.dialogs.templates_nested())
                 .then((selected) => {
                   if(selected === true) {
                     const {cat: {templates}, job_prm} = $p;
@@ -699,7 +698,6 @@ class EditorAccordion {
         return false;
       }
     });
-    this._layers._otoolbar.buttons.virtual_layer.classList.add('disabledbutton');
 
     this.tree_layers = new SchemeLayers(this._layers, (text) => {
       this._stv._toolbar.setItemText("info", text);
@@ -735,6 +733,9 @@ class EditorAccordion {
 
         case 'refill':
           const {_obj} = this.stv._grid;
+          if(_editor.project._dp.sys.furn_level > _obj.level) {
+            _obj.furn = '';
+          }
           _obj.furn.refill_prm(_obj);
           this.stv.reload();
           break;

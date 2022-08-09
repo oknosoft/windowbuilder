@@ -57,4 +57,5 @@ export default function PairProps(props) {
 
 PairProps.propTypes = {
   elm: PropTypes.array.isRequired,
+  editor: PropTypes.object.isRequired,
 };

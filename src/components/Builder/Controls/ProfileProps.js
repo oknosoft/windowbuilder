@@ -14,6 +14,10 @@ export default function ProfileProps(props) {
   const {elm, fields, editor} = props;
   const {ProfileSegment} = editor.constructor;
 
+  if(!elm.isInserted()) {
+    return 'Элемент удалён';
+  }
+
   const eprops = elm.elm_props();
   const select_b = () => {
     elm.b.selected = true;
@@ -50,4 +54,5 @@ export default function ProfileProps(props) {
 ProfileProps.propTypes = {
   elm: PropTypes.object.isRequired,
   fields: PropTypes.object.isRequired,
+  editor: PropTypes.object.isRequired,
 };
