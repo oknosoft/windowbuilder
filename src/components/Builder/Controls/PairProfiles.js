@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import PairToolbar from './Toolbar/PairToolbar';
 import PropField from 'metadata-react/DataField/PropField';
-import FieldEndConnection from '../../CatCnns/FieldEndConnection';
+import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
 
 function nearest(elm1, elm2, ProfileVirtual) {
   const nelm = elm1.nearest();
@@ -57,4 +57,5 @@ export default function PairProps(props) {
 
 PairProps.propTypes = {
   elm: PropTypes.array.isRequired,
+  editor: PropTypes.object.isRequired,
 };

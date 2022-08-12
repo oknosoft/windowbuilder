@@ -106,7 +106,7 @@ export default class GlassProps extends React.Component {
 
     const {info, inset, hide_coordinates} = elm;
     const props = elm.elm_props();
-    //$p.cat.clrs.selection_exclude_service(fields.clr, inset);
+    $p.cat.clrs.selection_exclude_service(fields.clr, inset);
     fields.clr.hide_composite = true;
     const is_composite = inset.insert_type === inset.insert_type._manager.Стеклопакет;
 

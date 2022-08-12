@@ -405,10 +405,8 @@ class SchemeProps {
   scheme_snapshot(scheme, attr) {
     const {_obj, editor: {project}} = this;
     const {_calc_order_row} = scheme._attr;
-    if(_obj && scheme === project && !attr.clipboard && _calc_order_row){
-      ["price_internal","amount_internal","price","amount"].forEach((fld) => {
-        _obj[fld] = _calc_order_row[fld];
-      });
+    if(_obj && scheme === project && !attr.clipboard && _calc_order_row) {
+      ['price_internal', 'amount_internal', 'price', 'amount'].forEach((fld) => _obj[fld] = _calc_order_row[fld]);
     }
   }
 
@@ -511,23 +509,23 @@ class EditorAccordion {
         active:  true,
       },
       {
-        id: "stv",
+        id: 'stv',
         text: '<i class="fa fa-object-ungroup fa-fw"></i>',
         title: 'Свойства створки',
       },
       {
-        id: "prod",
+        id: 'prod',
         text: '<i class="fa fa-picture-o fa-fw"></i>',
         title: 'Свойства изделия',
       },
       {
-        id: "tool",
+        id: 'tool',
         text: '<i class="fa fa-wrench fa-fw"></i>',
         title: 'Свойства инструмента',
       },
     ];
     this.tabbar = cell_acc.attachTabbar({
-      arrows_mode: "auto",
+      arrows_mode: 'auto',
       tabs: tabs
     });
 
@@ -549,7 +547,7 @@ class EditorAccordion {
       height: '28px',
       top: '6px',
       left: '4px',
-      class_name: "",
+      class_name: '',
       name: 'aling_bottom',
       buttons: [
         {name: 'left', css: 'tb_align_left', tooltip: msg.align_node_left, float: 'left'},
@@ -631,7 +629,8 @@ class EditorAccordion {
           const fillings = _editor.project.getItems({class: Editor.Filling, selected: true});
           if(fillings.length) {
             if(name === 'nested_layer') {
-              ui.dialogs.templates_nested()
+              _editor.project.save_coordinates({save: true, no_recalc: true})
+                .then(() => ui.dialogs.templates_nested())
                 .then((selected) => {
                   if(selected === true) {
                     const {cat: {templates}, job_prm} = $p;
@@ -699,7 +698,6 @@ class EditorAccordion {
         return false;
       }
     });
-    this._layers._otoolbar.buttons.virtual_layer.classList.add('disabledbutton');
 
     this.tree_layers = new SchemeLayers(this._layers, (text) => {
       this._stv._toolbar.setItemText("info", text);
@@ -735,6 +733,9 @@ class EditorAccordion {
 
         case 'refill':
           const {_obj} = this.stv._grid;
+          if(_editor.project._dp.sys.furn_level > _obj.level) {
+            _obj.furn = '';
+          }
           _obj.furn.refill_prm(_obj);
           this.stv.reload();
           break;
@@ -8453,9 +8454,11 @@ class ToolSelectNode extends ToolElement {
           }
           //project.l_dimensions.rotate(delta, center);
         }
-        project.save_coordinates({snapshot: true, clipboard: false});
-        const obx = $p.utils._clone(project.ox._obj);
-        project.load_stamp(obx, true);
+        project.save_coordinates({snapshot: true, clipboard: false})
+          .then(() => {
+            const obx = $p.utils._clone(project.ox._obj);
+            project.load_stamp(obx, true);
+          });
       })
       .catch(() => {
         for (const root of project.contours) {
@@ -8493,11 +8496,11 @@ class ToolSelectNode extends ToolElement {
             new Editor.Profile({generatrix: newpath, proto: path.parent});
           }
         }
-        else if (modifiers.shift) {
-          let do_select = false;
+        else if (modifiers.shift || path.parent instanceof Editor.Sectional) {
+          let do_select = false, j;
           if(path.parent instanceof Editor.GeneratrixElement &&
               !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)){
-            for (let j = 0; j < path.segments.length; j++) {
+            for (j = 0; j < path.segments.length; j++) {
               segment = path.segments[j];
               if (segment.selected){
                 do_select = true;
@@ -8514,7 +8517,7 @@ class ToolSelectNode extends ToolElement {
             index = (j < (path.segments.length - 1) ? j + 1 : j);
             point = segment.curve.getPointAt(0.5, true);
             if(path.parent instanceof Editor.Sectional){
-              paper.Path.prototype.insert.call(path, index, new paper.Segment(point));
+              path.insert(index, new paper.Segment(point));
             }
             else{
               handle = segment.curve.getTangentAt(0.5, true).normalize(segment.curve.length / 4);
@@ -8542,7 +8545,7 @@ class ToolSelectNode extends ToolElement {
       return false;
 
 
-    } 
+    }
     // удаление сегмента или элемента
     else if (['Delete','NumpadSubtract','Backspace'].includes(code)) {
 
@@ -8921,6 +8924,6 @@ class ToolText extends ToolElement {
 
 Editor.ToolText = ToolText;
 
-$p.injected_data._mixin({"tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Элемент и узел</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и рычаги узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n        <li>Добавить новый элемент, делением текущего<br />(кнопка {+} при нажатой кнопке {пробел})</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
+$p.injected_data._mixin({"tip_select_node.html":"<div class=\"otooltip\">\n    <p class=\"otooltip\">Инструмент <b>Элемент и узел</b> позволяет:</p>\n    <ul class=\"otooltip\">\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\n        <li>Выделить отдельные узлы и рычаги узлов<br />для изменения геометрии</li>\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\n        <li>Добавить новый элемент, делением текущего<br />(кнопка {+} при нажатой кнопке {пробел})</li>\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\n    </ul>\n    <hr />\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\n</div>"});
 return Editor;
 }));

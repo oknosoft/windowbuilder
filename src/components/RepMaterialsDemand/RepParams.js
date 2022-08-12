@@ -52,6 +52,7 @@ export default class RepParams extends Component {
   handleCustom = (row) => {
     this.props._obj.fill_by_order(row)
       .then(() => {
+        this.production.cache_actual = false;
         this.production.forceUpdate();
       });
   };

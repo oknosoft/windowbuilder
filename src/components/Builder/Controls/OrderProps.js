@@ -23,7 +23,7 @@ export default function OrderProps(props) {
 
     const {types} = property.type;
     let oselect = types.length === 1 && ['cat.property_values', 'cat.characteristics'].includes(types[0]);
-    const bool = types.includes('boolean') && (typeof prow.value === 'boolean' || types.length === 1);
+    const bool = types.includes('boolean') && (typeof row.value === 'boolean' || types.length === 1);
 
     panel.push(<PropField
       key={`prm-${property.valueOf()}`}
@@ -31,7 +31,7 @@ export default function OrderProps(props) {
       _fld="value"
       _meta={_meta}
       ctrl_type={oselect ? 'oselect' : (bool ? 'ch' : void 0)}
-    />)
+    />);
   }
   return panel;
 }

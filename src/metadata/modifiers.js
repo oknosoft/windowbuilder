@@ -43,5 +43,4 @@ export default function ($p) {
   s.src = '/dist/print/index.js';
   s.async = true;
   document.head.appendChild(s);
-
 }

@@ -21,18 +21,28 @@ export default class ElmInsets extends React.Component {
   constructor(props, context) {
     super(props, context);
 
-    const {inset} = props.elm;
-    if(inset.inserts.count()) {
-      const {cat, utils} = $p;
-      this._meta = utils._clone(cat.characteristics.metadata('inserts'));
-      this._meta.fields.inset.choice_params = [{name: 'ref', path: inset.inserts.unload_column('inset')}];
-      cat.scheme_settings.find_rows({obj: 'cat.characteristics.inserts'}, (scheme) => {
-        if(!this.scheme || scheme.name.endsWith('main')) {
-          this.scheme = scheme;
-        }
-      });
-    }
+    $p.cat.scheme_settings.find_rows({obj: 'cat.characteristics.inserts'}, (scheme) => {
+      if(!this.scheme || scheme.name.endsWith('main')) {
+        this.scheme = scheme;
+      }
+    });
     this.state = {row: null, inset: null};
+    this.tune_meta(props.elm);
+  }
+
+  shouldComponentUpdate(nextProps) {
+    if(nextProps.elm !== this.props.elm) {
+      this.tune_meta(nextProps.elm);
+    }
+    return true;
+  }
+
+  tune_meta(elm) {
+    const {cat, utils} = $p;
+    this._meta = utils._clone(cat.characteristics.metadata('inserts'));
+    const {inserts} = (elm).inset;
+    this._meta.fields.inset.choice_params = inserts.count() ?
+      [{name: 'ref', path: inserts.unload_column('inset')}] : [];
   }
 
   filter = (collection) => {

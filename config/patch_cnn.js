@@ -39,6 +39,12 @@ export const predefined = {
     log_level: 'warn',
     keys: keys21,
   },
+  'brusnika.': {
+    zone: 27,
+    host: 'https://brusnika.oknosoft.ru:2227/',
+    keys: keys21,
+    ram_indexer: false,
+  },
   'sandbox1.oknagc.': {
     zone: 21,
     host: 'http://sandbox1.oknagc.ru/',
@@ -56,7 +62,7 @@ export const predefined = {
     ram_indexer: false,
   },
   'localhost:3000': {
-    zone: 21,
+    zone: 10,
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
     keys: {google: ''},
@@ -78,11 +84,6 @@ export const predefined = {
     log_level: 'warn',
     keys: keys21,
     ram_indexer: false,
-  },
-  'khab': {
-    zone: 27,
-    log_level: 'warn',
-    keys: {google: ''},
   },
   'phototech.oknosoft.': {
     zone: 22,
