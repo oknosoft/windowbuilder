@@ -33,6 +33,7 @@ export default function ($p) {
 
     bld_new_layer: 'Добавить рамный слой',
     bld_new_stv: 'Добавить створку',
+    bld_new_shtulp: 'Добавить штульп-створки',
     bld_new_nested: 'Добавить вложенное изделие',
     bld_new_virtual: 'Добавить виртуальный слой',
     bld_new_stv_no_filling: 'Перед добавлением створки, укажите заполнение,<br />в которое поместить створку',
@@ -42,8 +43,11 @@ export default function ($p) {
     del_layer: 'Удалить слой',
 
     elm_spec: 'Открыть спецификацию элемента',
+    elm_split: 'Разделить на сегменты',
     err_no_cnn: 'не найдено соединение',
-    err_seam_len: 'длина шва',
+    err_seam_len: 'угол или длина шва',
+    err_self_intersected: 'самопересечение пути',
+    err_sizes: 'размеры элемента',
 
     glass_spec: 'Состав заполнения',
     glass_invalid_elm: 'Укажите заполнение на эскизе',
