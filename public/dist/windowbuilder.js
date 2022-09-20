@@ -1665,7 +1665,8 @@ class Editor extends $p.EditorInvisible {
     const {handlers, project} = this;
     const {props, handleIfaceState} = handlers;
     if(project._calc_order_row){
-      const title = project.ox.prod_name(true) + (project.ox._modified ? " *" : "");
+      const {ox} = project;
+      const title = ox.prod_name(true) + (ox._modified ? " *" : "");
       props.title != title && handleIfaceState({
         component: '',
         name: 'title',
@@ -1685,12 +1686,18 @@ class Editor extends $p.EditorInvisible {
       // проверяем ошибки в спецификации
       const {ОшибкаКритическая, ОшибкаИнфо} = $p.enm.elm_types;
       let has_errors;
-      project.ox.specification.forEach(({nom}) => {
-        if([ОшибкаКритическая, ОшибкаИнфо].includes(nom.elm_type)) {
-          has_errors = true;
-          return false;
-        }
+      const prods = [ox];
+      ox.calc_order.production.find_rows({ordn: ox}, ({characteristic}) => {
+        prods.push(characteristic);
       });
+      for(const cx of prods) {
+        cx.specification.forEach(({nom}) => {
+          if([ОшибкаКритическая, ОшибкаИнфо].includes(nom.elm_type)) {
+            has_errors = true;
+            return false;
+          }
+        });
+      }
       this._errpos.style.display = has_errors ? '' : 'none';
     }
   }
@@ -1744,11 +1751,18 @@ class Editor extends $p.EditorInvisible {
     grid.init();
 
     const {ОшибкаКритическая, ОшибкаИнфо} = $p.enm.elm_types;
-    this.project.ox.specification.forEach(({elm, nom}) => {
-      if([ОшибкаКритическая, ОшибкаИнфо].includes(nom.elm_type)) {
-        grid.addRow(1, [elm, nom.name]);
-      }
+    const {ox} = this.project;
+    const prods = [ox];
+    ox.calc_order.production.find_rows({ordn: ox}, ({characteristic}) => {
+      prods.push(characteristic);
     });
+    for(const cx of prods) {
+      cx.specification.forEach(({elm, nom}) => {
+        if([ОшибкаКритическая, ОшибкаИнфо].includes(nom.elm_type)) {
+          grid.addRow(1, [elm, nom.name]);
+        }
+      });
+    }
   }
 
   /**
