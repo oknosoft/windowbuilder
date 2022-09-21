@@ -289,15 +289,15 @@ class ToolSelectNode extends ToolElement {
     this.changed = true;
 
     if (this.mode == consts.move_shapes) {
-      this._scope.canvas_cursor('cursor-arrow-small');
-
-      let delta = point.subtract(this.mouseStartPos);
-      if (!modifiers.shift){
-        delta = delta.snap_to_angle(Math.PI*2/4);
-      }
-      this._scope.restore_selection_state(this.originalContent);
-      project.move_points(delta, true);
-      this._scope.clear_selection_bounds();
+      // this._scope.canvas_cursor('cursor-arrow-small');
+      //
+      // let delta = point.subtract(this.mouseStartPos);
+      // if (!modifiers.shift){
+      //   delta = delta.snap_to_angle(Math.PI*2/4);
+      // }
+      // this._scope.restore_selection_state(this.originalContent);
+      // project.move_points(delta, true);
+      // this._scope.clear_selection_bounds();
     }
     else if (this.mode == consts.move_points) {
       this._scope.canvas_cursor('cursor-arrow-small');

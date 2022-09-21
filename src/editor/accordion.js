@@ -620,9 +620,9 @@ class EditorAccordion {
           const fillings = _editor.project.getItems({class: Editor.Filling, selected: true});
           if(fillings.length) {
             if(name === 'nested_layer') {
-              // _editor.project.save_coordinates({save: true, no_recalc: true})
-              //   .then(() => ui.dialogs.templates_nested())
-              ui.dialogs.templates_nested()
+               // _editor.project.save_coordinates({save: true})
+               //   .then(() => ui.dialogs.templates_nested())
+             ui.dialogs.templates_nested()
                 .then((selected) => {
                   if(selected === true) {
                     const {cat: {templates}, job_prm} = $p;
