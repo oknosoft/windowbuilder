@@ -240,7 +240,12 @@ class Editor extends $p.EditorInvisible {
             pwnd.progressOn();
             Promise.resolve()
               .then(() => _editor.project.save_coordinates({save: true}))
-              .then(() => pwnd.progressOff && pwnd.progressOff())
+              .then(() => {
+                pwnd.progressOff && setTimeout(() => {
+                  _editor.activate();
+                   pwnd.progressOff();
+                }, 700);
+              })
               .catch(() => pwnd.progressOff && pwnd.progressOff());
           }
           break;
