@@ -49,7 +49,8 @@ const bprops = {
   mirror: {
     name: "Зеркальный вид",
     handler(project, value) {
-      project.mirror(value, true);
+      project.mirror(value, true)
+        .then(() => project.notify(value, 'mirror_change'));
     },
   },
   grid: {
