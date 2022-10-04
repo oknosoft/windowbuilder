@@ -218,11 +218,11 @@ class RulerWnd {
   }
 
   on_keydown(ev) {
-
+    const {keyCode, code, target, event} = ev;
     const {wnd, tool} = this;
 
     if (wnd) {
-      switch (ev.keyCode) {
+      switch (keyCode) {
         case 27:        // закрытие по {ESC}
           !(tool instanceof ToolRuler) && wnd.close();
           break;
@@ -250,7 +250,7 @@ class RulerWnd {
         case 109:       // -
         case 46:        // del
         case 8:         // backspace
-          if (ev.target && ['textarea', 'input'].indexOf(ev.target.tagName.toLowerCase()) != -1) {
+          if (target && ['textarea', 'input'].includes(target.tagName.toLowerCase())) {
             return;
           }
 
@@ -270,7 +270,8 @@ class RulerWnd {
         break;
 
       }
-      return $p.iface.cancel_bubble(ev);
+      return !['Control','ControlLeft','ControlRight','Alt','AltLeft','AltRight','Shist','ShistLeft','ShistRight']
+        .includes(code) && $p.iface.cancel_bubble(ev);
     }
 
   }
@@ -606,7 +607,7 @@ class ToolRuler extends ToolElement {
 
   }
 
-  hitTest({point}) {
+  hitTest({point, modifiers}) {
 
     this.hitItem = null;
     this.hitPoint = null;
@@ -622,7 +623,9 @@ class ToolRuler extends ToolElement {
       }
       else {
         // Hit test points
-        let hit = this.project.hitPoints(point, 16, false, true);
+        console.log(modifiers);
+        const shift = (modifiers.control || modifiers.shift) ? 1 : false;
+        let hit = this.project.hitPoints(point, 16, shift, true);
         if (hit) {
           if(hit.item.parent instanceof Editor.ProfileItem) {
             this.hitItem = hit;
