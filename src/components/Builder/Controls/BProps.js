@@ -55,44 +55,57 @@ const bprops = {
   },
   grid: {
     name: "Шаг сетки",
-    Component: function Grid({project, builder_props, setProps}) {
-
-      function setGrid({target}) {
-        builder_props.grid = parseFloat(target.value);
-        project.ox.builder_props = {grid: builder_props.grid};
-        setProps(Object.assign({}, builder_props));
-      }
-
-      return <>
-        <InputLabel>{bprops.grid.name}</InputLabel>
-        <input type="number" min="50" max="200" step="50" value={builder_props.grid} onChange={setGrid} />
-      </>;
-    },
+    Component: GridStep,
   },
   articles: {
     name: "Артикулы элементов",
-    Component: function Articles({project, builder_props, setProps, classes}) {
-
-      function setArticles({target}) {
-        builder_props.articles = parseFloat(target.value);
-        project.ox.builder_props = {articles: builder_props.articles};
-        project.register_change();
-        setProps(Object.assign({}, builder_props));
-      }
-
-      return <>
-        <InputLabel className={classes.top}>{bprops.articles.name}</InputLabel>
-        <Select
-          value={builder_props.articles}
-          onChange={setArticles}
-        >
-          {articles.map((text, value) => <MenuItem key={`a-${value}`} value={value}>{text}</MenuItem>)}
-        </Select>
-      </>;
-    },
+    Component: Articles,
   },
 };
 
+function Articles({project, builder_props, setProps, classes}) {
+
+  function setArticles({target}) {
+    builder_props.articles = parseFloat(target.value);
+    project.ox.builder_props = {articles: builder_props.articles};
+    project.register_change();
+    setProps(Object.assign({}, builder_props));
+  }
+
+  return <>
+    <InputLabel className={classes.top}>{bprops.articles.name}</InputLabel>
+    <Select
+      value={builder_props.articles}
+      onChange={setArticles}
+    >
+      {articles.map((text, value) => <MenuItem key={`a-${value}`} value={value}>{text}</MenuItem>)}
+    </Select>
+  </>;
+}
+Articles.propTypes = {
+  project: PropTypes.object,
+  builder_props: PropTypes.object,
+  classes: PropTypes.object,
+  setProps: PropTypes.func
+};
+
+function GridStep({project, builder_props, setProps}) {
+  function setGrid({target}) {
+    builder_props.grid = parseFloat(target.value);
+    project.ox.builder_props = {grid: builder_props.grid};
+    setProps(Object.assign({}, builder_props));
+  }
+
+  return <>
+    <InputLabel>{bprops.grid.name}</InputLabel>
+    <input type="number" min="50" max="200" step="50" value={builder_props.grid} onChange={setGrid} />
+  </>;
+}
+GridStep.propTypes = {
+  project: PropTypes.object,
+  builder_props: PropTypes.object,
+  setProps: PropTypes.func
+};
 
 export default function BProps({editor}) {
   const {project} = editor;

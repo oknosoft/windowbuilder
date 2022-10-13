@@ -4193,14 +4193,14 @@ class ToolCut extends ToolElement{
     const hitSize = 30;
     this.hitItem = null;
 
-    if (point) {
-      this.hitItem = this.project.hitTest(point, { ends: true, tolerance: hitSize });
-    }
 
-    if (this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem) {
+    if (point) {
       const {activeLayer, magnetism} = this.project;
-      const profile = this.hitItem.item.parent;
-      if(profile.parent === activeLayer) {
+      this.hitItem = activeLayer.hitTestAll(point, { ends: true, tolerance: hitSize })
+        .find(({item}) => item.layer === activeLayer);
+
+      if (this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem) {
+        const profile = this.hitItem.item.parent;
         const {profiles} = activeLayer;
         const {b, e} = profile;
         const selected = {profiles, profile, point: b.getDistance(point) < e.getDistance(point) ? 'b' : 'e'};
@@ -4209,12 +4209,12 @@ class ToolCut extends ToolElement{
           this.remove_cont();
           this.nodes = nodes;
           this.create_cont();
+          return true;
         }
       }
     }
-    else {
-      this._scope.canvas_cursor('cursor-arrow-cut');
-    }
+
+    this._scope.canvas_cursor('cursor-arrow-cut');
 
     return true;
   }
@@ -7868,7 +7868,6 @@ class ToolRuler extends ToolElement {
       }
       else {
         // Hit test points
-        console.log(modifiers);
         const shift = (modifiers.control || modifiers.shift) ? 1 : false;
         let hit = this.project.hitPoints(point, 16, shift, true);
         if (hit) {

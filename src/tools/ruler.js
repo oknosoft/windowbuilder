@@ -623,7 +623,6 @@ class ToolRuler extends ToolElement {
       }
       else {
         // Hit test points
-        console.log(modifiers);
         const shift = (modifiers.control || modifiers.shift) ? 1 : false;
         let hit = this.project.hitPoints(point, 16, shift, true);
         if (hit) {

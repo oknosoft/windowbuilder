@@ -12,67 +12,55 @@ import GoLayer from './GoLayer';
 import AddBoxIcon from '@material-ui/icons/AddBox';
 import {useStyles} from '../../Toolbar/styles';
 
+function addImpost(elm, orienattion) {
+
+  const {elm_types, positions} = $p.enm;
+  const inset = elm.project.default_inset({
+    elm,
+    elm_type: elm_types.impost,
+    pos: positions[orienattion],
+  });
+  const pt = elm.interiorPoint();
+  const {top, bottom, left, right} = elm.profiles_by_side();
+  const {layer} = elm;
+
+  const gen = (profile) => !layer.level || profile.elm_type.is('impost') ? profile.generatrix : profile.rays.outer;
+
+  let path;
+  if(orienattion == 'vert') {
+    path = new paper.Path([pt.add([0, 10000]), pt.add([0, -10000])]);
+    path.firstSegment.point = path.intersect_point(gen(bottom.profile));
+    path.lastSegment.point = path.intersect_point(gen(top.profile));
+  }
+  else {
+    path = new paper.Path([pt.add([-10000, 0]), pt.add([10000, 0])]);
+    path.firstSegment.point = path.intersect_point(gen(left.profile));
+    path.lastSegment.point = path.intersect_point(gen(right.profile));
+  }
+
+  new $p.EditorInvisible.Profile({
+    generatrix: path,
+    proto: {inset, clr: top.profile.clr, layer}
+  });
+}
+
 function GlassToolbar({editor, elm, classes}) {
   const {inset, reflect_grp} = elm;
 
-  function add_vert(elm) { 
-    
-    var ins_from_sys = editor.project.ox.sys.elmnts.find({elm_type:$p.enm.elm_types.Импост,by_default:true}).nom
-    const {top, bottom} = elm.profiles_by_side();
-const pt = elm.interiorPoint();
-      const path = new paper.Path([pt.add([0, 10000]), pt.add([0, -10000])]);
-      const pb = path.intersect_point(bottom.profile.generatrix);
-      const pe = path.intersect_point(top.profile.generatrix);
-    const {layer, clr} = top.profile;
-      path.firstSegment.point = pb;
-      path.lastSegment.point = pe;
-      const impost = new $p.EditorInvisible.Profile({
-        generatrix: path,
-        proto: { inset :ins_from_sys, clr, parent: layer}
-      });
-  
-
-  }  
-
-
-  function add_hor(elm) {
-    var ins_from_sys = editor.project.ox.sys.elmnts.find({elm_type:$p.enm.elm_types.Импост,by_default:true}).nom
-
-    const {left, right} = elm.profiles_by_side();
-const pt = elm.interiorPoint();
-      const path = new paper.Path([pt.add([-10000, 0]), pt.add([10000, 0])]);
-      const pb = path.intersect_point(left.profile.generatrix);
-      const pe = path.intersect_point(right.profile.generatrix);
-    const {layer, clr} = left.profile;
-      path.firstSegment.point = pb;
-      path.lastSegment.point = pe;
-      const impost = new $p.EditorInvisible.Profile({
-        generatrix: path,
-        proto: { inset :ins_from_sys, clr, parent: layer}
-      });
-    
-
-  }
-
-  function add_leaf_iface(elm) {
-    
-    elm.create_leaf()
-   
-  }
 
   return <Toolbar disableGutters>
-      <Tip title="Вставить  Створку ">
-      <SmallButton disabled={false} onClick={() => {add_leaf_iface(elm)}}>
+      <Tip title="Вставить Створку ">
+      <SmallButton disabled={false} onClick={() => elm.create_leaf()}>
         <AddBoxIcon/>
       </SmallButton>
     </Tip>
     <Tip title="Вставить вертикальный импост">
-      <SmallButton disabled={false} onClick={() => {add_vert(elm)}}>
+      <SmallButton disabled={false} onClick={() => {addImpost(elm, 'vert')}}>
         <BorderVerticalIcon/>
       </SmallButton>
     </Tip>
     <Tip title="Вставить горизонтальный импост">
-      <SmallButton disabled={false}  onClick={() => {add_hor(elm)}}>
+      <SmallButton disabled={false}  onClick={() => {addImpost(elm, 'hor')}}>
         <BorderHorizontalIcon/>
       </SmallButton>
     </Tip>
