@@ -15,7 +15,7 @@ function LayerToolbar({editor, layer, classes}) {
   if(!layer.hasChildren()) {
     return '';
   }
-  const {furn, project} = layer;
+  const {furn, project, direction} = layer;
   const contours = project.getItems({class: editor.constructor.Contour});
   return <Toolbar disableGutters>
     <Tip title="Поднять на передний план">
@@ -31,6 +31,17 @@ function LayerToolbar({editor, layer, classes}) {
       }}><FlipToBackIcon/></SmallButton>
     </Tip>
     <LayerKind layer={layer} />
+    <SmallButton disabled>|</SmallButton>
+    <Tip title="Направление открывания: Левое">
+      <SmallButton disabled={!furn || furn.empty()} onClick={() => {
+        layer.direction = direction._manager.left;
+      }}>L</SmallButton>
+    </Tip>
+    <Tip title="Направление открывания: Правое">
+      <SmallButton disabled={!furn || furn.empty()} onClick={() => {
+        layer.direction = direction._manager.right;
+      }}>R</SmallButton>
+    </Tip>
     <div className={classes.title}/>
     <Tip title="Обновить параметры">
       <IconButton
