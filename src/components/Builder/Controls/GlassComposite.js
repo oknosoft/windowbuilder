@@ -143,10 +143,6 @@ export default class GlassComposite extends React.Component {
     });
   };
 
-  handleByChain = () => {
-
-  };
-
   Toolbar = (props) => {
     const {width} = props;
     const {_grid, props: {elm, set_row}} = this;

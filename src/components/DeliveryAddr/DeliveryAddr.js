@@ -16,13 +16,17 @@ import FormGroup from '@material-ui/core/FormGroup';
 import DataField from 'metadata-react/DataField';
 import TextField  from '@material-ui/core/TextField';
 import IconButton  from '@material-ui/core/IconButton';
+import Typography from '@material-ui/core/Typography';
 import LiveHelp from '@material-ui/icons/LiveHelp';
 import GoogleMap from './GoogleMap';
 import YaMap from './YaMap';
 import YaSuggest from './YaSuggest';
 import {ReactDadata} from './DadataTyped/index.tsx';
 
-function Toolbtn({suggest_type, handleSuggestType}) {
+function Toolbtn({suggest_lock, suggest_type, handleSuggestType}) {
+  if(suggest_lock) {
+    return null;
+  }
   const lbl = suggest_type[0].toUpperCase() + ' ';
   return <IconButton
     title={`Источник подсказок: ${suggest_type}`}
@@ -46,11 +50,13 @@ class DeliveryAddr extends Component {
     t.handleCancel = handleCancel.bind(t);
     t.handleCalck = handleCalck.bind(t);
     t.obj = new FakeAddrObj(_mgr.by_ref[ref]);
+    const suggest_lock = Boolean($p.job_prm.keys.yandex);
     t.state = {
       msg: null,
       queryClose: false,
       cpresentation: t.cpresentation(),
-      suggest_type: $p.wsql.get_user_param('suggest_type') || 'dadata',
+      suggest_lock,
+      suggest_type: suggest_lock ? 'yandex' : ($p.wsql.get_user_param('suggest_type') || 'dadata'),
     };
     t.wnd = {
       setText() {},
@@ -156,12 +162,22 @@ class DeliveryAddr extends Component {
     }
     else if(data.value) {
       nearest = delivery.dadata.specify(data.value)
-        .then(({suggestions}) => {
+        .then(({suggestions, error}) => {
+          this.setState({error});
           if(suggestions && suggestions[0].data.geo_lat && suggestions[0].data.geo_lon) {
             if(!Object.keys(data.data).length) {
               Object.assign(data.data, suggestions[0].data);
               delivery.dadata.components(v, data.data);
               v.assemble_address_fields(true);
+              if(suggestions[0].value) {
+                data.value = suggestions[0].value;
+                if(this.dadata.addr) {
+                  this.dadata.onInputChange({
+                    fake: true,
+                    target: {value: data.value}
+                  });
+                }
+              }
               //v.owner.refresh_grid(co);
             }
             else {
@@ -205,8 +221,8 @@ class DeliveryAddr extends Component {
     }
     if(data.data) {
       obj.coordinates = JSON.stringify([point.lat, point.lng]);
-      this.setState({cpresentation: this.cpresentation()});
       obj.shipping_address = data.value || data.unrestricted_value;
+      this.setState({cpresentation: this.cpresentation()});
       map && map.reflectCenter([point.lat, point.lng]);
     }
   };
@@ -255,7 +271,7 @@ class DeliveryAddr extends Component {
   }
 
   content() {
-    const {obj, state: {cpresentation, suggest_type}, props: {delivery, classes}, geo_map} = this;
+    const {obj, state: {cpresentation, suggest_type, error}, props: {delivery, classes}, geo_map} = this;
     const ComponentMap = geo_map.includes('google') ? GoogleMap : YaMap;
     const addr = suggest_type === 'dadata' ?
       <ReactDadata
@@ -287,11 +303,16 @@ class DeliveryAddr extends Component {
       !geo_map.includes('without_area') && <FormGroup key="row1" row>
         <DataField _obj={obj} _fld="delivery_area"/>
         {coordin}
+        {error ? <Typography
+          color="error"
+          style={{display: 'flex', alignItems: 'flex-end', marginLeft: 16}}
+        >{error}</Typography> : null}
       </FormGroup>,
       !geo_map.includes('without_area') && addr,
       geo_map.includes('without_area') && <FormGroup key="row" row>
         {addr}
         {coordin}
+        {error ? <Typography color="error">{error}</Typography> : null}
       </FormGroup>,
       <ComponentMap
         key="map"
@@ -304,7 +325,7 @@ class DeliveryAddr extends Component {
 
   render() {
 
-    const {handleCancel, handleErrClose, obj: {_data}, state: {msg, queryClose, suggest_type}} = this;
+    const {handleCancel, handleErrClose, obj: {_data}, state: {msg, queryClose, suggest_type, suggest_lock}} = this;
 
 
     return <Dialog
@@ -317,7 +338,10 @@ class DeliveryAddr extends Component {
         <Button key="ok" onClick={this.handleOk} color="primary">Ок</Button>,
         <Button key="cancel" onClick={handleCancel} color="primary">Отмена</Button>
       ]}
-      toolbtns={<Toolbtn suggest_type={suggest_type} handleSuggestType={this.handleSuggestType}/>}
+      toolbtns={<Toolbtn
+        suggest_lock={suggest_lock}
+        suggest_type={suggest_type}
+        handleSuggestType={this.handleSuggestType}/>}
     >
       {this.content()}
       {msg &&

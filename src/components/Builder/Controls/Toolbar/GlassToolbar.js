@@ -9,18 +9,58 @@ import InfoButton from 'metadata-react/App/InfoButton';
 import SmallButton from '../../Toolbar/IconButton';
 import IconButton from '@material-ui/core/IconButton';
 import GoLayer from './GoLayer';
+import AddBoxIcon from '@material-ui/icons/AddBox';
 import {useStyles} from '../../Toolbar/styles';
+
+function addImpost(elm, orienattion) {
+
+  const {elm_types, positions} = $p.enm;
+  const inset = elm.project.default_inset({
+    elm,
+    elm_type: elm_types.impost,
+    pos: positions[orienattion],
+  });
+  const pt = elm.interiorPoint();
+  const {top, bottom, left, right} = elm.profiles_by_side();
+  const {layer} = elm;
+
+  const gen = (profile) => !layer.level || profile.elm_type.is('impost') ? profile.generatrix : profile.rays.outer;
+
+  let path;
+  if(orienattion == 'vert') {
+    path = new paper.Path([pt.add([0, 10000]), pt.add([0, -10000])]);
+    path.firstSegment.point = path.intersect_point(gen(bottom.profile));
+    path.lastSegment.point = path.intersect_point(gen(top.profile));
+  }
+  else {
+    path = new paper.Path([pt.add([-10000, 0]), pt.add([10000, 0])]);
+    path.firstSegment.point = path.intersect_point(gen(left.profile));
+    path.lastSegment.point = path.intersect_point(gen(right.profile));
+  }
+
+  new $p.EditorInvisible.Profile({
+    generatrix: path,
+    proto: {inset, clr: top.profile.clr, layer}
+  });
+}
 
 function GlassToolbar({editor, elm, classes}) {
   const {inset, reflect_grp} = elm;
+
+
   return <Toolbar disableGutters>
+      <Tip title="Вставить Створку ">
+      <SmallButton disabled={false} onClick={() => elm.create_leaf()}>
+        <AddBoxIcon/>
+      </SmallButton>
+    </Tip>
     <Tip title="Вставить вертикальный импост">
-      <SmallButton disabled onClick={null}>
+      <SmallButton disabled={false} onClick={() => {addImpost(elm, 'vert')}}>
         <BorderVerticalIcon/>
       </SmallButton>
     </Tip>
     <Tip title="Вставить горизонтальный импост">
-      <SmallButton disabled onClick={null}>
+      <SmallButton disabled={false}  onClick={() => {addImpost(elm, 'hor')}}>
         <BorderHorizontalIcon/>
       </SmallButton>
     </Tip>

@@ -92,67 +92,144 @@ class DeliveryManager {
 
     const yandex = this.yandex = {
 
-      format_suggestions(response) {
-        const {featureMember} = response.GeoObjectCollection;
-        if(featureMember && featureMember.length) {
-          const {Address, AddressDetails: {Country}} = featureMember[0].GeoObject.metaDataProperty.GeocoderMetaData;
-          const p1 = featureMember[0].GeoObject.Point;
-          let pos = p1 && p1.pos.split(' ').map(v => parseFloat(v));
-          if(featureMember.length > 3) {
-            const p2 = featureMember[1] && featureMember[1].GeoObject.Point;
-            let pos2 = p2 && p2.pos.split(' ').map(v => parseFloat(v));
-            pos[0] = (pos[0] + pos2[0]) / 2;
-            pos[1] = (pos[1] + pos2[1]) / 2;
+      format_suggestions({geoObjects, GeoObjectCollection}) {
+        if(geoObjects) {
+          const obj = geoObjects.get(0);
+          const res = {suggestions: []};
+          if (obj) {
+            // Об оценке точности ответа геокодера можно прочитать тут: https://tech.yandex.ru/maps/doc/geocoder/desc/reference/precision-docpage/
+            switch (obj.properties.get('metaDataProperty.GeocoderMetaData.precision')) {
+              case 'exact':
+                break;
+              case 'number':
+              case 'near':
+              case 'range':
+                res.error = 'Неточный адрес, уточните номер дома';
+                break;
+              case 'street':
+                res.error = 'Неполный адрес, уточните номер дома';
+                break;
+              case 'other':
+              default:
+                res.error = 'Неточный адрес, уточните адрес';
+            }
+            res.coords = obj.geometry.getCoordinates();
+            res.bounds = obj.properties.get('boundedBy');
           }
-
-          const res = {
-            data: {
-              postal_code: Address.postal_code || '',
-              house_type_full: 'дом',
-              region_with_type: '',
-              area_with_type: '',
-              city: '',
-              house: '',
-              street_with_type: '',
-            },
-            value: Address.formatted.replace(`${Country.CountryName}, `, ''),
-          };
-          if(pos && pos.length > 1) {
-            res.data.geo_lat = pos[1];
-            res.data.geo_lon = pos[0];
+          else {
+            res.error = 'Адрес не найден';
           }
-          for(const {kind, name} of Address.Components) {
-            switch (kind) {
-            case 'province':
-              res.data.region_with_type = name;
-              break;
-            case 'area':
-              res.data.area_with_type = name;
-              break;
-            case 'locality':
-              res.data.city = name;
-              break;
-            case 'street':
-              res.data.street_with_type = name;
-              break;
-            case 'district':
-              if(!res.data.street_with_type) {
-                res.data.street_with_type = name;
+          if(res.coords) {
+            const {Address, AddressDetails: {Country}, text} = obj.properties.get('metaDataProperty.GeocoderMetaData');
+            const suggest = {
+              data: {
+                postal_code: Address.postal_code || '',
+                house_type_full: 'дом',
+                region_with_type: '',
+                area_with_type: '',
+                city: '',
+                house: '',
+                street_with_type: '',
+                geo_lat: res.coords[0],
+                geo_lon: res.coords[1],
+              },
+              value: Address.formatted.replace(`${Country.CountryName}, `, ''),
+            };
+            res.suggestions.push(suggest);
+            const {data} = suggest;
+            for(const {kind, name} of Address.Components) {
+              switch (kind) {
+                case 'province':
+                  data.region_with_type = name;
+                  break;
+                case 'area':
+                  data.area_with_type = name;
+                  break;
+                case 'locality':
+                  data.city = name;
+                  break;
+                case 'street':
+                  data.street_with_type = name;
+                  break;
+                case 'district':
+                  if(!data.street_with_type) {
+                    data.street_with_type = name;
+                  }
+                  break;
+                case 'house':
+                  data.house = name;
+                  break;
               }
-              break;
-            case 'house':
-              res.data.house = name;
-              break;
             }
           }
+          return res;
+        }
 
-          return {suggestions: [res]};
+        else if(GeoObjectCollection) {
+          const {featureMember} = GeoObjectCollection;
+
+          //obj.properties.get('metaDataProperty.GeocoderMetaData.precision')
+
+          if(featureMember && featureMember.length) {
+            const {Address, AddressDetails: {Country}} = featureMember[0].GeoObject.metaDataProperty.GeocoderMetaData;
+            const p1 = featureMember[0].GeoObject.Point;
+            let pos = p1 && p1.pos.split(' ').map(v => parseFloat(v));
+            if(featureMember.length > 3) {
+              const p2 = featureMember[1] && featureMember[1].GeoObject.Point;
+              let pos2 = p2 && p2.pos.split(' ').map(v => parseFloat(v));
+              pos[0] = (pos[0] + pos2[0]) / 2;
+              pos[1] = (pos[1] + pos2[1]) / 2;
+            }
+
+            const res = {
+              data: {
+                postal_code: Address.postal_code || '',
+                house_type_full: 'дом',
+                region_with_type: '',
+                area_with_type: '',
+                city: '',
+                house: '',
+                street_with_type: '',
+              },
+              value: Address.formatted.replace(`${Country.CountryName}, `, ''),
+            };
+            if(pos && pos.length > 1) {
+              res.data.geo_lat = pos[1];
+              res.data.geo_lon = pos[0];
+            }
+            for(const {kind, name} of Address.Components) {
+              switch (kind) {
+                case 'province':
+                  res.data.region_with_type = name;
+                  break;
+                case 'area':
+                  res.data.area_with_type = name;
+                  break;
+                case 'locality':
+                  res.data.city = name;
+                  break;
+                case 'street':
+                  res.data.street_with_type = name;
+                  break;
+                case 'district':
+                  if(!res.data.street_with_type) {
+                    res.data.street_with_type = name;
+                  }
+                  break;
+                case 'house':
+                  res.data.house = name;
+                  break;
+              }
+            }
+
+            return {suggestions: [res]};
+          }
         }
         return {suggestions: []};
       },
 
       geolocate([lat, lon]) {
-        return fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${keys.yandex}&geocode=${lon},${lat}&format=json`)
+        return fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${keys.yandex}&geocode=${lon},${lat}&format=json&results=1`)
           .then(res => res.json())
           .then(({response}) => this.format_suggestions(response));
 
@@ -161,7 +238,11 @@ class DeliveryManager {
       },
 
       geocode(address) {
-        return fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${keys.yandex}&geocode=${address}&format=json`)
+        if(typeof ymaps !== "undefined") {
+          return ymaps.geocode(address, {results: 1})
+            .then(({geoObjects}) => this.format_suggestions({geoObjects}));
+        }
+        return fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${keys.yandex}&geocode=${address}&format=json&results=1`)
           .then(res => res.json())
           .then(({response}) => this.format_suggestions(response));
       }

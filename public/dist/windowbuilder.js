@@ -4193,14 +4193,14 @@ class ToolCut extends ToolElement{
     const hitSize = 30;
     this.hitItem = null;
 
-    if (point) {
-      this.hitItem = this.project.hitTest(point, { ends: true, tolerance: hitSize });
-    }
 
-    if (this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem) {
+    if (point) {
       const {activeLayer, magnetism} = this.project;
-      const profile = this.hitItem.item.parent;
-      if(profile.parent === activeLayer) {
+      this.hitItem = activeLayer.hitTestAll(point, { ends: true, tolerance: hitSize })
+        .find(({item}) => item.layer === activeLayer);
+
+      if (this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem) {
+        const profile = this.hitItem.item.parent;
         const {profiles} = activeLayer;
         const {b, e} = profile;
         const selected = {profiles, profile, point: b.getDistance(point) < e.getDistance(point) ? 'b' : 'e'};
@@ -4209,12 +4209,12 @@ class ToolCut extends ToolElement{
           this.remove_cont();
           this.nodes = nodes;
           this.create_cont();
+          return true;
         }
       }
     }
-    else {
-      this._scope.canvas_cursor('cursor-arrow-cut');
-    }
+
+    this._scope.canvas_cursor('cursor-arrow-cut');
 
     return true;
   }
@@ -7463,11 +7463,11 @@ class RulerWnd {
   }
 
   on_keydown(ev) {
-
+    const {keyCode, code, target, event} = ev;
     const {wnd, tool} = this;
 
     if (wnd) {
-      switch (ev.keyCode) {
+      switch (keyCode) {
         case 27:        // закрытие по {ESC}
           !(tool instanceof ToolRuler) && wnd.close();
           break;
@@ -7495,7 +7495,7 @@ class RulerWnd {
         case 109:       // -
         case 46:        // del
         case 8:         // backspace
-          if (ev.target && ['textarea', 'input'].indexOf(ev.target.tagName.toLowerCase()) != -1) {
+          if (target && ['textarea', 'input'].includes(target.tagName.toLowerCase())) {
             return;
           }
 
@@ -7515,7 +7515,8 @@ class RulerWnd {
         break;
 
       }
-      return $p.iface.cancel_bubble(ev);
+      return !['Control','ControlLeft','ControlRight','Alt','AltLeft','AltRight','Shist','ShistLeft','ShistRight']
+        .includes(code) && $p.iface.cancel_bubble(ev);
     }
 
   }
@@ -7851,7 +7852,7 @@ class ToolRuler extends ToolElement {
 
   }
 
-  hitTest({point}) {
+  hitTest({point, modifiers}) {
 
     this.hitItem = null;
     this.hitPoint = null;
@@ -7867,7 +7868,8 @@ class ToolRuler extends ToolElement {
       }
       else {
         // Hit test points
-        let hit = this.project.hitPoints(point, 16, false, true);
+        const shift = (modifiers.control || modifiers.shift) ? 1 : false;
+        let hit = this.project.hitPoints(point, 16, shift, true);
         if (hit) {
           if(hit.item.parent instanceof Editor.ProfileItem) {
             this.hitItem = hit;
