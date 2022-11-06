@@ -171,7 +171,12 @@ class DeliveryAddr extends Component {
               v.assemble_address_fields(true);
               if(suggestions[0].value) {
                 data.value = suggestions[0].value;
-                this.dadata.setState({query: data.value});
+                if(this.dadata.addr) {
+                  this.dadata.onInputChange({
+                    fake: true,
+                    target: {value: data.value}
+                  });
+                }
               }
               //v.owner.refresh_grid(co);
             }
