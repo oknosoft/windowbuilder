@@ -229,8 +229,8 @@
             .then(() => {
 
               const footer = {
-                columns: ",,,,#stat_total,,,#stat_s,,,,,#stat_total,,,#stat_total",
-                _in_header_stat_s: function (tag, index, data) {
+                columns: ",,,,#stat_t,,,#stat_s,,,,,#stat_t,,,#stat_t",
+                _in_header_stat_s (tag, index, data) {
                   const calck = function () {
                     let sum = 0;
                     for(const row of o.production) {
@@ -238,7 +238,18 @@
                         sum += row.s * row.quantity;
                       }
                     }
-                    return sum.toFixed(2);
+                    return sum.round(2).toLocaleString('ru-RU');
+                  };
+                  this._stat_in_header(tag, calck, index, data);
+                },
+                _in_header_stat_t (tag, index, data) {
+                  const column = this.columnIds[index];
+                  const calck = function () {
+                    let sum = 0;
+                    for(const row of o.production) {
+                      sum += row[column];
+                    }
+                    return sum.round(2).toLocaleString('ru-RU');
                   };
                   this._stat_in_header(tag, calck, index, data);
                 }
@@ -1137,5 +1148,11 @@
     }
 
   };
+
+  const {setCValue} = eXcell_ro.prototype;
+  eXcell_ro.prototype.setCValue = function (val) {
+    return setCValue.call(this, typeof val === 'number' ? val.toLocaleString('ru-RU') : val);
+  };
+  //eXcell_calck.prototype.setCValue = eXcell_ro.prototype.setCValue;
 
 })($p);

@@ -79,7 +79,14 @@ Object.defineProperties($p.cat.clrs, {
         // если указаны оба цвета
         if(btn_id == 'btn_select' && !eclr.clr_in.empty() && !eclr.clr_out.empty()) {
 
-          const clr = eclr.clr_in == eclr.clr_out ? eclr.clr_in : this.getter(`${eclr.clr_in.valueOf()}${eclr.clr_out.valueOf()}`);
+          let clr = eclr.clr_in;
+          if(eclr.clr_in != eclr.clr_out) {
+            clr = this.by_in_out(eclr);
+            if(clr.empty()) {
+              clr = this.getter(`${eclr.clr_in.valueOf()}${eclr.clr_out.valueOf()}`);
+            }
+          }
+
           pwnd.on_select(clr);
 
           wnd.close();
@@ -842,8 +849,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             .then(() => {
 
               const footer = {
-                columns: ",,,,#stat_total,,,#stat_s,,,,,#stat_total,,,#stat_total",
-                _in_header_stat_s: function (tag, index, data) {
+                columns: ",,,,#stat_t,,,#stat_s,,,,,#stat_t,,,#stat_t",
+                _in_header_stat_s (tag, index, data) {
                   const calck = function () {
                     let sum = 0;
                     for(const row of o.production) {
@@ -851,7 +858,18 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                         sum += row.s * row.quantity;
                       }
                     }
-                    return sum.toFixed(2);
+                    return sum.round(2).toLocaleString('ru-RU');
+                  };
+                  this._stat_in_header(tag, calck, index, data);
+                },
+                _in_header_stat_t (tag, index, data) {
+                  const column = this.columnIds[index];
+                  const calck = function () {
+                    let sum = 0;
+                    for(const row of o.production) {
+                      sum += row[column];
+                    }
+                    return sum.round(2).toLocaleString('ru-RU');
                   };
                   this._stat_in_header(tag, calck, index, data);
                 }
@@ -1750,6 +1768,12 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
     }
 
   };
+
+  const {setCValue} = eXcell_ro.prototype;
+  eXcell_ro.prototype.setCValue = function (val) {
+    return setCValue.call(this, typeof val === 'number' ? val.toLocaleString('ru-RU') : val);
+  };
+  //eXcell_calck.prototype.setCValue = eXcell_ro.prototype.setCValue;
 
 })($p);
 
