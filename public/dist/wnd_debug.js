@@ -659,18 +659,18 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         // TODO: штуки сейчас спрятаны в ro и имеют нулевую ширину
         if($p.wsql.get_user_param('hide_price_dealer')) {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
-          source.widths = '40,200,*,220,0,0,0,70,70,40,70,70,70,0,0,0';
-          source.min_widths = '30,200,220,150,0,0,0,70,70,70,70,70,70,0,0,0';
+          source.widths = '40,200,*,220,0,0,0,70,70,40,70,70,90,0,0,0';
+          source.min_widths = '30,200,220,150,0,0,0,70,70,70,70,70,90,0,0,0';
         }
         else if($p.wsql.get_user_param('hide_price_manufacturer')) {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма';
-          source.widths = '40,200,*,220,0,0,0,70,70,40,0,0,0,70,70,70';
-          source.min_widths = '30,200,220,150,0,0,0,70,70,70,0,0,0,70,70,70';
+          source.widths = '40,200,*,220,0,0,0,70,70,40,0,0,0,70,70,90';
+          source.min_widths = '30,200,220,150,0,0,0,70,70,70,0,0,0,70,70,90';
         }
         else {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
-          source.widths = '40,200,*,220,0,0,0,70,70,40,70,70,70,70,70,70';
-          source.min_widths = '30,200,220,150,0,0,0,70,70,70,70,70,70,70,70,70';
+          source.widths = '40,200,*,220,0,0,0,70,70,40,70,70,90,70,70,90';
+          source.min_widths = '30,200,220,150,0,0,0,70,70,70,70,70,90,70,70,90';
         }
 
         if(user.role_available('СогласованиеРасчетовЗаказов') || user.role_available('РедактированиеЦен') || user.role_available('РедактированиеСкидок')) {
@@ -869,7 +869,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                     for(const row of o.production) {
                       sum += row[column];
                     }
-                    return sum.round(2).toLocaleString('ru-RU');
+                    return sum.round(2).toLocaleString('ru-RU') + '\u00a0';
                   };
                   this._stat_in_header(tag, calck, index, data);
                 }

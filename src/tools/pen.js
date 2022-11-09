@@ -317,20 +317,21 @@ class ToolPen extends ToolElement {
             {name: 'triangle3', img: 'triangle3.png', float: 'left'},
             {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
             {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
-            {name: 'circle',    img: 'circle.png', float: 'left'},
             {name: 'arc1',      img: 'arc1.png', float: 'left'},
-            {name: 'trapeze1',  img: 'trapeze1.png', float: 'right'},
+            {name: 'circle',    img: 'circle.png', float: 'left'},
+            {name: 'circle1',   img: 'circle1.png', float: 'right'},
+            {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
             {name: 'trapeze2',  img: 'trapeze2.png', float: 'left'},
-            {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
-            {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
+            {name: 'trapeze3',  img: 'trapeze3.png', float: 'right'},
+            {name: 'trapeze4',  img: 'trapeze4.png', float: 'left'},
             {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-            {name: 'trapeze6',  img: 'trapeze6.png', float: 'left'},
-            {name: 'trapeze7',  img: 'trapeze7.png', float: 'right'},
+            {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'},
+            {name: 'trapeze7',  img: 'trapeze7.png', float: 'left'},
             {name: 'trapeze8',  img: 'trapeze8.png', float: 'left'},
-            {name: 'trapeze9',  img: 'trapeze9.png', float: 'left'},
-            {name: 'trapeze10',  img: 'trapeze10.png', float: 'right'}]}
-            },
-      ],
+            {name: 'trapeze9',  img: 'trapeze9.png', float: 'right'},
+            {name: 'trapeze10', img: 'trapeze10.png', float: 'left'},
+          ]},
+      }],
       image_path: '/imgs/',
       onclick: (name) => this.standard_form(name)
     });
@@ -1298,13 +1299,22 @@ class ToolPen extends ToolElement {
    * @param bounds
    */
   add_semicircle1(bounds) {
-    // находим правую нижнюю точку
-    const point = bounds.bottomRight;
-    const profiles = this.add_sequence([
-      [point, point.add([1000, 0])],
-      [point.add([1000, 0]), point]
-    ]);
-    profiles[0].arc_h = 500;
+    $p.ui.dialogs.input_value({
+      title: 'Полугкуг сверху',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        // находим правую нижнюю точку
+        const point = bounds.bottomRight;
+        const d = 2 * r;
+        const profiles = this.add_sequence([
+          [point, point.add([d, 0])],
+          [point.add([d, 0]), point]
+        ]);
+        profiles[0].arc_h = r;
+      });
   }
 
   /**
@@ -1312,13 +1322,22 @@ class ToolPen extends ToolElement {
    * @param bounds
    */
   add_semicircle2(bounds) {
-    // находим правую нижнюю точку
-    const point = bounds.bottomRight;
-    const profiles = this.add_sequence([
-      [point, point.add([1000, 0])],
-      [point.add([1000, 0]), point]
-    ]);
-    profiles[1].arc_h = 500;
+    $p.ui.dialogs.input_value({
+      title: 'Полугкуг снизу',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        // находим правую нижнюю точку
+        const point = bounds.bottomRight;
+        const d = 2 * r;
+        const profiles = this.add_sequence([
+          [point, point.add([d, 0])],
+          [point.add([d, 0]), point]
+        ]);
+        profiles[1].arc_h = r;
+      });
   }
 
   /**
@@ -1326,30 +1345,103 @@ class ToolPen extends ToolElement {
    * @param bounds
    */
   add_circle(bounds) {
-    // находим правую нижнюю точку
-    const point = bounds.bottomRight;
-    const profiles = this.add_sequence([
-      [point, point.add([1000, 0])],
-      [point.add([1000, 0]), point]
-    ]);
-    profiles[0].arc_h = 500;
-    profiles[1].arc_h = 500;
+    $p.ui.dialogs.input_value({
+      title: 'Круг из двух сегментов',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        // находим правую нижнюю точку
+        const point = bounds.bottomRight;
+        const d = 2 * r;
+        const profiles = this.add_sequence([
+          [point, point.add([d, 0])],
+          [point.add([d, 0]), point]
+        ]);
+        profiles[0].arc_h = r;
+        profiles[1].arc_h = r;
+      });
   }
+
+    /**
+     * Рисует circle1
+     * @param bounds
+     */
+    add_circle1(bounds) {
+      const {ui, enm, dp} = $p;
+      ui.dialogs.input_value({
+        title: 'Круг из двух сегментов',
+        text: 'Уточните радиус',
+        type: 'number',
+        initialValue: 500,
+      })
+        .then((r) => {
+          const d = 2 * r;
+          const dy = 10;
+          // находим укорочение
+          const vertor = new paper.Point([r, dy]);
+          vertor.length = r;
+          const h = r - vertor.x;
+          // находим правую нижнюю точку
+          const base = bounds.bottomRight;
+          const point = base.add([0, h]);
+          const profiles = this.add_sequence([
+            [point, point.add([d, 0])],
+            [point.add([d, 0]), point]
+          ]);
+          profiles[0].arc_h = r + dy;
+          profiles[1].arc_h = r - dy;
+
+          const {profile, project, _scope} = this;
+          profile.elm_type = enm.elm_types.impost;
+          dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
+
+          project.register_change(true, () => {
+            const impost = new Editor.Profile({
+              generatrix: new paper.Path({
+                strokeColor: 'black',
+                segments: [base.add([0, -dy]), base.add([d, -dy])],
+              }),
+              proto: profile,
+            });
+            project.deselectAll();
+            project.zoom_fit();
+            _scope.select_tool('select_node');
+            setTimeout(() => {
+              project.register_change(true, () => {
+                impost.selected = true;
+                project.move_points(new paper.Point(0, -1));
+                project.move_points(new paper.Point(0, 1));
+              });
+            }, 50);
+          });
+        });
+    }
 
   /**
    * Рисует arc1
    * @param bounds
    */
   add_arc1(bounds) {
-    // находим правую нижнюю точку
-    const point = bounds.bottomRight;
-    const profiles = this.add_sequence([
-      [point, point.add([0, -500])],
-      [point.add([0, -500]), point.add([1000, -500])],
-      [point.add([1000, -500]), point.add([1000, 0])],
-      [point.add([1000, 0]), point]
-    ]);
-    profiles[1].arc_h = 500;
+    $p.ui.dialogs.input_value({
+      title: 'Квадрат и полугкуг сверху',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        // находим правую нижнюю точку
+        const point = bounds.bottomRight;
+        const d = 2 * r;
+        const profiles = this.add_sequence([
+          [point, point.add([0, -r])],
+          [point.add([0, -r]), point.add([d, -r])],
+          [point.add([d, -r]), point.add([d, 0])],
+          [point.add([d, 0]), point]
+        ]);
+        profiles[1].arc_h = r;
+      });
   }
 
   /**
