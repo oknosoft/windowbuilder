@@ -9,26 +9,80 @@ import {Report, RepParams} from '../../components/RepMaterialsDemand';
 
 export default function ($p) {
 
-  const {characteristics} = $p.cat;
+  const {cat: {characteristics}, rep: {materials_demand}, RepMaterials_demand, utils} = $p;
+
+  const spec_flds = Object.keys(characteristics.metadata('specification').fields);
+  const rspec_flds = Object.keys(materials_demand.metadata('specification').fields);
 
   /**
    * Класс-компонент формы отчета
    * в отчете materials_demand используется типовая форма
    */
-  $p.rep.materials_demand.FrmObj = Report;
+  materials_demand.FrmObj = Report;
 
   /**
    * Класс-компонент панели параметров отчета
    * @type {RepParams}
    */
-  $p.rep.materials_demand.RepParams = RepParams;
+  materials_demand.RepParams = RepParams;
 
   /**
    * Имя табчасти, в которой живут данные отчета
    */
-  $p.rep.materials_demand._tabular = 'specification';
+  materials_demand._tabular = 'specification';
 
-  Object.defineProperties($p.RepMaterials_demand.prototype, {
+  /**
+   * Разрядность колонки qty
+   */
+  materials_demand.metadata('specification').fields.qty.type.fraction = 0;
+
+  /**
+   * устраняем дребезг react с помощью debounce
+   */
+  function fill_by_selected({type, elm, layer, ox, _obj}) {
+    switch (type) {
+      case 'order':
+      case 'settings':
+        return _obj.fill_by_order()
+          .then(() => _obj.calculate());
+
+      case 'root':
+        return  _obj.calculate_root(ox);
+
+      case 'layer':
+        return  _obj.calculate_root(ox, -layer.cnstr);
+
+      case 'elm':
+        return  _obj.calculate_root(ox, elm.elm);
+
+      case 'grp':
+      case 'pair':
+        return  _obj.calculate_root(ox, elm.map(v => v.elm));
+
+      default:
+        console.log(type);
+        return Promise.resolve();
+    }
+  }
+
+  materials_demand.fill_by_selected = function ({type, elm, layer, ox, _obj}) {
+    _obj.clear_timers();
+    return new Promise((resolve, reject) => {
+      _obj._data._resolve_timeout = setTimeout(() => {
+        fill_by_selected({type, elm, layer, ox, _obj})
+          .then(() => {
+            if(_obj._data._reject_timeout) {
+              clearTimeout(_obj._data._reject_timeout);
+            }
+            resolve();
+          })
+          .catch(reject);
+      }, 100);
+      _obj._data._reject_timeout = setTimeout(reject, 3000);
+    });
+  };
+
+  Object.defineProperties(RepMaterials_demand.prototype, {
 
     // подмешивает в наименование материала характеристику и размеры
     material: {
@@ -54,12 +108,88 @@ export default function ($p) {
 
         row.nom_kind = nom.nom_kind;
         row.grouping = nom.grouping;
-        row.article = nom.article;
         row.nom_group = nom.nom_group;
         row.price_group = nom.price_group;
         row.material = res;
 
+        row.article = nom.article;
+        row.id = nom.id;
+        row.packing = nom.packing;
+
         return res;
+      }
+    },
+
+    add_sprow: {
+      value({sprow, row, specification, prows}) {
+        let resrow = {};
+        spec_flds.forEach(fld => {
+          if(rspec_flds.includes(fld)) {
+            resrow[fld] = sprow[fld];
+          }
+        });
+        resrow = specification.add(resrow);
+
+        // учтём количество
+        const quantity = row.qty || row.quantity || 1;
+        resrow.qty = resrow.qty * quantity;
+        resrow.totqty = resrow.totqty * quantity;
+        resrow.totqty1 = resrow.totqty1 * quantity;
+        resrow.amount = resrow.amount * quantity;
+        resrow.amount_marged = resrow.amount_marged * quantity;
+
+        // рассчитаем недостающие поля
+
+        // если номер элемента < 0, интерпретируем его, как номер конструкции
+        if(resrow.elm > 0) {
+          resrow.cnstr = row.characteristic.coordinates.find({elm: resrow.elm})?.cnstr || 0;
+        }
+        else if(resrow.elm < 0) {
+          resrow.cnstr = -resrow.elm;
+        }
+
+        // ссылка на заказ
+        resrow.calc_order = row.characteristic.calc_order;
+
+        // номер строки изделия в исходном заказе
+        if(!row.characteristic.empty() && !prows.has(row.characteristic)) {
+          const {calc_order_row} = row.characteristic;
+          prows.set(row.characteristic, calc_order_row ? calc_order_row.row : 1);
+        }
+        resrow.product = prows.get(row.characteristic) || 0;
+
+        // свойства номенклатуры и группировки
+        this.material(resrow);
+      }
+    },
+
+    clear_timers: {
+      value() {
+        const {_data} = this;
+        if(_data._resolve_timeout) {
+          clearTimeout(_data._resolve_timeout);
+          _data._resolve_timeout = 0;
+        }
+        if(_data._reject_timeout) {
+          clearTimeout(_data._reject_timeout);
+          _data._reject_timeout = 0;
+        }
+      }
+    },
+
+    /**
+     * чистит таблицу результата
+     */
+    clear_spec: {
+      value() {
+        const {specification} = this;
+        specification.clear();
+        if(!specification._rows) {
+          specification._rows = [];
+        }
+        else {
+          specification._rows.length = 0;
+        }
       }
     },
 
@@ -74,98 +204,48 @@ export default function ($p) {
     calculate: {
       value() {
 
-        const {specification, production, scheme, _manager} = this;
-        const spec_flds = Object.keys(characteristics.metadata('specification').fields);
-        const rspec_flds = Object.keys(_manager.metadata('specification').fields);
-        const prows = {};
+        const {specification, production, scheme, calc_order} = this;
 
-        // чистим таблицу результата
-        specification.clear();
-        if(!specification._rows) {
-          specification._rows = [];
-        }
-        else {
-          specification._rows.length = 0;
-        }
+        this.clear_spec();
 
-        const add_sprow = (sprow, row, plain) => {
-          let resrow = {};
-          if(plain) {
-            resrow.nom = row.nom;
-            resrow.characteristic = row.characteristic;
-            resrow.clr = row.characteristic.clr;
-            resrow.qty = 1;
-            resrow.len = row.qty;
-            resrow.totqty = row.qty;
-            resrow.totqty1 = row.qty;
-          }
-          else {
-            spec_flds.forEach(fld => {
-              if(rspec_flds.indexOf(fld) != -1) {
-                resrow[fld] = sprow[fld];
-              }
-            });
-          }
-          resrow = specification.add(resrow);
-
-          // учтём количество
-          if(!plain) {
-            resrow.qty = resrow.qty * row.qty;
-            resrow.totqty = resrow.totqty * row.qty;
-            resrow.totqty1 = resrow.totqty1 * row.qty;
-            resrow.amount = resrow.amount * row.qty;
-            resrow.amount_marged = resrow.amount_marged * row.qty;
-          }
-
-          // рассчитаем недостающие поля
-
-          // если номер элемента < 0, интерпретируем его, как номер конструкции
-          if(resrow.elm > 0) {
-            resrow.cnstr = row.characteristic.coordinates.find({elm: resrow.elm})?.cnstr || 0;
-          }
-          else if(resrow.elm < 0) {
-            resrow.cnstr = -resrow.elm;
-          }
-
-          // ссылка на заказ
-          resrow.calc_order = plain ? this.calc_order : row.characteristic.calc_order;
-
-          // номер строки изделия в исходном заказе
-          if(plain) {
-            resrow.product = 0;
-          }
-          else {
-            if(!prows[row.characteristic.ref]) {
-              prows[row.characteristic.ref] = row.characteristic.calc_order.production.find_rows({characteristic: row.characteristic});
-              if(prows[row.characteristic.ref].length) {
-                prows[row.characteristic.ref] = prows[row.characteristic.ref][0].row;
-              }
-              else {
-                prows[row.characteristic.ref] = 1;
-              }
-            }
-            resrow.product = prows[row.characteristic.ref];
-          }
-
-          // свойства номенклатуры и группировки
-          this.material(resrow);
-
-        };
-
-        return Promise.resolve()
+        return this.load_linked_refs()
           .then(() => {
 
+            const prows = new Map();
+
             // бежим по продукции и заполняем результат
-            production.each((row) => {
-              if(!row.characteristic.calc_order.empty()) {
-                for(const sprow of row.characteristic.specification) {
-                  add_sprow(sprow, row);
-                }
+            for(const row of production) {
+              if(row.characteristic.calc_order === calc_order) {
+                row.characteristic.specification.each((sprow) => {
+                  this.add_sprow({sprow, row, specification, prows});
+                });
               }
               else {
-                add_sprow(row, row, true);
+                const {calc_order} = this;
+                const orow = calc_order.production.get(row.elm - 1);
+                if(!orow || orow.nom !== row.nom) {
+                  continue;
+                }
+                const sprow = Object.assign({}, {
+                  nom: row.nom,
+                  characteristic: row.characteristic,
+                  qty: row.qty,
+                  totqty: row.qty,
+                  totqty1: row.qty,
+                  price: orow.price_internal,
+                  amount: orow.amount_internal,
+                  amount_marged: orow.amount_internal,
+                });
+                this.add_sprow({
+                  sprow,
+                  row: {
+                    characteristic: {calc_order, empty() {return true;}},
+                    qty: 1,
+                  },
+                  specification,
+                  prows});
               }
-            });
+            }
 
             // фильтруем результат с учетом разыменования и видов сравнения
             scheme.filter(specification, '', true);
@@ -173,6 +253,35 @@ export default function ($p) {
             // группируем по схеме - сворачиваем результат и сохраняем его в ._rows
             scheme.group_by(specification);
 
+        });
+      }
+    },
+
+    calculate_root: {
+      value(ox, elm) {
+        const {calc_order_row: row} = ox;
+        const {specification, scheme} = this;
+        const prows = new Map();
+        this.clear_spec();
+
+        if(Array.isArray(elm)) {
+          for(const sprow of ox.specification) {
+            if(elm.includes(sprow.elm)) {
+              this.add_sprow({sprow, row, specification, prows});
+            }
+          }
+        }
+        else {
+          for(const sprow of ox.specification) {
+            if(!elm || sprow.elm === elm) {
+              this.add_sprow({sprow, row, specification, prows});
+            }
+          }
+        }
+
+        return utils.sleep().then(() => {
+          scheme.filter(specification, '', true);
+          scheme.group_by(specification);
         });
       }
     },
@@ -187,7 +296,7 @@ export default function ($p) {
 
         let pdoc;
 
-        if(!row._id && !row.ref) {
+        if(!row || (!row._id && !row.ref)) {
           if(this.calc_order.empty()) {
             return;
           }
@@ -216,12 +325,13 @@ export default function ($p) {
             this.calc_order = doc;
             const rows = [];
             for(const row of doc.production) {
-              if(row.characteristic.calc_order === doc || row.nom.cutting_optimization_type.is('РасчетНарезки')) {
+              if(row.characteristic.calc_order === doc || row.characteristic.calc_order.empty()) {
                 rows.push({
                   use: true,
                   nom: row.nom,
                   characteristic: row.characteristic,
                   qty: row.quantity,
+                  elm: row.characteristic.calc_order === doc ? 0 : row.row,
                 });
               }
             }
@@ -230,6 +340,7 @@ export default function ($p) {
           });
       }
     },
+
 
     // ресурсы по умолчанию
     // TODO: сделать признак в метаданных
