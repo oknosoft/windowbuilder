@@ -39,9 +39,15 @@ export const predefined = {
     log_level: 'warn',
     keys: keys21,
   },
-  'brusnika.': {
+  'brusnika.oknosoft.ru:2227': {
     zone: 27,
     host: 'https://brusnika.oknosoft.ru:2227/',
+    keys: keys21,
+    ram_indexer: false,
+  },
+  'brusnika.oknosoft.ru:2210': {
+    zone: 10,
+    host: 'https://brusnika.oknosoft.ru:2210/',
     keys: keys21,
     ram_indexer: false,
   },
