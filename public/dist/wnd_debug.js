@@ -1113,23 +1113,23 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         show_discount();
         break;
 
-      case 'btn_calendar':
-        calendar_new_event();
-        break;
-
       case 'btn_go_connection':
         go_connection();
         break;
 
       case 'btn_history':
-        $p.dp.buyers_order.open_component(wnd, {ref: o.ref, cmd: {hfields: null, db: null}, _mgr}, handlers, 'ObjHistory');
+        $p.dp.buyers_order.open_component(wnd, {
+          ref: o.ref,
+          cmd: {hfields: null, db: null},
+          _mgr
+        }, handlers, 'ObjHistory');
         break;
 
       case 'btn_number':
         const {current_user, ui} = $p;
         const {_manager, obj_delivery_state, number_doc, date} = o;
         const title = `Заказ №${number_doc} от ${moment(date).format(moment._masks.date_time)}`;
-        if(current_user.role_available('ИзменениеТехнологическойНСИ') || current_user.role_available('СогласованиеРасчетовЗаказов')) {
+        if (current_user.role_available('ИзменениеТехнологическойНСИ') || current_user.role_available('СогласованиеРасчетовЗаказов')) {
           ui.dialogs.input_value({
             title,
             text: 'Новый номер',
@@ -1137,14 +1137,14 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             initialValue: number_doc,
           })
             .then((number) => {
-              if(number.length !== 11) {
+              if (number.length !== 11) {
                 throw new Error('Длина номера должна быть 11 символов');
               }
-              if(number !== number_doc) {
+              if (number !== number_doc) {
                 const db = obj_delivery_state == 'Шаблон' ? _manager.adapter.db({cachable: 'ram'}) : _manager.adapter.db(_manager);
                 return db.query('doc/number_doc', {key: [_manager.class_name, date.getFullYear(), number]})
                   .then((res) => {
-                    if(res.rows.length) {
+                    if (res.rows.length) {
                       throw new Error(`Заказ с номером ${number} уже существует в базе за ${date.getFullYear()} год`);
                     }
                     o.number_doc = number;
@@ -1164,7 +1164,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       case 'calc_order':
         clone_calc_order(o);
         break;
-      }
+    }
 
       if(btn_id.startsWith('prn_')) {
         _mgr.print(o, btn_id, wnd);
@@ -1173,13 +1173,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         const formula = $p.cat.formulas.get(btn_id.substr(5));
         formula && formula.execute(o);
       }
-    }
-
-    /**
-     * создаёт событие календаря
-     */
-    function calendar_new_event() {
-      $p.msg.show_not_implemented();
     }
 
     /**
