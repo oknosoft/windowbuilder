@@ -656,6 +656,10 @@ class ToolPen extends ToolElement {
 
     this.hitTest(event);
 
+    if(this.profile.elm_type.is('tearing')) {
+      return;
+    }
+
     const {project, addl_hit} = this;
 
     // елси есть addl_hit - рисуем прототип элемента
@@ -1161,6 +1165,43 @@ class ToolPen extends ToolElement {
     }
   }
 
+  hitTest_tearing({point}) {
+    const tolerance = 16;
+    const {project, _scope} = this;
+
+    this.hitItem = point && project.hitTest(point, {fill:true, stroke:false, curves:false, tolerance });
+    if (this.hitItem?.item?.parent instanceof Editor.Filling) {
+      const rect = new paper.Path.Rectangle({
+        center: point,
+        size: [240, 240],
+        insert: false,
+      });
+      const intersections = this.hitItem.item.getIntersections(rect);
+      if(intersections.length) {
+        this._scope.canvas_cursor('cursor-pen-freehand');
+        this.mode = null;
+        this.path && this.path.remove();
+      }
+      else {
+        this._scope.canvas_cursor('cursor-pen-adjust');
+        this.mode = 'create';
+        this.path && this.path.remove();
+        this.path = new paper.Path.Rectangle({
+          center: point,
+          size: [200, 200],
+          strokeColor: 'grey',
+          strokeWidth: 2,
+          strokeScaling: false,
+        });
+      }
+    }
+    else {
+      this._scope.canvas_cursor('cursor-pen-freehand');
+      this.mode = null;
+      this.path && this.path.remove();
+    }
+  }
+
   hitTest(event) {
 
     this.addl_hit = null;
@@ -1169,15 +1210,18 @@ class ToolPen extends ToolElement {
     const {elm_types} = $p.enm;
 
     switch (this.profile.elm_type) {
-    case elm_types.Добор:
+    case elm_types.addition:
       this.hitTest_addl(event);
       break;
     case elm_types.Соединитель:
       this.hitTest_connective(event);
       break;
-    case elm_types.Примыкание:
+    case elm_types.adjoining:
       this.hitTest_adj(event);
       break;
+    case elm_types.tearing:
+        this.hitTest_tearing(event);
+        break;
     default:
       const hitSize = 6;
 
