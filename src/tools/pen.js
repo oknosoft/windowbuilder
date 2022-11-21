@@ -478,8 +478,8 @@ class ToolPen extends ToolElement {
     const {_scope, addl_hit, profile, project, group} = this;
     const {
       enm: {elm_types},
-      EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, ProfileCut, ProfileAdjoining, Profile, ProfileItem, Filling}
-    } = $p;
+      EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, ProfileCut, ProfileAdjoining,
+        Profile, ProfileItem, Filling, Contour}} = $p;
 
     group && group.removeChildren();
 
@@ -573,6 +573,21 @@ class ToolPen extends ToolElement {
       case elm_types.Сечение:
         // рисуем линию
         this.last_profile = new ProfileCut({generatrix: this.path, proto: profile});
+        break;
+
+      case elm_types.tearing:
+        // рисуем разрыв заполнения
+        const tearing = Contour.create({
+          kind: 4,
+          parent: this.hitItem.item.layer,
+          project,
+        });
+        tearing.initialize({
+          parent: this.hitItem.item.parent,
+          inset: profile.inset,
+          clr: profile.clr,
+          path: this.path,
+        });
         break;
 
       default:
@@ -1244,8 +1259,6 @@ class ToolPen extends ToolElement {
 
     return true;
   }
-
-
 
   /**
    * ### Добавление типовой формы
