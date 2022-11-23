@@ -588,6 +588,7 @@ class ToolPen extends ToolElement {
           clr: profile.clr,
           path: this.path,
         });
+        this.path.remove();
         break;
 
       default:
@@ -1421,60 +1422,60 @@ class ToolPen extends ToolElement {
       });
   }
 
-    /**
-     * Рисует circle1
-     * @param bounds
-     */
-    add_circle1(bounds) {
-      const {ui, enm, dp} = $p;
-      ui.dialogs.input_value({
-        title: 'Круг из двух сегментов',
-        text: 'Уточните радиус',
-        type: 'number',
-        initialValue: 500,
-      })
-        .then((r) => {
-          const d = 2 * r;
-          const dy = 10;
-          // находим укорочение
-          const vertor = new paper.Point([r, dy]);
-          vertor.length = r;
-          const h = r - vertor.x;
-          // находим правую нижнюю точку
-          const base = bounds.bottomRight;
-          const point = base.add([0, h]);
-          const profiles = this.add_sequence([
-            [point, point.add([d, 0])],
-            [point.add([d, 0]), point]
-          ]);
-          profiles[0].arc_h = r + dy;
-          profiles[1].arc_h = r - dy;
+  /**
+   * Рисует circle1
+   * @param bounds
+   */
+  add_circle1(bounds) {
+    const {ui, enm, dp} = $p;
+    ui.dialogs.input_value({
+      title: 'Круг из двух сегментов',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        const d = 2 * r;
+        const dy = 10;
+        // находим укорочение
+        const vertor = new paper.Point([r, dy]);
+        vertor.length = r;
+        const h = r - vertor.x;
+        // находим правую нижнюю точку
+        const base = bounds.bottomRight;
+        const point = base.add([0, h]);
+        const profiles = this.add_sequence([
+          [point, point.add([d, 0])],
+          [point.add([d, 0]), point]
+        ]);
+        profiles[0].arc_h = r + dy;
+        profiles[1].arc_h = r - dy;
 
-          const {profile, project, _scope} = this;
-          profile.elm_type = enm.elm_types.impost;
-          dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
+        const {profile, project, _scope} = this;
+        profile.elm_type = enm.elm_types.impost;
+        dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
 
-          project.register_change(true, () => {
-            const impost = new Editor.Profile({
-              generatrix: new paper.Path({
-                strokeColor: 'black',
-                segments: [base.add([0, -dy]), base.add([d, -dy])],
-              }),
-              proto: profile,
-            });
-            project.deselectAll();
-            project.zoom_fit();
-            _scope.select_tool('select_node');
-            setTimeout(() => {
-              project.register_change(true, () => {
-                impost.selected = true;
-                project.move_points(new paper.Point(0, -1));
-                project.move_points(new paper.Point(0, 1));
-              });
-            }, 50);
+        project.register_change(true, () => {
+          const impost = new Editor.Profile({
+            generatrix: new paper.Path({
+              strokeColor: 'black',
+              segments: [base.add([0, -dy]), base.add([d, -dy])],
+            }),
+            proto: profile,
           });
+          project.deselectAll();
+          project.zoom_fit();
+          _scope.select_tool('select_node');
+          setTimeout(() => {
+            project.register_change(true, () => {
+              impost.selected = true;
+              project.move_points(new paper.Point(0, -1));
+              project.move_points(new paper.Point(0, 1));
+            });
+          }, 50);
         });
-    }
+      });
+  }
 
   /**
    * Рисует arc1

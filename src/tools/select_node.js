@@ -406,6 +406,15 @@ class ToolSelectNode extends ToolElement {
     const step = modifiers.shift ? 1 : 10;
     let j, segment, index, point, handle;
 
+    function move(point) {
+      if(project.activeLayer?.kind === 4 && project.selectedItems.some((path) => path instanceof Editor.Filling)) {
+        project.activeLayer.move(point);
+      }
+      else{
+        project.move_points(point);
+      }
+    }
+
     if ('NumpadAdd,Insert'.includes(code)) {
 
       for(let path of project.selectedItems){
@@ -581,16 +590,16 @@ class ToolSelectNode extends ToolElement {
 
     }
     else if (code === 'ArrowLeft') {
-      project.move_points(new paper.Point(-step, 0));
+      move(new paper.Point(-step, 0));
     }
     else if (code === 'ArrowRight') {
-      project.move_points(new paper.Point(step, 0));
+      move(new paper.Point(step, 0));
     }
     else if (code === 'ArrowUp') {
-      project.move_points(new paper.Point(0, -step));
+      move(new paper.Point(0, -step));
     }
     else if (code === 'ArrowDown') {
-      project.move_points(new paper.Point(0, step));
+      move(new paper.Point(0, step));
     }
     else if (code === 'KeyV') {
       project.zoom_fit();
