@@ -792,10 +792,10 @@ class ToolLayImpost extends ToolElement {
 
   choice_links_clr() {
 
-    const {profile, sys, elm_type_clrs} = this;
+    const {profile, project, sys, elm_type_clrs} = this;
 
     // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'));
+    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), profile, project);
 
     profile._metadata('clr').choice_params.push({
       name: 'ref',

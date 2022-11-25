@@ -420,7 +420,7 @@ class SchemeProps {
     this._obj = _obj;
 
     // корректируем метаданные поля выбора цвета
-    $p.cat.clrs.selection_exclude_service($p.dp.buyers_order.metadata("clr"), _obj);
+    $p.cat.clrs.selection_exclude_service($p.dp.buyers_order.metadata("clr"), _obj, this.editor.project);
 
     this._grid && this._grid.destructor && this._grid.destructor();
 

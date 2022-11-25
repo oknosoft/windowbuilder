@@ -122,7 +122,7 @@ export default function ($p) {
         if(row) {
           params.selection = {elm: row.obj.row};
           if(!row.obj.inset.empty()) {
-            $p.cat.clrs.selection_exclude_service(meta_production.clr, row.obj.inset);
+            $p.cat.clrs.selection_exclude_service(meta_production.clr, row.obj.inset, paper.project);
           }
         }
       }

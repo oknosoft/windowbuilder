@@ -22,7 +22,7 @@ class GlassLayerProps extends React.Component {
     const _obj = elm.region(row);
     const {fields} = _obj._metadata;
     const {clr} = fields;
-    $p.cat.clrs.selection_exclude_service(clr, inset);
+    $p.cat.clrs.selection_exclude_service(clr, inset, elm.ox);
     const content = [<PropField fullWidth key={`clr-${inset.ref}-${row.row}`} _obj={_obj} _fld="clr" _meta={clr} empty_text="Авто"/>];
     for (const prm of inset.used_params()) {
       const {ref} = prm;

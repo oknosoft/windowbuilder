@@ -13,7 +13,7 @@ export default function ProductProps(props) {
   const elm = new constructor.FakePrmElm(project);
 
   // корректируем метаданные поля выбора цвета
-  const clr_group = $p.cat.clrs.selection_exclude_service(_dp._metadata('clr'), _dp);
+  const clr_group = $p.cat.clrs.selection_exclude_service(_dp._metadata('clr'), _dp, project);
 
   return <>
     <RootToolbar project={project} ox={ox} _dp={_dp} />

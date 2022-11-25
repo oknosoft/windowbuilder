@@ -429,7 +429,7 @@ class SchemeProps {
     this._obj = _obj;
 
     // корректируем метаданные поля выбора цвета
-    $p.cat.clrs.selection_exclude_service($p.dp.buyers_order.metadata("clr"), _obj);
+    $p.cat.clrs.selection_exclude_service($p.dp.buyers_order.metadata("clr"), _obj, this.editor.project);
 
     this._grid && this._grid.destructor && this._grid.destructor();
 
@@ -856,6 +856,7 @@ class EditorAccordion {
 class AdditionalInserts {
 
   constructor(cnstr, project, cell) {
+    this.project = project;
     this.create_wnd(cnstr, project, cell);
   }
 
@@ -997,7 +998,7 @@ class AdditionalInserts {
       if(row && !row.obj.inset.empty()){
         const {inset, _owner} = row.obj;
         _owner._owner.add_inset_params(inset, params.selection.cnstr);
-        $p.cat.clrs.selection_exclude_service(this._fields.clr, inset);
+        $p.cat.clrs.selection_exclude_service(this._fields.clr, inset, this.project);
       }
     }
   }
@@ -5046,10 +5047,10 @@ class ToolLayImpost extends ToolElement {
 
   choice_links_clr() {
 
-    const {profile, sys, elm_type_clrs} = this;
+    const {profile, project, sys, elm_type_clrs} = this;
 
     // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'));
+    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), profile, project);
 
     profile._metadata('clr').choice_params.push({
       name: 'ref',
@@ -5993,7 +5994,7 @@ class ToolPen extends ToolElement {
     }];
 
     // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this);
+    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this, project);
 
     this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
     this._grid = this.wnd.attachHeadFields({
