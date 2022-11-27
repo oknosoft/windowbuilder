@@ -1,3 +1,5 @@
+// кнопка заполнения по цепочке
+
 import React from 'react';
 import PropTypes from 'prop-types';
 import Tip from 'metadata-react/App/Tip';

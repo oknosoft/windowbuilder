@@ -4,12 +4,12 @@ import Toolbar from '@material-ui/core/Toolbar';
 import BorderHorizontalIcon from '@material-ui/icons/BorderHorizontal';
 import BorderVerticalIcon from '@material-ui/icons/BorderVertical';
 import OpenWithIcon from '@material-ui/icons/OpenWith';
+import AddBoxIcon from '@material-ui/icons/AddBox';
 import Tip from 'metadata-react/App/Tip';
 import InfoButton from 'metadata-react/App/InfoButton';
 import SmallButton from '../../Toolbar/IconButton';
 import IconButton from '@material-ui/core/IconButton';
 import GoLayer from './GoLayer';
-import AddBoxIcon from '@material-ui/icons/AddBox';
 import {useStyles} from '../../Toolbar/styles';
 
 function addImpost(elm, orienattion) {
@@ -46,21 +46,20 @@ function addImpost(elm, orienattion) {
 
 function GlassToolbar({editor, elm, classes}) {
   const {inset, reflect_grp} = elm;
-
-
+  
   return <Toolbar disableGutters>
-      <Tip title="Вставить Створку ">
-      <SmallButton disabled={false} onClick={() => elm.create_leaf()}>
+    <Tip title="Вставить Створку ">
+      <SmallButton onClick={() => elm.create_leaf()}>
         <AddBoxIcon/>
       </SmallButton>
     </Tip>
     <Tip title="Вставить вертикальный импост">
-      <SmallButton disabled={false} onClick={() => {addImpost(elm, 'vert')}}>
+      <SmallButton onClick={() => {addImpost(elm, 'vert')}}>
         <BorderVerticalIcon/>
       </SmallButton>
     </Tip>
     <Tip title="Вставить горизонтальный импост">
-      <SmallButton disabled={false}  onClick={() => {addImpost(elm, 'hor')}}>
+      <SmallButton onClick={() => {addImpost(elm, 'hor')}}>
         <BorderHorizontalIcon/>
       </SmallButton>
     </Tip>

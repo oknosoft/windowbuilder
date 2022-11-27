@@ -2,7 +2,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
-import TabularSection from 'metadata-react/TabularSection';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import RemoveIcon from '@material-ui/icons/DeleteOutline';
 import ArrowUpIcon from '@material-ui/icons/ArrowUpward';
@@ -10,6 +9,7 @@ import ArrowDownIcon from '@material-ui/icons/ArrowDownward';
 import VerticalAlignBottomIcon from '@material-ui/icons/VerticalAlignBottom';
 import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
+import TabularSection from 'metadata-react/TabularSection';
 import Tip from 'metadata-react/App/Tip';
 import Bar from './Bar';
 import GlassLayerProps from './GlassLayerProps';

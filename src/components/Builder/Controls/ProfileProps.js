@@ -8,7 +8,8 @@ import ElmInsets from './ElmInsets';
 import Coordinates from './Coordinates';
 import LinkedProp from './LinkedProp';
 import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
-import FieldInsetProfile from '../../CatInserts/FieldInsetProfile';
+import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
+import FieldInsetProfile from 'wb-forms/dist/CatInserts/FieldInsetProfile';
 
 export default function ProfileProps(props) {
   const {elm, fields, editor} = props;
@@ -30,12 +31,14 @@ export default function ProfileProps(props) {
 
   const locked = Boolean(elm.locked);
 
+  const clr_group = $p.cat.clrs.selection_exclude_service(fields.clr, elm, elm.ox);
+
   return <>
     <ProfileToolbar {...props} />
     <Bar>{`${elm.elm_type} ${elm.info}`}</Bar>
     <FieldInsetProfile elm={elm} disabled={locked || elm instanceof ProfileSegment}/>
     {locked ? null : <>
-      <PropField _obj={elm} _fld="clr" _meta={fields.clr}/>
+      <FieldClr _obj={elm} _fld="clr" _meta={fields.clr} clr_group={clr_group}/>
       <PropField _obj={elm} _fld="offset" _meta={fields.offset}/>
 
       <Bar>Свойства</Bar>

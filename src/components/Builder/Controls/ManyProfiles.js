@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import PropField from 'metadata-react/DataField/PropField';
-import FieldInsetProfile from '../../CatInserts/FieldInsetProfile';
+import FieldInsetProfile from 'wb-forms/dist/CatInserts/FieldInsetProfile';
 
 export default function ManyProfiles({profiles}) {
   const [elm] = profiles;
