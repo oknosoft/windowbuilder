@@ -393,7 +393,6 @@ class ToolCut extends ToolElement{
       }
     }
     rack2.profile.rays.clear(true);
-    rack2.profile.removeChildren();
     rack2.profile.remove();
 
     cnn = rack1.profile.cnn_point(rack1.point);

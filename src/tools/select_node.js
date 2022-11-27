@@ -555,7 +555,6 @@ class ToolSelectNode extends ToolElement {
         }
         else if(path.parent instanceof Editor.GeneratrixElement){
           if(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment){
-            path.removeChildren();
             path.remove();
           }
           else{
@@ -574,7 +573,6 @@ class ToolSelectNode extends ToolElement {
             // если не было обработки узлов - удаляем элемент
             if(!do_select){
               path = path.parent;
-              path.removeChildren();
               path.remove();
             }
           }

@@ -427,7 +427,6 @@ class ToolPen extends ToolElement {
       this.project.selectedItems.forEach((path) => {
         if(path.parent instanceof Editor.ProfileItem){
           path = path.parent;
-          path.removeChildren();
           path.remove();
         }
       });

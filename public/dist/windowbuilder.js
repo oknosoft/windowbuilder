@@ -4147,7 +4147,6 @@ class ToolCut extends ToolElement{
       }
     }
     rack2.profile.rays.clear(true);
-    rack2.profile.removeChildren();
     rack2.profile.remove();
 
     cnn = rack1.profile.cnn_point(rack1.point);
@@ -6133,7 +6132,6 @@ class ToolPen extends ToolElement {
       this.project.selectedItems.forEach((path) => {
         if(path.parent instanceof Editor.ProfileItem){
           path = path.parent;
-          path.removeChildren();
           path.remove();
         }
       });
@@ -8796,7 +8794,6 @@ class ToolSelectNode extends ToolElement {
         }
         else if(path.parent instanceof Editor.GeneratrixElement){
           if(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment){
-            path.removeChildren();
             path.remove();
           }
           else{
@@ -8815,7 +8812,6 @@ class ToolSelectNode extends ToolElement {
             // если не было обработки узлов - удаляем элемент
             if(!do_select){
               path = path.parent;
-              path.removeChildren();
               path.remove();
             }
           }
