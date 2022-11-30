@@ -40,7 +40,7 @@ export default class ElmInsets extends React.Component {
   tune_meta(elm) {
     const {cat, utils} = $p;
     this._meta = utils._clone(cat.characteristics.metadata('inserts'));
-    const {inserts} = (elm).inset;
+    const {inserts} = elm.inset;
     this._meta.fields.inset.choice_params = inserts.count() ?
       [{name: 'ref', path: inserts.unload_column('inset')}] : [];
   }
@@ -112,7 +112,7 @@ export default class ElmInsets extends React.Component {
     }
 
     return <>
-      <Bar>Вложенные вставки</Bar>
+      <Bar>{elm.elm > 0 ? 'Вложенные вставки' : `Вставки в ${elm.info}`}</Bar>
       <Toolbar disableGutters variant="dense">
         <IconButton key="btn_add" title="Добавить вставку" onClick={this.handleAdd}><AddIcon /></IconButton>
         <IconButton key="btn_del" title="Удалить строку" onClick={this.handleRemove}><RemoveIcon /></IconButton>

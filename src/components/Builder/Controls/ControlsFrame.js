@@ -110,6 +110,10 @@ class ControlsFrame extends React.Component {
     }
     else {
       other.ox = project ? project.ox : null;
+      if(!other.ox || other.ox.empty()) {
+        return 'Загрузка...';
+      }
+
       const {Filling} = $p.EditorInvisible;
 
       switch (type) {
@@ -133,7 +137,7 @@ class ControlsFrame extends React.Component {
         break;
       case 'ins':
         if(!other.elm) {
-          other.elm = new project.constructor.FakePrmElm(project);
+          other.elm = new project.constructor.FakePrmElm(other.layer);
         }
         panel = <ElmInsets {...other}/>;
         break;

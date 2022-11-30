@@ -73,6 +73,12 @@ export const predefined = {
     log_level: 'warn',
     keys: {google: ''},
   },
+  'localhost:2210': {
+    zone: 10,
+    splash: {css: 'splash21', title: false},
+    log_level: 'warn',
+    keys: {google: ''},
+  },
   'localhost:3030': {
     zone: 23,
     log_level: 'warn',

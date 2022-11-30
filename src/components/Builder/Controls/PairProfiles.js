@@ -5,6 +5,7 @@ import Typography from '@material-ui/core/Typography';
 import PairToolbar from './Toolbar/PairToolbar';
 import PropField from 'metadata-react/DataField/PropField';
 import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
+import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
 
 function nearest(elm1, elm2, ProfileVirtual) {
   const nelm = elm1.nearest();
@@ -38,10 +39,12 @@ export default function PairProps(props) {
   // для примыкающих, проверяем применимость
   const err1 = nearest1 && elm1.cnn3?.empty?.();
   const err2 = nearest2 && elm2.cnn3?.empty?.();
+  const clr_group = $p.cat.clrs.selection_exclude_service(fields.clr, elm1, elm1.ox);
   return <>
     <PairToolbar {...props} />
     <PropField _obj={elm1} _fld="inset" _meta={_meta1} read_only={elm1_filling}/>
     <PropField _obj={elm2} _fld="inset" _meta={_meta2} read_only={elm2_filling}/>
+    <FieldClr _obj={elm1} _fld="clr" _meta={fields.clr} clr_group={clr_group}/>
     {has_b1 ? <FieldEndConnection elm1={elm1} elm2={elm2} node="b" fields={fields} /> : null}
     {has_e1 ? <FieldEndConnection elm1={elm1} elm2={elm2} node="e" fields={fields} /> : null}
     {has_b2 ? <FieldEndConnection elm1={elm2} elm2={elm1} node="b" fields={fields} /> : null}
