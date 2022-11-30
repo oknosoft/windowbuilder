@@ -919,7 +919,11 @@ class Editor extends $p.EditorInvisible {
     if(!layer) {
       layer = this.project.activeLayer;
     }
-    if(layer) {
+    if(!(layer instanceof paper.Layer) && layer.layer) {
+      layer.layer.activate();
+      layer = layer.layer;
+    }
+    if(layer instanceof paper.Layer) {
       return this.fragment_spec({
         elm: -layer.cnstr,
         ox: layer.prod_ox,
