@@ -629,9 +629,7 @@ class EditorAccordion {
           const fillings = _editor.project.getItems({class: Editor.Filling, selected: true});
           if(fillings.length) {
             if(name === 'nested_layer') {
-               // _editor.project.save_coordinates({save: true})
-               //   .then(() => ui.dialogs.templates_nested())
-             ui.dialogs.templates_nested()
+              ui.dialogs.templates_nested()
                 .then((selected) => {
                   if(selected === true) {
                     const {cat: {templates}, job_prm} = $p;
@@ -5223,7 +5221,7 @@ class ToolLayImpost extends ToolElement {
 
     this.paths.forEach((p) => {
 
-      let iter = 0, angle, proto = {clr: profile.clr};
+      let iter = 0, angle, proto = {clr: profile.clr, elm_type: profile.elm_type};
 
       function do_bind() {
 

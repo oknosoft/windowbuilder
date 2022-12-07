@@ -965,7 +965,7 @@ class ToolLayImpost extends ToolElement {
 
     this.paths.forEach((p) => {
 
-      let iter = 0, angle, proto = {clr: profile.clr};
+      let iter = 0, angle, proto = {clr: profile.clr, elm_type: profile.elm_type};
 
       function do_bind() {
 
