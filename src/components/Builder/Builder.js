@@ -19,12 +19,12 @@ class Builder extends DhtmlxCell {
       this._editor.eve.emit('react', tab === 'tool');
       return true;
     });
-    const root = ReactDOM.createRoot(this._editor._acc._tool.cell);
-    root.render(<ToolWnd editor={this._editor}/>);
+    this._root = ReactDOM.createRoot(this._editor._acc._tool.cell);
+    this._root.render(<ToolWnd editor={this._editor}/>);
   }
 
   componentWillUnmount() {
-    const {cell, _editor} = this;
+    const {cell, _editor, _root} = this;
     if(_editor){
       const {ox} = _editor.project;
       const {calc_order} = ox;
@@ -38,8 +38,9 @@ class Builder extends DhtmlxCell {
       if(ox._modified && calc_order._modified) {
         calc_order._data._reload = true;
       }
-
     }
+    _root?.unmount?.();
+    this._root = null;
     cell.detachObject(true);
     super.componentWillUnmount();
   }

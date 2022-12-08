@@ -45,9 +45,9 @@
     "metadata-superlogin": "2.0.31-beta.1",
     "react-highlight-words": "^0.18",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#83bd771832526786401071493ffd0e4585d341cf",
+    "wb-core": "github:oknosoft/windowbuilder-core#ad014260fd1e8793bf49236383fb42e414155f99",
     "wb-cutting": "github:oknosoft/genetic-cutting#da74a4a12254f351c1364e86bbf0c0454550701d",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#04bc02635b86d288cec7ca6d387a2c5779ee97e4"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#be1f7346f6dace9a7d09d2771d23c85bf8bb28d6"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
