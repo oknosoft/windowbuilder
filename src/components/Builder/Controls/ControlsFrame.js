@@ -35,6 +35,7 @@ class ControlsFrame extends React.Component {
       scheme_changed: this.scheme_changed,
       loaded: this.scheme_changed,
       set_inset: this.set_inset,
+      elm_removed: this.elm_removed,
       coordinates_calculated: this.coordinates_calculated,
     });
     project._dp._manager.on('update', this.dp_listener);
@@ -51,6 +52,7 @@ class ControlsFrame extends React.Component {
       scheme_changed: this.scheme_changed,
       loaded: this.scheme_changed,
       set_inset: this.set_inset,
+      elm_removed: this.elm_removed,
       coordinates_calculated: this.coordinates_calculated,
     });
     project && project._dp._manager.off('update', this.dp_listener);
@@ -65,6 +67,11 @@ class ControlsFrame extends React.Component {
   tool_activated = () => {
     this.forceUpdate();
   };
+
+  elm_removed = (elm) => {
+    const {eve, project} = this.props.editor;
+    eve.emit('elm_activated', elm.layer || project);
+  }
 
   // при смене фурнитуры
   furn_changed = () => {
