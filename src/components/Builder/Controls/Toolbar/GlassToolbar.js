@@ -46,7 +46,7 @@ function addImpost(elm, orienattion) {
 
 function GlassToolbar({editor, elm, classes}) {
   const {inset, reflect_grp} = elm;
-  
+
   return <Toolbar disableGutters>
     <Tip title="Вставить Створку ">
       <SmallButton onClick={() => elm.create_leaf()}>
@@ -54,12 +54,12 @@ function GlassToolbar({editor, elm, classes}) {
       </SmallButton>
     </Tip>
     <Tip title="Вставить вертикальный импост">
-      <SmallButton onClick={() => {addImpost(elm, 'vert')}}>
+      <SmallButton onClick={() => addImpost(elm, 'vert')}>
         <BorderVerticalIcon/>
       </SmallButton>
     </Tip>
     <Tip title="Вставить горизонтальный импост">
-      <SmallButton onClick={() => {addImpost(elm, 'hor')}}>
+      <SmallButton onClick={() => addImpost(elm, 'hor')}>
         <BorderHorizontalIcon/>
       </SmallButton>
     </Tip>

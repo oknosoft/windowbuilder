@@ -151,12 +151,18 @@ export default function ($p) {
         // ссылка на заказ
         resrow.calc_order = row.characteristic.calc_order;
 
-        // номер строки изделия в исходном заказе
+        // номер строки изделия и комментарий
         if(!row.characteristic.empty() && !prows.has(row.characteristic)) {
           const {calc_order_row} = row.characteristic;
-          prows.set(row.characteristic, calc_order_row ? calc_order_row.row : 1);
+          const row_desc = {
+            product: calc_order_row ? calc_order_row.row : 1,
+            note: calc_order_row ? calc_order_row.note : '',
+          };
+          prows.set(row.characteristic, row_desc);
         }
-        resrow.product = prows.get(row.characteristic) || 0;
+        const row_desc = prows.get(row.characteristic);
+        resrow.product = row_desc?.product || 0;
+        resrow.note = row_desc?.note || '';
 
         // свойства номенклатуры и группировки
         this.material(resrow);

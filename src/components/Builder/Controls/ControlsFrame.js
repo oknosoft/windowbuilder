@@ -71,7 +71,7 @@ class ControlsFrame extends React.Component {
   elm_removed = (elm) => {
     const {eve, project} = this.props.editor;
     eve.emit('elm_activated', elm.layer || project);
-  }
+  };
 
   // при смене фурнитуры
   furn_changed = () => {
