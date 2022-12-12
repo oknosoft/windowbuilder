@@ -3156,7 +3156,11 @@ class ToolElement extends Editor.ToolElement {
   }
 
   on_close(wnd) {
-    wnd && wnd.cell && setTimeout(() => this._scope && this._scope.tools[1].activate());
+    if(wnd) {
+      wnd.wnd_options(this.options.wnd);
+      $p.wsql.save_options('editor', this.options);
+      wnd.cell && setTimeout(() => this._scope && this._scope.tools[1].activate());
+    }
     return true;
   }
 
@@ -4289,7 +4293,7 @@ class ToolLayImpost extends ToolElement {
           height: 420,
           width: 320,
           allow_close: true,
-          region: 'r2',
+          region: 'r1',
         },
       },
       mode: null,
@@ -5022,7 +5026,7 @@ class ToolLayImpost extends ToolElement {
       reattach = true;
     }
     if('inset_by_y' in fields) {
-      const {pair, split_type} = obj.inset_by_y;
+      const {pair, split_type, region} = obj.inset_by_y;
       if(split_type.length) {
         obj.split = split_type[0];
       }
@@ -5030,14 +5034,20 @@ class ToolLayImpost extends ToolElement {
         obj.inset_by_x = pair;
         touchx = false;
       }
+      if(region && !region.empty?.()) {
+        obj.region = region;
+      }
     }
     if(touchx && 'inset_by_x' in fields) {
-      const {pair, split_type} = obj.inset_by_x;
+      const {pair, split_type, region} = obj.inset_by_x;
       if(split_type.length) {
         obj.split = split_type[0];
       }
       if(!pair.empty()) {
         obj.inset_by_y = pair;
+      }
+      if(region && !region.empty?.()) {
+        obj.region = region;
       }
     }
     reattach && _grid && _grid.attach({
