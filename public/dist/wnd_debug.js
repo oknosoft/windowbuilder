@@ -992,8 +992,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         }
       }
 
-      // если вложенное изделие - блокируем все поля
-      else if(row.characteristic.leading_product.calc_order === o) {
+      // если изделие или вложенное изделие или комплектация - блокируем все поля
+      else if(row.characteristic.calc_order === o || row.nom === $p.job_prm.nom.accessories) {
         if(!['discount_percent', 'discount_percent_internal', 'price_internal', 'amount_internal', 'note'].includes(production.columnIds[ind])) {
           production.cells(id, ind).setDisabled(true);
         }
