@@ -39,7 +39,9 @@ class Builder extends DhtmlxCell {
         calc_order._data._reload = true;
       }
     }
-    _root?.unmount?.();
+    setTimeout(() => {
+      _root?.unmount?.();
+    });
     this._root = null;
     cell.detachObject(true);
     super.componentWillUnmount();
