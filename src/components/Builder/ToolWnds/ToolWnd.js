@@ -28,7 +28,6 @@ class ToolWnd extends React.Component {
       layer: null,
       tool: null,
       type: 'root',
-      visible: false,
     };
   }
 
@@ -37,7 +36,6 @@ class ToolWnd extends React.Component {
     eve.on({
       tool_activated: this.tool_activated,
       elm_activated: this.elm_activated,
-      react: this.visible,
     });
   }
 
@@ -46,16 +44,11 @@ class ToolWnd extends React.Component {
     eve.off({
       tool_activated: this.tool_activated,
       elm_activated: this.elm_activated,
-      react: this.visible,
     });
   }
 
   tool_activated = (tool) => {
     this.setState({tool});
-  };
-
-  visible = (visible) => {
-    this.setState({visible});
   };
 
   elm_activated = (elm) => {
@@ -85,12 +78,12 @@ class ToolWnd extends React.Component {
   };
 
   render() {
-    const {props: {editor}, state: {elm, layer, tool, type, visible}} = this;
+    const {props: {editor}, state: {elm, layer, tool, type}} = this;
     const Wnd = (tool && (tool.ToolWnd || tool.constructor.ToolWnd)) || Stub;
     return <Provider store={store}>
       <ThemeProvider theme={theme}>
         <div style={{overflowX: 'hidden', overflowY: 'auto'}}>
-          {visible && <Wnd editor={editor} type={type} elm={elm} layer={layer} tree_select={this.tree_select}/>}
+          <Wnd editor={editor} type={type} elm={elm} layer={layer} tree_select={this.tree_select}/>
         </div>
       </ThemeProvider>
     </Provider>;

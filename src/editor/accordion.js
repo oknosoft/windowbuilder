@@ -515,10 +515,7 @@ class EditorAccordion {
         title: 'Свойства инструмента',
       },
     ];
-    this.tabbar = cell_acc.attachTabbar({
-      arrows_mode: 'auto',
-      tabs: tabs
-    });
+    this.tabbar = cell_acc.attachTabbar({arrows_mode: 'auto', tabs});
 
     const titles = this.tabbar.tabsArea.children[1].firstChild.children;
     tabs.forEach((tab, index) => {
@@ -797,8 +794,8 @@ class EditorAccordion {
     this.props = new SchemeProps(this._prod, _editor);
 
     this._tool = this.tabbar.cells('tool');
+    this._tool.attachObject(document.createElement('div'));
     _editor.eve.on('tool_activated', this.tool_activated.bind(this));
-
 
   }
 

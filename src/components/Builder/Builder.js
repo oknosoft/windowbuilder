@@ -14,13 +14,20 @@ class Builder extends DhtmlxCell {
     super.componentDidMount();
     const {cell, handlers} = this;
     this._editor = new $p.Editor(cell, handlers);
+    this._editor.eve.on('unload', () => {
+      const {_root} = this;
+      if(_root) {
+        _root.unmount();
+        this._root = null;
+      }
+    });
     const {_acc} = this._editor;
-    _acc.tabbar.attachEvent('onSelect', (tab) => {
-      this._editor.eve.emit('react', tab === 'tool');
+    _acc.tabbar.attachEvent('onSelect', (tab, lastTab) => {
+      if(tab !== lastTab) {
+        this.createRoot({tab, cell: _acc.tabbar.cells(tab).cell.firstChild});
+      }
       return true;
     });
-    this._root = ReactDOM.createRoot(this._editor._acc._tool.cell);
-    this._root.render(<ToolWnd editor={this._editor}/>);
   }
 
   componentWillUnmount() {
@@ -39,12 +46,26 @@ class Builder extends DhtmlxCell {
         calc_order._data._reload = true;
       }
     }
-    setTimeout(() => {
-      _root?.unmount?.();
-    });
+    if(_root) {
+      setTimeout(() => {
+        _root?.unmount?.();
+      });
+    }
     this._root = null;
     cell.detachObject(true);
     super.componentWillUnmount();
+  }
+
+  createRoot({tab, cell}) {
+    const {_editor, _root} = this;
+    if(_root) {
+      _root.unmount();
+      this._root = null;
+    }
+    if(tab === 'tool') {
+      this._root = ReactDOM.createRoot(cell);
+      this._root.render(<ToolWnd editor={_editor}/>);
+    }
   }
 
   /**

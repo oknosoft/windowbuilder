@@ -524,10 +524,7 @@ class EditorAccordion {
         title: 'Свойства инструмента',
       },
     ];
-    this.tabbar = cell_acc.attachTabbar({
-      arrows_mode: 'auto',
-      tabs: tabs
-    });
+    this.tabbar = cell_acc.attachTabbar({arrows_mode: 'auto', tabs});
 
     const titles = this.tabbar.tabsArea.children[1].firstChild.children;
     tabs.forEach((tab, index) => {
@@ -806,8 +803,8 @@ class EditorAccordion {
     this.props = new SchemeProps(this._prod, _editor);
 
     this._tool = this.tabbar.cells('tool');
+    this._tool.attachObject(document.createElement('div'));
     _editor.eve.on('tool_activated', this.tool_activated.bind(this));
-
 
   }
 
@@ -2403,9 +2400,10 @@ class Editor extends $p.EditorInvisible {
   }
 
   close(ox, calc_order) {
-    const {project} = this;
+    const {project, eve} = this;
     let path = '/';
     if(project) {
+      eve.emit('unload', this);
       project.getItems({class: Editor.DimensionLine}).forEach((el) => el.wnd && el.wnd.close());
       if(!ox) {
         ox = project.ox;
@@ -2417,7 +2415,7 @@ class Editor extends $p.EditorInvisible {
       if(calc_order && !calc_order.empty()){
         path += `${calc_order.class_name}/${calc_order.ref}`;
         if(ox && !ox.empty()){
-          path += `/?ref=${ox.ref}`
+          path += `/?ref=${ox.ref}`;
         }
       }
     }

@@ -1248,9 +1248,10 @@ class Editor extends $p.EditorInvisible {
   }
 
   close(ox, calc_order) {
-    const {project} = this;
+    const {project, eve} = this;
     let path = '/';
     if(project) {
+      eve.emit('unload', this);
       project.getItems({class: Editor.DimensionLine}).forEach((el) => el.wnd && el.wnd.close());
       if(!ox) {
         ox = project.ox;
@@ -1262,7 +1263,7 @@ class Editor extends $p.EditorInvisible {
       if(calc_order && !calc_order.empty()){
         path += `${calc_order.class_name}/${calc_order.ref}`;
         if(ox && !ox.empty()){
-          path += `/?ref=${ox.ref}`
+          path += `/?ref=${ox.ref}`;
         }
       }
     }
