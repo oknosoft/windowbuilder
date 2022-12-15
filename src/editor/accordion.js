@@ -81,18 +81,18 @@ class SchemeLayers {
       // если выделено несколько створок, переносим выделение на раму
       const layers = [];
       const {project} = this.editor;
-      for(const elm of project.getSelectedItems()) {
-        elm.layer instanceof Editor.Contour && layers.indexOf(elm.layer) === -1 && layers.push(elm.layer);
+      for(const item of project.getSelectedItems()) {
+        item.layer instanceof Editor.Contour && layers.indexOf(item.layer) === -1 && layers.push(item.layer);
       }
       if(layers.length > 1) {
         const parents = [];
-        for(const elm of layers) {
-          let parent = elm.parent;
+        for(const item of layers) {
+          let parent = item.parent;
           while (parent && parent.parent) {
             parent = parent.parent;
           }
           if(!parent) {
-            parent = elm;
+            parent = item;
           }
           contour = parent;
           break;
@@ -528,60 +528,61 @@ class EditorAccordion {
      * ячейка для размещения свойств элемента
      */
     this.elm = this.tabbar.cells('elm');
-    this.elm._toolbar = this.elm.attachToolbar();
-    this.elm._otoolbar = new iface.OTooolBar({
-      wrapper: this.elm.cell,
-      width: '100%',
-      height: '28px',
-      top: '6px',
-      left: '4px',
-      class_name: '',
-      name: 'aling_bottom',
-      buttons: [
-        {name: 'left', css: 'tb_align_left', tooltip: msg.align_node_left, float: 'left'},
-        {name: 'bottom', css: 'tb_align_bottom', tooltip: msg.align_node_bottom, float: 'left'},
-        {name: 'top', css: 'tb_align_top', tooltip: msg.align_node_top, float: 'left'},
-        {name: 'right', css: 'tb_align_right', tooltip: msg.align_node_right, float: 'left'},
-        {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: msg.align_all, float: 'left'},
-        {name: 'sep_0', text: '', float: 'left'},
-        {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_elm, float: 'left'},
-        {name: 'sep_1', text: '', float: 'left'},
-        {name: 'arc', css: 'tb_cursor-arc-r', tooltip: msg.bld_arc, float: 'left'},
-
-        {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: msg.del_elm, float: 'right', paddingRight: '18px'},
-        {name: 'spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию элемента', float: 'right'},
-      ],
-      image_path: "/imgs/",
-      onclick: (name) => {
-        switch (name) {
-          case 'arc':
-            _editor.profile_radius();
-            break;
-
-          case 'additional_inserts':
-            _editor.additional_inserts('elm');
-            break;
-
-          case 'delete':
-            _editor.project.selectedItems.forEach((path) => {
-              const {parent} = path;
-              if(parent instanceof Editor.ProfileItem){
-                parent.removeChildren();
-                parent.remove();
-              }
-            });
-            break;
-
-        case 'spec':
-          _editor.elm_spec();
-          break;
-
-        default:
-          _editor.profile_align(name);
-        }
-      }
-    });
-    _editor.eve.on('set_inset', this.on_set_inset.bind(this));
+    this.elm.attachObject(document.createElement('div'));
+    // this.elm._toolbar = this.elm.attachToolbar();
+    // this.elm._otoolbar = new iface.OTooolBar({
+    //   wrapper: this.elm.cell,
+    //   width: '100%',
+    //   height: '28px',
+    //   top: '6px',
+    //   left: '4px',
+    //   class_name: '',
+    //   name: 'aling_bottom',
+    //   buttons: [
+    //     {name: 'left', css: 'tb_align_left', tooltip: msg.align_node_left, float: 'left'},
+    //     {name: 'bottom', css: 'tb_align_bottom', tooltip: msg.align_node_bottom, float: 'left'},
+    //     {name: 'top', css: 'tb_align_top', tooltip: msg.align_node_top, float: 'left'},
+    //     {name: 'right', css: 'tb_align_right', tooltip: msg.align_node_right, float: 'left'},
+    //     {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: msg.align_all, float: 'left'},
+    //     {name: 'sep_0', text: '', float: 'left'},
+    //     {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_elm, float: 'left'},
+    //     {name: 'sep_1', text: '', float: 'left'},
+    //     {name: 'arc', css: 'tb_cursor-arc-r', tooltip: msg.bld_arc, float: 'left'},
+    //
+    //     {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: msg.del_elm, float: 'right', paddingRight: '18px'},
+    //     {name: 'spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию элемента', float: 'right'},
+    //   ],
+    //   image_path: "/imgs/",
+    //   onclick: (name) => {
+    //     switch (name) {
+    //       case 'arc':
+    //         _editor.profile_radius();
+    //         break;
+    //
+    //       case 'additional_inserts':
+    //         _editor.additional_inserts('elm');
+    //         break;
+    //
+    //       case 'delete':
+    //         _editor.project.selectedItems.forEach((path) => {
+    //           const {parent} = path;
+    //           if(parent instanceof Editor.ProfileItem){
+    //             parent.removeChildren();
+    //             parent.remove();
+    //           }
+    //         });
+    //         break;
+    //
+    //     case 'spec':
+    //       _editor.elm_spec();
+    //       break;
+    //
+    //     default:
+    //       _editor.profile_align(name);
+    //     }
+    //   }
+    // });
+    // _editor.eve.on('set_inset', this.on_set_inset.bind(this));
 
     /**
      * слои в аккордионе
@@ -687,7 +688,7 @@ class EditorAccordion {
     });
 
     this.tree_layers = new SchemeLayers(this._layers, (text) => {
-      this._stv._toolbar.setItemText("info", text);
+      //this._stv._toolbar.setItemText("info", text);
       _editor.additional_inserts('contour', this.tree_layers.layout.cells('b'));
     }, _editor);
 
@@ -695,103 +696,105 @@ class EditorAccordion {
      * свойства створки
      */
     this._stv = this.tabbar.cells('stv');
-    this._stv._toolbar = this._stv.attachToolbar({
-      items:[
-        {id: "info", type: "text", text: ""},
-      ],
-    });
-    this._stv._otoolbar = new iface.OTooolBar({
-      wrapper: this._stv.cell,
-      width: '100%',
-      height: '28px',
-      top: '6px',
-      left: '4px',
-      class_name: "",
-      name: 'bottom',
-      image_path: '/imgs/',
-      buttons: [
-        {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'},
-        {name: 'spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию фурнитуры', float: 'right'},
-        {name: 'down', text: '<i class="fa fa-arrow-down fa-fw"></i>', tooltip: 'Сдвинуть по Z ниже', float: 'right'},
-        {name: 'up', text: '<i class="fa fa-arrow-up fa-fw"></i>', tooltip: 'Сдвинуть по Z выше', float: 'right'},
-      ], onclick: (name) => {
-
-        switch (name) {
-
-        case 'refill':
-          const {_obj} = this.stv._grid;
-          if(_editor.project._dp.sys.furn_level > _obj.level) {
-            _obj.furn = '';
-          }
-          _obj.furn.refill_prm(_obj);
-          this.stv.reload();
-          break;
-
-        case 'spec':
-          _editor.layer_spec();
-          break;
-
-        case 'up':
-        case 'down':
-          const {activeLayer} = _editor.project;
-          if(activeLayer && activeLayer.bring) {
-            activeLayer.bring(name);
-            activeLayer.activate(true);
-          }
-
-          break;
-
-        default:
-          msg.show_msg(name);
-          break;
-        }
-
-        return false;
-      }
-    });
-    this.stv = new StvProps(this._stv, _editor);
+    this._stv.attachObject(document.createElement('div'));
+    // this._stv._toolbar = this._stv.attachToolbar({
+    //   items:[
+    //     {id: "info", type: "text", text: ""},
+    //   ],
+    // });
+    // this._stv._otoolbar = new iface.OTooolBar({
+    //   wrapper: this._stv.cell,
+    //   width: '100%',
+    //   height: '28px',
+    //   top: '6px',
+    //   left: '4px',
+    //   class_name: "",
+    //   name: 'bottom',
+    //   image_path: '/imgs/',
+    //   buttons: [
+    //     {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'},
+    //     {name: 'spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию фурнитуры', float: 'right'},
+    //     {name: 'down', text: '<i class="fa fa-arrow-down fa-fw"></i>', tooltip: 'Сдвинуть по Z ниже', float: 'right'},
+    //     {name: 'up', text: '<i class="fa fa-arrow-up fa-fw"></i>', tooltip: 'Сдвинуть по Z выше', float: 'right'},
+    //   ], onclick: (name) => {
+    //
+    //     switch (name) {
+    //
+    //     case 'refill':
+    //       const {_obj} = this.stv._grid;
+    //       if(_editor.project._dp.sys.furn_level > _obj.level) {
+    //         _obj.furn = '';
+    //       }
+    //       _obj.furn.refill_prm(_obj);
+    //       this.stv.reload();
+    //       break;
+    //
+    //     case 'spec':
+    //       _editor.layer_spec();
+    //       break;
+    //
+    //     case 'up':
+    //     case 'down':
+    //       const {activeLayer} = _editor.project;
+    //       if(activeLayer && activeLayer.bring) {
+    //         activeLayer.bring(name);
+    //         activeLayer.activate(true);
+    //       }
+    //
+    //       break;
+    //
+    //     default:
+    //       msg.show_msg(name);
+    //       break;
+    //     }
+    //
+    //     return false;
+    //   }
+    // });
+    // this.stv = new StvProps(this._stv, _editor);
 
     /**
      * свойства изделия
      */
     this._prod = this.tabbar.cells('prod');
-    this._prod._toolbar = this._prod.attachToolbar();
-    this._prod._otoolbar = new iface.OTooolBar({
-      wrapper: this._prod.cell,
-      width: '100%',
-      height: '28px',
-      top: '6px',
-      left: '4px',
-      class_name: "",
-      name: 'bottom',
-      image_path: '/imgs/',
-      buttons: [
-        {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_product, float: 'left'},
-        {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
-
-      ], onclick: (name) => {
-
-        switch(name) {
-
-          case 'refill':
-            _editor.project._dp.sys.refill_prm(_editor.project.ox, 0, false, _editor.project);
-            this.props.reload();
-            break;
-
-          case 'inserts_to_product':
-            // дополнительные вставки в изделие
-            _editor.additional_inserts();
-            break;
-
-          default:
-            msg.show_msg(name);
-            break;
-        }
-
-        return false;
-      }
-    });
-    this.props = new SchemeProps(this._prod, _editor);
+    this._prod.attachObject(document.createElement('div'));
+    // this._prod._toolbar = this._prod.attachToolbar();
+    // this._prod._otoolbar = new iface.OTooolBar({
+    //   wrapper: this._prod.cell,
+    //   width: '100%',
+    //   height: '28px',
+    //   top: '6px',
+    //   left: '4px',
+    //   class_name: "",
+    //   name: 'bottom',
+    //   image_path: '/imgs/',
+    //   buttons: [
+    //     {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_product, float: 'left'},
+    //     {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
+    //
+    //   ], onclick: (name) => {
+    //
+    //     switch(name) {
+    //
+    //       case 'refill':
+    //         _editor.project._dp.sys.refill_prm(_editor.project.ox, 0, false, _editor.project);
+    //         this.props.reload();
+    //         break;
+    //
+    //       case 'inserts_to_product':
+    //         // дополнительные вставки в изделие
+    //         _editor.additional_inserts();
+    //         break;
+    //
+    //       default:
+    //         msg.show_msg(name);
+    //         break;
+    //     }
+    //
+    //     return false;
+    //   }
+    // });
+    // this.props = new SchemeProps(this._prod, _editor);
 
     this._tool = this.tabbar.cells('tool');
     this._tool.attachObject(document.createElement('div'));
@@ -805,29 +808,29 @@ class EditorAccordion {
     }
   }
 
-  on_set_inset(elm) {
-    const {_grid} = elm._attr;
-    if(_grid && _grid._obj === elm) {
-      _grid.attach({
-        obj: elm,
-        oxml: elm.oxml
-      });
-    }
-  }
+  // on_set_inset(elm) {
+  //   const {_grid} = elm._attr;
+  //   if(_grid && _grid._obj === elm) {
+  //     _grid.attach({
+  //       obj: elm,
+  //       oxml: elm.oxml
+  //     });
+  //   }
+  // }
 
   attach(obj) {
     this.tree_layers.attach();
-    this.props.attach(obj);
+    //this.props.attach(obj);
   }
 
   unload() {
-    if(this.elm) {
-      this.elm._otoolbar.unload();
+    if(this.tree_layers) {
+      //this.elm._otoolbar.unload();
       this._layers._otoolbar.unload();
-      this._prod._otoolbar.unload();
+      //this._prod._otoolbar.unload();
       this.tree_layers.unload();
-      this.props.unload();
-      this.stv.unload();
+      //this.props.unload();
+      //this.stv.unload();
       this._cell.detachObject(true);
     }
     for(const fld in this){

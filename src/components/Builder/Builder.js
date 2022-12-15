@@ -28,6 +28,9 @@ class Builder extends DhtmlxCell {
       }
       return true;
     });
+    if(_acc.tabbar.getActiveTab() === 'elm') {
+      this.createRoot({tab: 'elm', cell: _acc.tabbar.cells('elm').cell.firstChild});
+    }
   }
 
   componentWillUnmount() {
@@ -65,6 +68,18 @@ class Builder extends DhtmlxCell {
     if(tab === 'tool') {
       this._root = ReactDOM.createRoot(cell);
       this._root.render(<ToolWnd editor={_editor}/>);
+    }
+    else if(tab === 'prod') {
+      this._root = ReactDOM.createRoot(cell);
+      this._root.render(<ToolWnd editor={_editor} fix="root"/>);
+    }
+    else if(tab === 'stv') {
+      this._root = ReactDOM.createRoot(cell);
+      this._root.render(<ToolWnd editor={_editor} fix="layer"/>);
+    }
+    else if(tab === 'elm') {
+      this._root = ReactDOM.createRoot(cell);
+      this._root.render(<ToolWnd editor={_editor} fix="elm"/>);
     }
   }
 
