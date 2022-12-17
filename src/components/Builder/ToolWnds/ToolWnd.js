@@ -126,11 +126,22 @@ class ToolWnd extends React.Component {
   };
 
   render() {
-    const {props: {editor}, state: {elm, layer, tool, type}} = this;
-    const Wnd = (tool && (tool.ToolWnd || tool.constructor.ToolWnd)) || Stub;
+    const {props: {editor, fix}, state: {elm, layer, tool, type}} = this;
+    let Wnd;
+    if(fix) {
+      Wnd = editor.constructor.ToolSelectNode.ToolWnd;
+    }
+    else {
+      Wnd = (tool && (tool.ToolWnd || tool.constructor.ToolWnd)) || Stub;
+    }
     return <Provider store={store}>
       <ThemeProvider theme={theme}>
-        <div style={{overflowX: 'hidden', overflowY: 'auto', height: '100%'}}>
+        <div
+          style={{overflowX: 'hidden', overflowY: 'auto', height: '100%'}}
+          onKeyDown={(event) => {
+            event.stopPropagation();
+          }}
+        >
           <Wnd editor={editor} type={type} elm={elm} layer={layer} tree_select={this.tree_select}/>
         </div>
       </ThemeProvider>

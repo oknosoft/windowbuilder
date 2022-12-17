@@ -44,6 +44,7 @@
     "metadata-redux": "2.0.31-beta.1",
     "metadata-superlogin": "2.0.31-beta.1",
     "react-highlight-words": "^0.18",
+    "react-number-format": "^5.1.2",
     "react-treebeard": "^3.2.4",
     "wb-core": "github:oknosoft/windowbuilder-core#20576be2d8223fcbf90e12c35561f763e90f0e90",
     "wb-cutting": "github:oknosoft/genetic-cutting#da74a4a12254f351c1364e86bbf0c0454550701d",

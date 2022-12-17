@@ -28,9 +28,8 @@ class Builder extends DhtmlxCell {
       }
       return true;
     });
-    if(_acc.tabbar.getActiveTab() === 'elm') {
-      this.createRoot({tab: 'elm', cell: _acc.tabbar.cells('elm').cell.firstChild});
-    }
+    const tab = _acc.tabbar.getActiveTab();
+    this.createRoot({tab, cell: _acc.tabbar.cells(tab).cell.firstChild});
   }
 
   componentWillUnmount() {
@@ -100,11 +99,11 @@ class Builder extends DhtmlxCell {
     const {dialog} = this.props;
     const Dialog = dialog && dialog.ref && dialog.Component;
 
-    return <div>
+    return <>
       <Prompt when message={this.prompt} />
       <div ref={el => this.el = el}/>
       {Dialog && <Dialog handlers={this.handlers} dialog={dialog} owner={this} />}
-    </div>;
+    </>;
   }
 
 }

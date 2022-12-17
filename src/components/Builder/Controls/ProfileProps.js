@@ -39,7 +39,6 @@ export default function ProfileProps(props) {
     <FieldInsetProfile elm={elm} disabled={locked || elm instanceof ProfileSegment}/>
     {locked ? null : <>
       <FieldClr _obj={elm} _fld="clr" _meta={fields.clr} clr_group={clr_group}/>
-      <PropField _obj={elm} _fld="offset" _meta={fields.offset}/>
 
       <Bar>Свойства</Bar>
       <FieldEndConnection elm1={elm} node="b" _fld="cnn1" onClick={select_b}/>

@@ -126,6 +126,7 @@ class ControlsFrame extends React.Component {
 
       switch (type) {
       case 'elm':
+        other.key = elm?.ref || 'null';
         panel = <ElmProps {...other}/>;
         break;
       case 'pair':

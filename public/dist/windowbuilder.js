@@ -1791,7 +1791,12 @@ class Editor extends $p.EditorInvisible {
     const _editor = this;
     const _canvas = document.createElement('canvas'); // собственно, канвас
     _editor._wrapper.appendChild(_canvas);
-    _canvas.style.backgroundColor = "#f9fbfa";
+    _canvas.style.backgroundColor = '#f9fbfa';
+    _canvas.style.outline = 'none';
+    _canvas.contentEditable = true;
+    _canvas.onmousedown = function () {
+      this.focus();
+    };
 
     const _scheme = new $p.EditorInvisible.Scheme(_canvas, _editor);
     const pwnd_resize_finish = () => {
