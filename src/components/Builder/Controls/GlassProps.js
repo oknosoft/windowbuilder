@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
 import GlassToolbar from './Toolbar/GlassToolbar';
 import Bar from './Bar';
+import ElmInsets from './ElmInsets';
 import GlassComposite from './GlassComposite';
 import Coordinates from './Coordinates';
 import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
@@ -123,6 +124,7 @@ export default class GlassProps extends React.Component {
       {is_composite ? <GlassComposite elm={elm} row={row} set_row={this.set_row}/> : null}
 
       <Coordinates elm={elm} fields={fields} read_only />
+      <ElmInsets elm={elm}/>
 
     </>;
   }
