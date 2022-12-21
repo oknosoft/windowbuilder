@@ -15,7 +15,7 @@ let theme = createTheme({
 
   typography: {
     useNextVariants: true,
-    fontSize: 12.6,
+    fontSize: 12.2,
   },
 
   overrides: {
