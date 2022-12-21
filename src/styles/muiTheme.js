@@ -1,8 +1,7 @@
-import {createTheme} from '@material-ui/core/styles';
+import {createTheme, responsiveFontSizes} from '@material-ui/core/styles';
 import teal from '@material-ui/core/colors/blueGrey';
 
-
-const theme = createTheme({
+let theme = createTheme({
 
   palette: {
     primary: teal, // Purple and green play nicely together.
@@ -16,6 +15,7 @@ const theme = createTheme({
 
   typography: {
     useNextVariants: true,
+    fontSize: 12.6,
   },
 
   overrides: {
@@ -36,6 +36,8 @@ const theme = createTheme({
   },
 
 });
+
+//theme = responsiveFontSizes(theme, {});
 
 export default theme;
 

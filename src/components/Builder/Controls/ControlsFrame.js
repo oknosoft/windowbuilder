@@ -96,7 +96,12 @@ class ControlsFrame extends React.Component {
 
   // при пересчете координат
   coordinates_calculated = () => {
-
+    const {project} = this.props.editor;
+    if(project) {
+      const {ox, _dp} = project;
+      $p.utils._mixin(_dp, ox.calc_order_row, ['note', 'price_internal', 'amount', 'amount_internal']);
+      this.forceUpdate();
+    }
   };
 
   // при готовности снапшота, обновляем суммы и цены

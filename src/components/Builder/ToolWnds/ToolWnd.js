@@ -95,7 +95,7 @@ class ToolWnd extends React.Component {
           this.tree_select({type: 'layer', layer: elm, elm: null});
         }
         else {
-          this.tree_select({type: 'layer', layer: elm.layer, elm: null});
+          this.tree_select({type: 'layer', layer: elm?.layer || project?.activeLayer, elm: null});
         }
       }
       return;
