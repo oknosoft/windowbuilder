@@ -11,13 +11,14 @@ const dkey = new Date().toISOString().substr(0, 10);
 export default function () {
   skipWaiting();
 
-  const revision = '20221215';
+  const revision = '20221218';
+  const persistent = '20220000';
 
   precacheAndRoute([
-    {url: '/dist/dhtmlx.min.js', revision: null },
+    {url: '/dist/dhtmlx.min.js', revision: persistent },
     {url: '/dist/windowbuilder.js', revision },
     {url: '/dist/wnd_debug.js', revision },
-    {url: '/dist/paperjs-deep-diff.min.js', revision: null },
+    {url: '/dist/paperjs-deep-diff.min.js', revision: persistent },
     //{url: '/couchdb/mdm/92/common', revision: dkey },
     //{url: '/styles/app.0c9a31.css', revision: null},
   ]);

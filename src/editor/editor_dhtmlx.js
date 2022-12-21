@@ -644,6 +644,18 @@ class Editor extends $p.EditorInvisible {
     };
 
     const _scheme = new $p.EditorInvisible.Scheme(_canvas, _editor);
+    // это свойство для отладки... можно будет удалить
+    Object.defineProperty(_scheme, '_activeLayer', {
+      get() {
+        return this.__activeLayer;
+      },
+      set(v) {
+        if(v && !(v instanceof paper.Layer) && v.layer) {
+          v = v.layer;
+        }
+        this.__activeLayer = v;
+      }
+    });
     const pwnd_resize_finish = () => {
       _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
     };
