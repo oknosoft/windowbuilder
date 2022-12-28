@@ -6,12 +6,12 @@ import {skipWaiting} from 'workbox-core';
 import {precacheAndRoute} from 'workbox-precaching';
 
 // в отладочном режиме, обновляем cache раз в день
-const dkey = new Date().toISOString().substr(0, 10);
+const dkey = new Date().toISOString().substring(0, 10);
 
 export default function () {
   skipWaiting();
 
-  const revision = '20221218';
+  const revision = '20221219';
   const persistent = '20220000';
 
   precacheAndRoute([

@@ -144,6 +144,7 @@ class SchemeLayers {
         cnns: 'Соединители',
         visualization: 'Визуализация доп. элементов',
         txts: 'Комментарии',
+        glass_numbers: 'Номера заполнений',
       };
       for (const prop in props) {
         tree.addItem(prop, props[prop], 0);
