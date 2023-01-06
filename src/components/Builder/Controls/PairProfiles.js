@@ -3,6 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import PairToolbar from './Toolbar/PairToolbar';
+import ProfileToolbar from './Toolbar/ProfileToolbar';
 import PropField from 'metadata-react/DataField/PropField';
 import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
 import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
@@ -41,7 +42,7 @@ export default function PairProps(props) {
   const err2 = nearest2 && elm2.cnn3?.empty?.();
   const clr_group = $p.cat.clrs.selection_exclude_service(fields.clr, elm1, elm1.ox);
   return <>
-    <PairToolbar {...props} />
+    {elm1_profile && elm2_profile ? <ProfileToolbar {...props} /> : <PairToolbar {...props} />}
     <PropField _obj={elm1} _fld="inset" _meta={_meta1} read_only={elm1_filling}/>
     <PropField _obj={elm2} _fld="inset" _meta={_meta2} read_only={elm2_filling}/>
     <FieldClr _obj={elm1} _fld="clr" _meta={fields.clr} clr_group={clr_group}/>

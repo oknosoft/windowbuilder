@@ -1,7 +1,6 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import PropField from 'metadata-react/DataField/PropField';
 import ProfileToolbar from './Toolbar/ProfileToolbar';
 import Bar from './Bar';
 import ElmInsets from './ElmInsets';

@@ -116,6 +116,7 @@
     "webpack-manifest-plugin": "^4.0.2",
     "workbox-webpack-plugin": "^6.4.1"
   },
+  "packageManager": "^yarn@1.22",
   "files": [
     "LICENSE",
     "LICENSE.ru.md"
