@@ -40,9 +40,8 @@ export default class ElmInsets extends React.Component {
   tune_meta(elm) {
     const {cat, utils} = $p;
     this._meta = utils._clone(cat.characteristics.metadata('inserts'));
-    const {inserts} = elm.inset;
-    this._meta.fields.inset.choice_params = inserts.count() ?
-      [{name: 'ref', path: inserts.unload_column('inset')}] : [];
+    const path = elm.inset.offer_insets(elm);
+    this._meta.fields.inset.choice_params = path.length ? [{name: 'ref', path}] : [];
   }
 
   filter = (collection) => {
@@ -61,13 +60,15 @@ export default class ElmInsets extends React.Component {
   };
 
   handleAdd = () => {
-    const {ox, elm, inset} = this.props.elm;
+    const {elm} = this.props;
+    const {ox, elm: cnstr, inset} = elm;
+
     $p.ui.dialogs.input_value({
       title: 'Укажите вставку',
-      list: inset.inserts.unload_column('inset'),
+      list: inset.offer_insets(elm),
     })
       .then((inset) => {
-        const row = ox.inserts.add({cnstr: -elm, inset});
+        const row = ox.inserts.add({cnstr: -cnstr, inset});
         return row;
       })
       .then((row) => {
@@ -105,9 +106,9 @@ export default class ElmInsets extends React.Component {
 
   render() {
 
-    const {props: {elm}, state: {row, inset}} = this;
+    const {props: {elm}, state: {row, inset}, _meta} = this;
 
-    if(!elm.inset.inserts.count()) {
+    if(!_meta.fields.inset.choice_params.length) {
       return null;
     }
 
@@ -122,7 +123,7 @@ export default class ElmInsets extends React.Component {
             <TabularSection
               ref={this.handleRef}
               _obj={elm.ox}
-              _meta={this._meta}
+              _meta={_meta}
               _tabular="inserts"
               scheme={this.scheme}
               filter={this.filter}

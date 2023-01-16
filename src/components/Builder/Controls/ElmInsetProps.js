@@ -42,7 +42,7 @@ class ElmInsetProps extends React.Component {
   }
 
   render() {
-    const {elm, row} = this.props;
+    const {elm, row, inset} = this.props;
     if(!elm || !row) {
       return null;
     }
@@ -71,6 +71,13 @@ class ElmInsetProps extends React.Component {
       for(const param of row.inset.used_params()) {
         const {ref} = param;
         content.push(<LinkedProp key={`prm0-${ref}`} _obj={_obj} _fld={ref} param={param} cnstr={0} inset={row.inset} fields={fields} />);
+      }
+    }
+    else if(elm instanceof Editor.Filling) {
+      const {fields} = elm._metadata;
+      for(const param of row.inset.used_params()) {
+        const {ref} = param;
+        content.push(<LinkedProp key={`prm0-${ref}`} _obj={elm} _fld={ref} param={param} cnstr={-elm.elm} inset={row.inset} fields={fields} />);
       }
     }
     else {
