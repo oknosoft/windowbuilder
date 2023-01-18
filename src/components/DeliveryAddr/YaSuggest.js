@@ -82,7 +82,7 @@ class YaSuggest extends React.Component {
 
   delayedSelect = (exec) => {
     this.delay && clearTimeout(this.delay);
-    if(exec) {
+    if(exec === true) {
       this.handleSelect({originalEvent: {item: this.addr}});
     }
     else {
@@ -92,7 +92,7 @@ class YaSuggest extends React.Component {
 
   onInputKey = (e) => {
     if(e.key === 'Enter' || e.key === 'Tab') {
-      this.delayedSelect();
+      this.handleSelect({originalEvent: {item: this.addr}});
     }
     else if(e.key === 'Escape') {
       e.stopPropagation();
@@ -117,7 +117,7 @@ class YaSuggest extends React.Component {
           value={query}
           onChange={this.onInputChange}
           onKeyDown={this.onInputKey}
-          onBlur={this.delayedSelect}
+          //onBlur={this.delayedSelect}
         />
         <TextField
           margin="dense"
