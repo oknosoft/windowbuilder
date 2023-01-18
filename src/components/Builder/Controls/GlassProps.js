@@ -107,8 +107,7 @@ export default class GlassProps extends React.Component {
     const {info, inset, ox} = elm;
     const props = elm.elm_props();
     const clr_group = $p.cat.clrs.selection_exclude_service(fields.clr, inset, ox);
-    fields.clr.hide_composite = true;
-    const is_composite = inset.insert_type === inset.insert_type._manager.Стеклопакет;
+    const is_composite = inset.insert_type.is('glass');
 
     return <>
       <GlassToolbar {...this.props} elm={elm} />
