@@ -11,11 +11,15 @@ import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import PropField from 'metadata-react/DataField/PropField';
 import FieldNumberNative from 'metadata-react/DataField/FieldNumberNative';
 import FieldCheckbox from 'metadata-react/DataField/FieldCheckbox';
-import useStyles from 'wb-forms/dist/Common/stylesAccordion';
+import useStyles from './stylesAccordion';
 
 export default function Coordinates({elm, fields, read_only, select_b, select_e}) {
-  const {x1, y1, x2, y2} = elm;
+  const {x1, y1, x2, y2, _row} = elm;
   const classes = useStyles();
+  let text = `[${x1}, ${y1}] [${x2}, ${y2}]`;
+  if(!read_only) {
+    text += ` [${_row.alp1.toFixed()}°, ${_row.alp2.toFixed()}°]`;
+  }
 
   return <Accordion square elevation={0} classes={{expanded: classes.rootExpanded}}>
     <AccordionSummary classes={{
@@ -31,7 +35,7 @@ export default function Coordinates({elm, fields, read_only, select_b, select_e}
         <Input
           classes={{root: classes.iroot, input: classes.input}}
           readOnly
-          value={`[${x1}, ${y1}], [${x2}, ${y2}]`}
+          value={text}
           endAdornment={<InputAdornment position="end" classes={{root: classes.input}}>
             <ArrowDropDownIcon />
           </InputAdornment>}

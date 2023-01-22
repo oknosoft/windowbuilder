@@ -75,9 +75,10 @@ class ElmInsetProps extends React.Component {
     }
     else if(elm instanceof Editor.Filling) {
       const {fields} = elm._metadata;
+      const _obj = elm.region(row);
       for(const param of row.inset.used_params()) {
         const {ref} = param;
-        content.push(<LinkedProp key={`prm0-${ref}`} _obj={elm} _fld={ref} param={param} cnstr={-elm.elm} inset={row.inset} fields={fields} />);
+        content.push(<LinkedProp key={`prm0-${ref}`} _obj={_obj} _fld={ref} param={param} cnstr={-elm.elm} inset={row.inset} fields={fields} />);
       }
     }
     else {

@@ -2,6 +2,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
+import Accordion from '@material-ui/core/Accordion';
+import AccordionSummary from '@material-ui/core/AccordionSummary';
+import AccordionDetails from '@material-ui/core/AccordionDetails';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import Input from '@material-ui/core/Input';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import RemoveIcon from '@material-ui/icons/DeleteOutline';
 import ArrowUpIcon from '@material-ui/icons/ArrowUpward';
@@ -11,9 +19,9 @@ import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
 import TabularSection from 'metadata-react/TabularSection';
 import Tip from 'metadata-react/App/Tip';
-import Bar from './Bar';
 import GlassLayerProps from './GlassLayerProps';
 import CompositeChains from './GlassCompositeChains';
+import useStyles from './stylesAccordion';
 
 const reflect = ({project, reflect_grp}) => {
   if(reflect_grp) {
@@ -24,7 +32,44 @@ const reflect = ({project, reflect_grp}) => {
   }
 };
 
-export default class GlassComposite extends React.Component {
+export default function AccordionGlassComposite(props) {
+  const {elm}  = props;
+  const classes = useStyles();
+
+  const [length, set_length] = React.useState(elm.ox.glass_specification.find_rows({elm: elm.elm}).length);
+
+  const update_length = () => {
+    set_length(elm.ox.glass_specification.find_rows({elm: elm.elm}).length);
+  }
+
+  return <Accordion square elevation={0} classes={{expanded: classes.rootExpanded}}>
+    <AccordionSummary classes={{
+      root: classes.summary,
+      content: classes.summaryContent,
+      expanded: classes.summaryExpanded,
+      expandIcon: classes.icon,
+    }}>
+      <FormControl classes={{root: classes.control}}>
+        <InputLabel classes={{shrink: classes.lshrink, formControl: classes.lformControl}}>
+          Состав пакета
+        </InputLabel>
+        <Input
+          classes={{root: classes.iroot, input: classes.input}}
+          readOnly
+          value={`${length} элем.`}
+          endAdornment={<InputAdornment position="end" classes={{root: classes.input}}>
+            <ArrowDropDownIcon />
+          </InputAdornment>}
+        />
+      </FormControl>
+    </AccordionSummary>
+    <AccordionDetails classes={{root: classes.details}}>
+      <GlassComposite {...props} update_length={update_length} length={length}/>
+    </AccordionDetails>
+  </Accordion>
+}
+
+class GlassComposite extends React.Component {
 
   constructor(props, context) {
     super(props, context);
@@ -80,6 +125,7 @@ export default class GlassComposite extends React.Component {
     const {ox, elm} = props.elm;
 
     const row = ox.glass_specification.add({elm});
+    props.update_length();
 
     //selectRow
     if(_grid) {
@@ -94,12 +140,13 @@ export default class GlassComposite extends React.Component {
   };
 
   handleRemove = () => {
-    const {_grid, props: {elm, set_row}} = this;
+    const {_grid, props: {elm, set_row, update_length}} = this;
     if(_grid) {
       const {selected} = _grid.state;
       if(selected && selected.hasOwnProperty('rowIdx')) {
         _grid.handleRemove();
         reflect(elm);
+        update_length();
         if(_grid.rowGetter(0)) {
           setTimeout(() => {
             _grid._grid.selectCell({rowIdx: 0, idx: 0}, false);
@@ -181,12 +228,15 @@ export default class GlassComposite extends React.Component {
 
   render() {
 
-    const {elm, row}  = this.props;
+    const {elm, row, length}  = this.props;
+    let height = 172;
+    if(length > 2) {
+      height += (length -2) * 35;
+    }
 
     return <>
-      <Bar>Составной пакет</Bar>
       {this.scheme ? <>
-        <div style={{height: 320}}>
+        <div style={{height}}>
           <TabularSection
             ref={this.handleRef}
             _obj={elm.ox}

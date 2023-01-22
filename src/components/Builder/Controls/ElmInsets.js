@@ -7,16 +7,73 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
+import Accordion from '@material-ui/core/Accordion';
+import AccordionSummary from '@material-ui/core/AccordionSummary';
+import AccordionDetails from '@material-ui/core/AccordionDetails';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import Input from '@material-ui/core/Input';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import TabularSection from 'metadata-react/TabularSection';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import RemoveIcon from '@material-ui/icons/DeleteOutline';
 import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
-import Bar from './Bar';
 import ElmInsetProps from './ElmInsetProps';
 import RegionEditor from './ElmInsetRegion';
+import useStyles from './stylesAccordion';
 
-export default class ElmInsets extends React.Component {
+function tune_meta(elm) {
+  const {cat, utils} = $p;
+  const _meta = utils._clone(cat.characteristics.metadata('inserts'));
+  const path = elm.inset.offer_insets(elm);
+  _meta.fields.inset.choice_params = path.length ? [{name: 'ref', path}] : [];
+  return _meta;
+}
+
+export default function AccordionElmInsets(props) {
+  const {elm} = props;
+  const classes = useStyles();
+  const _meta = tune_meta(elm);
+
+  if(!_meta.fields.inset.choice_params.length) {
+    return null;
+  }
+
+  const [length, set_length] = React.useState(elm.ox.inserts.find_rows({cnstr: -elm.elm}).length);
+
+  const update_length = () => {
+    set_length(elm.ox.inserts.find_rows({cnstr: -elm.elm}).length);
+  }
+
+  return <Accordion square elevation={0} classes={{expanded: classes.rootExpanded}}>
+    <AccordionSummary classes={{
+      root: classes.summary,
+      content: classes.summaryContent,
+      expanded: classes.summaryExpanded,
+      expandIcon: classes.icon,
+    }}>
+      <FormControl classes={{root: classes.control}}>
+        <InputLabel classes={{shrink: classes.lshrink, formControl: classes.lformControl}}>
+          {elm.elm > 0 ? 'Вложенные вставки' : `Вставки в ${elm.info}`}
+        </InputLabel>
+        <Input
+          classes={{root: classes.iroot, input: classes.input}}
+          readOnly
+          value={length ? `${length} шт.` : 'Не заданы'}
+          endAdornment={<InputAdornment position="end" classes={{root: classes.input}}>
+            <ArrowDropDownIcon />
+          </InputAdornment>}
+        />
+      </FormControl>
+    </AccordionSummary>
+    <AccordionDetails classes={{root: classes.details}}>
+      <ElmInsets {...props} _meta={_meta} update_length={update_length} length={length}/>
+    </AccordionDetails>
+  </Accordion>
+}
+class ElmInsets extends React.Component {
 
   constructor(props, context) {
     super(props, context);
@@ -27,21 +84,6 @@ export default class ElmInsets extends React.Component {
       }
     });
     this.state = {row: null, inset: null};
-    this.tune_meta(props.elm);
-  }
-
-  shouldComponentUpdate(nextProps) {
-    if(nextProps.elm !== this.props.elm) {
-      this.tune_meta(nextProps.elm);
-    }
-    return true;
-  }
-
-  tune_meta(elm) {
-    const {cat, utils} = $p;
-    this._meta = utils._clone(cat.characteristics.metadata('inserts'));
-    const path = elm.inset.offer_insets(elm);
-    this._meta.fields.inset.choice_params = path.length ? [{name: 'ref', path}] : [];
   }
 
   filter = (collection) => {
@@ -60,7 +102,7 @@ export default class ElmInsets extends React.Component {
   };
 
   handleAdd = () => {
-    const {elm} = this.props;
+    const {elm, update_length} = this.props;
     const {ox, elm: cnstr, inset} = elm;
 
     $p.ui.dialogs.input_value({
@@ -75,13 +117,13 @@ export default class ElmInsets extends React.Component {
         if(this._grid) {
           this._grid.cache_actual = false;
         }
-        this.setState({row, inset: row.inset});
+        this.setState({row, inset: row.inset}, update_length);
       });
   };
 
   handleRemove = () => {
     this._grid.handleRemove();
-    this.setState({row: null, inset: null});
+    this.setState({row: null, inset: null}, this.props.update_length);
   };
 
   handleRef = (el) => {
@@ -106,20 +148,19 @@ export default class ElmInsets extends React.Component {
 
   render() {
 
-    const {props: {elm}, state: {row, inset}, _meta} = this;
-
-    if(!_meta.fields.inset.choice_params.length) {
-      return null;
+    const {props: {elm, _meta, length}, state: {row, inset}} = this;
+    let height = 110;
+    if(length > 1) {
+      height = 90 + (length -1) * 35;
     }
 
     return <>
-      <Bar>{elm.elm > 0 ? 'Вложенные вставки' : `Вставки в ${elm.info}`}</Bar>
       <Toolbar disableGutters variant="dense">
         <IconButton key="btn_add" title="Добавить вставку" onClick={this.handleAdd}><AddIcon /></IconButton>
         <IconButton key="btn_del" title="Удалить строку" onClick={this.handleRemove}><RemoveIcon /></IconButton>
       </Toolbar>
       {this.scheme ? <>
-          <div style={{height: 110}}>
+          <div style={{height}}>
             <TabularSection
               ref={this.handleRef}
               _obj={elm.ox}
@@ -148,4 +189,5 @@ export default class ElmInsets extends React.Component {
 
 ElmInsets.propTypes = {
   elm: PropTypes.object.isRequired,
+  update_length: PropTypes.func,
 };
