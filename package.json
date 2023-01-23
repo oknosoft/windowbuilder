@@ -46,7 +46,7 @@
     "react-highlight-words": "^0.18",
     "react-number-format": "^5.1.2",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#8c7879e3e2ef89a115ee2d58cc993028f4d1c415",
+    "wb-core": "github:oknosoft/windowbuilder-core#17ae62e1040fc86236439e2eaeac10506325bb47",
     "wb-cutting": "github:oknosoft/genetic-cutting#da74a4a12254f351c1364e86bbf0c0454550701d",
     "wb-forms": "github:oknosoft/windowbuilder-forms#568729671c4ee0de6247a53c864e912529b25239"
   },
