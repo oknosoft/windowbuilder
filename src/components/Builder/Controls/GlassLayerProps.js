@@ -9,7 +9,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
-import LinkedProp from './LinkedProp';
+import LinkedProp from 'wb-forms/dist/Common/LinkedProp';
 
 class GlassLayerProps extends React.Component {
 

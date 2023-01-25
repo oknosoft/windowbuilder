@@ -5,7 +5,7 @@ import ProfileToolbar from './Toolbar/ProfileToolbar';
 import Bar from './Bar';
 import ElmInsets from './ElmInsets';
 import Coordinates from './Coordinates';
-import LinkedProp from './LinkedProp';
+import LinkedProp from 'wb-forms/dist/Common/LinkedProp';
 import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
 import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
 import FieldInsetProfile from 'wb-forms/dist/CatInserts/FieldInsetProfile';

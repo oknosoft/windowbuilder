@@ -11,14 +11,15 @@ import FieldFlipped from 'wb-forms/dist/CatClrs/FieldFlipped';
 
 export default function LayerProps(props) {
   const {layer, ox} = props;
-  const {blank} = $p.utils;
+  const {utils: {blank}, job_prm: {builder}}  = $p;
+  const cflipped = builder.hide_flipped ? null : <FieldFlipped _obj={layer} />;
   return <>
     <LayerToolbar {...props}/>
     <Bar>{layer.info}</Bar>
     {layer.own_sys ?
       <>
         <PropField _obj={layer} _fld="sys" />
-        <FieldFlipped _obj={layer} />
+        {cflipped}
         <LinkedProps ts={layer.prms} cnstr={layer.cnstr} inset={blank.guid} layer={layer}/>
       </>
       :
@@ -27,12 +28,12 @@ export default function LayerProps(props) {
         <FieldFurn _obj={layer} _fld="furn" fullWidth />
         <PropField _obj={layer} _fld="direction" />
         <PropField _obj={layer} _fld="h_ruch" />
-        <FieldFlipped _obj={layer} />
+        {cflipped}
         <LinkedProps ts={ox.params} cnstr={layer.cnstr} inset={blank.guid} layer={layer}/>
       </>
           :
         <>
-          <FieldFlipped _obj={layer} />
+          {cflipped}
           <Typography>Рамный слой не имеет свойств фурнитуры</Typography>
         </>
       )

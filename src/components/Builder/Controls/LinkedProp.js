@@ -27,7 +27,7 @@ export default function LinkedProp({_obj, _fld='value', param, fields, cnstr, in
     }
   }
 
-  const _meta = Object.assign({}, fields[_fld]);
+  const _meta = $p.utils._clone(fields[_fld]);
   _meta.synonym = param.caption || param.name;
 
   const {types} = param.type;
