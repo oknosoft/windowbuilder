@@ -35,7 +35,6 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
       for(const fld of ['inset', 'furn1', 'furn2']) {
         this._meta.fields[fld].mandatory = true;
       }
-
     }
 
     /**
@@ -142,7 +141,6 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
         }
       });
     }
-
   }
 
   class ToolStulpFlap extends ToolElement {
@@ -157,17 +155,11 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
       });
 
       this.on({
-
         activate: this.on_activate,
-
         deactivate: this.on_deactivate,
-
         mousedown: this.mousedown,
-
         mousemove: this.hitTest,
-
       });
-
     }
 
     on_activate() {
@@ -245,7 +237,10 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
         generatrix: path,
         proto: {inset, clr, parent: layer}
       });
-      project.redraw();
+      layer.redraw();
+      while (project._ch.length) {
+        project.redraw();
+      }
       const {Левое, Правое} = $p.enm.open_directions;
       const flaps = {l: null, r: null};
       // сначала создаём пассивную створку
