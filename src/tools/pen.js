@@ -308,27 +308,30 @@ class ToolPen extends ToolElement {
         tooltip: 'Добавить типовую форму',
         float: 'left',
         sub: {
-          width: '90px',
-          height:'190px',
+          width: '120px',
+          height:'174px',
           buttons: [
             {name: 'square', img: 'square.png', float: 'left'},
             {name: 'triangle1', img: 'triangle1.png', float: 'left'},
-            {name: 'triangle2', img: 'triangle2.png', float: 'right'},
-            {name: 'triangle3', img: 'triangle3.png', float: 'left'},
+            {name: 'triangle2', img: 'triangle2.png', float: 'left'},
+            {name: 'triangle3', img: 'triangle3.png', float: 'right'},
             {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
-            {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
+            {name: 'semicircle2', img: 'semicircle2.png', float: 'left'},
             {name: 'arc1',      img: 'arc1.png', float: 'left'},
-            {name: 'circle',    img: 'circle.png', float: 'left'},
-            {name: 'circle1',   img: 'circle1.png', float: 'right'},
+            {name: 'circle',    img: 'circle.png', float: 'right'},
+            {name: 'circle1',   css: 'tb_circle1', float: 'left'},
+            {name: 'circle2',   css: 'tb_circle2', float: 'left'},
+            {name: 'circle3',   css: 'tb_circle3', float: 'left'},
+            {name: 'circle4',   css: 'tb_circle4', float: 'right'},
             {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
             {name: 'trapeze2',  img: 'trapeze2.png', float: 'left'},
-            {name: 'trapeze3',  img: 'trapeze3.png', float: 'right'},
-            {name: 'trapeze4',  img: 'trapeze4.png', float: 'left'},
+            {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
+            {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
             {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-            {name: 'trapeze6',  img: 'trapeze6.png', float: 'right'},
+            {name: 'trapeze6',  img: 'trapeze6.png', float: 'left'},
             {name: 'trapeze7',  img: 'trapeze7.png', float: 'left'},
-            {name: 'trapeze8',  img: 'trapeze8.png', float: 'left'},
-            {name: 'trapeze9',  img: 'trapeze9.png', float: 'right'},
+            {name: 'trapeze8',  img: 'trapeze8.png', float: 'right'},
+            {name: 'trapeze9',  img: 'trapeze9.png', float: 'left'},
             {name: 'trapeze10', img: 'trapeze10.png', float: 'left'},
           ]},
       }],
@@ -1425,7 +1428,7 @@ class ToolPen extends ToolElement {
    * Рисует circle1
    * @param bounds
    */
-  add_circle1(bounds) {
+  add_circle1(bounds, sign = 1) {
     const {ui, enm, dp} = $p;
     ui.dialogs.input_value({
       title: 'Круг из двух сегментов',
@@ -1435,20 +1438,23 @@ class ToolPen extends ToolElement {
     })
       .then((r) => {
         const d = 2 * r;
-        const dy = 10;
+        const delta = 10 * sign;
         // находим укорочение
-        const vertor = new paper.Point([r, dy]);
+        const vertor = new paper.Point([r, delta]);
         vertor.length = r;
-        const h = r - vertor.x;
+
         // находим правую нижнюю точку
         const base = bounds.bottomRight;
+        const h = r - vertor.x;
         const point = base.add([0, h]);
-        const profiles = this.add_sequence([
-          [point, point.add([d, 0])],
-          [point.add([d, 0]), point]
-        ]);
-        profiles[0].arc_h = r + dy;
-        profiles[1].arc_h = r - dy;
+        const profiles = this.add_sequence(sign > 0 ?
+          [[point, point.add([d, 0])], [point.add([d, 0]), point]] :
+          [[point.add([d, 0]), point], [point, point.add([d, 0])]]);
+        const segments = sign > 0 ?
+          [base.add([d, -delta]), base.add([0, -delta])] :
+          [base.add([0, -delta]), base.add([d, -delta])];
+        profiles[0].arc_h = r + sign * delta;
+        profiles[1].arc_h = r - sign * delta;
 
         const {profile, project, _scope} = this;
         profile.elm_type = enm.elm_types.impost;
@@ -1458,7 +1464,7 @@ class ToolPen extends ToolElement {
           const impost = new Editor.Profile({
             generatrix: new paper.Path({
               strokeColor: 'black',
-              segments: [base.add([0, -dy]), base.add([d, -dy])],
+              segments,
             }),
             proto: profile,
           });
@@ -1468,12 +1474,28 @@ class ToolPen extends ToolElement {
           setTimeout(() => {
             project.register_change(true, () => {
               impost.selected = true;
-              project.move_points(new paper.Point(0, -1));
-              project.move_points(new paper.Point(0, 1));
+              project.move_points(new paper.Point([0, sign]).negate());
+              project.move_points(new paper.Point([0, sign]));
             });
           }, 50);
         });
       });
+  }
+
+  add_circle2(bounds) {
+    $p.ui.dialogs.alert({
+      title: 'Круг из двух сегментов',
+      text: 'Не реализовано в текущей версии',
+    });
+    //this.add_circle1(bounds, -1);
+  }
+
+  add_circle3(bounds) {
+    this.add_circle2(bounds);
+  }
+
+  add_circle4(bounds) {
+    this.add_circle2(bounds);
   }
 
   /**
