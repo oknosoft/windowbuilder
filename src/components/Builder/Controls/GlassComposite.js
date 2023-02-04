@@ -74,9 +74,10 @@ class GlassComposite extends React.Component {
   constructor(props, context) {
     super(props, context);
     const {cat, utils} = $p;
+    const {region} = props.elm.inset;
     this._meta = utils._clone(cat.characteristics.metadata('glass_specification'));
     cat.scheme_settings.find_rows({obj: 'cat.characteristics.glass_specification'}, (scheme) => {
-      if(!this.scheme || scheme.name.endsWith('main')) {
+      if(!this.scheme || scheme.name.endsWith(region ? 'region' : 'main')) {
         this.scheme = scheme;
       }
     });
