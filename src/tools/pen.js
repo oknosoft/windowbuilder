@@ -1483,19 +1483,65 @@ class ToolPen extends ToolElement {
   }
 
   add_circle2(bounds) {
-    $p.ui.dialogs.alert({
+    this.add_circle1(bounds, -1);
+  }
+
+  add_circle4(bounds, sign = 1) {
+    const {ui, enm, dp} = $p;
+    ui.dialogs.input_value({
       title: 'Круг из двух сегментов',
-      text: 'Не реализовано в текущей версии',
-    });
-    //this.add_circle1(bounds, -1);
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        const d = -2 * r;
+        const delta = 10 * sign;
+        // находим укорочение
+        const vertor = new paper.Point([delta, r]);
+        vertor.length = r;
+
+        // находим правую нижнюю точку
+        const base = bounds.topLeft;
+        const h = r + vertor.y;
+        const point = base.add([-h, 0]);
+        const profiles = this.add_sequence(sign > 0 ?
+          [[point, point.add([0, d])], [point.add([0, d]), point]] :
+          [[point.add([0, d]), point], [point, point.add([0, d])]]);
+        profiles[0].arc_h = r - sign * delta;
+        profiles[1].arc_h = r + sign * delta;
+
+        const {profile, project, _scope} = this;
+        profile.elm_type = enm.elm_types.impost;
+        dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
+
+        project.register_change(true, () => {
+          const segments = sign > 0 ?
+            [profiles[0].e.add([delta, 0]), profiles[0].b.add([delta, 0])] :
+            [profiles[1].e.add([delta, 0]), profiles[1].b.add([delta, 0])];
+          const impost = new Editor.Profile({
+            generatrix: new paper.Path({
+              strokeColor: 'black',
+              segments,
+            }),
+            proto: profile,
+          });
+          project.deselectAll();
+          project.zoom_fit();
+          _scope.select_tool('select_node');
+          setTimeout(() => {
+            project.register_change(true, () => {
+              impost.selected = true;
+              project.move_points(new paper.Point([sign, 0]).negate());
+              project.move_points(new paper.Point([sign, 0]));
+            });
+          }, 50);
+        });
+      });
   }
 
   add_circle3(bounds) {
-    this.add_circle2(bounds);
-  }
-
-  add_circle4(bounds) {
-    this.add_circle2(bounds);
+    this.add_circle4(bounds, -1);
   }
 
   /**
