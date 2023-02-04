@@ -1,13 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
+import PropField from 'metadata-react/DataField/PropField';
 import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
 import FieldInsetProfile from 'wb-forms/dist/CatInserts/FieldInsetProfile';
 import ProfileToolbar from './Toolbar/ProfileToolbar';
 
 export default function ManyProfiles({editor, classes, profiles}) {
   const [elm] = profiles;
-  // если ражные типы элементов - править нельзя
+  const {Onlay} = editor.constructor;
+  // если разные типы элементов - править нельзя
   const {elm_type} = elm;
   const {fields} = elm.__metadata(false);
   const clr_group = $p.cat.clrs.selection_exclude_service(fields.clr, elm, elm.ox);
@@ -18,6 +20,7 @@ export default function ManyProfiles({editor, classes, profiles}) {
       vsr_types ? 'с разными типами элементов' : `${profiles.length} шт., ${elm_type.toString()}` }`}</Typography>
     <FieldInsetProfile disabled={vsr_types} elm={elm}/>
     <FieldClr _obj={elm} _fld="clr" _meta={fields.clr} clr_group={clr_group} />
+    {elm instanceof Onlay ? <PropField _obj={elm} _fld="region" _meta={elm._metadata.fields.region} ctrl_type="oselect" /> : null}
   </>;
 }
 

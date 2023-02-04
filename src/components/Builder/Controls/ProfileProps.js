@@ -1,18 +1,19 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import ProfileToolbar from './Toolbar/ProfileToolbar';
-import Bar from './Bar';
-import ElmInsets from './ElmInsets';
-import Coordinates from './Coordinates';
+import PropField from 'metadata-react/DataField/PropField';
 import LinkedProp from 'wb-forms/dist/Common/LinkedProp';
 import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
 import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
 import FieldInsetProfile from 'wb-forms/dist/CatInserts/FieldInsetProfile';
+import ProfileToolbar from './Toolbar/ProfileToolbar';
+import Bar from './Bar';
+import ElmInsets from './ElmInsets';
+import Coordinates from './Coordinates';
 
 export default function ProfileProps(props) {
   const {elm, fields, editor} = props;
-  const {ProfileSegment} = editor.constructor;
+  const {ProfileSegment, Onlay} = editor.constructor;
 
   if(!elm.isInserted()) {
     return 'Элемент удалён';
@@ -42,6 +43,7 @@ export default function ProfileProps(props) {
       <Bar>Свойства</Bar>
       <FieldEndConnection elm1={elm} node="b" _fld="cnn1" onClick={select_b}/>
       <FieldEndConnection elm1={elm} node="e" _fld="cnn2" onClick={select_e}/>
+      {elm instanceof Onlay ? <PropField _obj={elm} _fld="region" _meta={elm._metadata.fields.region} ctrl_type="oselect" /> : null}
       {eprops.map((param, ind) => {
         return <LinkedProp key={`ap-${ind}`} _obj={elm} _fld={param.ref} param={param} cnstr={-elm.elm} fields={fields} />;
       })}

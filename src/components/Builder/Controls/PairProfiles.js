@@ -18,7 +18,7 @@ function nearest(elm1, elm2, ProfileVirtual) {
 
 export default function PairProps(props) {
   const {elm: [elm1, elm2], editor} = props;
-  const {ProfileItem, ProfileVirtual, Filling} = editor.constructor;
+  const {ProfileItem, ProfileVirtual, Filling, Onlay} = editor.constructor;
   const var_layers = elm1.layer !== elm2.layer;
   const elm1_profile = elm1 instanceof ProfileItem;
   const elm2_profile = elm2 instanceof ProfileItem;
@@ -56,6 +56,8 @@ export default function PairProps(props) {
       <br/>
       <Typography color="error">Нет соединений между элементами</Typography>
     </>}
+    {elm1_profile && elm2_profile && elm1 instanceof Onlay ?
+       <PropField _obj={elm1} _fld="region" _meta={fields.region} ctrl_type="oselect" /> : null}
   </>;
 }
 
