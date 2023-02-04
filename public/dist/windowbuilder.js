@@ -266,60 +266,6 @@ class EditorAccordion {
      */
     this.elm = this.tabbar.cells('elm');
     this.elm.attachObject(document.createElement('div'));
-    // this.elm._toolbar = this.elm.attachToolbar();
-    // this.elm._otoolbar = new iface.OTooolBar({
-    //   wrapper: this.elm.cell,
-    //   width: '100%',
-    //   height: '28px',
-    //   top: '6px',
-    //   left: '4px',
-    //   class_name: '',
-    //   name: 'aling_bottom',
-    //   buttons: [
-    //     {name: 'left', css: 'tb_align_left', tooltip: msg.align_node_left, float: 'left'},
-    //     {name: 'bottom', css: 'tb_align_bottom', tooltip: msg.align_node_bottom, float: 'left'},
-    //     {name: 'top', css: 'tb_align_top', tooltip: msg.align_node_top, float: 'left'},
-    //     {name: 'right', css: 'tb_align_right', tooltip: msg.align_node_right, float: 'left'},
-    //     {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: msg.align_all, float: 'left'},
-    //     {name: 'sep_0', text: '', float: 'left'},
-    //     {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_elm, float: 'left'},
-    //     {name: 'sep_1', text: '', float: 'left'},
-    //     {name: 'arc', css: 'tb_cursor-arc-r', tooltip: msg.bld_arc, float: 'left'},
-    //
-    //     {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: msg.del_elm, float: 'right', paddingRight: '18px'},
-    //     {name: 'spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию элемента', float: 'right'},
-    //   ],
-    //   image_path: "/imgs/",
-    //   onclick: (name) => {
-    //     switch (name) {
-    //       case 'arc':
-    //         _editor.profile_radius();
-    //         break;
-    //
-    //       case 'additional_inserts':
-    //         _editor.additional_inserts('elm');
-    //         break;
-    //
-    //       case 'delete':
-    //         _editor.project.selectedItems.forEach((path) => {
-    //           const {parent} = path;
-    //           if(parent instanceof Editor.ProfileItem){
-    //             parent.removeChildren();
-    //             parent.remove();
-    //           }
-    //         });
-    //         break;
-    //
-    //     case 'spec':
-    //       _editor.elm_spec();
-    //       break;
-    //
-    //     default:
-    //       _editor.profile_align(name);
-    //     }
-    //   }
-    // });
-    // _editor.eve.on('set_inset', this.on_set_inset.bind(this));
 
     /**
      * слои в аккордионе
@@ -453,15 +399,6 @@ class EditorAccordion {
     }
   }
 
-  // on_set_inset(elm) {
-  //   const {_grid} = elm._attr;
-  //   if(_grid && _grid._obj === elm) {
-  //     _grid.attach({
-  //       obj: elm,
-  //       oxml: elm.oxml
-  //     });
-  //   }
-  // }
 
   attach(obj) {
     this.tree_layers.attach();
