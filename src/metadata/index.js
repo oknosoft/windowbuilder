@@ -78,7 +78,7 @@ export function init(store) {
               })
                 .on('change', (change) => {
                   // информируем слушателей текущего сеанса об изменениях
-                  if(change.doc.obj_delivery_state !== 'Шаблон') {
+                  if(change.doc.class_name !== 'doc.nom_prices_setup' && change.doc.obj_delivery_state !== 'Шаблон') {
                     pouch.load_changes({docs: [change.doc]});
                     pouch.emit('ram_change', change);
                   }
