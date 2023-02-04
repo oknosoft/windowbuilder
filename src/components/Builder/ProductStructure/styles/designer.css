@@ -1,0 +1,104 @@
+
+.dsn-span {
+  float: left;
+}
+
+.dsn-hover:hover {
+  background-color: rgba(0, 126, 255, 0.12);
+}
+
+.dsn-search-box {
+  min-height: unset;
+  padding: 0 4px 4px 0;
+}
+
+.dsn-tree {
+  height: calc(100% - 37px);
+  overflow: auto;
+}
+
+.dsn-input {
+  width: 100%;
+  margin-left: 4px;
+}
+
+.dsn-component {
+  width: 100%;
+  height: 100%;
+  display: block;
+  vertical-align: top;
+  padding: 0;
+  border: 1px gray solid;
+}
+
+.dsn-content {
+  width: 100%;
+  height: calc(100% - 24px);
+  display: block;
+  vertical-align: top;
+}
+
+.dsn-draggable-handle {
+  width: 100%;
+  height: 24px;
+  background-color: gray;
+  cursor: move;
+  color: white;
+  font-weight: 500;
+  padding: 2px 8px;
+}
+
+.dsn-treeview-icon {
+  float: left;
+  width: 20px;
+  height: 24px;
+  background-repeat: no-repeat;
+  background-position: left center;
+}
+
+.dsn-space {
+  width: 8px;
+}
+
+/* иконы классов 1С */
+.icon_root {
+  background-image: url(struct.png);
+}
+
+.icon_order {
+  background-image: url(briefcase.png);
+}
+
+.icon_layers {
+  background-image: url(layers.png);
+}
+
+.icon_layer {
+  background-image: url(layer.png);
+}
+
+.icon_profile {
+  background-image: url(profile.png);
+}
+
+.icon_glass {
+  background-image: url(glass.png);
+}
+
+.icon_text {
+  background-image: url(text.png);
+}
+
+.icon_size {
+  background-image: url(size.png);
+}
+
+.icon_gear {
+  background-image: url(gear.png);
+}
+
+.icon_1c_cat {
+  background-image: url(data:image/gif;base64,R0lGODlhEgASALMOAIuLi8rKypKSkp6enoaGhoWFhaCgoO7u7vv7+5iYmPb29ri4uP///2ZmZv///wAAACH5BAEAAA4ALAAAAAASABIAAARR0MlJq704a0eWB94CflUTCImJqmmZJEbzDnJCV0U4inrJ/I0fIwj0AYXEoXGIRC6T0BJi2pgiqtSSYtvYKrrc0mHcGB/K5FJjzW6vN/C4/BIBADs=);
+}
+
+
