@@ -1,6 +1,6 @@
 {
   "name": "windowbuilder",
-  "version": "2.1.263",
+  "version": "2.1.264",
   "description": "Order dealer for windows and stained glass",
   "repository": {
     "type": "git",
@@ -25,28 +25,31 @@
     "url": "https://github.com/oknosoft/windowbuilder/issues"
   },
   "homepage": "https://light.oknosoft.ru/",
-  "proxy1": "https://develop.ecookna.ru/",
+  "proxy": "https://develop.ecookna.ru/",
   "proxy2": "https://dvlp.ecookna.ru/",
   "proxy3": "https://zakaz.kaleva.ru:2019/",
   "proxy4": "https://info.tmk-online.ru/",
   "proxy5": "http://localhost:3016/",
   "proxy6": "https://quick.ecookna.ru/",
   "proxy7": "https://crystallit.oknosoft.ru/",
-  "proxy": "https://brusnika.oknosoft.ru/",
-  "proxy9": "https://start.phototech.ru/",
+  "proxy8": "https://brusnika.oknosoft.ru:2210/",
+  "proxy9": "https://brusnika.oknosoft.ru:2227/",
+  "proxy10": "https://start.phototech.ru/",
+  "proxy11": "https://tg.oknosoft.ru:2310/",
   "dependencies": {
     "@turf/points-within-polygon": "^6.5",
     "dxf-writer": "^1.18",
     "md5-file": "^5.0",
-    "metadata-dhtmlx": "2.0.30-beta.12",
-    "metadata-react": "2.0.30-beta.12",
-    "metadata-redux": "2.0.30-beta.12",
-    "metadata-superlogin": "2.0.30-beta.12",
+    "metadata-dhtmlx": "2.0.31-beta.1",
+    "metadata-react": "2.0.31-beta.1",
+    "metadata-redux": "2.0.31-beta.1",
+    "metadata-superlogin": "2.0.31-beta.1",
     "react-highlight-words": "^0.18",
+    "react-number-format": "^5.1.2",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#22d9f52ebd68792b03c57a8f9fed50c7e58b3f79",
+    "wb-core": "github:oknosoft/windowbuilder-core#b9606255e43069b33fc0b8683ab19bd9cbce2c03",
     "wb-cutting": "github:oknosoft/genetic-cutting#da74a4a12254f351c1364e86bbf0c0454550701d",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#1e7330ec99adb5a754811ab8aedcf080dcbcd27f"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#c6a6ffe4e5aabd824562199c5ba6b66d7cbb3fe9"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
@@ -114,6 +117,7 @@
     "webpack-manifest-plugin": "^4.0.2",
     "workbox-webpack-plugin": "^6.4.1"
   },
+  "packageManager": "^yarn@1.22",
   "files": [
     "LICENSE",
     "LICENSE.ru.md"

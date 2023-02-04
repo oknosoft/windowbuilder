@@ -90,18 +90,18 @@ class SchemeLayers {
       // если выделено несколько створок, переносим выделение на раму
       const layers = [];
       const {project} = this.editor;
-      for(const elm of project.getSelectedItems()) {
-        elm.layer instanceof Editor.Contour && layers.indexOf(elm.layer) === -1 && layers.push(elm.layer);
+      for(const item of project.getSelectedItems()) {
+        item.layer instanceof Editor.Contour && layers.indexOf(item.layer) === -1 && layers.push(item.layer);
       }
       if(layers.length > 1) {
         const parents = [];
-        for(const elm of layers) {
-          let parent = elm.parent;
+        for(const item of layers) {
+          let parent = item.parent;
           while (parent && parent.parent) {
             parent = parent.parent;
           }
           if(!parent) {
-            parent = elm;
+            parent = item;
           }
           contour = parent;
           break;
@@ -132,7 +132,7 @@ class SchemeLayers {
   load_layer(layer) {
     this.tree.addItem(layer.key, layer.presentation(), layer.parent ? layer.parent.key : 0);
     this.tree.checkItem(layer.key);
-    layer.contours.forEach((l) => this.load_layer(l));
+    layer.contours.concat(layer.tearings).forEach((l) => this.load_layer(l));
   }
 
   listener(obj, fields) {
@@ -153,6 +153,7 @@ class SchemeLayers {
         cnns: 'Соединители',
         visualization: 'Визуализация доп. элементов',
         txts: 'Комментарии',
+        glass_numbers: 'Номера заполнений',
       };
       for (const prop in props) {
         tree.addItem(prop, props[prop], 0);
@@ -162,6 +163,20 @@ class SchemeLayers {
       for (const prop in builder_props) {
         props[prop] && builder_props[prop] && tree.checkItem(prop);
       }
+      tree.addItem('articles', '<div id="tree-articles" style="display: flex;">Номера профилей </div>', 0);
+      tree.disableCheckbox('articles');
+      const divArticles = tree.cont.querySelector('#tree-articles');
+      const comboArticles = new dhtmlXCombo(divArticles,"combo_articles","160px");
+      const avalues = ['Нет', 'Номер', 'Вставка', 'Номенклатура', 'Номер + Вставка', 'Номер + Номенклатура'];
+      comboArticles.addOption(avalues.map((v, i) => [i, v]));
+      comboArticles.selectOption(builder_props.articles);
+      comboArticles.attachEvent("onChange", function(value, text){
+        project.ox.builder_props = {articles: value};
+        project.register_change();
+      });
+      const cntArticles = divArticles.querySelector('.dhxcombo_dhx_terrace');
+      cntArticles.style.marginTop = '5px';
+      cntArticles.style.marginLeft = '6px';
     }
   }
 
@@ -204,293 +219,6 @@ class SchemeLayers {
 
 }
 
-class StvProps {
-
-  constructor(cell, editor) {
-    this.layout = cell;
-    this.editor = editor;
-    this.attach = this.attach.bind(this);
-    this.reload = this.reload.bind(this);
-    this.on_refresh_prm_links = this.on_refresh_prm_links.bind(this);
-
-    this.eve = editor.eve.on({
-      layer_activated: this.attach,
-      furn_changed: this.reload,
-      refresh_prm_links: this.on_refresh_prm_links,
-    });
-  }
-
-  attach(obj) {
-
-    if(!this.layout || !this.layout.attachHeadFields){
-      return;
-    }
-
-    if(!obj || !obj.cnstr || (this._grid && this._grid._obj === obj)){
-      return;
-    }
-
-    // пробегаем в цикле по параметрам, чтобы спрятать скрытые строки
-    obj.refresh_prm_links();
-
-    const attr = {
-      obj,
-      oxml: {
-        Фурнитура: ['furn'],
-        Параметры: []
-      },
-      ts: 'params',
-      ts_title: 'Параметры',
-      selection: {
-        cnstr: obj.cnstr || -9999,
-        inset: $p.utils.blank.guid,
-        hide: {not: true}
-      }
-    };
-
-    if(obj.layer) {
-      attr.oxml.Фурнитура.push('direction', 'h_ruch');
-    }
-    if(obj.project._dp.sys.show_flipped) {
-      attr.oxml.Фурнитура.push('flipped');
-    }
-
-    // создаём или переподключаем грид
-    if(!this._grid){
-      this._grid = this.layout.attachHeadFields(attr);
-      this._grid.attachEvent("onPropertyChanged", (pname, new_value) => {
-        pname = this._grid && this._grid.getSelectedRowId();
-        setTimeout(() => this.on_prm_change(pname, new_value, true));
-      });
-    }else{
-      this._grid.attach(attr);
-    }
-
-    // прячем параметры фурнитуры во внешних слоях
-    if(!obj.parent && this._grid.getAllRowIds){
-      const rids = this._grid.getAllRowIds();
-      if(rids){
-        this._grid.closeItem(rids.split(",")[0]);
-      }
-    }
-
-    this.on_prm_change('0|0');
-    this._grid.setSizes();
-
-    const ro = obj instanceof Editor.ContourNestedContent || obj instanceof Editor.ContourNested;
-    this._grid.setEditable(!ro);
-    const {buttons} = this.layout._otoolbar;
-    for(const btn in buttons) {
-      if(btn === 'spec') {
-        continue;
-      }
-      if(ro) {
-        buttons[btn].classList.add('disabledbutton');
-      }
-      else {
-        buttons[btn].classList.remove('disabledbutton');
-      }
-    }
-  }
-
-  on_refresh_prm_links(contour) {
-    const {_grid} = this;
-    if(_grid && contour === _grid._obj){
-      this.reload();
-    }
-  }
-
-  /**
-   * Обработчик при изменении параметра фурнитуры
-   * @param field
-   * @param value
-   * @param realy_changed
-   */
-  on_prm_change(field, value, realy_changed) {
-
-    const pnames = field && field.split('|');
-    const {_grid, editor} = this;
-
-    if(!field || !_grid || pnames.length < 2){
-      return;
-    }
-
-    const {_obj} = _grid;
-    let need_set_sizes;
-
-    // пробегаем по всем строкам
-    _obj.params.find_rows({
-      cnstr: _obj.cnstr || -9999,
-      inset: $p.utils.blank.guid,
-      hide: {not: true}
-    }, (prow) => {
-      const {param} = prow;
-      if(param == value){
-        return;
-      }
-      const links = param.params_links({grid: _grid, obj: prow, layer: _obj});
-      const hide = links.some((link) => link.hide);
-      const row = _grid.getRowById('params|'+param);
-
-      if (row){
-        if (hide && (row.style.display != "none")){
-          row.style.display="none";
-          need_set_sizes = realy_changed;
-        }
-        if (!hide && (row.style.display == "none")){
-          row.style.display="";
-          need_set_sizes = realy_changed;
-        }
-      }
-
-      // проверим вхождение значения в доступные и при необходимости изменим
-      if(links.length && param.linked_values(links, prow)){
-        editor.project.register_change();
-        _grid._obj._manager.emit_async('update', prow, {value: prow._obj.value});
-      }
-
-    });
-
-    if(need_set_sizes){
-      _grid.setSizes();
-    }
-  }
-
-  reload() {
-    if(this._grid){
-      this._grid.reload();
-      this.on_prm_change('0|0', null, true);
-    }
-  }
-
-  unload() {
-    this.eve.off('layer_activated', this.attach);
-    this.eve.off('furn_changed', this.reload);
-    this.eve.off('refresh_prm_links', this.on_refresh_prm_links);
-    this.layout.detachObject(true);
-    for(const fld in this){
-      delete this[fld];
-    }
-  }
-
-}
-
-class SchemeProps {
-
-  constructor(cell, editor) {
-
-    this.layout = cell;
-    this.editor = editor;
-
-    this.reflect_changes = this.reflect_changes.bind(this);
-    this.contour_redrawed = this.contour_redrawed.bind(this);
-    this.scheme_snapshot = this.scheme_snapshot.bind(this);
-
-    this.eve = editor.eve.on({
-      // начинаем следить за изменениями размеров при перерисовке контуров
-      contour_redrawed: this.contour_redrawed,
-      // при готовности снапшота, обновляем суммы и цены
-      scheme_snapshot: this.scheme_snapshot,
-    });
-  }
-
-  contour_redrawed() {
-    const {_obj, _reflect_id} = this;
-    if(_obj){
-      _reflect_id && clearTimeout(_reflect_id);
-      this._reflect_id = setTimeout(this.reflect_changes, 100);
-    }
-  }
-
-  scheme_snapshot(scheme, attr) {
-    const {_obj, editor: {project}} = this;
-    const {_calc_order_row} = scheme._attr;
-    if(_obj && scheme === project && !attr.clipboard && _calc_order_row) {
-      ['price_internal', 'amount_internal', 'price', 'amount'].forEach((fld) => _obj[fld] = _calc_order_row[fld]);
-    }
-  }
-
-  reflect_changes() {
-    this._reflect_id = 0;
-    const {_obj, editor: {project}} = this;
-    if(project && _obj) {
-      _obj.len = project.bounds.width.round();
-      _obj.height = project.bounds.height.round();
-      _obj.s = project.area;
-    }
-  }
-
-  attach(_obj) {
-
-    if(!this.layout || !this.layout.attachHeadFields){
-      return;
-    }
-
-    this._obj = _obj;
-
-    // корректируем метаданные поля выбора цвета
-    $p.cat.clrs.selection_exclude_service($p.dp.buyers_order.metadata("clr"), _obj);
-
-    this._grid && this._grid.destructor && this._grid.destructor();
-
-    const is_dialer = !$p.current_user.role_available('СогласованиеРасчетовЗаказов') && !$p.current_user.role_available('РедактированиеСкидок');
-    const oxml = {
-      'Свойства': ['sys', 'clr',
-        {id: 'len', path: 'o.len', synonym: 'Ширина, мм', type: 'ro'},
-        {id: 'height', path: 'o.height', synonym: 'Высота, мм', type: 'ro'},
-        {id: 's', path: 'o.s', synonym: 'Площадь, м²', type: 'ro'}
-      ]
-    };
-
-    if($p.wsql.get_user_param('hide_price_dealer')) {
-      oxml['Строка заказа'] = [
-        'quantity',
-        {id: 'price', path: 'o.price', synonym: 'Цена', type: 'ro'},
-        {id: 'discount_percent', path: 'o.discount_percent', synonym: 'Скидка %', type: is_dialer ? 'ro' : 'calck'},
-        {id: 'amount', path: 'o.amount', synonym: 'Сумма', type: 'ro'},
-        'note'
-      ];
-    }
-    else {
-      oxml['Строка заказа'] = [
-        'quantity',
-        {id: 'price_internal', path: 'o.price_internal', synonym: 'Цена дилера', type: 'ro'},
-        {id: 'discount_percent_internal', path: 'o.discount_percent_internal', synonym: 'Скидка дил %', type: 'calck'},
-        {id: 'amount_internal', path: 'o.amount_internal', synonym: 'Сумма дилера', type: 'ro'},
-        {id: 'price', path: 'o.price', synonym: 'Цена пост', type: 'ro'},
-        {id: 'discount_percent', path: 'o.discount_percent', synonym: 'Скидка пост %', type: is_dialer ? 'ro' : 'calck'},
-        {id: 'amount', path: 'o.amount', synonym: 'Сумма пост', type: 'ro'},
-        'note'
-      ];
-    }
-
-    this._grid = this.layout.attachHeadFields({
-      obj: _obj,
-      oxml: oxml,
-      ts: "extra_fields",
-      ts_title: "Свойства",
-      selection: {
-        cnstr: 0,
-        inset: $p.utils.blank.guid,
-        hide: {not: true}
-      }
-    });
-
-  }
-
-  reload() {
-    this._grid && this._grid.reload();
-  }
-
-  unload() {
-    this.eve.off('contour_redrawed', this.contour_redrawed);
-    this.eve.off('scheme_snapshot', this.scheme_snapshot);
-    this.layout.detachObject(true);
-    this._obj = null;
-  }
-
-}
-
 class EditorAccordion {
 
   constructor(_editor, cell_acc) {
@@ -524,10 +252,7 @@ class EditorAccordion {
         title: 'Свойства инструмента',
       },
     ];
-    this.tabbar = cell_acc.attachTabbar({
-      arrows_mode: 'auto',
-      tabs: tabs
-    });
+    this.tabbar = cell_acc.attachTabbar({arrows_mode: 'auto', tabs});
 
     const titles = this.tabbar.tabsArea.children[1].firstChild.children;
     tabs.forEach((tab, index) => {
@@ -540,60 +265,7 @@ class EditorAccordion {
      * ячейка для размещения свойств элемента
      */
     this.elm = this.tabbar.cells('elm');
-    this.elm._toolbar = this.elm.attachToolbar();
-    this.elm._otoolbar = new iface.OTooolBar({
-      wrapper: this.elm.cell,
-      width: '100%',
-      height: '28px',
-      top: '6px',
-      left: '4px',
-      class_name: '',
-      name: 'aling_bottom',
-      buttons: [
-        {name: 'left', css: 'tb_align_left', tooltip: msg.align_node_left, float: 'left'},
-        {name: 'bottom', css: 'tb_align_bottom', tooltip: msg.align_node_bottom, float: 'left'},
-        {name: 'top', css: 'tb_align_top', tooltip: msg.align_node_top, float: 'left'},
-        {name: 'right', css: 'tb_align_right', tooltip: msg.align_node_right, float: 'left'},
-        {name: 'all', text: '<i class="fa fa-arrows-alt fa-fw"></i>', tooltip: msg.align_all, float: 'left'},
-        {name: 'sep_0', text: '', float: 'left'},
-        {name: 'additional_inserts', text: '<i class="fa fa-tag fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_elm, float: 'left'},
-        {name: 'sep_1', text: '', float: 'left'},
-        {name: 'arc', css: 'tb_cursor-arc-r', tooltip: msg.bld_arc, float: 'left'},
-
-        {name: 'delete', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: msg.del_elm, float: 'right', paddingRight: '18px'},
-        {name: 'spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию элемента', float: 'right'},
-      ],
-      image_path: "/imgs/",
-      onclick: (name) => {
-        switch (name) {
-          case 'arc':
-            _editor.profile_radius();
-            break;
-
-          case 'additional_inserts':
-            _editor.additional_inserts('elm');
-            break;
-
-          case 'delete':
-            _editor.project.selectedItems.forEach((path) => {
-              const {parent} = path;
-              if(parent instanceof Editor.ProfileItem){
-                parent.removeChildren();
-                parent.remove();
-              }
-            });
-            break;
-
-        case 'spec':
-          _editor.elm_spec();
-          break;
-
-        default:
-          _editor.profile_align(name);
-        }
-      }
-    });
-    _editor.eve.on('set_inset', this.on_set_inset.bind(this));
+    this.elm.attachObject(document.createElement('div'));
 
     /**
      * слои в аккордионе
@@ -629,9 +301,7 @@ class EditorAccordion {
           const fillings = _editor.project.getItems({class: Editor.Filling, selected: true});
           if(fillings.length) {
             if(name === 'nested_layer') {
-               // _editor.project.save_coordinates({save: true})
-               //   .then(() => ui.dialogs.templates_nested())
-             ui.dialogs.templates_nested()
+              ui.dialogs.templates_nested()
                 .then((selected) => {
                   if(selected === true) {
                     const {cat: {templates}, job_prm} = $p;
@@ -701,7 +371,7 @@ class EditorAccordion {
     });
 
     this.tree_layers = new SchemeLayers(this._layers, (text) => {
-      this._stv._toolbar.setItemText("info", text);
+      //this._stv._toolbar.setItemText("info", text);
       _editor.additional_inserts('contour', this.tree_layers.layout.cells('b'));
     }, _editor);
 
@@ -709,107 +379,17 @@ class EditorAccordion {
      * свойства створки
      */
     this._stv = this.tabbar.cells('stv');
-    this._stv._toolbar = this._stv.attachToolbar({
-      items:[
-        {id: "info", type: "text", text: ""},
-      ],
-    });
-    this._stv._otoolbar = new iface.OTooolBar({
-      wrapper: this._stv.cell,
-      width: '100%',
-      height: '28px',
-      top: '6px',
-      left: '4px',
-      class_name: "",
-      name: 'bottom',
-      image_path: '/imgs/',
-      buttons: [
-        {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'},
-        {name: 'spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию фурнитуры', float: 'right'},
-        {name: 'down', text: '<i class="fa fa-arrow-down fa-fw"></i>', tooltip: 'Сдвинуть по Z ниже', float: 'right'},
-        {name: 'up', text: '<i class="fa fa-arrow-up fa-fw"></i>', tooltip: 'Сдвинуть по Z выше', float: 'right'},
-      ], onclick: (name) => {
-
-        switch (name) {
-
-        case 'refill':
-          const {_obj} = this.stv._grid;
-          if(_editor.project._dp.sys.furn_level > _obj.level) {
-            _obj.furn = '';
-          }
-          _obj.furn.refill_prm(_obj);
-          this.stv.reload();
-          break;
-
-        case 'spec':
-          _editor.layer_spec();
-          break;
-
-        case 'up':
-        case 'down':
-          const {activeLayer} = _editor.project;
-          if(activeLayer && activeLayer.bring) {
-            activeLayer.bring(name);
-            activeLayer.activate(true);
-          }
-
-          break;
-
-        default:
-          msg.show_msg(name);
-          break;
-        }
-
-        return false;
-      }
-    });
-    this.stv = new StvProps(this._stv, _editor);
+    this._stv.attachObject(document.createElement('div'));
 
     /**
      * свойства изделия
      */
     this._prod = this.tabbar.cells('prod');
-    this._prod._toolbar = this._prod.attachToolbar();
-    this._prod._otoolbar = new iface.OTooolBar({
-      wrapper: this._prod.cell,
-      width: '100%',
-      height: '28px',
-      top: '6px',
-      left: '4px',
-      class_name: "",
-      name: 'bottom',
-      image_path: '/imgs/',
-      buttons: [
-        {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_product, float: 'left'},
-        {name: 'refill', text: '<i class="fa fa-retweet fa-fw"></i>', tooltip: 'Обновить параметры', float: 'right', paddingRight: '20px'}
-
-      ], onclick: (name) => {
-
-        switch(name) {
-
-          case 'refill':
-            _editor.project._dp.sys.refill_prm(_editor.project.ox, 0, false, _editor.project);
-            this.props.reload();
-            break;
-
-          case 'inserts_to_product':
-            // дополнительные вставки в изделие
-            _editor.additional_inserts();
-            break;
-
-          default:
-            msg.show_msg(name);
-            break;
-        }
-
-        return false;
-      }
-    });
-    this.props = new SchemeProps(this._prod, _editor);
+    this._prod.attachObject(document.createElement('div'));
 
     this._tool = this.tabbar.cells('tool');
+    this._tool.attachObject(document.createElement('div'));
     _editor.eve.on('tool_activated', this.tool_activated.bind(this));
-
 
   }
 
@@ -819,29 +399,20 @@ class EditorAccordion {
     }
   }
 
-  on_set_inset(elm) {
-    const {_grid} = elm._attr;
-    if(_grid && _grid._obj === elm) {
-      _grid.attach({
-        obj: elm,
-        oxml: elm.oxml
-      });
-    }
-  }
 
   attach(obj) {
     this.tree_layers.attach();
-    this.props.attach(obj);
+    //this.props.attach(obj);
   }
 
   unload() {
-    if(this.elm) {
-      this.elm._otoolbar.unload();
+    if(this.tree_layers) {
+      //this.elm._otoolbar.unload();
       this._layers._otoolbar.unload();
-      this._prod._otoolbar.unload();
+      //this._prod._otoolbar.unload();
       this.tree_layers.unload();
-      this.props.unload();
-      this.stv.unload();
+      //this.props.unload();
+      //this.stv.unload();
       this._cell.detachObject(true);
     }
     for(const fld in this){
@@ -856,6 +427,7 @@ class EditorAccordion {
 class AdditionalInserts {
 
   constructor(cnstr, project, cell) {
+    this.project = project;
     this.create_wnd(cnstr, project, cell);
   }
 
@@ -997,7 +569,7 @@ class AdditionalInserts {
       if(row && !row.obj.inset.empty()){
         const {inset, _owner} = row.obj;
         _owner._owner.add_inset_params(inset, params.selection.cnstr);
-        $p.cat.clrs.selection_exclude_service(this._fields.clr, inset);
+        $p.cat.clrs.selection_exclude_service(this._fields.clr, inset, this.project);
       }
     }
   }
@@ -1792,9 +1364,26 @@ class Editor extends $p.EditorInvisible {
     const _editor = this;
     const _canvas = document.createElement('canvas'); // собственно, канвас
     _editor._wrapper.appendChild(_canvas);
-    _canvas.style.backgroundColor = "#f9fbfa";
+    _canvas.style.backgroundColor = '#f9fbfa';
+    _canvas.style.outline = 'none';
+    _canvas.contentEditable = true;
+    _canvas.onmousedown = function () {
+      this.focus();
+    };
 
     const _scheme = new $p.EditorInvisible.Scheme(_canvas, _editor);
+    // это свойство для отладки... можно будет удалить
+    Object.defineProperty(_scheme, '_activeLayer', {
+      get() {
+        return this.__activeLayer;
+      },
+      set(v) {
+        if(v && !(v instanceof paper.Layer) && v.layer) {
+          v = v.layer;
+        }
+        this.__activeLayer = v;
+      }
+    });
     const pwnd_resize_finish = () => {
       _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
     };
@@ -2075,7 +1664,11 @@ class Editor extends $p.EditorInvisible {
     if(!layer) {
       layer = this.project.activeLayer;
     }
-    if(layer) {
+    if(!(layer instanceof paper.Layer) && layer.layer) {
+      layer.layer.activate();
+      layer = layer.layer;
+    }
+    if(layer instanceof paper.Layer) {
       return this.fragment_spec({
         elm: -layer.cnstr,
         ox: layer.prod_ox,
@@ -2400,9 +1993,10 @@ class Editor extends $p.EditorInvisible {
   }
 
   close(ox, calc_order) {
-    const {project} = this;
+    const {project, eve} = this;
     let path = '/';
     if(project) {
+      eve.emit('unload', this);
       project.getItems({class: Editor.DimensionLine}).forEach((el) => el.wnd && el.wnd.close());
       if(!ox) {
         ox = project.ox;
@@ -2414,7 +2008,7 @@ class Editor extends $p.EditorInvisible {
       if(calc_order && !calc_order.empty()){
         path += `${calc_order.class_name}/${calc_order.ref}`;
         if(ox && !ox.empty()){
-          path += `/?ref=${ox.ref}`
+          path += `/?ref=${ox.ref}`;
         }
       }
     }
@@ -2473,54 +2067,53 @@ $p.Editor = Editor;
  * Подключает окно редактор свойств текущего элемента, выбранного инструментом
  */
 Editor.BuilderElement.prototype.attache_wnd = function attache_wnd(cell) {
-  if(!this._attr._grid || !this._attr._grid.cell){
-
-    this._attr._grid = cell.attachHeadFields({
-      obj: this,
-      oxml: this.oxml
-    });
-    this._attr._grid.attachEvent('onRowSelect', function (id) {
-      if(['x1', 'y1', 'a1', 'cnn1'].indexOf(id) != -1) {
-        this._obj.select_node('b');
-      }
-      else if(['x2', 'y2', 'a2', 'cnn2'].indexOf(id) != -1) {
-        this._obj.select_node('e');
-      }
-    });
-  }
-  else if(this._attr._grid._obj != this){
-    this._attr._grid.attach({
-      obj: this,
-      oxml: this.oxml
-    });
-  }
-  const ro = this.layer instanceof Editor.ContourNestedContent || this.layer instanceof Editor.ContourNested;
-  const {buttons} = this.project._scope._acc.elm._otoolbar;
-  this._attr._grid.setEditable(!ro);
-  for(const btn in buttons) {
-    if(btn === 'spec') {
-      continue;
-    }
-    if(ro) {
-      buttons[btn].classList.add('disabledbutton');
-    }
-    else {
-      buttons[btn].classList.remove('disabledbutton');
-    }
-  }
-
-}
+  // if(!this._attr._grid || !this._attr._grid.cell){
+  //
+  //   this._attr._grid = cell.attachHeadFields({
+  //     obj: this,
+  //     oxml: this.oxml
+  //   });
+  //   this._attr._grid.attachEvent('onRowSelect', function (id) {
+  //     if(['x1', 'y1', 'a1', 'cnn1'].indexOf(id) != -1) {
+  //       this._obj.select_node('b');
+  //     }
+  //     else if(['x2', 'y2', 'a2', 'cnn2'].indexOf(id) != -1) {
+  //       this._obj.select_node('e');
+  //     }
+  //   });
+  // }
+  // else if(this._attr._grid._obj != this){
+  //   this._attr._grid.attach({
+  //     obj: this,
+  //     oxml: this.oxml
+  //   });
+  // }
+  // const ro = this.layer instanceof Editor.ContourNestedContent || this.layer instanceof Editor.ContourNested;
+  // const {buttons} = this.project._scope._acc.elm._otoolbar;
+  // this._attr._grid.setEditable(!ro);
+  // for(const btn in buttons) {
+  //   if(btn === 'spec') {
+  //     continue;
+  //   }
+  //   if(ro) {
+  //     buttons[btn].classList.add('disabledbutton');
+  //   }
+  //   else {
+  //     buttons[btn].classList.remove('disabledbutton');
+  //   }
+  // }
+};
 
 /**
  * Отключает и выгружает из памяти окно свойств элемента
  */
 Editor.BuilderElement.prototype.detache_wnd = function detache_wnd() {
-  const {_grid} = this._attr;
-  if(_grid && _grid.destructor && _grid._owner_cell){
-    _grid._owner_cell.detachObject(true);
-    delete this._attr._grid;
-  }
-}
+  // const {_grid} = this._attr;
+  // if(_grid && _grid.destructor && _grid._owner_cell){
+  //   _grid._owner_cell.detachObject(true);
+  //   delete this._attr._grid;
+  // }
+};
 
 
 /**
@@ -3153,7 +2746,11 @@ class ToolElement extends Editor.ToolElement {
   }
 
   on_close(wnd) {
-    wnd && wnd.cell && setTimeout(() => this._scope && this._scope.tools[1].activate());
+    if(wnd) {
+      wnd.wnd_options(this.options.wnd);
+      $p.wsql.save_options('editor', this.options);
+      wnd.cell && setTimeout(() => this._scope && this._scope.tools[1].activate());
+    }
     return true;
   }
 
@@ -4146,7 +3743,6 @@ class ToolCut extends ToolElement{
       }
     }
     rack2.profile.rays.clear(true);
-    rack2.profile.removeChildren();
     rack2.profile.remove();
 
     cnn = rack1.profile.cnn_point(rack1.point);
@@ -4287,7 +3883,7 @@ class ToolLayImpost extends ToolElement {
           height: 420,
           width: 320,
           allow_close: true,
-          region: 'r2',
+          region: 'r1',
         },
       },
       mode: null,
@@ -5020,7 +4616,7 @@ class ToolLayImpost extends ToolElement {
       reattach = true;
     }
     if('inset_by_y' in fields) {
-      const {pair, split_type} = obj.inset_by_y;
+      const {pair, split_type, region} = obj.inset_by_y;
       if(split_type.length) {
         obj.split = split_type[0];
       }
@@ -5028,14 +4624,20 @@ class ToolLayImpost extends ToolElement {
         obj.inset_by_x = pair;
         touchx = false;
       }
+      if(region && !region.empty?.()) {
+        obj.region = region;
+      }
     }
     if(touchx && 'inset_by_x' in fields) {
-      const {pair, split_type} = obj.inset_by_x;
+      const {pair, split_type, region} = obj.inset_by_x;
       if(split_type.length) {
         obj.split = split_type[0];
       }
       if(!pair.empty()) {
         obj.inset_by_y = pair;
+      }
+      if(region && !region.empty?.()) {
+        obj.region = region;
       }
     }
     reattach && _grid && _grid.attach({
@@ -5046,10 +4648,10 @@ class ToolLayImpost extends ToolElement {
 
   choice_links_clr() {
 
-    const {profile, sys, elm_type_clrs} = this;
+    const {profile, project, sys, elm_type_clrs} = this;
 
     // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'));
+    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), profile, project);
 
     profile._metadata('clr').choice_params.push({
       name: 'ref',
@@ -5219,7 +4821,7 @@ class ToolLayImpost extends ToolElement {
 
     this.paths.forEach((p) => {
 
-      let iter = 0, angle, proto = {clr: profile.clr};
+      let iter = 0, angle, proto = {clr: profile.clr, elm_type: profile.elm_type};
 
       function do_bind() {
 
@@ -5993,7 +5595,7 @@ class ToolPen extends ToolElement {
     }];
 
     // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this);
+    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this, project);
 
     this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
     this._grid = this.wnd.attachHeadFields({
@@ -6013,29 +5615,33 @@ class ToolPen extends ToolElement {
         tooltip: 'Добавить типовую форму',
         float: 'left',
         sub: {
-          width: '90px',
-          height:'190px',
+          width: '120px',
+          height:'174px',
           buttons: [
             {name: 'square', img: 'square.png', float: 'left'},
             {name: 'triangle1', img: 'triangle1.png', float: 'left'},
-            {name: 'triangle2', img: 'triangle2.png', float: 'right'},
-            {name: 'triangle3', img: 'triangle3.png', float: 'left'},
+            {name: 'triangle2', img: 'triangle2.png', float: 'left'},
+            {name: 'triangle3', img: 'triangle3.png', float: 'right'},
             {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
-            {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
-            {name: 'circle',    img: 'circle.png', float: 'left'},
+            {name: 'semicircle2', img: 'semicircle2.png', float: 'left'},
             {name: 'arc1',      img: 'arc1.png', float: 'left'},
-            {name: 'trapeze1',  img: 'trapeze1.png', float: 'right'},
+            {name: 'circle',    img: 'circle.png', float: 'right'},
+            {name: 'circle1',   css: 'tb_circle1', float: 'left'},
+            {name: 'circle2',   css: 'tb_circle2', float: 'left'},
+            {name: 'circle3',   css: 'tb_circle3', float: 'left'},
+            {name: 'circle4',   css: 'tb_circle4', float: 'right'},
+            {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
             {name: 'trapeze2',  img: 'trapeze2.png', float: 'left'},
             {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
             {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
             {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
             {name: 'trapeze6',  img: 'trapeze6.png', float: 'left'},
-            {name: 'trapeze7',  img: 'trapeze7.png', float: 'right'},
-            {name: 'trapeze8',  img: 'trapeze8.png', float: 'left'},
+            {name: 'trapeze7',  img: 'trapeze7.png', float: 'left'},
+            {name: 'trapeze8',  img: 'trapeze8.png', float: 'right'},
             {name: 'trapeze9',  img: 'trapeze9.png', float: 'left'},
-            {name: 'trapeze10',  img: 'trapeze10.png', float: 'right'}]}
-            },
-      ],
+            {name: 'trapeze10', img: 'trapeze10.png', float: 'left'},
+          ]},
+      }],
       image_path: '/imgs/',
       onclick: (name) => this.standard_form(name)
     });
@@ -6131,7 +5737,6 @@ class ToolPen extends ToolElement {
       this.project.selectedItems.forEach((path) => {
         if(path.parent instanceof Editor.ProfileItem){
           path = path.parent;
-          path.removeChildren();
           path.remove();
         }
       });
@@ -6182,8 +5787,8 @@ class ToolPen extends ToolElement {
     const {_scope, addl_hit, profile, project, group} = this;
     const {
       enm: {elm_types},
-      EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, ProfileCut, ProfileAdjoining, Profile, ProfileItem, Filling}
-    } = $p;
+      EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, ProfileCut, ProfileAdjoining,
+        Profile, ProfileItem, Filling, Contour}} = $p;
 
     group && group.removeChildren();
 
@@ -6279,6 +5884,22 @@ class ToolPen extends ToolElement {
         this.last_profile = new ProfileCut({generatrix: this.path, proto: profile});
         break;
 
+      case elm_types.tearing:
+        // рисуем разрыв заполнения
+        const tearing = Contour.create({
+          kind: 4,
+          parent: this.hitItem.item.layer,
+          project,
+        });
+        tearing.initialize({
+          parent: this.hitItem.item.parent,
+          inset: profile.inset,
+          clr: profile.clr,
+          path: this.path,
+        });
+        this.path.remove();
+        break;
+
       default:
         // рисуем профиль
         this.last_profile = new Profile({generatrix: this.path, proto: profile});
@@ -6359,6 +5980,10 @@ class ToolPen extends ToolElement {
   on_mousemove(event) {
 
     this.hitTest(event);
+
+    if(this.profile.elm_type.is('tearing')) {
+      return;
+    }
 
     const {project, addl_hit} = this;
 
@@ -6865,6 +6490,43 @@ class ToolPen extends ToolElement {
     }
   }
 
+  hitTest_tearing({point}) {
+    const tolerance = 16;
+    const {project, _scope} = this;
+
+    this.hitItem = point && project.hitTest(point, {fill:true, stroke:false, curves:false, tolerance });
+    if (this.hitItem?.item?.parent instanceof Editor.Filling) {
+      const rect = new paper.Path.Rectangle({
+        center: point,
+        size: [240, 240],
+        insert: false,
+      });
+      const intersections = this.hitItem.item.getIntersections(rect);
+      if(intersections.length) {
+        this._scope.canvas_cursor('cursor-pen-freehand');
+        this.mode = null;
+        this.path && this.path.remove();
+      }
+      else {
+        this._scope.canvas_cursor('cursor-pen-adjust');
+        this.mode = 'create';
+        this.path && this.path.remove();
+        this.path = new paper.Path.Rectangle({
+          center: point,
+          size: [200, 200],
+          strokeColor: 'grey',
+          strokeWidth: 2,
+          strokeScaling: false,
+        });
+      }
+    }
+    else {
+      this._scope.canvas_cursor('cursor-pen-freehand');
+      this.mode = null;
+      this.path && this.path.remove();
+    }
+  }
+
   hitTest(event) {
 
     this.addl_hit = null;
@@ -6873,15 +6535,18 @@ class ToolPen extends ToolElement {
     const {elm_types} = $p.enm;
 
     switch (this.profile.elm_type) {
-    case elm_types.Добор:
+    case elm_types.addition:
       this.hitTest_addl(event);
       break;
     case elm_types.Соединитель:
       this.hitTest_connective(event);
       break;
-    case elm_types.Примыкание:
+    case elm_types.adjoining:
       this.hitTest_adj(event);
       break;
+    case elm_types.tearing:
+        this.hitTest_tearing(event);
+        break;
     default:
       const hitSize = 6;
 
@@ -6904,8 +6569,6 @@ class ToolPen extends ToolElement {
 
     return true;
   }
-
-
 
   /**
    * ### Добавление типовой формы
@@ -7003,13 +6666,22 @@ class ToolPen extends ToolElement {
    * @param bounds
    */
   add_semicircle1(bounds) {
-    // находим правую нижнюю точку
-    const point = bounds.bottomRight;
-    const profiles = this.add_sequence([
-      [point, point.add([1000, 0])],
-      [point.add([1000, 0]), point]
-    ]);
-    profiles[0].arc_h = 500;
+    $p.ui.dialogs.input_value({
+      title: 'Полугкуг сверху',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        // находим правую нижнюю точку
+        const point = bounds.bottomRight;
+        const d = 2 * r;
+        const profiles = this.add_sequence([
+          [point, point.add([d, 0])],
+          [point.add([d, 0]), point]
+        ]);
+        profiles[0].arc_h = r;
+      });
   }
 
   /**
@@ -7017,13 +6689,22 @@ class ToolPen extends ToolElement {
    * @param bounds
    */
   add_semicircle2(bounds) {
-    // находим правую нижнюю точку
-    const point = bounds.bottomRight;
-    const profiles = this.add_sequence([
-      [point, point.add([1000, 0])],
-      [point.add([1000, 0]), point]
-    ]);
-    profiles[1].arc_h = 500;
+    $p.ui.dialogs.input_value({
+      title: 'Полугкуг снизу',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        // находим правую нижнюю точку
+        const point = bounds.bottomRight;
+        const d = 2 * r;
+        const profiles = this.add_sequence([
+          [point, point.add([d, 0])],
+          [point.add([d, 0]), point]
+        ]);
+        profiles[1].arc_h = r;
+      });
   }
 
   /**
@@ -7031,14 +6712,143 @@ class ToolPen extends ToolElement {
    * @param bounds
    */
   add_circle(bounds) {
-    // находим правую нижнюю точку
-    const point = bounds.bottomRight;
-    const profiles = this.add_sequence([
-      [point, point.add([1000, 0])],
-      [point.add([1000, 0]), point]
-    ]);
-    profiles[0].arc_h = 500;
-    profiles[1].arc_h = 500;
+    $p.ui.dialogs.input_value({
+      title: 'Круг из двух сегментов',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        // находим правую нижнюю точку
+        const point = bounds.bottomRight;
+        const d = 2 * r;
+        const profiles = this.add_sequence([
+          [point, point.add([d, 0])],
+          [point.add([d, 0]), point]
+        ]);
+        profiles[0].arc_h = r;
+        profiles[1].arc_h = r;
+      });
+  }
+
+  /**
+   * Рисует circle1
+   * @param bounds
+   */
+  add_circle1(bounds, sign = 1) {
+    const {ui, enm, dp} = $p;
+    ui.dialogs.input_value({
+      title: 'Круг из двух сегментов',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        const d = 2 * r;
+        const delta = 10 * sign;
+        // находим укорочение
+        const vertor = new paper.Point([r, delta]);
+        vertor.length = r;
+
+        // находим правую нижнюю точку
+        const base = bounds.bottomRight;
+        const h = r - vertor.x;
+        const point = base.add([0, h]);
+        const profiles = this.add_sequence(sign > 0 ?
+          [[point, point.add([d, 0])], [point.add([d, 0]), point]] :
+          [[point.add([d, 0]), point], [point, point.add([d, 0])]]);
+        const segments = sign > 0 ?
+          [base.add([d, -delta]), base.add([0, -delta])] :
+          [base.add([0, -delta]), base.add([d, -delta])];
+        profiles[0].arc_h = r + sign * delta;
+        profiles[1].arc_h = r - sign * delta;
+
+        const {profile, project, _scope} = this;
+        profile.elm_type = enm.elm_types.impost;
+        dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
+
+        project.register_change(true, () => {
+          const impost = new Editor.Profile({
+            generatrix: new paper.Path({
+              strokeColor: 'black',
+              segments,
+            }),
+            proto: profile,
+          });
+          project.deselectAll();
+          project.zoom_fit();
+          _scope.select_tool('select_node');
+          setTimeout(() => {
+            project.register_change(true, () => {
+              impost.selected = true;
+              project.move_points(new paper.Point([0, sign]).negate());
+              project.move_points(new paper.Point([0, sign]));
+            });
+          }, 50);
+        });
+      });
+  }
+
+  add_circle2(bounds) {
+    this.add_circle1(bounds, -1);
+  }
+
+  add_circle4(bounds, sign = 1) {
+    const {ui, enm, dp} = $p;
+    ui.dialogs.input_value({
+      title: 'Круг из двух сегментов',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        const d = -2 * r;
+        const delta = 10 * sign;
+        // находим укорочение
+        const vertor = new paper.Point([delta, r]);
+        vertor.length = r;
+
+        // находим правую нижнюю точку
+        const base = bounds.topLeft;
+        const h = r + vertor.y;
+        const point = base.add([-h, 0]);
+        const profiles = this.add_sequence(sign > 0 ?
+          [[point, point.add([0, d])], [point.add([0, d]), point]] :
+          [[point.add([0, d]), point], [point, point.add([0, d])]]);
+        profiles[0].arc_h = r - sign * delta;
+        profiles[1].arc_h = r + sign * delta;
+
+        const {profile, project, _scope} = this;
+        profile.elm_type = enm.elm_types.impost;
+        dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
+
+        project.register_change(true, () => {
+          const segments = sign > 0 ?
+            [profiles[0].e.add([delta, 0]), profiles[0].b.add([delta, 0])] :
+            [profiles[1].e.add([delta, 0]), profiles[1].b.add([delta, 0])];
+          const impost = new Editor.Profile({
+            generatrix: new paper.Path({
+              strokeColor: 'black',
+              segments,
+            }),
+            proto: profile,
+          });
+          project.deselectAll();
+          project.zoom_fit();
+          _scope.select_tool('select_node');
+          setTimeout(() => {
+            project.register_change(true, () => {
+              impost.selected = true;
+              project.move_points(new paper.Point([sign, 0]).negate());
+              project.move_points(new paper.Point([sign, 0]));
+            });
+          }, 50);
+        });
+      });
+  }
+
+  add_circle3(bounds) {
+    this.add_circle4(bounds, -1);
   }
 
   /**
@@ -7046,15 +6856,24 @@ class ToolPen extends ToolElement {
    * @param bounds
    */
   add_arc1(bounds) {
-    // находим правую нижнюю точку
-    const point = bounds.bottomRight;
-    const profiles = this.add_sequence([
-      [point, point.add([0, -500])],
-      [point.add([0, -500]), point.add([1000, -500])],
-      [point.add([1000, -500]), point.add([1000, 0])],
-      [point.add([1000, 0]), point]
-    ]);
-    profiles[1].arc_h = 500;
+    $p.ui.dialogs.input_value({
+      title: 'Квадрат и полугкуг сверху',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        // находим правую нижнюю точку
+        const point = bounds.bottomRight;
+        const d = 2 * r;
+        const profiles = this.add_sequence([
+          [point, point.add([0, -r])],
+          [point.add([0, -r]), point.add([d, -r])],
+          [point.add([d, -r]), point.add([d, 0])],
+          [point.add([d, 0]), point]
+        ]);
+        profiles[1].arc_h = r;
+      });
   }
 
   /**
@@ -8496,6 +8315,15 @@ class ToolSelectNode extends ToolElement {
     const step = modifiers.shift ? 1 : 10;
     let j, segment, index, point, handle;
 
+    function move(point) {
+      if(project.activeLayer?.kind === 4 && project.selectedItems.some((path) => path instanceof Editor.Filling)) {
+        project.activeLayer.move(point);
+      }
+      else{
+        project.move_points(point);
+      }
+    }
+
     if ('NumpadAdd,Insert'.includes(code)) {
 
       for(let path of project.selectedItems){
@@ -8636,7 +8464,6 @@ class ToolSelectNode extends ToolElement {
         }
         else if(path.parent instanceof Editor.GeneratrixElement){
           if(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment){
-            path.removeChildren();
             path.remove();
           }
           else{
@@ -8655,7 +8482,6 @@ class ToolSelectNode extends ToolElement {
             // если не было обработки узлов - удаляем элемент
             if(!do_select){
               path = path.parent;
-              path.removeChildren();
               path.remove();
             }
           }
@@ -8671,16 +8497,16 @@ class ToolSelectNode extends ToolElement {
 
     }
     else if (code === 'ArrowLeft') {
-      project.move_points(new paper.Point(-step, 0));
+      move(new paper.Point(-step, 0));
     }
     else if (code === 'ArrowRight') {
-      project.move_points(new paper.Point(step, 0));
+      move(new paper.Point(step, 0));
     }
     else if (code === 'ArrowUp') {
-      project.move_points(new paper.Point(0, -step));
+      move(new paper.Point(0, -step));
     }
     else if (code === 'ArrowDown') {
-      project.move_points(new paper.Point(0, step));
+      move(new paper.Point(0, step));
     }
     else if (code === 'KeyV') {
       project.zoom_fit();

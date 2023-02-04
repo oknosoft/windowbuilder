@@ -636,9 +636,26 @@ class Editor extends $p.EditorInvisible {
     const _editor = this;
     const _canvas = document.createElement('canvas'); // собственно, канвас
     _editor._wrapper.appendChild(_canvas);
-    _canvas.style.backgroundColor = "#f9fbfa";
+    _canvas.style.backgroundColor = '#f9fbfa';
+    _canvas.style.outline = 'none';
+    _canvas.contentEditable = true;
+    _canvas.onmousedown = function () {
+      this.focus();
+    };
 
     const _scheme = new $p.EditorInvisible.Scheme(_canvas, _editor);
+    // это свойство для отладки... можно будет удалить
+    Object.defineProperty(_scheme, '_activeLayer', {
+      get() {
+        return this.__activeLayer;
+      },
+      set(v) {
+        if(v && !(v instanceof paper.Layer) && v.layer) {
+          v = v.layer;
+        }
+        this.__activeLayer = v;
+      }
+    });
     const pwnd_resize_finish = () => {
       _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
     };
@@ -919,7 +936,11 @@ class Editor extends $p.EditorInvisible {
     if(!layer) {
       layer = this.project.activeLayer;
     }
-    if(layer) {
+    if(!(layer instanceof paper.Layer) && layer.layer) {
+      layer.layer.activate();
+      layer = layer.layer;
+    }
+    if(layer instanceof paper.Layer) {
       return this.fragment_spec({
         elm: -layer.cnstr,
         ox: layer.prod_ox,
@@ -1244,9 +1265,10 @@ class Editor extends $p.EditorInvisible {
   }
 
   close(ox, calc_order) {
-    const {project} = this;
+    const {project, eve} = this;
     let path = '/';
     if(project) {
+      eve.emit('unload', this);
       project.getItems({class: Editor.DimensionLine}).forEach((el) => el.wnd && el.wnd.close());
       if(!ox) {
         ox = project.ox;
@@ -1258,7 +1280,7 @@ class Editor extends $p.EditorInvisible {
       if(calc_order && !calc_order.empty()){
         path += `${calc_order.class_name}/${calc_order.ref}`;
         if(ox && !ox.empty()){
-          path += `/?ref=${ox.ref}`
+          path += `/?ref=${ox.ref}`;
         }
       }
     }

@@ -2,17 +2,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
+import LinkedProp from 'wb-forms/dist/Common/LinkedProp';
+import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
+import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
+import FieldInsetProfile from 'wb-forms/dist/CatInserts/FieldInsetProfile';
 import ProfileToolbar from './Toolbar/ProfileToolbar';
 import Bar from './Bar';
 import ElmInsets from './ElmInsets';
 import Coordinates from './Coordinates';
-import LinkedProp from './LinkedProp';
-import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
-import FieldInsetProfile from '../../CatInserts/FieldInsetProfile';
 
 export default function ProfileProps(props) {
   const {elm, fields, editor} = props;
-  const {ProfileSegment} = editor.constructor;
+  const {ProfileSegment, Onlay} = editor.constructor;
 
   if(!elm.isInserted()) {
     return 'Элемент удалён';
@@ -30,17 +31,19 @@ export default function ProfileProps(props) {
 
   const locked = Boolean(elm.locked);
 
+  const clr_group = $p.cat.clrs.selection_exclude_service(fields.clr, elm, elm.ox);
+
   return <>
     <ProfileToolbar {...props} />
     <Bar>{`${elm.elm_type} ${elm.info}`}</Bar>
     <FieldInsetProfile elm={elm} disabled={locked || elm instanceof ProfileSegment}/>
     {locked ? null : <>
-      <PropField _obj={elm} _fld="clr" _meta={fields.clr}/>
-      <PropField _obj={elm} _fld="offset" _meta={fields.offset}/>
+      <FieldClr _obj={elm} _fld="clr" _meta={fields.clr} clr_group={clr_group}/>
 
       <Bar>Свойства</Bar>
       <FieldEndConnection elm1={elm} node="b" _fld="cnn1" onClick={select_b}/>
       <FieldEndConnection elm1={elm} node="e" _fld="cnn2" onClick={select_e}/>
+      {elm instanceof Onlay ? <PropField _obj={elm} _fld="region" _meta={elm._metadata.fields.region} ctrl_type="oselect" /> : null}
       {eprops.map((param, ind) => {
         return <LinkedProp key={`ap-${ind}`} _obj={elm} _fld={param.ref} param={param} cnstr={-elm.elm} fields={fields} />;
       })}

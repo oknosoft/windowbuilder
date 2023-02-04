@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
-import DataField from 'metadata-react/DataField';
 import Toolbar from '@material-ui/core/Toolbar';
+import DataField from 'metadata-react/DataField';
 import withStyles, {extClasses} from 'metadata-react/DataField/stylesPropertyGrid';
 import Tip from 'metadata-react/App/Tip';
 

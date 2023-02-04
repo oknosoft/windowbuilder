@@ -2,6 +2,7 @@
 class AdditionalInserts {
 
   constructor(cnstr, project, cell) {
+    this.project = project;
     this.create_wnd(cnstr, project, cell);
   }
 
@@ -143,7 +144,7 @@ class AdditionalInserts {
       if(row && !row.obj.inset.empty()){
         const {inset, _owner} = row.obj;
         _owner._owner.add_inset_params(inset, params.selection.cnstr);
-        $p.cat.clrs.selection_exclude_service(this._fields.clr, inset);
+        $p.cat.clrs.selection_exclude_service(this._fields.clr, inset, this.project);
       }
     }
   }

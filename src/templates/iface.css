@@ -145,3 +145,14 @@
   -moz-box-shadow: 3px 3px 12px 3px rgba(0,0,0,0.4);
   box-shadow: 3px 3px 12px 3px rgba(0,0,0,0.4);
 }
+
+.dhxlayout_base_dhx_terrace div.dhx_cell_layout {
+  z-index: auto;
+}
+.dhxlayout_base_dhx_terrace div.dhx_cell_layout div.dhx_cell_cont_layout {
+  z-index: auto;
+}
+.dhxtabbar_base_dhx_terrace div.dhxtabbar_tabs {
+  z-index: auto;
+}
+

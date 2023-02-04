@@ -14,17 +14,26 @@ class Builder extends DhtmlxCell {
     super.componentDidMount();
     const {cell, handlers} = this;
     this._editor = new $p.Editor(cell, handlers);
+    this._editor.eve.on('unload', () => {
+      const {_root} = this;
+      if(_root) {
+        _root.unmount();
+        this._root = null;
+      }
+    });
     const {_acc} = this._editor;
-    _acc.tabbar.attachEvent('onSelect', (tab) => {
-      this._editor.eve.emit('react', tab === 'tool');
+    _acc.tabbar.attachEvent('onSelect', (tab, lastTab) => {
+      if(tab !== lastTab) {
+        this.createRoot({tab, cell: _acc.tabbar.cells(tab).cell.firstChild});
+      }
       return true;
     });
-    const root = ReactDOM.createRoot(this._editor._acc._tool.cell);
-    root.render(<ToolWnd editor={this._editor}/>);
+    const tab = _acc.tabbar.getActiveTab();
+    this.createRoot({tab, cell: _acc.tabbar.cells(tab).cell.firstChild});
   }
 
   componentWillUnmount() {
-    const {cell, _editor} = this;
+    const {cell, _editor, _root} = this;
     if(_editor){
       const {ox} = _editor.project;
       const {calc_order} = ox;
@@ -38,10 +47,39 @@ class Builder extends DhtmlxCell {
       if(ox._modified && calc_order._modified) {
         calc_order._data._reload = true;
       }
-
     }
+    if(_root) {
+      setTimeout(() => {
+        _root?.unmount?.();
+      });
+    }
+    this._root = null;
     cell.detachObject(true);
     super.componentWillUnmount();
+  }
+
+  createRoot({tab, cell}) {
+    const {_editor, _root} = this;
+    if(_root) {
+      _root.unmount();
+      this._root = null;
+    }
+    if(tab === 'tool') {
+      this._root = ReactDOM.createRoot(cell);
+      this._root.render(<ToolWnd editor={_editor}/>);
+    }
+    else if(tab === 'prod') {
+      this._root = ReactDOM.createRoot(cell);
+      this._root.render(<ToolWnd editor={_editor} fix="root"/>);
+    }
+    else if(tab === 'stv') {
+      this._root = ReactDOM.createRoot(cell);
+      this._root.render(<ToolWnd editor={_editor} fix="layer"/>);
+    }
+    else if(tab === 'elm') {
+      this._root = ReactDOM.createRoot(cell);
+      this._root.render(<ToolWnd editor={_editor} fix="elm"/>);
+    }
   }
 
   /**
@@ -61,11 +99,11 @@ class Builder extends DhtmlxCell {
     const {dialog} = this.props;
     const Dialog = dialog && dialog.ref && dialog.Component;
 
-    return <div>
+    return <>
       <Prompt when message={this.prompt} />
       <div ref={el => this.el = el}/>
       {Dialog && <Dialog handlers={this.handlers} dialog={dialog} owner={this} />}
-    </div>;
+    </>;
   }
 
 }

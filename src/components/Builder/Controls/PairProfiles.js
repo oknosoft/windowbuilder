@@ -3,8 +3,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import PairToolbar from './Toolbar/PairToolbar';
+import ProfileToolbar from './Toolbar/ProfileToolbar';
 import PropField from 'metadata-react/DataField/PropField';
 import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
+import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
 
 function nearest(elm1, elm2, ProfileVirtual) {
   const nelm = elm1.nearest();
@@ -16,7 +18,7 @@ function nearest(elm1, elm2, ProfileVirtual) {
 
 export default function PairProps(props) {
   const {elm: [elm1, elm2], editor} = props;
-  const {ProfileItem, ProfileVirtual, Filling} = editor.constructor;
+  const {ProfileItem, ProfileVirtual, Filling, Onlay} = editor.constructor;
   const var_layers = elm1.layer !== elm2.layer;
   const elm1_profile = elm1 instanceof ProfileItem;
   const elm2_profile = elm2 instanceof ProfileItem;
@@ -38,10 +40,12 @@ export default function PairProps(props) {
   // для примыкающих, проверяем применимость
   const err1 = nearest1 && elm1.cnn3?.empty?.();
   const err2 = nearest2 && elm2.cnn3?.empty?.();
+  const clr_group = $p.cat.clrs.selection_exclude_service(fields.clr, elm1, elm1.ox);
   return <>
-    <PairToolbar {...props} />
+    {elm1_profile && elm2_profile ? <ProfileToolbar {...props} /> : <PairToolbar {...props} />}
     <PropField _obj={elm1} _fld="inset" _meta={_meta1} read_only={elm1_filling}/>
     <PropField _obj={elm2} _fld="inset" _meta={_meta2} read_only={elm2_filling}/>
+    <FieldClr _obj={elm1} _fld="clr" _meta={fields.clr} clr_group={clr_group}/>
     {has_b1 ? <FieldEndConnection elm1={elm1} elm2={elm2} node="b" fields={fields} /> : null}
     {has_e1 ? <FieldEndConnection elm1={elm1} elm2={elm2} node="e" fields={fields} /> : null}
     {has_b2 ? <FieldEndConnection elm1={elm2} elm2={elm1} node="b" fields={fields} /> : null}
@@ -52,6 +56,8 @@ export default function PairProps(props) {
       <br/>
       <Typography color="error">Нет соединений между элементами</Typography>
     </>}
+    {elm1_profile && elm2_profile && elm1 instanceof Onlay ?
+       <PropField _obj={elm1} _fld="region" _meta={fields.region} ctrl_type="oselect" /> : null}
   </>;
 }
 

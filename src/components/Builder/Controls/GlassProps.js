@@ -3,8 +3,10 @@ import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
 import GlassToolbar from './Toolbar/GlassToolbar';
 import Bar from './Bar';
+import ElmInsets from './ElmInsets';
 import GlassComposite from './GlassComposite';
 import Coordinates from './Coordinates';
+import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
 
 /**
  * Виртуальное заполнение
@@ -19,8 +21,6 @@ function glassGrp(grp) {
         return `№ ${grp.map(({elm}) => elm).join(', ')} (группа)`;
       case 'equals':
         return (elmnts) => elmnts.every(elm => grp.includes(elm)) && grp.every(elm => elmnts.includes(elm));
-      case 'hide_coordinates':
-        return true;
       case 'reflect_grp':
         return () => {
           const {glass_specification, _data} = target.ox;
@@ -104,17 +104,16 @@ export default class GlassProps extends React.Component {
   render() {
     const {state: {elm, row}, fields} = this;
 
-    const {info, inset, hide_coordinates} = elm;
+    const {info, inset, ox} = elm;
     const props = elm.elm_props();
-    $p.cat.clrs.selection_exclude_service(fields.clr, inset);
-    fields.clr.hide_composite = true;
-    const is_composite = inset.insert_type === inset.insert_type._manager.Стеклопакет;
+    const clr_group = $p.cat.clrs.selection_exclude_service(fields.clr, inset, ox);
+    const is_composite = inset.insert_type.is('Стеклопакет');
 
     return <>
       <GlassToolbar {...this.props} elm={elm} />
       <Bar>{`Заполнение ${info}`}</Bar>
       <PropField _obj={elm} _fld="inset" _meta={fields.inset} handleValueChange={() => this.set_row(null)}/>
-      <PropField _obj={elm} _fld="clr" _meta={fields.clr}/>
+      <FieldClr _obj={elm} _fld="clr" _meta={fields.clr} clr_group={clr_group}/>
 
       {props.length ? <>
         <Bar>Свойства</Bar>
@@ -123,7 +122,8 @@ export default class GlassProps extends React.Component {
 
       {is_composite ? <GlassComposite elm={elm} row={row} set_row={this.set_row}/> : null}
 
-      {!hide_coordinates && <Coordinates elm={elm} fields={fields} read_only />}
+      <Coordinates elm={elm} fields={fields} read_only />
+      <ElmInsets elm={elm}/>
 
     </>;
   }

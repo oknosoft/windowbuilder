@@ -22,6 +22,21 @@ const repos = [
     remote: '..\\wb-forms',
     dir: 'dist',
   },
+  {
+    local: 'metadata-core',
+    remote: '..\\metadata\\packages\\metadata-core',
+    dir: '',
+  },
+  {
+    local: 'metadata-pouchdb',
+    remote: '..\\metadata\\packages\\metadata-pouchdb',
+    dir: '',
+  },
+  {
+    local: 'metadata-abstract-ui',
+    remote: '..\\metadata\\packages\\metadata-abstract-ui',
+    dir: '',
+  },
 ];
 
 for(const local of Object.keys(dependencies).filter(v => /^metadata-/.test(v))) {

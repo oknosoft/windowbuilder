@@ -23,7 +23,7 @@ export default function ({dp}) {
       if(attr.field == 'elm_type' || attr.field == 'inset') {
         obj.clr = project.clr;
         obj.inset.clr_group.default_clr(obj);
-        $p.cat.clrs.selection_exclude_service(obj._metadata('clr'), obj.inset);
+        $p.cat.clrs.selection_exclude_service(obj._metadata('clr'), obj.inset, project);
       }
     },
 

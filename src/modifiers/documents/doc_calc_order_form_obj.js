@@ -39,18 +39,18 @@
         // TODO: штуки сейчас спрятаны в ro и имеют нулевую ширину
         if($p.wsql.get_user_param('hide_price_dealer')) {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
-          source.widths = '40,200,*,220,0,0,0,70,70,40,70,70,70,0,0,0';
-          source.min_widths = '30,200,220,150,0,0,0,70,70,70,70,70,70,0,0,0';
+          source.widths = '40,200,*,220,0,0,0,70,70,40,70,70,90,0,0,0';
+          source.min_widths = '30,200,220,150,0,0,0,70,70,70,70,70,90,0,0,0';
         }
         else if($p.wsql.get_user_param('hide_price_manufacturer')) {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма';
-          source.widths = '40,200,*,220,0,0,0,70,70,40,0,0,0,70,70,70';
-          source.min_widths = '30,200,220,150,0,0,0,70,70,70,0,0,0,70,70,70';
+          source.widths = '40,200,*,220,0,0,0,70,70,40,0,0,0,70,70,90';
+          source.min_widths = '30,200,220,150,0,0,0,70,70,70,0,0,0,70,70,90';
         }
         else {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
-          source.widths = '40,200,*,220,0,0,0,70,70,40,70,70,70,70,70,70';
-          source.min_widths = '30,200,220,150,0,0,0,70,70,70,70,70,70,70,70,70';
+          source.widths = '40,200,*,220,0,0,0,70,70,40,70,70,90,70,70,90';
+          source.min_widths = '30,200,220,150,0,0,0,70,70,70,70,70,90,70,70,90';
         }
 
         if(user.role_available('СогласованиеРасчетовЗаказов') || user.role_available('РедактированиеЦен') || user.role_available('РедактированиеСкидок')) {
@@ -229,8 +229,8 @@
             .then(() => {
 
               const footer = {
-                columns: ",,,,#stat_total,,,#stat_s,,,,,#stat_total,,,#stat_total",
-                _in_header_stat_s: function (tag, index, data) {
+                columns: ",,,,#stat_t,,,#stat_s,,,,,#stat_t,,,#stat_t",
+                _in_header_stat_s (tag, index, data) {
                   const calck = function () {
                     let sum = 0;
                     for(const row of o.production) {
@@ -238,7 +238,18 @@
                         sum += row.s * row.quantity;
                       }
                     }
-                    return sum.toFixed(2);
+                    return sum.round(2).toLocaleString('ru-RU');
+                  };
+                  this._stat_in_header(tag, calck, index, data);
+                },
+                _in_header_stat_t (tag, index, data) {
+                  const column = this.columnIds[index];
+                  const calck = function () {
+                    let sum = 0;
+                    for(const row of o.production) {
+                      sum += row[column];
+                    }
+                    return sum.round(2).toLocaleString('ru-RU') + '\u00a0';
                   };
                   this._stat_in_header(tag, calck, index, data);
                 }
@@ -361,8 +372,8 @@
         }
       }
 
-      // если вложенное изделие - блокируем все поля
-      else if(row.characteristic.leading_product.calc_order === o) {
+      // если изделие или вложенное изделие или комплектация - блокируем все поля
+      else if(row.characteristic.calc_order === o || row.nom === $p.job_prm.nom.accessories) {
         if(!['discount_percent', 'discount_percent_internal', 'price_internal', 'amount_internal', 'note'].includes(production.columnIds[ind])) {
           production.cells(id, ind).setDisabled(true);
         }
@@ -482,23 +493,23 @@
         show_discount();
         break;
 
-      case 'btn_calendar':
-        calendar_new_event();
-        break;
-
       case 'btn_go_connection':
         go_connection();
         break;
 
       case 'btn_history':
-        $p.dp.buyers_order.open_component(wnd, {ref: o.ref, cmd: {hfields: null, db: null}, _mgr}, handlers, 'ObjHistory');
+        $p.dp.buyers_order.open_component(wnd, {
+          ref: o.ref,
+          cmd: {hfields: null, db: null},
+          _mgr
+        }, handlers, 'ObjHistory');
         break;
 
       case 'btn_number':
         const {current_user, ui} = $p;
         const {_manager, obj_delivery_state, number_doc, date} = o;
         const title = `Заказ №${number_doc} от ${moment(date).format(moment._masks.date_time)}`;
-        if(current_user.role_available('ИзменениеТехнологическойНСИ') || current_user.role_available('СогласованиеРасчетовЗаказов')) {
+        if (current_user.role_available('ИзменениеТехнологическойНСИ') || current_user.role_available('СогласованиеРасчетовЗаказов')) {
           ui.dialogs.input_value({
             title,
             text: 'Новый номер',
@@ -506,14 +517,14 @@
             initialValue: number_doc,
           })
             .then((number) => {
-              if(number.length !== 11) {
+              if (number.length !== 11) {
                 throw new Error('Длина номера должна быть 11 символов');
               }
-              if(number !== number_doc) {
+              if (number !== number_doc) {
                 const db = obj_delivery_state == 'Шаблон' ? _manager.adapter.db({cachable: 'ram'}) : _manager.adapter.db(_manager);
                 return db.query('doc/number_doc', {key: [_manager.class_name, date.getFullYear(), number]})
                   .then((res) => {
-                    if(res.rows.length) {
+                    if (res.rows.length) {
                       throw new Error(`Заказ с номером ${number} уже существует в базе за ${date.getFullYear()} год`);
                     }
                     o.number_doc = number;
@@ -533,7 +544,7 @@
       case 'calc_order':
         clone_calc_order(o);
         break;
-      }
+    }
 
       if(btn_id.startsWith('prn_')) {
         _mgr.print(o, btn_id, wnd);
@@ -542,13 +553,6 @@
         const formula = $p.cat.formulas.get(btn_id.substr(5));
         formula && formula.execute(o);
       }
-    }
-
-    /**
-     * создаёт событие календаря
-     */
-    function calendar_new_event() {
-      $p.msg.show_not_implemented();
     }
 
     /**
@@ -1137,5 +1141,11 @@
     }
 
   };
+
+  const {setCValue} = eXcell_ro.prototype;
+  eXcell_ro.prototype.setCValue = function (val) {
+    return setCValue.call(this, typeof val === 'number' ? val.toLocaleString('ru-RU') : val);
+  };
+  //eXcell_calck.prototype.setCValue = eXcell_ro.prototype.setCValue;
 
 })($p);

@@ -9,7 +9,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
-import LinkedProp from './LinkedProp';
+import LinkedProp from 'wb-forms/dist/Common/LinkedProp';
 
 class ElmInsetProps extends React.Component {
 
@@ -42,7 +42,7 @@ class ElmInsetProps extends React.Component {
   }
 
   render() {
-    const {elm, row} = this.props;
+    const {elm, row, inset} = this.props;
     if(!elm || !row) {
       return null;
     }
@@ -71,6 +71,16 @@ class ElmInsetProps extends React.Component {
       for(const param of row.inset.used_params()) {
         const {ref} = param;
         content.push(<LinkedProp key={`prm0-${ref}`} _obj={_obj} _fld={ref} param={param} cnstr={0} inset={row.inset} fields={fields} />);
+      }
+    }
+    else if(elm instanceof Editor.Filling) {
+      for(const param of row.inset.used_params()) {
+        const {ref} = param;
+        const _obj = row._owner._owner.params.find({cnstr: row.cnstr, region: 0, inset: row.inset, param});
+        if(_obj) {
+          const {fields} = _obj._metadata();
+          content.push(<LinkedProp key={`prm0-${ref}`} _obj={_obj} param={param} cnstr={row.cnstr} inset={row.inset} fields={fields} />);
+        }
       }
     }
     else {

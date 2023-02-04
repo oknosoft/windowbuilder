@@ -13,7 +13,7 @@ function Product({editor}) {
   return <div>
     <PropField _obj={_dp} _fld="sys" />
     <PropField _obj={_dp} _fld="clr" />
-    <LinkedProps ts={ox.params} cnstr={0} inset={utils.blank.guid}/>
+    <LinkedProps ts={ox.params} cnstr={0} inset={utils.blank.guid} project={project}/>
     <PropField _obj={_dp} _fld="quantity" />
     {!hide_dealer && <PropField
       _obj={_dp}

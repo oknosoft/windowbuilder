@@ -5,9 +5,9 @@ import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import StandardForms from './StandardForms';
 import PropField from 'metadata-react/DataField/PropField';
-import Bar from '../Controls/Bar';
 import withStyles, {extClasses} from 'metadata-react/DataField/stylesPropertyGrid';
-import FieldInsetProfile from '../../CatInserts/FieldInsetProfile';
+import Bar from '../Controls/Bar';
+import FieldInsetProfile from 'wb-forms/dist/CatInserts/FieldInsetProfile';
 
 function PenWnd({editor, layer, classes}) {
   const {tool, project} = editor;

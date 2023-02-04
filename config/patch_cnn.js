@@ -8,14 +8,6 @@ const keys21 = {
  * предопределенные зоны
  */
 export const predefined = {
-  'start.ecookna.': {
-    zone: 21,
-    host: 'https://start.ecookna.ru/',
-    splash: {css: 'splash21', title: false},
-    log_level: 'warn',
-    keys: keys21,
-    ram_indexer: false,
-  },
   'develop.ecookna.ru:2111': {
     zone: 11,
     host: 'https://develop.ecookna.ru:2111/',
@@ -32,16 +24,33 @@ export const predefined = {
     keys: keys21,
     ram_indexer: false,
   },
-  'ecookna.': {
-    zone: 21,
-    host: 'https://zakaz.ecookna.ru/',
-    splash: {css: 'splash21', title: false},
-    log_level: 'warn',
+  'tg.oknosoft.ru:2310': {
+    zone: 10,
+    host: 'https://tg.oknosoft.ru:2310/',
     keys: keys21,
+    ram_indexer: false,
   },
-  'brusnika.': {
+  'tg.oknosoft.ru:2328': {
+    zone: 28,
+    host: 'https://tg.oknosoft.ru/',
+    keys: keys21,
+    ram_indexer: false,
+  },
+  'tg.oknosoft.ru': {
+    zone: 28,
+    host: 'https://tg.oknosoft.ru/',
+    keys: keys21,
+    ram_indexer: false,
+  },
+  'brusnika.oknosoft.ru:2227': {
     zone: 27,
     host: 'https://brusnika.oknosoft.ru:2227/',
+    keys: keys21,
+    ram_indexer: false,
+  },
+  'brusnika.oknosoft.ru:2210': {
+    zone: 10,
+    host: 'https://brusnika.oknosoft.ru:2210/',
     keys: keys21,
     ram_indexer: false,
   },
@@ -67,6 +76,12 @@ export const predefined = {
     log_level: 'warn',
     keys: {google: ''},
   },
+  'localhost:2210': {
+    zone: 10,
+    splash: {css: 'splash21', title: false},
+    log_level: 'warn',
+    keys: {google: ''},
+  },
   'localhost:3030': {
     zone: 23,
     log_level: 'warn',
@@ -77,40 +92,17 @@ export const predefined = {
     host: 'https://rusokon.oknosoft.ru/',
     keys: keys21,
   },
-  'start.kaleva.': {
-    zone: 8,
-    host: 'https://start.kaleva.ru/',
+  'ecookna.': {
+    zone: 21,
+    host: 'https://start.ecookna.ru/',
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
     keys: keys21,
     ram_indexer: false,
   },
-  'phototech.oknosoft.': {
+  'phototech.': {
     zone: 22,
     host: 'https://start.phototech.ru/',
-    splash: {css: 'splash21', title: false},
-    log_level: 'warn',
-    keys: keys21,
-    ram_indexer: false,
-  },
-  'start.phototech.': {
-    zone: 22,
-    host: 'https://start.phototech.ru/',
-    splash: {css: 'splash21', title: false},
-    log_level: 'warn',
-    keys: keys21,
-    ram_indexer: false,
-  },
-  'kaleva.ru:2019': {
-    zone: 8,
-    splash: {css: 'splash21', title: false},
-    log_level: 'warn',
-    keys: keys21,
-    ram_indexer: false,
-  },
-  'kaleva.ru:2021': {
-    zone: 8,
-    host: 'https://start.kaleva.ru/',
     splash: {css: 'splash21', title: false},
     log_level: 'warn',
     keys: keys21,
@@ -118,9 +110,11 @@ export const predefined = {
   },
   'kaleva.': {
     zone: 8,
-    host: 'https://zakaz.kaleva.ru/',
+    host: 'https://start.kaleva.ru/',
     splash: {css: 'splash21', title: false},
+    log_level: 'warn',
     keys: keys21,
+    ram_indexer: false,
   },
   'aribaz.': {zone: 2, host: 'https://aribaz.oknosoft.ru/'},
   'tmk.': {zone: 23, host: 'https://tmk-online.ru/'},

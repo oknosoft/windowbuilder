@@ -23,22 +23,55 @@ class ToolWnd extends React.Component {
 
   constructor(props, context) {
     super(props, context);
+    const {editor: {project, tool, constructor}, fix} = props;
     this.state = {
       elm: null,
       layer: null,
-      tool: null,
+      tool,
       type: 'root',
-      visible: false,
     };
+    if(fix === 'root') {
+      return;
+    }
+    if(fix === 'layer') {
+      let {activeLayer} = project;
+      if(!(activeLayer instanceof constructor.Contour)) {
+        activeLayer = project.contours[0];
+      }
+      this.state.type = 'layer';
+      this.state.layer = activeLayer;
+      return;
+    }
+    const {selected_elements: elm} = project;
+    if(elm.length === 2) {
+      this.state.type = 'pair';
+      this.state.elm = elm;
+    }
+    else if(elm.length > 2) {
+      this.state.type = 'grp';
+      this.state.elm = elm;
+    }
+    else if(elm.length || fix === 'elm') {
+      this.state.type = 'elm';
+      this.state.elm = elm[0];
+    }
+    else {
+      const {activeLayer} = project;
+      if(activeLayer instanceof constructor.Contour) {
+        this.state.type = 'layer';
+        this.state.layer = activeLayer;
+      }
+    }
   }
 
   componentDidMount() {
-    const {eve} = this.props.editor;
-    eve.on({
-      tool_activated: this.tool_activated,
-      elm_activated: this.elm_activated,
-      react: this.visible,
-    });
+    const {editor: {eve}, fix} = this.props;
+    if(fix !== 'root') {
+      eve.on({
+        tool_activated: this.tool_activated,
+        elm_activated: this.elm_activated,
+      });
+    }
   }
 
   componentWillUnmount() {
@@ -46,7 +79,6 @@ class ToolWnd extends React.Component {
     eve.off({
       tool_activated: this.tool_activated,
       elm_activated: this.elm_activated,
-      react: this.visible,
     });
   }
 
@@ -54,20 +86,29 @@ class ToolWnd extends React.Component {
     this.setState({tool});
   };
 
-  visible = (visible) => {
-    this.setState({visible});
-  };
-
   elm_activated = (elm) => {
-    const {Contour, Scheme} = this.props.editor.constructor;
-    if(!elm || elm instanceof Scheme) {
+    const {editor: {constructor: {Scheme}, Layer, project}, fix} = this.props;
+
+    if(fix === 'layer') {
+      if(!(elm instanceof Scheme)) {
+        if(elm instanceof Layer) {
+          this.tree_select({type: 'layer', layer: elm, elm: null});
+        }
+        else {
+          this.tree_select({type: 'layer', layer: elm?.layer || project?.activeLayer, elm: null});
+        }
+      }
+      return;
+    }
+
+    if(fix !== 'elm' && (!elm || elm instanceof Scheme)) {
       this.tree_select({type: 'root', elm});
     }
-    else if(elm instanceof Contour) {
+    else if(fix !== 'elm' && (elm instanceof Layer)) {
       this.tree_select({type: 'layer', layer: elm, elm: null});
     }
     else {
-      const {selected_elements} = elm.project;
+      const {selected_elements} = project;
       if(selected_elements.length === 2) {
         this.tree_select({type: 'pair', elm: selected_elements});
       }
@@ -85,12 +126,23 @@ class ToolWnd extends React.Component {
   };
 
   render() {
-    const {props: {editor}, state: {elm, layer, tool, type, visible}} = this;
-    const Wnd = (tool && (tool.ToolWnd || tool.constructor.ToolWnd)) || Stub;
+    const {props: {editor, fix}, state: {elm, layer, tool, type}} = this;
+    let Wnd;
+    if(fix) {
+      Wnd = editor.constructor.ToolSelectNode.ToolWnd;
+    }
+    else {
+      Wnd = (tool && (tool.ToolWnd || tool.constructor.ToolWnd)) || Stub;
+    }
     return <Provider store={store}>
       <ThemeProvider theme={theme}>
-        <div style={{overflowX: 'hidden', overflowY: 'auto'}}>
-          {visible && <Wnd editor={editor} type={type} elm={elm} layer={layer} tree_select={this.tree_select}/>}
+        <div
+          style={{overflowX: 'hidden', overflowY: 'auto', height: '100%'}}
+          onKeyDown={(event) => {
+            event.stopPropagation();
+          }}
+        >
+          <Wnd editor={editor} type={type} elm={elm} layer={layer} tree_select={this.tree_select}/>
         </div>
       </ThemeProvider>
     </Provider>;

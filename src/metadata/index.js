@@ -78,7 +78,7 @@ export function init(store) {
               })
                 .on('change', (change) => {
                   // информируем слушателей текущего сеанса об изменениях
-                  if(change.doc.obj_delivery_state !== 'Шаблон') {
+                  if(change.doc.class_name !== 'doc.nom_prices_setup' && change.doc.obj_delivery_state !== 'Шаблон') {
                     pouch.load_changes({docs: [change.doc]});
                     pouch.emit('ram_change', change);
                   }
@@ -93,7 +93,8 @@ export function init(store) {
     md.once('predefined_elmnts_inited', () => pouch.emit('pouch_complete_loaded'));
 
     // читаем paperjs и deep-diff
-    $p.load_script('/dist/paperjs-deep-diff.min.js', 'script')
+    $p.load_script(process.env.NODE_ENV === 'production' ?
+      '/dist/paperjs-deep-diff.min.js' : '/dist/paperjs-deep-diff.js', 'script')
 
       // читаем базовый скрипт рисовалки
       .then(() => import('wb-core/dist/drawer'))

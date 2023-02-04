@@ -288,7 +288,7 @@ class ToolPen extends ToolElement {
     }];
 
     // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this);
+    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this, project);
 
     this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
     this._grid = this.wnd.attachHeadFields({
@@ -308,29 +308,33 @@ class ToolPen extends ToolElement {
         tooltip: 'Добавить типовую форму',
         float: 'left',
         sub: {
-          width: '90px',
-          height:'190px',
+          width: '120px',
+          height:'174px',
           buttons: [
             {name: 'square', img: 'square.png', float: 'left'},
             {name: 'triangle1', img: 'triangle1.png', float: 'left'},
-            {name: 'triangle2', img: 'triangle2.png', float: 'right'},
-            {name: 'triangle3', img: 'triangle3.png', float: 'left'},
+            {name: 'triangle2', img: 'triangle2.png', float: 'left'},
+            {name: 'triangle3', img: 'triangle3.png', float: 'right'},
             {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
-            {name: 'semicircle2', img: 'semicircle2.png', float: 'right'},
-            {name: 'circle',    img: 'circle.png', float: 'left'},
+            {name: 'semicircle2', img: 'semicircle2.png', float: 'left'},
             {name: 'arc1',      img: 'arc1.png', float: 'left'},
-            {name: 'trapeze1',  img: 'trapeze1.png', float: 'right'},
+            {name: 'circle',    img: 'circle.png', float: 'right'},
+            {name: 'circle1',   css: 'tb_circle1', float: 'left'},
+            {name: 'circle2',   css: 'tb_circle2', float: 'left'},
+            {name: 'circle3',   css: 'tb_circle3', float: 'left'},
+            {name: 'circle4',   css: 'tb_circle4', float: 'right'},
+            {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
             {name: 'trapeze2',  img: 'trapeze2.png', float: 'left'},
             {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
             {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
             {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
             {name: 'trapeze6',  img: 'trapeze6.png', float: 'left'},
-            {name: 'trapeze7',  img: 'trapeze7.png', float: 'right'},
-            {name: 'trapeze8',  img: 'trapeze8.png', float: 'left'},
+            {name: 'trapeze7',  img: 'trapeze7.png', float: 'left'},
+            {name: 'trapeze8',  img: 'trapeze8.png', float: 'right'},
             {name: 'trapeze9',  img: 'trapeze9.png', float: 'left'},
-            {name: 'trapeze10',  img: 'trapeze10.png', float: 'right'}]}
-            },
-      ],
+            {name: 'trapeze10', img: 'trapeze10.png', float: 'left'},
+          ]},
+      }],
       image_path: '/imgs/',
       onclick: (name) => this.standard_form(name)
     });
@@ -426,7 +430,6 @@ class ToolPen extends ToolElement {
       this.project.selectedItems.forEach((path) => {
         if(path.parent instanceof Editor.ProfileItem){
           path = path.parent;
-          path.removeChildren();
           path.remove();
         }
       });
@@ -477,8 +480,8 @@ class ToolPen extends ToolElement {
     const {_scope, addl_hit, profile, project, group} = this;
     const {
       enm: {elm_types},
-      EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, ProfileCut, ProfileAdjoining, Profile, ProfileItem, Filling}
-    } = $p;
+      EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, ProfileCut, ProfileAdjoining,
+        Profile, ProfileItem, Filling, Contour}} = $p;
 
     group && group.removeChildren();
 
@@ -574,6 +577,22 @@ class ToolPen extends ToolElement {
         this.last_profile = new ProfileCut({generatrix: this.path, proto: profile});
         break;
 
+      case elm_types.tearing:
+        // рисуем разрыв заполнения
+        const tearing = Contour.create({
+          kind: 4,
+          parent: this.hitItem.item.layer,
+          project,
+        });
+        tearing.initialize({
+          parent: this.hitItem.item.parent,
+          inset: profile.inset,
+          clr: profile.clr,
+          path: this.path,
+        });
+        this.path.remove();
+        break;
+
       default:
         // рисуем профиль
         this.last_profile = new Profile({generatrix: this.path, proto: profile});
@@ -654,6 +673,10 @@ class ToolPen extends ToolElement {
   on_mousemove(event) {
 
     this.hitTest(event);
+
+    if(this.profile.elm_type.is('tearing')) {
+      return;
+    }
 
     const {project, addl_hit} = this;
 
@@ -1160,6 +1183,43 @@ class ToolPen extends ToolElement {
     }
   }
 
+  hitTest_tearing({point}) {
+    const tolerance = 16;
+    const {project, _scope} = this;
+
+    this.hitItem = point && project.hitTest(point, {fill:true, stroke:false, curves:false, tolerance });
+    if (this.hitItem?.item?.parent instanceof Editor.Filling) {
+      const rect = new paper.Path.Rectangle({
+        center: point,
+        size: [240, 240],
+        insert: false,
+      });
+      const intersections = this.hitItem.item.getIntersections(rect);
+      if(intersections.length) {
+        this._scope.canvas_cursor('cursor-pen-freehand');
+        this.mode = null;
+        this.path && this.path.remove();
+      }
+      else {
+        this._scope.canvas_cursor('cursor-pen-adjust');
+        this.mode = 'create';
+        this.path && this.path.remove();
+        this.path = new paper.Path.Rectangle({
+          center: point,
+          size: [200, 200],
+          strokeColor: 'grey',
+          strokeWidth: 2,
+          strokeScaling: false,
+        });
+      }
+    }
+    else {
+      this._scope.canvas_cursor('cursor-pen-freehand');
+      this.mode = null;
+      this.path && this.path.remove();
+    }
+  }
+
   hitTest(event) {
 
     this.addl_hit = null;
@@ -1168,15 +1228,18 @@ class ToolPen extends ToolElement {
     const {elm_types} = $p.enm;
 
     switch (this.profile.elm_type) {
-    case elm_types.Добор:
+    case elm_types.addition:
       this.hitTest_addl(event);
       break;
     case elm_types.Соединитель:
       this.hitTest_connective(event);
       break;
-    case elm_types.Примыкание:
+    case elm_types.adjoining:
       this.hitTest_adj(event);
       break;
+    case elm_types.tearing:
+        this.hitTest_tearing(event);
+        break;
     default:
       const hitSize = 6;
 
@@ -1199,8 +1262,6 @@ class ToolPen extends ToolElement {
 
     return true;
   }
-
-
 
   /**
    * ### Добавление типовой формы
@@ -1298,13 +1359,22 @@ class ToolPen extends ToolElement {
    * @param bounds
    */
   add_semicircle1(bounds) {
-    // находим правую нижнюю точку
-    const point = bounds.bottomRight;
-    const profiles = this.add_sequence([
-      [point, point.add([1000, 0])],
-      [point.add([1000, 0]), point]
-    ]);
-    profiles[0].arc_h = 500;
+    $p.ui.dialogs.input_value({
+      title: 'Полугкуг сверху',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        // находим правую нижнюю точку
+        const point = bounds.bottomRight;
+        const d = 2 * r;
+        const profiles = this.add_sequence([
+          [point, point.add([d, 0])],
+          [point.add([d, 0]), point]
+        ]);
+        profiles[0].arc_h = r;
+      });
   }
 
   /**
@@ -1312,13 +1382,22 @@ class ToolPen extends ToolElement {
    * @param bounds
    */
   add_semicircle2(bounds) {
-    // находим правую нижнюю точку
-    const point = bounds.bottomRight;
-    const profiles = this.add_sequence([
-      [point, point.add([1000, 0])],
-      [point.add([1000, 0]), point]
-    ]);
-    profiles[1].arc_h = 500;
+    $p.ui.dialogs.input_value({
+      title: 'Полугкуг снизу',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        // находим правую нижнюю точку
+        const point = bounds.bottomRight;
+        const d = 2 * r;
+        const profiles = this.add_sequence([
+          [point, point.add([d, 0])],
+          [point.add([d, 0]), point]
+        ]);
+        profiles[1].arc_h = r;
+      });
   }
 
   /**
@@ -1326,14 +1405,143 @@ class ToolPen extends ToolElement {
    * @param bounds
    */
   add_circle(bounds) {
-    // находим правую нижнюю точку
-    const point = bounds.bottomRight;
-    const profiles = this.add_sequence([
-      [point, point.add([1000, 0])],
-      [point.add([1000, 0]), point]
-    ]);
-    profiles[0].arc_h = 500;
-    profiles[1].arc_h = 500;
+    $p.ui.dialogs.input_value({
+      title: 'Круг из двух сегментов',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        // находим правую нижнюю точку
+        const point = bounds.bottomRight;
+        const d = 2 * r;
+        const profiles = this.add_sequence([
+          [point, point.add([d, 0])],
+          [point.add([d, 0]), point]
+        ]);
+        profiles[0].arc_h = r;
+        profiles[1].arc_h = r;
+      });
+  }
+
+  /**
+   * Рисует circle1
+   * @param bounds
+   */
+  add_circle1(bounds, sign = 1) {
+    const {ui, enm, dp} = $p;
+    ui.dialogs.input_value({
+      title: 'Круг из двух сегментов',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        const d = 2 * r;
+        const delta = 10 * sign;
+        // находим укорочение
+        const vertor = new paper.Point([r, delta]);
+        vertor.length = r;
+
+        // находим правую нижнюю точку
+        const base = bounds.bottomRight;
+        const h = r - vertor.x;
+        const point = base.add([0, h]);
+        const profiles = this.add_sequence(sign > 0 ?
+          [[point, point.add([d, 0])], [point.add([d, 0]), point]] :
+          [[point.add([d, 0]), point], [point, point.add([d, 0])]]);
+        const segments = sign > 0 ?
+          [base.add([d, -delta]), base.add([0, -delta])] :
+          [base.add([0, -delta]), base.add([d, -delta])];
+        profiles[0].arc_h = r + sign * delta;
+        profiles[1].arc_h = r - sign * delta;
+
+        const {profile, project, _scope} = this;
+        profile.elm_type = enm.elm_types.impost;
+        dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
+
+        project.register_change(true, () => {
+          const impost = new Editor.Profile({
+            generatrix: new paper.Path({
+              strokeColor: 'black',
+              segments,
+            }),
+            proto: profile,
+          });
+          project.deselectAll();
+          project.zoom_fit();
+          _scope.select_tool('select_node');
+          setTimeout(() => {
+            project.register_change(true, () => {
+              impost.selected = true;
+              project.move_points(new paper.Point([0, sign]).negate());
+              project.move_points(new paper.Point([0, sign]));
+            });
+          }, 50);
+        });
+      });
+  }
+
+  add_circle2(bounds) {
+    this.add_circle1(bounds, -1);
+  }
+
+  add_circle4(bounds, sign = 1) {
+    const {ui, enm, dp} = $p;
+    ui.dialogs.input_value({
+      title: 'Круг из двух сегментов',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        const d = -2 * r;
+        const delta = 10 * sign;
+        // находим укорочение
+        const vertor = new paper.Point([delta, r]);
+        vertor.length = r;
+
+        // находим правую нижнюю точку
+        const base = bounds.topLeft;
+        const h = r + vertor.y;
+        const point = base.add([-h, 0]);
+        const profiles = this.add_sequence(sign > 0 ?
+          [[point, point.add([0, d])], [point.add([0, d]), point]] :
+          [[point.add([0, d]), point], [point, point.add([0, d])]]);
+        profiles[0].arc_h = r - sign * delta;
+        profiles[1].arc_h = r + sign * delta;
+
+        const {profile, project, _scope} = this;
+        profile.elm_type = enm.elm_types.impost;
+        dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
+
+        project.register_change(true, () => {
+          const segments = sign > 0 ?
+            [profiles[0].e.add([delta, 0]), profiles[0].b.add([delta, 0])] :
+            [profiles[1].e.add([delta, 0]), profiles[1].b.add([delta, 0])];
+          const impost = new Editor.Profile({
+            generatrix: new paper.Path({
+              strokeColor: 'black',
+              segments,
+            }),
+            proto: profile,
+          });
+          project.deselectAll();
+          project.zoom_fit();
+          _scope.select_tool('select_node');
+          setTimeout(() => {
+            project.register_change(true, () => {
+              impost.selected = true;
+              project.move_points(new paper.Point([sign, 0]).negate());
+              project.move_points(new paper.Point([sign, 0]));
+            });
+          }, 50);
+        });
+      });
+  }
+
+  add_circle3(bounds) {
+    this.add_circle4(bounds, -1);
   }
 
   /**
@@ -1341,15 +1549,24 @@ class ToolPen extends ToolElement {
    * @param bounds
    */
   add_arc1(bounds) {
-    // находим правую нижнюю точку
-    const point = bounds.bottomRight;
-    const profiles = this.add_sequence([
-      [point, point.add([0, -500])],
-      [point.add([0, -500]), point.add([1000, -500])],
-      [point.add([1000, -500]), point.add([1000, 0])],
-      [point.add([1000, 0]), point]
-    ]);
-    profiles[1].arc_h = 500;
+    $p.ui.dialogs.input_value({
+      title: 'Квадрат и полугкуг сверху',
+      text: 'Уточните радиус',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        // находим правую нижнюю точку
+        const point = bounds.bottomRight;
+        const d = 2 * r;
+        const profiles = this.add_sequence([
+          [point, point.add([0, -r])],
+          [point.add([0, -r]), point.add([d, -r])],
+          [point.add([d, -r]), point.add([d, 0])],
+          [point.add([d, 0]), point]
+        ]);
+        profiles[1].arc_h = r;
+      });
   }
 
   /**

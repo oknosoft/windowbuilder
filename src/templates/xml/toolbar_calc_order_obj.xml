@@ -8,7 +8,7 @@
   <item type="button" id="btn_post" enabled="false" text="&lt;i class='fa fa-check-square-o fa-fw'&gt;&lt;/i&gt;" title="Провести документ"/>
   <item type="button" id="btn_unpost" enabled="false" text="&lt;i class='fa fa-square-o fa-fw'&gt;&lt;/i&gt;" title="Отмена проведения"/>
 
-  <item type="button" id="btn_files" text="&lt;i class='fa fa-paperclip fa-fw'&gt;&lt;/i&gt;" title="Присоединенные файлы"/>
+  <item type="button" id="btn_files" text="&lt;i class='fa fa-paperclip fa-fw'&gt;&lt;/i&gt;" title="Присоединенные файлы, {Ctrl}+Click для добавления ссылки"/>
 
   <item type="buttonSelect" id="bs_print" text="&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt;" title="Печать" openAll="true">
   </item>

@@ -35,6 +35,7 @@ class ControlsFrame extends React.Component {
       scheme_changed: this.scheme_changed,
       loaded: this.scheme_changed,
       set_inset: this.set_inset,
+      elm_removed: this.elm_removed,
       coordinates_calculated: this.coordinates_calculated,
     });
     project._dp._manager.on('update', this.dp_listener);
@@ -51,6 +52,7 @@ class ControlsFrame extends React.Component {
       scheme_changed: this.scheme_changed,
       loaded: this.scheme_changed,
       set_inset: this.set_inset,
+      elm_removed: this.elm_removed,
       coordinates_calculated: this.coordinates_calculated,
     });
     project && project._dp._manager.off('update', this.dp_listener);
@@ -64,6 +66,12 @@ class ControlsFrame extends React.Component {
   // при активации инструмента
   tool_activated = () => {
     this.forceUpdate();
+  };
+
+  elm_removed = (elm) => {
+    const {eve, project, constructor: {ProfileConnective}} = this.props.editor;
+    const isConnective = elm instanceof ProfileConnective;
+    eve.emit('elm_activated', isConnective ? project : (elm.layer || project));
   };
 
   // при смене фурнитуры
@@ -88,7 +96,12 @@ class ControlsFrame extends React.Component {
 
   // при пересчете координат
   coordinates_calculated = () => {
-
+    const {project} = this.props.editor;
+    if(project) {
+      const {ox, _dp} = project;
+      $p.utils._mixin(_dp, ox.calc_order_row, ['note', 'price_internal', 'amount', 'amount_internal']);
+      this.forceUpdate();
+    }
   };
 
   // при готовности снапшота, обновляем суммы и цены
@@ -110,11 +123,16 @@ class ControlsFrame extends React.Component {
     }
     else {
       other.ox = project ? project.ox : null;
+      if(!other.ox || other.ox.empty()) {
+        return 'Загрузка...';
+      }
+
       const {Filling} = $p.EditorInvisible;
 
       switch (type) {
       case 'elm':
-        panel = elm ? <ElmProps {...other}/> : ``;
+        other.key = `elm-${elm?.elm}`;
+        panel = <ElmProps {...other}/>;
         break;
       case 'pair':
         panel = elm.every((elm) => elm instanceof Filling) ? <GlassProps {...other}/> : <PairProps {...other}/>;
@@ -133,7 +151,7 @@ class ControlsFrame extends React.Component {
         break;
       case 'ins':
         if(!other.elm) {
-          other.elm = new project.constructor.FakePrmElm(project);
+          other.elm = new project.constructor.FakePrmElm(other.layer);
         }
         panel = <ElmInsets {...other}/>;
         break;

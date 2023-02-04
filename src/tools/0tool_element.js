@@ -60,7 +60,11 @@ class ToolElement extends Editor.ToolElement {
   }
 
   on_close(wnd) {
-    wnd && wnd.cell && setTimeout(() => this._scope && this._scope.tools[1].activate());
+    if(wnd) {
+      wnd.wnd_options(this.options.wnd);
+      $p.wsql.save_options('editor', this.options);
+      wnd.cell && setTimeout(() => this._scope && this._scope.tools[1].activate());
+    }
     return true;
   }
 

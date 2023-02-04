@@ -19,6 +19,11 @@
   flex-shrink: 0;
 }
 
+.tb_circle1 {background-image: url(/imgs/circle2.png); width: 21px; height: 21px;}
+.tb_circle2 {background-image: url(/imgs/circle2.png); width: 21px; height: 21px; transform: rotate(180deg);}
+.tb_circle3 {background-image: url(/imgs/circle2.png); width: 21px; height: 21px; transform: rotate(270deg);}
+.tb_circle4 {background-image: url(/imgs/circle2.png); width: 21px; height: 21px; transform: rotate(90deg);}
+
 .tb_img_cnn_ad {background-image: url(/imgs/cnn-ad.png);}
 .tb_img_cnn_i {background-image: url(/imgs/cnn-i.png);}
 .tb_img_cnn_ii {background-image: url(/imgs/cnn-ii.png);}
