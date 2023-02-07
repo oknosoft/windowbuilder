@@ -40,6 +40,9 @@ class ProductionParamsList extends MDNRComponent {
 
   handleSelect = () => {
     const {_current, props: {handlers}} = this;
+    if(_current?.is_folder) {
+      return this.listDoubleClick();
+    }
     _current && handlers.handleSelect && handlers.handleSelect(_current);
   };
 
