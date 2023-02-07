@@ -40,7 +40,7 @@ export default function AccordionGlassComposite(props) {
 
   const update_length = () => {
     set_length(elm.ox.glass_specification.find_rows({elm: elm.elm}).length);
-  }
+  };
 
   return <Accordion square elevation={0} classes={{expanded: classes.rootExpanded}}>
     <AccordionSummary classes={{
@@ -66,8 +66,11 @@ export default function AccordionGlassComposite(props) {
     <AccordionDetails classes={{root: classes.details}}>
       <GlassComposite {...props} update_length={update_length} length={length}/>
     </AccordionDetails>
-  </Accordion>
+  </Accordion>;
 }
+AccordionGlassComposite.propTypes = {
+  elm: PropTypes.object, // элемент составного заполнения
+};
 
 class GlassComposite extends React.Component {
 
@@ -260,7 +263,6 @@ class GlassComposite extends React.Component {
     </>;
   }
 }
-
 GlassComposite.propTypes = {
   elm: PropTypes.object, // элемент составного заполнения
   row: PropTypes.object, // строка состава
