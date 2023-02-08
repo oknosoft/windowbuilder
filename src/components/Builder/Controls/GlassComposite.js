@@ -237,6 +237,9 @@ class GlassComposite extends React.Component {
     if(length > 2) {
       height += (length -2) * 35;
     }
+    if(height < 220) {
+      height = 220;
+    }
 
     return <>
       {this.scheme ? <>
