@@ -45,7 +45,7 @@ export default function AccordionElmInsets(props) {
 
   const update_length = () => {
     set_length(elm.ox.inserts.find_rows({cnstr: -elm.elm}).length);
-  }
+  };
 
   return <Accordion square elevation={0} classes={{expanded: classes.rootExpanded}}>
     <AccordionSummary classes={{
@@ -71,8 +71,11 @@ export default function AccordionElmInsets(props) {
     <AccordionDetails classes={{root: classes.details}}>
       <ElmInsets {...props} _meta={_meta} update_length={update_length} length={length}/>
     </AccordionDetails>
-  </Accordion>
+  </Accordion>;
 }
+AccordionElmInsets.propTypes = {
+  elm: PropTypes.object.isRequired,
+};
 class ElmInsets extends React.Component {
 
   constructor(props, context) {

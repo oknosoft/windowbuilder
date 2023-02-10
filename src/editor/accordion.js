@@ -39,6 +39,12 @@ class SchemeLayers {
       else {
         project.ox.builder_props = {[key]: state};
         project.register_change(true);
+        if(key === 'bw') {
+          const {clr_by_clr} = Editor.BuilderElement;
+          for(const profile of project.getItems({class: Editor.ProfileItem})) {
+            profile.path.fillColor = clr_by_clr.call(profile, profile.clr);
+          }
+        }
       }
       project.register_update();
     });
@@ -145,6 +151,7 @@ class SchemeLayers {
         visualization: 'Визуализация доп. элементов',
         txts: 'Комментарии',
         glass_numbers: 'Номера заполнений',
+        bw: 'Чёрно-белый режим',
       };
       for (const prop in props) {
         tree.addItem(prop, props[prop], 0);

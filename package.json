@@ -40,16 +40,16 @@
     "@turf/points-within-polygon": "^6.5",
     "dxf-writer": "^1.18",
     "md5-file": "^5.0",
-    "metadata-dhtmlx": "2.0.31-beta.1",
-    "metadata-react": "2.0.31-beta.1",
-    "metadata-redux": "2.0.31-beta.1",
-    "metadata-superlogin": "2.0.31-beta.1",
+    "metadata-dhtmlx": "2.0.32-beta.1",
+    "metadata-react": "2.0.32-beta.1",
+    "metadata-redux": "2.0.32-beta.1",
+    "metadata-superlogin": "2.0.32-beta.1",
     "react-highlight-words": "^0.18",
     "react-number-format": "^5.1.2",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#b9606255e43069b33fc0b8683ab19bd9cbce2c03",
+    "wb-core": "github:oknosoft/windowbuilder-core#d114e62191d118e2e290934af3b138879ee068a2",
     "wb-cutting": "github:oknosoft/genetic-cutting#da74a4a12254f351c1364e86bbf0c0454550701d",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#c6a6ffe4e5aabd824562199c5ba6b66d7cbb3fe9"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#a7acbda2eaea662eae45343343d55773cd57a683"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
