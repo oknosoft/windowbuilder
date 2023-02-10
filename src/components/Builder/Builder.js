@@ -50,7 +50,8 @@ class Builder extends DhtmlxCell {
     }
     if(_root) {
       setTimeout(() => {
-        _root?.unmount?.();
+        try{_root?.unmount?.();}
+        catch (e) {}
       });
     }
     this._root = null;

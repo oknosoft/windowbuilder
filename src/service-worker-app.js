@@ -6,7 +6,7 @@ import {skipWaiting} from 'workbox-core';
 import {precacheAndRoute} from 'workbox-precaching';
 
 // в отладочном режиме, обновляем cache раз в день
-const dkey = new Date().toISOString().substring(0, 10);
+const dkey = new Date().toJSON().substring(0, 10);
 
 export default function () {
   skipWaiting();
