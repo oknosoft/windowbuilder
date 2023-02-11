@@ -6608,6 +6608,9 @@ class ToolPen extends ToolElement {
       }));
     });
     profile.bind_sys && project.activeLayer.on_sys_changed(true);
+    project.register_change(true, () => {
+      project.activeLayer.on_sys_changed();
+    });
     return profiles;
   }
 

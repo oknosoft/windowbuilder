@@ -14,7 +14,7 @@ const fs = require('fs-extra');
 const paths = require('../config/paths');
 const packageData = require('../package.json');
 const moment = require('moment');
-const build = `{"build": "v${packageData.version} (${packageData.dependencies['metadata-core']}), ${moment().format()}"}`;
+const build = `{"build": "v${packageData.version} (${packageData.dependencies['metadata-react']}), ${moment().format()}"}`;
 fs.writeFile(path.resolve(paths.appBuild + '/build.json'), build, 'utf8', function (err) {
   if(err) {
     console.log(err);
