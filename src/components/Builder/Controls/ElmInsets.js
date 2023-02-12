@@ -37,11 +37,11 @@ export default function AccordionElmInsets(props) {
   const classes = useStyles();
   const _meta = tune_meta(elm);
 
+  const [length, set_length] = React.useState(elm.ox.inserts.find_rows({cnstr: -elm.elm}).length);
+
   if(!_meta.fields.inset.choice_params.length) {
     return null;
   }
-
-  const [length, set_length] = React.useState(elm.ox.inserts.find_rows({cnstr: -elm.elm}).length);
 
   const update_length = () => {
     set_length(elm.ox.inserts.find_rows({cnstr: -elm.elm}).length);
