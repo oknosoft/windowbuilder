@@ -606,8 +606,9 @@ class ToolPen extends ToolElement {
             this._controls.mousemove({point: this.last_profile.e}, true);
             this.last_profile = null;
             this._controls.create_click();
+            this.project.activeLayer.on_sys_changed();
           }
-        }, 50);
+        }, 40);
       }
     }
     else if (this.hitItem && this.hitItem.item && (modifiers.shift || modifiers.control || modifiers.option)) {
