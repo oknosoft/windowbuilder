@@ -3,9 +3,6 @@
 // функция установки параметров сеанса
 import settings from '../../config/app.settings';
 
-// принудительный редирект и установка зоны для абонентов с выделенными серверами
-import {patch_prm, patch_cnn} from '../../config/patch_cnn';
-
 // генератор события META_LOADED для redux
 import {addMiddleware} from 'redux-dynamic-middlewares';
 // стандартные события pouchdb и метаданных
@@ -36,8 +33,8 @@ import reset_cache from './reset_cache';
 global.$p = $p;
 
 // параметры сеанса и метаданные инициализируем без лишних проволочек
-$p.wsql.init(patch_prm(settings));
-patch_cnn();
+$p.wsql.init(settings.prm(settings));
+settings.cnn($p);
 
 // со скрипом инициализации метаданных, так же - не затягиваем
 init_meta($p);
