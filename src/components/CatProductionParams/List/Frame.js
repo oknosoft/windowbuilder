@@ -65,7 +65,7 @@ class ProductionParamsList extends MDNRComponent {
 
   listSetCurrent = (elm) => {
     this._current = elm;
-  }
+  };
 
   render() {
     const {props, tree, context: {dnr: {frameRect}}, state: {parent, value, columns}} = this;
@@ -94,4 +94,4 @@ class ProductionParamsList extends MDNRComponent {
   }
 }
 
-export default withStyles(styles)(ProductionParamsList)
+export default withStyles(styles)(ProductionParamsList);

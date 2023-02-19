@@ -160,6 +160,7 @@ ToolWnd.childContextTypes = {
 
 ToolWnd.propTypes = {
   editor: PropTypes.object.isRequired,
+  fix: PropTypes.string,
 };
 
 export default ToolWnd;
