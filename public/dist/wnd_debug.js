@@ -2397,6 +2397,9 @@ class OSvgs {
     if(!res.length){
       // возможно, стоит показать надпись, что нет эскизов
     }
+    else if(res.length > 8) {
+      this.apply_area_hidden();
+    }
   }
 
   onclick(event, dbl) {
