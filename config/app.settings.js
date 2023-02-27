@@ -90,9 +90,6 @@ function settings(prm = {}) {
 
     //
     keys: {
-      dadata: 'bc6f1add49fc97e9db87781cd613235064dbe0f9',
-      yandex: '0ab2c686-6aca-4311-ae5e-087829702ae7',
-      google: 'AIzaSyAO-Jca5NTE5bQ7IY7BxFCl0jgW9OsJvuM',
       geonames: 'oknosoft',
     },
 
