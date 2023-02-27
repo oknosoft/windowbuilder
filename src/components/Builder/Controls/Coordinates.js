@@ -12,6 +12,7 @@ import PropField from 'metadata-react/DataField/PropField';
 import FieldNumberNative from 'metadata-react/DataField/FieldNumberNative';
 import FieldCheckbox from 'metadata-react/DataField/FieldCheckbox';
 import useStyles from './stylesAccordion';
+import {useOpenContext} from './index';
 
 export default function Coordinates({elm, fields, read_only, select_b, select_e}) {
   const {x1, y1, x2, y2, _row} = elm;
@@ -21,7 +22,12 @@ export default function Coordinates({elm, fields, read_only, select_b, select_e}
     text += ` [${_row.alp1.toFixed()}°, ${_row.alp2.toFixed()}°]`;
   }
 
-  return <Accordion square elevation={0} classes={{expanded: classes.rootExpanded}}>
+  const {open, openChange} = useOpenContext();
+  const onChange = (e, coordinates) => {
+    openChange({coordinates});
+  };
+
+  return <Accordion square elevation={0} classes={{expanded: classes.rootExpanded}} expanded={open.coordinates} onChange={onChange}>
     <AccordionSummary classes={{
       root: classes.summary,
       content: classes.summaryContent,

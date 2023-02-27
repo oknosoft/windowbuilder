@@ -22,6 +22,7 @@ import Tip from 'metadata-react/App/Tip';
 import GlassLayerProps from './GlassLayerProps';
 import CompositeChains from './GlassCompositeChains';
 import useStyles from './stylesAccordion';
+import {useOpenContext} from './index';
 
 const reflect = ({project, reflect_grp}) => {
   if(reflect_grp) {
@@ -37,12 +38,16 @@ export default function AccordionGlassComposite(props) {
   const classes = useStyles();
 
   const [length, set_length] = React.useState(elm.ox.glass_specification.find_rows({elm: elm.elm}).length);
+  const {open, openChange} = useOpenContext();
+  const onChange = (e, composite) => {
+    openChange({composite});
+  };
 
   const update_length = () => {
     set_length(elm.ox.glass_specification.find_rows({elm: elm.elm}).length);
   };
 
-  return <Accordion square elevation={0} classes={{expanded: classes.rootExpanded}}>
+  return <Accordion square elevation={0} classes={{expanded: classes.rootExpanded}} expanded={open.composite} onChange={onChange}>
     <AccordionSummary classes={{
       root: classes.summary,
       content: classes.summaryContent,
