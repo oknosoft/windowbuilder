@@ -87,22 +87,6 @@ class ElmInsets extends React.Component {
       }
     });
     this.state = {row: null, inset: null};
-    this.tune_meta(props.elm);
-  }
-
-  shouldComponentUpdate(nextProps) {
-    if(nextProps.elm !== this.props.elm) {
-      this.tune_meta(nextProps.elm);
-    }
-    return true;
-  }
-
-  tune_meta(elm) {
-    const {cat, utils} = $p;
-    this._meta = utils._clone(cat.characteristics.metadata('inserts'));
-    const {inserts} = (elm).inset;
-    this._meta.fields.inset.choice_params = inserts.count() ?
-      [{name: 'ref', path: inserts.unload_column('inset')}] : [];
   }
 
   filter = (collection) => {
