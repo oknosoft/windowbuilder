@@ -170,6 +170,7 @@ class Editor extends $p.EditorInvisible {
                 ],
             }},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
+        //{name: 'smart_size', css: 'tb_ruler_node', tooltip: 'Умный размер'},
         {name: 'stulp_flap', css: 'tb_stulp_flap', tooltip: 'Штульповые створки'},
         {name: 'vitrazh', text: '<i class="fa fa-film"></i>', tooltip: 'Витраж'},
         {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'},
@@ -419,6 +420,11 @@ class Editor extends $p.EditorInvisible {
      * Относительное позиционирование и сдвиг
      */
     new ToolRuler();
+
+    /**
+     * Умный размер
+     */
+    new ToolSmartSize();
 
     /**
      * Вставка штульповых створок
