@@ -386,7 +386,6 @@ class ToolRuler extends ToolElement {
       hitItem: null,
       hitPoint: null,
       changed: false,
-      //minDistance: 10,
       selected: {
         a: [],
         b: [],
