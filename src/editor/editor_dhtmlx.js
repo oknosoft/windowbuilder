@@ -147,7 +147,7 @@ class Editor extends $p.EditorInvisible {
      * @type OTooolBar
      * @private
      */
-    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '408px',
+    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '442px',
       image_path: '/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
@@ -170,7 +170,7 @@ class Editor extends $p.EditorInvisible {
                 ],
             }},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
-        //{name: 'smart_size', css: 'tb_ruler_node', tooltip: 'Умный размер'},
+        {name: 'smart_size', css: 'tb_ruler_node', tooltip: 'Умный размер'},
         {name: 'stulp_flap', css: 'tb_stulp_flap', tooltip: 'Штульповые створки'},
         {name: 'vitrazh', text: '<i class="fa fa-film"></i>', tooltip: 'Витраж'},
         {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'},
