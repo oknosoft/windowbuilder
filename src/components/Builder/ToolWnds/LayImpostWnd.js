@@ -27,8 +27,6 @@ export default function LayImpostWnd({editor}) {
 
   // Пересчёт связанных списков
   React.useEffect(() => {
-    const split_all = Object.values(lay_split_types.by_ref).filter(v => !v.empty());
-    const split_ri = [lay_split_types.ДелениеВертикальных, lay_split_types.ДелениеГоризонтальных];
 
     const inserts = project._dp.sys.inserts(profile.elm_type, '', {project, layer: project.activeLayer});
     setInserts(inserts);
@@ -37,28 +35,34 @@ export default function LayImpostWnd({editor}) {
       profile.inset_by_y = inserts[0];
     }
 
-    if(profile.elm_type === elm_types.layout) {
-      setSplit(split_all);
-    }
-    else {
-      setSplit(split_ri);
-    }
-
   }, [profile.elm_type]);
 
   // Слушаем изменения
   React.useEffect(() => {
 
-    function dataChange(obj, fields) {
+    const split_all = Object.values(lay_split_types.by_ref).filter(v => !v.empty());
+    const split_ri = [lay_split_types.ДелениеВертикальных, lay_split_types.ДелениеГоризонтальных];
+
+    function dataChange(obj, fields, first) {
 
       let touchx = true;
-      const {profile, sys, _grid} = this;
 
       if('inset_by_y' in fields) {
         const {pair, split_type, region} = obj.inset_by_y;
         if(split_type.length) {
           obj.split = split_type[0];
+          setSplit(split_type);
         }
+        else if(profile.elm_type === elm_types.layout) {
+          setSplit(split_all);
+        }
+        else {
+          setSplit(split_ri);
+          if(!split_ri.includes(obj.split)) {
+            obj.split = split_ri[0];
+          }
+        }
+
         if(!pair.empty()) {
           obj.inset_by_x = pair;
           touchx = false;
@@ -72,7 +76,7 @@ export default function LayImpostWnd({editor}) {
       }
       if(touchx && 'inset_by_x' in fields) {
         const {pair, split_type, region} = obj.inset_by_x;
-        if(split_type.length) {
+        if(split_type.length && obj.split != split_type[0]) {
           obj.split = split_type[0];
         }
         if(!pair.empty()) {
@@ -87,9 +91,10 @@ export default function LayImpostWnd({editor}) {
         clrs.selection_exclude_service(cmeta, obj.inset_by_y.clr_group.empty() ? obj.inset_by_x : obj.inset_by_y, project);
       }
 
-      setRev((v) => v + 1);
+      first !== true && setRev((v) => v + 1);
     }
 
+    dataChange(profile, {inset_by_y: profile.inset_by_y}, true);
     profile._manager.on('update', dataChange);
 
     return () => {
@@ -100,7 +105,12 @@ export default function LayImpostWnd({editor}) {
   return <div className={classes.root}>
     <DataField _obj={profile} Component={FieldSelectStatic} _fld="elm_type" options={etypes}/>
     <DataField _obj={profile} _fld="clr" _meta={cmeta}/>
-    <DataField _obj={profile} _fld="split" Component={FieldSelectStatic} options={split}/>
+    <DataField _obj={profile}
+               _fld="split"
+               Component={FieldSelectStatic}
+               options={split}
+               read_only={split.length === 1 || profile.inset_by_y.lay_split_types}
+    />
     {profile.elm_type === elm_types.rama ? <DataField _obj={profile} _fld="w" Component={FieldNumberNative}/> : null}
     {profile.elm_type === elm_types.rama ? <DataField _obj={profile} _fld="h" Component={FieldNumberNative}/> : null}
     {profile.elm_type === elm_types.layout ? <DataField _obj={profile} _fld="region"/> : null}
