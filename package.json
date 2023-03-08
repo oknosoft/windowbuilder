@@ -47,7 +47,7 @@
     "react-highlight-words": "^0.18",
     "react-number-format": "^5.1.2",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#8c73f2904d36039ede4825c3be26b7e2f215c3e2",
+    "wb-core": "github:oknosoft/windowbuilder-core#4c1e8204ee8c1f6bc8704f4fb6562caac3198f1a",
     "wb-cutting": "github:oknosoft/genetic-cutting#da74a4a12254f351c1364e86bbf0c0454550701d",
     "wb-forms": "github:oknosoft/windowbuilder-forms#80f8036da5dc3758b9ad5a126d1c7d01253d8b2c"
   },
@@ -63,7 +63,7 @@
     "babel-plugin-named-asset-import": "^0.3.8",
     "babel-preset-react-app": "^10.0.1",
     "bfj": "^7.0.2",
-    "browserslist": "^4.18.1",
+    "browserslist": "^4.21",
     "camelcase": "^6.2.1",
     "case-sensitive-paths-webpack-plugin": "^2.4.0",
     "css-loader": "^6.5.1",
