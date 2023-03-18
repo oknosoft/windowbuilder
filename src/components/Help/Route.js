@@ -10,7 +10,7 @@ export default function MarkdownRoute(props) {
 
   let fname = location.pathname.replace('/help', '');
   if(fname.startsWith('/')) {
-    fname = fname.substr(1);
+    fname = fname.substring(1);
   }
   else if(!fname) {
     props.history.push(`${location.pathname}/`);

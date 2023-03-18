@@ -68,12 +68,9 @@ class Additions extends React.Component {
       const order_row = calc_order.production.add({
         nom: row.nom,
         characteristic: row.characteristic,
-        quantity: row.quantity,
-        qty: row.quantity,
-        len: 0,
-        width: 0,
+        qty: 1,
       });
-      order_row.s = 0;
+      order_row.quantity = row.quantity.round(3);
       if(production) {
         production.refresh_row(order_row);
       }

@@ -882,7 +882,7 @@ class Editor extends $p.EditorInvisible {
      * @type OTooolBar
      * @private
      */
-    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '408px',
+    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '442px',
       image_path: '/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
@@ -905,7 +905,7 @@ class Editor extends $p.EditorInvisible {
                 ],
             }},
         {name: 'ruler', css: 'tb_ruler_ui', tooltip: 'Позиционирование и сдвиг'},
-        //{name: 'smart_size', css: 'tb_ruler_node', tooltip: 'Умный размер'},
+        {name: 'smart_size', css: 'tb_ruler_node', tooltip: 'Умный размер'},
         {name: 'stulp_flap', css: 'tb_stulp_flap', tooltip: 'Штульповые створки'},
         {name: 'vitrazh', text: '<i class="fa fa-film"></i>', tooltip: 'Витраж'},
         {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'},
@@ -3870,18 +3870,14 @@ class ToolLayImpost extends ToolElement {
 
     // подключает окно редактора
     function tool_wnd() {
-
+      const {dp, wsql, enm} = $p;
       tool.sys = tool._scope.project._dp.sys;
 
       // создаём экземпляр обработки
-      const profile = tool.profile = $p.dp.builder_lay_impost.create();
-
-
-      profile.elm_type_change = tool.elm_type_change.bind(tool);
-      profile._manager.on('update', profile.elm_type_change);
+      const profile = tool.profile = dp.builder_lay_impost.create();
 
       // восстанавливаем сохранённые параметры
-      $p.wsql.restore_options('editor', tool.options);
+      wsql.restore_options('editor', tool.options);
       Object.assign(tool.options.wnd, {
         on_close: tool.on_close,
         height: 420,
@@ -3895,18 +3891,18 @@ class ToolLayImpost extends ToolElement {
 
       // если в текущем слое есть профили, выбираем импост
       if (profile.elm_type.empty()) {
-        profile.elm_type = $p.enm.elm_types.Импост;
+        profile.elm_type = enm.elm_types.Импост;
       }
 
       // вставку по умолчанию получаем эмулируя событие изменения типа элемента
-      $p.dp.builder_lay_impost.emit('value_change', {field: 'elm_type'}, profile);
+      dp.builder_lay_impost.emit('value_change', {field: 'elm_type'}, profile);
 
       // выравнивание по умолчанию
       if (profile.align_by_y.empty()) {
-        profile.align_by_y = $p.enm.positions.Центр;
+        profile.align_by_y = enm.positions.Центр;
       }
       if (profile.align_by_x.empty()) {
-        profile.align_by_x = $p.enm.positions.Центр;
+        profile.align_by_x = enm.positions.Центр;
       }
 
       // цвет по умолчанию
@@ -3915,163 +3911,10 @@ class ToolLayImpost extends ToolElement {
       }
 
       // параметры отбора для выбора цвета
-      tool.choice_links_clr();
+      //tool.choice_links_clr();
 
       // параметры отбора типа деления
-      tool.choice_params_split();
-
-      // параметры отбора для выбора вставок
-      profile._metadata('inset_by_x').choice_links = profile._metadata('inset_by_y').choice_links = [{
-        name: ['selection', 'ref'],
-        path: [(o, f) => {
-          if ($p.utils.is_data_obj(o)) {
-            return profile.rama_impost.indexOf(o) !== -1;
-          }
-          else {
-            let refs = '';
-            profile.rama_impost.forEach((o) => {
-              if (refs) {
-                refs += ', ';
-              }
-              refs += '"' + o.ref + '"';
-            });
-            return '_t_.ref in (' + refs + ')';
-          }
-        }],
-      }];
-
-
-
-      tool.wnd = $p.iface.dat_blank(tool._scope._dxw, tool.options.wnd);
-
-      tool._grid = tool.wnd.attachHeadFields({
-        obj: profile,
-        oxml: tool.oxml(),
-      });
-
-      if (!tool.options.wnd.bounds_open) {
-        tool._grid.collapseKids(tool._grid.getRowById(
-          tool._grid.getAllRowIds().split(',')[13],
-        ));
-      }
-      tool._grid.attachEvent('onOpenEnd', function (id, state) {
-        if (id == this.getAllRowIds().split(',')[13])
-          tool.options.wnd.bounds_open = state > 0;
-      });
-
-      //
-      if (!tool._grid_button_click)
-        tool._grid_button_click = function (btn, bar) {
-          tool.wnd.elmnts._btns.forEach(function (val, ind) {
-            if (val.id == bar) {
-              const suffix = (ind == 0) ? 'y' : 'x';
-              profile['step_by_' + suffix] = 0;
-
-              if (btn == 'clear') {
-                profile['elm_by_' + suffix] = 0;
-
-              } else if (btn == 'del') {
-
-                if (profile['elm_by_' + suffix] > 0)
-                  profile['elm_by_' + suffix] = profile['elm_by_' + suffix] - 1;
-                else if (profile['elm_by_' + suffix] < 0)
-                  profile['elm_by_' + suffix] = 0;
-
-              } else if (btn == 'add') {
-
-                if (profile['elm_by_' + suffix] < 1)
-                  profile['elm_by_' + suffix] = 1;
-                else
-                  profile['elm_by_' + suffix] = profile['elm_by_' + suffix] + 1;
-              }
-
-            }
-          });
-        };
-
-      tool.wnd.elmnts._btns = [];
-      tool._grid.getAllRowIds().split(',').forEach(function (id, ind) {
-        if (id.match(/^\d+$/)) {
-
-          const cell = tool._grid.cells(id, 1);
-          cell.cell.style.position = 'relative';
-
-          if (ind < 10) {
-            tool.wnd.elmnts._btns.push({
-              id: id,
-              bar: new $p.iface.OTooolBar({
-                wrapper: cell.cell,
-                top: '0px',
-                right: '1px',
-                name: id,
-                width: '80px',
-                height: '20px',
-                class_name: '',
-                buttons: [
-                  {
-                    name: 'clear',
-                    text: '<i class="fa fa-trash-o"></i>',
-                    title: 'Очистить направление',
-                    class_name: 'md_otooolbar_grid_button',
-                  },
-                  {
-                    name: 'del',
-                    text: '<i class="fa fa-minus-square-o"></i>',
-                    title: 'Удалить ячейку',
-                    class_name: 'md_otooolbar_grid_button',
-                  },
-                  {
-                    name: 'add',
-                    text: '<i class="fa fa-plus-square-o"></i>',
-                    title: 'Добавить ячейку',
-                    class_name: 'md_otooolbar_grid_button',
-                  },
-                ],
-                onclick: tool._grid_button_click,
-              }),
-            });
-          } else {
-            tool.wnd.elmnts._btns.push({
-              id: id,
-              bar: new $p.iface.OTooolBar({
-                wrapper: cell.cell,
-                top: '0px',
-                right: '1px',
-                name: id,
-                width: '80px',
-                height: '20px',
-                class_name: '',
-                buttons: [
-                  {
-                    name: 'clear',
-                    text: '<i class="fa fa-trash-o"></i>',
-                    title: 'Очистить габариты',
-                    class_name: 'md_otooolbar_grid_button',
-                  },
-                ],
-                onclick: function () {
-                  profile.w = profile.h = 0;
-                },
-              }),
-            });
-          }
-
-          cell.cell.title = '';
-        }
-
-      });
-
-      const wnd_options = tool.wnd.wnd_options;
-      tool.wnd.wnd_options = function (opt) {
-        wnd_options.call(tool.wnd, opt);
-
-        for (const prop in profile._metadata().fields) {
-          if (prop.indexOf('step') === -1 && prop.indexOf('inset') === -1 && prop != 'clr' && prop != 'w' && prop != 'h') {
-            const val = profile[prop];
-            opt[prop] = $p.utils.is_data_obj(val) ? val.ref : val;
-          }
-        }
-      };
+      //tool.choice_params_split();
 
     }
 
@@ -4089,22 +3932,6 @@ class ToolLayImpost extends ToolElement {
       mousemove: this.mousemove,
     });
 
-  }
-
-  oxml() {
-    const {_manager, elm_type, inset_by_x, inset_by_y} = this.profile;
-    const {form} = _manager.metadata();
-    const oxml = form && form.obj && form.obj.head && $p.utils._clone(form.obj.head);
-    if(oxml && elm_type === $p.enm.elm_types.Раскладка) {
-      if(oxml[' '] && !oxml[' '].includes('region')) {
-        oxml[' '].push('region');
-      }
-    }
-    const index = oxml && oxml[' '].indexOf('split');
-    if(index && (inset_by_x.lay_split_types || inset_by_y.lay_split_types)) {
-      oxml[' '][index] = {id: 'split', path: 'o.split', synonym: 'Тип деления', type: 'ro'};
-    }
-    return oxml;
   }
 
   deactivate() {
@@ -4523,142 +4350,18 @@ class ToolLayImpost extends ToolElement {
   }
 
   detache_wnd() {
-    const {profile, wnd} = this;
-    if (profile) {
-      profile._manager.off('update', profile.elm_type_change);
-      delete profile.elm_type_change;
+    const {profile, options: {wnd}} = this;
+    const {utils, wsql} = $p;
+    for (const prop in profile._metadata().fields) {
+      if (!prop.includes('step') && !prop.includes('inset') && prop != 'clr' && prop != 'w' && prop != 'h') {
+        const val = profile[prop];
+        wnd[prop] = utils.is_data_obj(val) ? val.ref : val;
+      }
     }
-    if (wnd && wnd.elmnts) {
-      wnd.elmnts._btns.forEach((btn) => {
-        btn.bar && btn.bar.unload && btn.bar.unload();
-      });
-    }
-    ToolElement.prototype.detache_wnd.call(this);
+    wsql.save_options('editor', this.options);
+    this.profile = null;
   }
 
-  // возвращает конкатенацию ограничений цвета всех вставок текущего типа
-  elm_type_clrs(profile, sys) {
-
-    function add_by_clr(clr) {
-      if (clr instanceof $p.CatClrs) {
-        const {ref} = clr;
-        if (clr.is_folder) {
-          $p.cat.clrs.alatable.forEach((row) => row.parent == ref && profile._elm_type_clrs.push(row.ref));
-        }
-        else {
-          profile._elm_type_clrs.push(ref);
-        }
-      }
-      else if (clr instanceof $p.CatColor_price_groups) {
-        clr.clr_conformity.forEach(({clr1}) => add_by_clr(clr1));
-      }
-    }
-
-    if (!profile._elm_type_clrs) {
-      const {inset_by_x, inset_by_y} = profile;
-      profile._elm_type_clrs = [];
-
-      // цвет по умолчанию
-      if (profile.elm_type != $p.enm.elm_types.Раскладка) {
-        add_by_clr(profile.clr);
-      }
-
-      if (inset_by_x.clr_group.empty() && inset_by_y.clr_group.empty()) {
-        add_by_clr(sys.clr_group);
-      }
-      else {
-        if (!inset_by_x.clr_group.empty()) {
-          add_by_clr(inset_by_x.clr_group);
-        }
-        if (!inset_by_y.clr_group.empty() && inset_by_y.clr_group != inset_by_x.clr_group) {
-          add_by_clr(inset_by_y.clr_group);
-        }
-      }
-    }
-    if (profile._elm_type_clrs.length && profile._elm_type_clrs.indexOf(profile.clr.ref) == -1) {
-      profile.clr = profile._elm_type_clrs[0];
-    }
-    return profile._elm_type_clrs;
-  }
-
-  // при изменении типа элемента, чистим отбор по цвету
-  elm_type_change(obj, fields) {
-    let reattach, touchx = true;
-    const {profile, sys, _grid} = this;
-    if ('inset_by_x' in fields || 'inset_by_y' in fields || 'elm_type' in fields) {
-      delete profile._elm_type_clrs;
-      this.elm_type_clrs(profile, sys);
-      reattach = true;
-    }
-    if('inset_by_y' in fields) {
-      const {pair, split_type, region} = obj.inset_by_y;
-      if(split_type.length) {
-        obj.split = split_type[0];
-      }
-      if(!pair.empty()) {
-        obj.inset_by_x = pair;
-        touchx = false;
-      }
-      if(region && !region.empty?.()) {
-        obj.region = region;
-      }
-    }
-    if(touchx && 'inset_by_x' in fields) {
-      const {pair, split_type, region} = obj.inset_by_x;
-      if(split_type.length) {
-        obj.split = split_type[0];
-      }
-      if(!pair.empty()) {
-        obj.inset_by_y = pair;
-      }
-      if(region && !region.empty?.()) {
-        obj.region = region;
-      }
-    }
-    reattach && _grid && _grid.attach({
-      obj: profile,
-      oxml: this.oxml(),
-    });
-  }
-
-  choice_links_clr() {
-
-    const {profile, project, sys, elm_type_clrs} = this;
-
-    // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), profile, project);
-
-    profile._metadata('clr').choice_params.push({
-      name: 'ref',
-      get path() {
-        const res = elm_type_clrs(profile, sys);
-        return res.length ? {in: res} : {not: ''};
-      },
-    });
-
-  }
-
-  // параметры отбора типа деления
-  choice_params_split() {
-    const {profile} = this;
-    const {choice_params} = profile._metadata('split');
-    const def = ['ДелениеГоризонтальных', 'ДелениеВертикальных', 'КрестВСтык', 'КрестПересечение'];
-    choice_params.length = 0;
-    choice_params.push({
-      name: 'ref',
-      get path() {
-        const res = [];
-        for(const fld of ['inset_by_y', 'inset_by_y']) {
-          for(const v of profile[fld].split_type) {
-            if(!res.includes(v)) {
-              res.push(v);
-            }
-          }
-        }
-        return res.length ? res : def;
-      },
-    });
-  }
 
   add_profiles() {
     const {profile, project, _scope: {consts}} = this;
@@ -8602,12 +8305,15 @@ class ToolSmartSize extends ToolElement {
     Object.assign(this, {
       options: {name: 'smart_size'},
       disable_size: true,
-      mode: 0,
+      mode: 0,  // 1 - выбрана первая точка, 2 - вторая, 3 - выбрано положение линии
       hitItem: null,
       hitPoint: null,
       b: null,
       e: null,
       paths: new Map(),
+      rect_pos: '',
+      swap: false,
+      sign: 1,
     });
 
     this.on({
@@ -8634,16 +8340,142 @@ class ToolSmartSize extends ToolElement {
     }
     this.paths.clear();
     this.mode = 0;
+    this.b = this.e = null;
+    this.project.deselect_all_points(true);
   }
 
   on_mouseup(event) {
-
+    if(event.event.which === 3) {
+      return this.on_deactivate();
+    }
+    let {mode, hitPoint, b, e, paths, project, rect_pos, swap, sign} = this;
+    let callout = paths.get('callout1');
+    if(swap) {
+      [b, e] = [e, b];
+      callout = paths.get('callout2');
+      sign = -sign;
+    }
+    if(mode === 2) {
+      // создать линию
+      const attr = {
+        elm1: b.profile,
+        elm2: e.profile,
+        p1: b.point_name,
+        p2: e.point_name,
+        parent: b.profile.layer.l_dimensions,
+        project,
+      };
+      if(rect_pos !== 'free') {
+        attr.fix_angle = true;
+        attr.angle = paths.get('size').getTangentAt(0).angle;
+      }
+      attr.offset = sign * callout.length;
+      new Editor.DimensionLineCustom(attr);
+      project.register_change(true);
+      return this.on_deactivate();
+    }
+    if(!hitPoint) {
+      return;
+    }
+    if(!mode) {
+      this.mode = 1;
+      this.b = hitPoint;
+    }
+    else if(mode === 1) {
+      this.mode = 2;
+      this.e = hitPoint;
+    }
   }
 
   on_mousemove(event) {
     this._scope.canvas_cursor('cursor-autodesk');
     this.hitTest(event);
-    const {mode, paths} = this;
+    const {mode, paths, b, e, project} = this;
+    // если есть обе точки
+    if(mode === 1) {
+      if(!paths.has('size')) {
+        paths.set('size', new paper.Path({
+          parent: project.l_dimensions,
+          segments: [b.point, event.point],
+          strokeColor: 'black',
+          guide: true,
+        }));
+      }
+      paths.get('size').lastSegment.point = event.point;
+    }
+    // если есть обе точки и смещение линии
+    else if(mode === 2) {
+      // добавляем выноски и линию размера
+      if(!paths.has('callout1')) {
+        paths.set('callout1', new paper.Path({
+          parent: project.l_dimensions,
+          segments: [b.point, event.point],
+          strokeColor: 'black',
+          guide: true,
+        }));
+      }
+      if(!paths.has('callout2')) {
+        paths.set('callout2', new paper.Path({
+          parent: project.l_dimensions,
+          segments: [e.point, event.point],
+          strokeColor: 'black',
+          guide: true,
+        }));
+      }
+      const rect = new paper.Rectangle(b.point, e.point);
+      const gen = new paper.Path({
+        insert: false,
+        segments: [b.point, e.point],
+      });
+      const {rib, pos, parallel} = rect.nearest_rib(event.point);
+      this.rect_pos = pos;
+      this.swap = false;
+      this.sign = gen.point_pos(event.point);
+      const pt = gen.getNearestPoint(event.point);
+      const line = paths.get('size');
+      if(rect.contains(event.point) || !rib) {
+        this.rect_pos = 'free';
+        const delta = pt.getDistance(event.point);
+        const normal = gen.getNormalAt(0).multiply(delta * this.sign);
+        paths.get('callout1').lastSegment.point = b.point.add(normal);
+        paths.get('callout2').lastSegment.point = e.point.add(normal);
+        line.firstSegment.point = b.point.add(normal);
+        line.lastSegment.point = e.point.add(normal);
+      }
+      else {
+        const pp2 = parallel.point.add(parallel.vector);
+        line.firstSegment.point = parallel.point;
+        line.lastSegment.point = pp2;
+        if(b.point.getDistance(parallel.point) > b.point.getDistance(pp2)) {
+          this.swap = true;
+          paths.get('callout1').lastSegment.point = pp2;
+          paths.get('callout2').lastSegment.point = parallel.point;
+        }
+        else {
+          paths.get('callout1').lastSegment.point = parallel.point;
+          paths.get('callout2').lastSegment.point = pp2;
+        }
+      }
+      this.sign = gen.point_pos(line.interiorPoint);
+      // добавляем текст
+      if(!paths.has('text')) {
+        paths.set('text', new paper.PointText({
+          parent: project.l_dimensions,
+          justification: 'center',
+          fillColor: 'black',
+          fontFamily: paper.consts?.font_family,
+          fontSize: Editor.DimensionLine._font_size(project.bounds)})
+        );
+      }
+      const text = paths.get('text');
+      text.content = line.length.round(1).toString();
+      const vector = line.getTangentAt(0);
+      text.rotation = vector.angle;
+      text.position = line.getPointAt(line.length/2).add(line.getNormalAt(0).multiply(text.fontSize / 1.6));
+      if(line.length < 20) {
+        text.position = text.position.add(line.getTangentAt(0).multiply(text.fontSize / 3));
+      }
+    }
   }
 
   on_keyup(event) {
@@ -8655,16 +8487,31 @@ class ToolSmartSize extends ToolElement {
     if(['Escape'].includes(code)) {
       this.on_deactivate();
     }
+    else if(['Delete', 'NumpadSubtract', 'Backspace'].includes(code)) {
+      this.project.selectedItems.some((path) => {
+        if(path.parent instanceof Editor.DimensionLineCustom) {
+          path.parent.remove();
+          return true;
+        }
+      });
+    }
+    else if(['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(code)) {
+      const sign = ['ArrowRight', 'ArrowUp'].includes(code) ? 1 : -1;
+      for(const {parent} of this.project.selectedItems) {
+        if(parent instanceof Editor.DimensionLineCustom) {
+          parent.offset = parent.offset + sign * 10;
+        }
+      }
+    }
     event.stop();
   }
 
   hitTest({point}) {
-    let hit = this.project.hitPoints(point, 10, 1, true);
-    if (hit) {
-      if(hit.item.parent instanceof Editor.ProfileItem) {
-        this.hitItem = hit;
-        this.hitPoint = hit.item.parent.select_corn(point);
-      }
+    this.hitItem = this.hitPoint = null;
+    let hit = this.project.hitPoints(point, 8, 1, true);
+    if (hit?.item?.parent instanceof Editor.ProfileItem) {
+      this.hitItem = hit;
+      this.hitPoint = hit.item.parent.select_corn(point);
     }
   }
 
