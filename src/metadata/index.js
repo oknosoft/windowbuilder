@@ -15,7 +15,7 @@ import init_meta from 'wb-core/dist/init_meta';
 import init_sql from 'wb-core/dist/init_sql';
 import init_classes from 'wb-core/dist/init';
 import modifiers from './modifiers';
-import proxy_login, {load_ram, load_common} from 'metadata-superlogin/proxy';
+import proxy_login, {load_ram, load_common} from 'metadata-react/common/proxy';
 
 // загружаем metadata.transition и экспортируем $p глобально
 import $p from 'metadata-dhtmlx';
