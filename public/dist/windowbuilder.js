@@ -1429,8 +1429,7 @@ class Editor extends $p.EditorInvisible {
     _scheme.view.on('mousemove', (event) => {
       const {bounds} = _scheme;
       if(bounds) {
-        _mousepos.innerHTML = 'x:' + (event.point.x - bounds.x).toFixed(0) +
-          ' y:' + (bounds.height + bounds.y - event.point.y).toFixed(0);
+        _mousepos.innerHTML = `x:${(event.point.x - bounds.x).toFixed(1)} y:${(bounds.height + bounds.y - event.point.y).toFixed(1)}`;
       }
     });
 
