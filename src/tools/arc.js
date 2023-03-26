@@ -26,6 +26,7 @@ class ToolArc extends ToolElement{
       options: {name: 'arc'},
       mouseStartPos: new paper.Point(),
       mode: null,
+      dl: false,
       hitItem: null,
       originalContent: null,
       changed: false,
@@ -38,6 +39,7 @@ class ToolArc extends ToolElement{
       },
 
       deactivate() {
+        this.remove_path();
         this._scope.hide_selection_bounds();
       },
 
@@ -47,7 +49,7 @@ class ToolArc extends ToolElement{
 
       mousedrag: this.mousedrag,
 
-      mousemove: this.hitTest,
+      mousemove: this.mousemove,
 
       keydown: this.keydown,
 
@@ -76,10 +78,34 @@ class ToolArc extends ToolElement{
     this.mode = null;
     this.changed = false;
 
-    if (this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem
-      && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
+    const {hitItem, hitPoint, dl, project} = this;
+    if (dl) {
+      if(hitPoint) {
+        const {parent} = hitItem.item;
 
-      this.mode = this.hitItem.item.parent.generatrix;
+        if(parent.is_linear()) {
+          $p.msg.show_msg({
+            type: 'alert-info',
+            text: `Выделен прямой элемент`,
+            title: 'Размерная линия радиуса'
+          });
+        }
+        else {
+          // создаём размерную линию
+          new Editor.DimensionRadius({
+            elm1: parent,
+            p1: hitItem.item.getOffsetOf(hitPoint).round(),
+            parent: parent.layer.l_dimensions,
+            by_curve: modifiers.control || modifiers.shift,
+          });
+          project.register_change(true);
+        }
+      }
+    }
+    else if (hitItem && hitItem.item.parent instanceof Editor.ProfileItem
+      && (hitItem.type == 'fill' || hitItem.type == 'stroke')) {
+
+      this.mode = hitItem.item.parent.generatrix;
 
       if (modifiers.control || modifiers.option){
         // при зажатом ctrl или alt строим правильную дугу
@@ -100,10 +126,10 @@ class ToolArc extends ToolElement{
         this.reset_arc(r = this.mode);
       }
       else {
-        this.project.deselectAll();
+        project.deselectAll();
         r = this.mode;
         r.selected = true;
-        this.project.deselect_all_points();
+        project.deselect_all_points();
         this.mouseStartPos = point.clone();
         this.originalContent = this._scope.capture_selection_state();
       }
@@ -118,7 +144,7 @@ class ToolArc extends ToolElement{
     }
     else{
       //tool.detache_wnd();
-      this.project.deselectAll();
+      project.deselectAll();
     }
   }
 
@@ -157,10 +183,44 @@ class ToolArc extends ToolElement{
     }
   }
 
-  keydown({modifiers, event: {code}}) {
+  mousemove(event) {
+    this.hitTest(event);
+    if(this.dl && this.hitPoint) {
+      if (!this.path) {
+        this.path = new paper.Path.Circle({
+          center: this.hitPoint,
+          radius: 20,
+          fillColor: new paper.Color(0, 0, 1, 0.5),
+          guide: true,
+        });
+      }
+      else {
+        this.path.position = this.hitPoint;
+      }
+    }
+  }
+
+  keydown(event) {
+
+    const {modifiers, event: {code}} = event;
+
+    // нажатие `R` переключает режим: деформация или ввод размера
+    if(code === 'KeyR') {
+      event.stop();
+      this.dl = !this.dl;
+      this.remove_path();
+      return;
+    }
 
     const {project} = this._scope;
-    if(project.selectedItems.length === 1) {
+    if(['Delete', 'NumpadSubtract', 'Backspace'].includes(code)) {
+      for(const {parent} of project.selectedItems) {
+        if(parent instanceof Editor.DimensionLineCustom) {
+          parent.remove();
+        }
+      }
+    }
+    else if(project.selectedItems.length === 1) {
       const step = modifiers.shift ? 1 : 10;
       const {parent} = project.selectedItems[0];
 
@@ -214,24 +274,45 @@ class ToolArc extends ToolElement{
     element.layer.notify({profiles: [element.parent], points: []}, this._scope.consts.move_points);
   }
 
+  remove_path() {
+
+    if (this.path) {
+      this.path.removeSegments();
+      this.path.remove();
+      this.path = null;
+    }
+  }
+
   hitTest({point}) {
 
     const hitSize = 6;
     this.hitItem = null;
 
     if(point) {
+      if (this.dl) {
+        this.hitItem = this.project.hitTest(point, {stroke: true, tolerance: 24});
+      }
       this.hitItem = this.project.hitTest(point, {fill: true, stroke: true, selected: true, tolerance: hitSize});
     }
     if(!this.hitItem) {
-      this.hitItem = this.project.hitTest(point, {fill: true, tolerance: hitSize});
+      this.hitItem = this.project.hitTest(point, {fill: true, stroke: true, tolerance: hitSize});
     }
 
     if(this.hitItem && this.hitItem.item.parent instanceof Editor.ProfileItem
       && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
-      this._scope.canvas_cursor('cursor-arc');
+
+      if (this.dl) {
+        this.hitPoint = this.hitItem.item.getNearestPoint(point);
+        this._scope.canvas_cursor('cursor-arrow-white-point');
+      }
+      else {
+        this._scope.canvas_cursor('cursor-arc');
+      }
     }
     else {
-      this._scope.canvas_cursor('cursor-arc-arrow');
+      this.remove_path();
+      this.hitPoint = null;
+      this._scope.canvas_cursor(this.dl ? 'cursor-autodesk' : 'cursor-arc-arrow');
     }
 
     return true;

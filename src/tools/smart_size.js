@@ -195,12 +195,11 @@ class ToolSmartSize extends ToolElement {
       this.on_deactivate();
     }
     else if(['Delete', 'NumpadSubtract', 'Backspace'].includes(code)) {
-      this.project.selectedItems.some((path) => {
-        if(path.parent instanceof Editor.DimensionLineCustom) {
-          path.parent.remove();
-          return true;
+      for(const {parent} of this.project.selectedItems) {
+        if(parent instanceof Editor.DimensionLineCustom) {
+          parent.remove();
         }
-      });
+      }
     }
     else if(['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(code)) {
       const sign = ['ArrowRight', 'ArrowUp'].includes(code) ? 1 : -1;

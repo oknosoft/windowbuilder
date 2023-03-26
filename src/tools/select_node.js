@@ -78,24 +78,25 @@ class ToolSelectNode extends ToolElement {
 
   mousedown({event, modifiers, point}) {
 
-    const {project, consts, eve} = this._scope;
+    const {_scope: {project, consts, eve}, hitItem} = this;
 
     this.mode = null;
     this.changed = false;
     this.mouseDown = true;
 
-    if(event && event.which && event.which > 1){
-      //
-    }
+    this.sz_fin();
 
-    if (this.hitItem && !modifiers.alt) {
+    if (hitItem && !modifiers.alt) {
 
-      if(this.hitItem.item instanceof paper.PointText && !(this.hitItem.item instanceof Editor.PathUnselectable)) {
+      if(hitItem.item instanceof paper.PointText) {
+        // && !(hitItem.item instanceof Editor.PathUnselectable)
+        if(hitItem.item.parent instanceof Editor.DimensionLine && !hitItem.item.parent.is_disabled()) {
+          this.sz_start(hitItem.item.parent);
+        }
         return;
       }
 
-
-      let item = this.hitItem.item.parent;
+      let item = hitItem.item.parent;
       if (modifiers.space) {
         const nearest = item?.nearest?.();
         if(nearest) {
@@ -103,7 +104,7 @@ class ToolSelectNode extends ToolElement {
         }
       }
 
-      if (item && (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke')) {
+      if (item && (hitItem.type == 'fill' || hitItem.type == 'stroke')) {
 
         if(item instanceof Editor.Filling && project._attr.elm_fragment > 0) {
           item.selected = false;
@@ -129,35 +130,35 @@ class ToolSelectNode extends ToolElement {
         }
 
       }
-      else if (this.hitItem.type == 'segment') {
+      else if (hitItem.type == 'segment') {
         if (modifiers.shift) {
-          this.hitItem.segment.selected = !this.hitItem.segment.selected;
+          hitItem.segment.selected = !hitItem.segment.selected;
         }
         else {
-          if (!this.hitItem.segment.selected){
+          if (!hitItem.segment.selected){
             project.deselect_all_points();
             project.deselectAll();
           }
-          this.hitItem.segment.selected = true;
+          hitItem.segment.selected = true;
         }
-        if (this.hitItem.segment.selected) {
+        if (hitItem.segment.selected) {
           this.mode = consts.move_points;
           this.mouseStartPos = point.clone();
           this.originalContent = this._scope.capture_selection_state();
         }
       }
-      else if (this.hitItem.type == 'handle-in' || this.hitItem.type == 'handle-out') {
+      else if (hitItem.type == 'handle-in' || hitItem.type == 'handle-out') {
         this.mode = consts.move_handle;
         this.mouseStartPos = point.clone();
-        this.originalHandleIn = this.hitItem.segment.handleIn.clone();
-        this.originalHandleOut = this.hitItem.segment.handleOut.clone();
+        this.originalHandleIn = hitItem.segment.handleIn.clone();
+        this.originalHandleOut = hitItem.segment.handleOut.clone();
 
-        /* if (this.hitItem.type == 'handle-out') {
-         this.originalHandlePos = this.hitItem.segment.handleOut.clone();
-         this.originalOppHandleLength = this.hitItem.segment.handleIn.length;
+        /* if (hitItem.type == 'handle-out') {
+         this.originalHandlePos = hitItem.segment.handleOut.clone();
+         this.originalOppHandleLength = hitItem.segment.handleIn.length;
          } else {
-         this.originalHandlePos = this.hitItem.segment.handleIn.clone();
-         this.originalOppHandleLength = this.hitItem.segment.handleOut.length;
+         this.originalHandlePos = hitItem.segment.handleIn.clone();
+         this.originalOppHandleLength = hitItem.segment.handleOut.length;
          }
          this.originalContent = capture_selection_state(); // For some reason this does not work!
          */
@@ -173,9 +174,9 @@ class ToolSelectNode extends ToolElement {
       this._scope.clear_selection_bounds();
 
     }
-    else if (this.hitItem && modifiers.alt) {
+    else if (hitItem && modifiers.alt) {
       project.deselectAll();
-      const {layer} = this.hitItem.item;
+      const {layer} = hitItem.item;
       layer.activate();
       eve.emit('elm_activated', layer);
     }
@@ -695,6 +696,128 @@ class ToolSelectNode extends ToolElement {
     }
 
     return true;
+  }
+
+  div_by_pos() {
+    const {profile: {children, size, pos}, project: {view}} = this;
+    const point = view.projectToView(children.text.bounds.center);
+    const tip = 'Установить размер сдвигом элементов ';
+    const div = this.div = document.createElement('DIV');
+    div.classList.add('sz_div');
+    if(pos === 'left' || pos === 'right') {
+      div.innerHTML = `<div id="sz_btn_top" class="sz_btn tb_align_vert" title="${tip}сверху"></div>
+<input class="sz_input" type="number" step="10" value="${size.toFixed()}"/>
+<div id="sz_btn_bottom" class="sz_btn tb_align_vert" title="${tip}снизу"></div>
+<div id="sz_btn_rateably" class="sz_btn tb_align_vert2" title="${tip}пропорционально"></div>`;
+      div.style.top = `${point.y - 37}px`;
+      div.style.left = `${point.x - 29}px`;
+    }
+    else if(pos === 'top' || pos === 'bottom') {
+      div.innerHTML = `<div class="sz_div2">
+    <div id="sz_btn_left" class="sz_btn tb_align_hor" title="${tip}слева"></div>
+    <input class="sz_input" type="number" step="10" value="${size.toFixed()}"/>
+    <div id="sz_btn_right" class="sz_btn tb_align_hor" title="${tip}справа"></div>
+    <div id="sz_btn_rateably" class="sz_btn tb_align_hor2" title="${tip}пропорционально"></div>
+</div>`;
+      div.style.top = `${point.y - 12}px`;
+      div.style.left = `${point.x - 49}px`;
+    }
+    else {
+      div.innerHTML = `<div id="sz_btn_top" class="sz_btn tb_align_vert" title="${tip}сверху"></div>
+<div class="sz_div2">
+    <div id="sz_btn_left" class="sz_btn tb_align_hor" title="${tip}слева"></div>
+    <input class="sz_input" type="number" step="10" value="${size.toFixed()}"/>
+    <div id="sz_btn_right" class="sz_btn tb_align_hor" title="${tip}справа"></div>
+</div>
+<div id="sz_btn_bottom" class="sz_btn tb_align_vert" title="${tip}снизу"></div>`;
+      div.style.top = `${point.y - 37}px`;
+      div.style.left = `${point.x - 49}px`;
+    }
+    view.element.parentNode.appendChild(div);
+    return div;
+  }
+
+  // создаёт поле ввода и кнопки уточнения размера
+  sz_start(item) {
+    this.sz_fin();
+    this.mode = 'sz_start';
+    this.profile = item;
+    const div = this.div_by_pos();
+    const input = this.input = div.querySelector('.sz_input');
+    input.focus();
+    input.select();
+    input.onkeydown = this.sz_keydown.bind(this);
+    div.onclick = this.sz_click.bind(this);
+  }
+
+  // обработчик клика кнопок размера
+  sz_click(ev) {
+    const {id} = ev.target;
+    if(id?.startsWith('sz_btn')) {
+      const {input, profile} = this;
+      const attr = {
+        wnd: profile,
+        size: parseFloat(input.value),
+        name: id.substring(7),
+      };
+      this.sz_fin();
+      profile.sizes_wnd(attr);
+      const {elm1, elm2} = profile._attr;
+      if(!elm1 && !elm2) {
+        //this._scope.deffered_zoom_fit();
+      }
+    }
+  }
+
+  // обработчик нажатия кнопок в поле ввода
+  sz_keydown(event) {
+    const {key, altKey} = event;
+    if (key === 'Escape' || key === 'Tab') {
+      this.sz_fin();
+    }
+    else if (key === 'Enter' || (altKey && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key))) {
+      $p.ui.prevent(event);
+      const {input, profile} = this;
+      const attr = {
+        wnd: profile,
+        size: parseFloat(input.value),
+      };
+      switch (key) {
+      case 'Enter':
+        attr.name = altKey ? 'rateably' : 'auto';
+        break;
+      case 'ArrowUp':
+        attr.name = 'top';
+        break;
+      case 'ArrowDown':
+        attr.name = 'bottom';
+        break;
+      default:
+        attr.name = key.substring(5).toLowerCase();
+      }
+      this.sz_fin();
+      profile.sizes_wnd(attr);
+      const {elm1, elm2} = profile._attr;
+      if(!elm1 && !elm2) {
+        //this._scope.deffered_zoom_fit();
+      }
+    }
+  }
+
+  // при окончании ввода размера, удаляем HTMLElement
+  sz_fin() {
+    const {div, profile, view, mode} = this;
+    if (div) {
+      view.element.parentNode.removeChild(div);
+      this.div = null;
+      this.input = null;
+    }
+    if (profile instanceof Editor.DimensionLine) {
+      this.profile = null;
+    }
+    if (mode === 'sz_start') {
+      this.mode = null;
+    }
   }
 
 }
