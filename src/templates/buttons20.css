@@ -40,6 +40,8 @@
 .tb_align_top { background-image: url(/imgs/align_top.png); opacity: 0.9;}
 .tb_align_vert { background-image: url(/imgs/align_vert.png); opacity: 0.9;}
 .tb_align_hor { background-image: url(/imgs/align_hor.png); opacity: 0.9;}
+.tb_align_vert2 {background-image: url(imgs/align_vert2.png); opacity: 0.9;}
+.tb_align_hor2 {background-image: url(imgs/align_hor2.png); opacity: 0.9;}
 
 .tb_icon-hand { background-image: url(/imgs/icon-hand.png);}
 .tb_icon-arrow-white { background-image: url(/imgs/icon-arrow-white.png);}

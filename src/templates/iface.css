@@ -73,6 +73,35 @@
 	word-break: break-all;
 }
 
+.sz_div {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: radial-gradient(ellipse, #fff, rgba(255,255,255,.4));
+}
+.sz_div2 {
+  display: flex;
+}
+
+.sz_btn {
+  margin: 2px;
+  width: 22px;
+  height: 22px;
+  background-position: 1px 1px;
+  cursor: pointer;
+}
+.sz_btn:hover {
+  background-color: #ccc;
+}
+
+.sz_input {
+  padding: 2px;
+  width: 4rem;
+  text-align: center;
+  border: none;
+}
+
 .mousepos {
 	position: absolute;
 	left: 4px;
