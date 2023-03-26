@@ -186,18 +186,10 @@ class GlassComposite extends React.Component {
   };
 
   handleByInset = () => {
-    const {_grid, props: {elm, set_row}} = this;
+    const {elm, set_row} = this.props;
     elm.set_inset(elm.inset, false, true);
-    this.forceUpdate(() => {
-      if(_grid.rowGetter(0)) {
-        setTimeout(() => {
-          _grid._grid.selectCell({rowIdx: 0, idx: 0}, false);
-        });
-      }
-      else {
-        set_row(null);
-      }
-    });
+    set_row(null, true);
+    elm.project.register_change();
   };
 
   handleReverse = () => {
@@ -208,7 +200,7 @@ class GlassComposite extends React.Component {
     glass_specification.clear({elm: elm.elm});
     glass_specification.load(rows, true);
     set_row(null, true);
-    elm.project.register_change()
+    elm.project.register_change();
   };
 
   Toolbar = (props) => {
