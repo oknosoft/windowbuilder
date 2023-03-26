@@ -1,7 +1,7 @@
 {
   //"parser": "babel-eslint", // https://github.com/babel/babel-eslint,
   "parserOptions": {
-    "ecmaVersion": 8,
+    "ecmaVersion": 'latest',
     "ecmaFeatures": {
       "experimentalObjectRestSpread": true,
       "jsx": true

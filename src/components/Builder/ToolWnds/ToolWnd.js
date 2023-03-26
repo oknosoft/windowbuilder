@@ -11,7 +11,6 @@ import {Provider} from 'react-redux';
 import {ThemeProvider} from '@material-ui/styles';
 import Typography from '@material-ui/core/Typography';
 
-
 // тема для material-ui
 import theme from '../../../styles/muiTheme';
 import {lazy} from '../../App/lazy';

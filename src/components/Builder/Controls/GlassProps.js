@@ -61,7 +61,7 @@ export default class GlassProps extends React.Component {
 
   constructor(props, context) {
     super(props, context);
-    this.state = {elm: glassGrp(props.elm), row: null};
+    this.state = {elm: glassGrp(props.elm), row: null, index: 0};
     this.fields = props.fields || this.state.elm.__metadata(false).fields;
   }
 
@@ -97,12 +97,17 @@ export default class GlassProps extends React.Component {
     this.forceUpdate();
   };
 
-  set_row = (row) => {
+  set_row = (row, reverse) => {
     this.setState({row});
+    if(reverse) {
+      let {index} = this.state;
+      index++;
+      setTimeout(() => this.setState({index}), 200);
+    }
   };
 
   render() {
-    const {state: {elm, row}, fields} = this;
+    const {state: {elm, row, index}, fields} = this;
 
     const {info, inset, ox} = elm;
     const props = elm.elm_props();
@@ -112,7 +117,13 @@ export default class GlassProps extends React.Component {
     return <>
       <GlassToolbar {...this.props} elm={elm} />
       <Bar>{`Заполнение ${info}`}</Bar>
-      <PropField _obj={elm} _fld="inset" _meta={fields.inset} handleValueChange={() => this.set_row(null)}/>
+      <PropField
+        key={`inset-${index}`}
+        _obj={elm}
+        _fld="inset"
+        _meta={fields.inset}
+        handleValueChange={() => this.set_row(null)}
+      />
       <FieldClr _obj={elm} _fld="clr" _meta={fields.clr} clr_group={clr_group}/>
 
       {props.length ? <>

@@ -14,6 +14,7 @@ import AddIcon from '@material-ui/icons/AddCircleOutline';
 import RemoveIcon from '@material-ui/icons/DeleteOutline';
 import ArrowUpIcon from '@material-ui/icons/ArrowUpward';
 import ArrowDownIcon from '@material-ui/icons/ArrowDownward';
+import FlipCameraAndroidIcon from '@material-ui/icons/FlipCameraAndroid';
 import VerticalAlignBottomIcon from '@material-ui/icons/VerticalAlignBottom';
 import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -22,7 +23,7 @@ import Tip from 'metadata-react/App/Tip';
 import GlassLayerProps from './GlassLayerProps';
 import CompositeChains from './GlassCompositeChains';
 import useStyles from './stylesAccordion';
-import {useOpenContext} from './index';
+import {useOpenContext} from './OpenContext';
 
 const reflect = ({project, reflect_grp}) => {
   if(reflect_grp) {
@@ -199,6 +200,17 @@ class GlassComposite extends React.Component {
     });
   };
 
+  handleReverse = () => {
+    const {elm, set_row} = this.props;
+    const {glass_specification} = elm.ox;
+    const rows = glass_specification.find_rows({elm: elm.elm})
+      .map(({row, _row, ...other}) => other).reverse();
+    glass_specification.clear({elm: elm.elm});
+    glass_specification.load(rows, true);
+    set_row(null, true);
+    elm.project.register_change()
+  };
+
   Toolbar = (props) => {
     const {width} = props;
     const {_grid, props: {elm, set_row}} = this;
@@ -221,6 +233,9 @@ class GlassComposite extends React.Component {
         <IconButton onClick={this.handleByInset}><VerticalAlignBottomIcon/></IconButton>
       </Tip>
       <CompositeChains _grid={_grid} elm={elm} set_row={set_row} />
+      <Tip title="Перевернуть состав">
+        <IconButton onClick={this.handleReverse}><FlipCameraAndroidIcon/></IconButton>
+      </Tip>
     </Toolbar>;
   };
 
@@ -258,6 +273,7 @@ class GlassComposite extends React.Component {
             filter={this.filter}
             disable_cache
             denyAddDel
+            denySort
             Toolbar={this.Toolbar}
             onCellSelected={this.handleCellSelected}
           />
