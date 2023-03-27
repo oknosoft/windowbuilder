@@ -198,7 +198,9 @@ class GlassComposite extends React.Component {
     const rows = glass_specification.find_rows({elm: elm.elm})
       .map(({row, _row, ...other}) => other).reverse();
     glass_specification.clear({elm: elm.elm});
-    glass_specification.load(rows, true);
+    for(const row of rows){
+      glass_specification.add(row, true, null, true);
+    }
     set_row(null, true);
     elm.project.register_change();
   };
