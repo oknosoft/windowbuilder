@@ -6917,10 +6917,18 @@ class ToolSelectNode extends ToolElement {
       }
 
       let item = hitItem.item.parent;
+      if(!(item instanceof Editor.BuilderElement) && item.parent) {
+        item = item.parent;
+      }
       if (modifiers.space) {
-        const nearest = item?.nearest?.();
-        if(nearest) {
-          item = nearest;
+        if(item instanceof Editor.Filling) {
+          item = item.nearest(point);
+        }
+        else {
+          const nearest = item?.nearest?.();
+          if(nearest) {
+            item = nearest;
+          }
         }
       }
 
@@ -8033,6 +8041,6 @@ class ToolText extends ToolElement {
 
 Editor.ToolText = ToolText;
 
-$p.injected_data._mixin({"tip_select_node.html":"<div class=\"otooltip\">\r\n    <p class=\"otooltip\">Инструмент <b>Элемент и узел</b> позволяет:</p>\r\n    <ul class=\"otooltip\">\r\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\r\n        <li>Выделить отдельные узлы и рычаги узлов<br />для изменения геометрии</li>\r\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\r\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n        <li>Добавить новый элемент, делением текущего<br />(кнопка {+} при нажатой кнопке {пробел})</li>\r\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\r\n    </ul>\r\n    <hr />\r\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\r\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\r\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\r\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\r\n</div>"});
+$p.injected_data._mixin({"tip_select_node.html":"<div class=\"otooltip\">\n    <p class=\"otooltip\">Инструмент <b>Элемент и узел</b> позволяет:</p>\n    <ul class=\"otooltip\">\n        <li>Выделить элемент<br />для изменения его свойств или перемещения</li>\n        <li>Выделить отдельные узлы и рычаги узлов<br />для изменения геометрии</li>\n        <li>Добавить новый узел (изгиб)<br />(кнопка {+} на цифровой клавиатуре)</li>\n        <li>Удалить выделенный узел (изгиб)<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\n        <li>Добавить новый элемент, делением текущего<br />(кнопка {+} при нажатой кнопке {пробел})</li>\n        <li>Удалить выделенный элемент<br />(кнопки {del} или {-} на цифровой клавиатуре)</li>\n    </ul>\n    <hr />\n    <a title=\"Видеоролик, иллюстрирующий работу инструмента\" href=\"https://www.youtube.com/embed/UcBGQGqwUro?list=PLiVLBB_TTj5njgxk5E_EjwxzCGM4XyKlQ\" target=\"_blank\">\n        <i class=\"fa fa-video-camera fa-lg\"></i> Обучающее видео</a>\n    <a title=\"Справка по инструменту в WIKI\" href=\"http://www.oknosoft.ru/upzp/apidocs/classes/OTooolBar.html\" target=\"_blank\" style=\"margin-left: 9px;\">\n        <i class='fa fa-question-circle fa-lg'></i> Справка в wiki</a>\n</div>"});
 return Editor;
 }));

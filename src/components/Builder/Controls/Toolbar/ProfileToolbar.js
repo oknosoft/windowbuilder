@@ -7,7 +7,7 @@ import ZoomOutMapIcon from '@material-ui/icons/ZoomOutMap';
 import Tip from 'metadata-react/App/Tip';
 import InfoButton from 'metadata-react/App/InfoButton';
 import SmallButton from '../../Toolbar/IconButton';
-import GoLayer from './GoLayer';
+import GoUp from './GoUp';
 import {useStyles} from '../../Toolbar/styles';
 
 const btnClick = (editor, name) => {
@@ -66,7 +66,7 @@ function ProfileToolbar({editor, elm, classes}) {
       <SmallButton onClick={btnClick(editor, 'all')}><ZoomOutMapIcon /></SmallButton>
     </Tip>
     <div className={classes.title}/>
-    <GoLayer elm={elm} editor={editor}/>
+    <GoUp elm={elm} editor={editor}/>
     <Tip title={msg.elm_spec}>
       <IconButton onClick={btnClick(editor, 'spec')}>
         <i className="fa fa-table" />
