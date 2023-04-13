@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Checkbox from '@material-ui/core/Checkbox';
 import Dialog from 'metadata-react/App/Dialog';
 
 import {makeStyles} from '@material-ui/core/styles';
@@ -32,6 +34,7 @@ export default function FromClipboard({queryClose}) {
   const classes = useStyles();
   const [enable_clone, setClone] = React.useState(false);
   const [enable_copy, setCopy] = React.useState(false);
+  const [refill, setRefill] = React.useState(true);
   const [raw, setRaw] = React.useState({});
 
   const onPaste = async ({clipboardData}) => {
@@ -75,7 +78,7 @@ export default function FromClipboard({queryClose}) {
   const copy = () => {
     const src = raw;
     Object.defineProperty(src, 'refill_props', {
-      value: true,
+      value: refill,
       enumerable: false,
       configurable: true,
     });
@@ -96,12 +99,20 @@ export default function FromClipboard({queryClose}) {
     queryClose();
   };
 
+  const handleChange = ({target}) => {
+    setRefill(target.checked);
+  };
+
   return <Dialog
     open
     title="Импорт заказа"
     onClose={queryClose}
     actions={[
-      <Button key="clone" onClick={clone} disabled={!enable_clone}>Вставить клон</Button>,
+      <FormControlLabel
+        control={<Checkbox checked={refill} onChange={handleChange} />}
+        label="Свойства из системы"
+      />,
+      //<Button key="clone" onClick={clone} disabled={!enable_clone}>Вставить клон</Button>,
       <Button key="copy" onClick={copy} disabled={!enable_copy}>Создать копию</Button>,
       <Button key="cancel" onClick={queryClose} color="primary">Закрыть</Button>
     ]}
