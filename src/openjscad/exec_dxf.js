@@ -14,7 +14,7 @@ export function exec_dxf (scheme, jscad) {
 
   // имя будущего файла
   let name = ox.prod_name(true).replace(/\//,'-');
-  name = name.substr(0, name.indexOf('/'));
+  name = name.substring(0, name.indexOf('/'));
 
   function export_contour(layer) {
     for(const profile of layer.profiles) {

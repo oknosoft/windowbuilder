@@ -13,12 +13,12 @@ export function exec_dxf (scheme, Drawing) {
 
   // имя будущего файла
   let name = ox.prod_name(true).replace(/\//,'-');
-  name = name.substr(0, name.indexOf('/'));
+  name = name.substring(0, name.indexOf('/'));
 
   function export_path(src) {
     const path = src.path.clone(false);
     let prev;
-    path.flatten(0.5);
+    path.flatten(0.6);
     path.curves.forEach(({point1, point2}, index) => {
       if(!prev){
         prev = point1;
@@ -37,10 +37,6 @@ export function exec_dxf (scheme, Drawing) {
   function export_contour(layer) {
     d.addLayer(`l_${layer.cnstr}`, Drawing.ACI.LAYER, 'CONTINUOUS');
     d.setActiveLayer(`l_${layer.cnstr}`);
-
-    // for(const glass of layer.glasses(false, true)) {
-    //   export_path(glass);
-    // }
 
     for(const profile of layer.profiles) {
       export_path(profile);
@@ -61,8 +57,14 @@ export function exec_dxf (scheme, Drawing) {
     // добавляем слой для заполнения
     d.addLayer(`g_${glass.elm}`, Drawing.ACI.LAYER, 'CONTINUOUS');
     d.setActiveLayer(`g_${glass.elm}`);
-    
+
     export_path(glass);
+
+    // разрывы
+    for(const tearing of glass.layer.tearings) {
+
+    }
+
 
     if (withLay) {
       // добавляем слой для раскладки
