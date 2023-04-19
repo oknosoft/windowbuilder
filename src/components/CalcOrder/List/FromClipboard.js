@@ -32,9 +32,9 @@ cтрок: ${raw.production.length}, сумма: ${raw.doc_amount}, автор: 
 export default function FromClipboard({queryClose}) {
 
   const classes = useStyles();
-  const [enable_clone, setClone] = React.useState(false);
+  //const [enable_clone, setClone] = React.useState(false);
   const [enable_copy, setCopy] = React.useState(false);
-  const [refill, setRefill] = React.useState(true);
+  const [refill, setRefill] = React.useState(false);
   const [raw, setRaw] = React.useState({});
 
   const onPaste = async ({clipboardData}) => {
@@ -50,12 +50,12 @@ export default function FromClipboard({queryClose}) {
         const {current_user, doc: {calc_order}} = $p;
         const doc = await calc_order.get(tmp.ref, 'promise');
         setCopy(true);
-        if(doc.is_new() &&
-          (current_user.role_available('СогласованиеРасчетовЗаказов') ||
-            current_user.role_available('РедактированиеЦен') ||
-            current_user.roles.includes('doc_full'))) {
-          setClone(true);
-        }
+        // if(doc.is_new() &&
+        //   (current_user.role_available('СогласованиеРасчетовЗаказов') ||
+        //     current_user.role_available('РедактированиеЦен') ||
+        //     current_user.roles.includes('doc_full'))) {
+        //   setClone(true);
+        // }
       }
       else {
         setRaw(wrong);
@@ -70,7 +70,7 @@ export default function FromClipboard({queryClose}) {
       e.preventDefault();
       e.stopPropagation();
       setRaw({});
-      setClone(false);
+      //setClone(false);
       setCopy(false);
     }
   };
