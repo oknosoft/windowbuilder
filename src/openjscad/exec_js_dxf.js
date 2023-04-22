@@ -62,7 +62,9 @@ export function exec_dxf (scheme, Drawing) {
 
     // разрывы
     for(const tearing of glass.layer.tearings) {
-
+      if(tearing.path.height && tearing.path.width) {
+        export_path({path: tearing.profile_path});
+      }
     }
 
 
