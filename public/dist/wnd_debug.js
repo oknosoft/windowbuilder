@@ -1057,7 +1057,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         break;
 
       case 'btn_add_product':
-        //$p.dp.buyers_order.open_product_list(wnd, o);
         $p.dp.buyers_order.open_component(wnd, o, handlers, 'AdditionsExt');
         break;
 
@@ -1565,6 +1564,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         not_production();
       }
       else {
+        const {utils, ui: {dialogs}} = $p;
         const row = o.production.get(selId);
         if(row) {
           const {owner, calc_order} = row.characteristic;
@@ -1572,11 +1572,14 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             not_production();
           }
           else if(row.characteristic.coordinates.count()) {
-            const json = JSON.stringify($p.utils._mixin({}, row.characteristic._obj, [],
+            const json = JSON.stringify(utils._mixin({}, row.characteristic._obj, [],
               'ref,_rev,name,calc_order,product,leading_product,leading_elm,origin,partner,department,specification,svg'.split(',')));
             navigator.clipboard.writeText(json)
-              .then(() => $p.ui.dialogs.alert({text: 'Скопировано в буфер обмена'}))
-              .catch(err => $p.ui.dialogs.alert({text: err.message}));
+              .then(() => dialogs.alert({
+                title: 'Экспорт данных',
+                text: `${row.characteristic.prod_name(true)} скопировано в буфер обмена`,
+              }))
+              .catch(err => dialogs.alert({text: err.message}));
           }
           else {
             not_production();
@@ -1590,25 +1593,34 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
      */
     function prod_import() {
       const err = new TypeError('В буфере обмена нет подходящих данных');
-      navigator.clipboard.readText()
-        .then((text) => JSON.parse(text))
-        .catch(() => {
-          throw err;
-        })
-        .then((obj) => {
-          if(obj?.class_name !== 'cat.characteristics') {
-            throw err;
+      $p.dp.buyers_order.open_component(wnd, {
+        _mgr,
+        ref: o.ref,
+        cmd: {
+          fin(raw, refill) {
+            open_builder(raw);
           }
-          open_builder(obj);
-        })
-        .catch(err => $p.ui.dialogs.alert({text: err.message}));
+        }
+      }, handlers, 'FromClipboard');
+      // navigator.clipboard.readText()
+      //   .then((text) => JSON.parse(text))
+      //   .catch(() => {
+      //     throw err;
+      //   })
+      //   .then((obj) => {
+      //     if(obj?.class_name !== 'cat.characteristics') {
+      //       throw err;
+      //     }
+      //     open_builder(obj);
+      //   })
+      //   .catch(err => $p.ui.dialogs.alert({text: err.message}));
     }
 
     /**
      * ОткрытьПостроитель()
      * @param [create_new] {Boolean} - создавать новое изделие или открывать в текущей строке
      */
-    function open_builder(create_new) {
+    function open_builder(create_new, refill) {
 
       if(create_new === 'clone') {
         const selId = production_get_sel_index();
@@ -1639,8 +1651,8 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                   return characteristic.save();
                 })
                 .then((cx) => {
-                  // при необходимости, установим признак перезаполнить параметры изделия и фурнитуры
-                  if(calc_order.refill_props) {
+                  // при необходимости, установим признак перезаполнять параметры изделия и фурнитуры
+                  if(calc_order.refill_props || refill === true) {
                     cx._data.refill_props = true;
                   }
                   // открываем рисовалку
@@ -1659,6 +1671,9 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             if(typeof create_new === 'object') {
               // заполняем продукцию сырыми данными
               characteristic._mixin(create_new, null, 'ref,name,calc_order,product,leading_product,leading_elm,origin,partner'.split(','), true);
+              if(refill === true) {
+                characteristic._data.refill_props = true;
+              }
               handlers.handleNavigate(`/builder/${characteristic.ref}?order=${o.ref}`);
             }
             else {

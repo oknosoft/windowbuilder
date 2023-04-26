@@ -195,6 +195,9 @@ export default function ($p) {
     case 'ObjHistory':
       imodule = import('wb-forms/dist/ObjHistory');
       break;
+    case 'FromClipboard':
+      imodule = import('../../components/CalcOrder/List/FromClipboard');
+      break;
     }
     imodule.then((module) => handlers.handleIfaceState({
         component: area,

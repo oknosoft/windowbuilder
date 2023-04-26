@@ -14,22 +14,40 @@ const useStyles = makeStyles({
   },
 });
 
-const wrong = 'В буфере обмена нет корректных данных о заказе';
 const processing = 'Обработка данных...\nДлительная операция';
 
 const presentation = (raw) => {
+  const {cat} = $p;
   if(raw && typeof raw === 'string') {
     return raw;
   }
-  if(raw && raw.date && raw.number_doc) {
+  if(raw?.date && raw.number_doc) {
     const date = moment(raw.date);
     return `Расчет-заказ №${raw.number_doc} от ${date.format('LL')}
-cтрок: ${raw.production.length}, сумма: ${raw.doc_amount}, автор: ${$p.cat.users.get(raw.manager).toString()}`;
+cтрок: ${raw.production.length}, сумма: ${raw.doc_amount}, автор: ${cat.users.get(raw.manager).toString()}`;
+  }
+  if(raw?.sys && raw.x && raw.y) {
+    return `Система: ${cat.production_params.get(raw.sys).name}
+Цвет: ${cat.clrs.get(raw.clr).name}
+Габариты: ${raw.x}x${raw.y}, площадь: ${raw.s}м²`;
   }
   return '';
 };
 
-export default function FromClipboard({queryClose}) {
+export default function FromClipboard(props) {
+
+  let {queryClose, handlers, dialog} = props;
+  if(!queryClose && handlers) {
+    queryClose = () => {
+      handlers.handleIfaceState({
+        component: 'DataObjPage',
+        name: 'dialog',
+        value: null,
+      });
+    };
+  }
+
+  const wrong = `В буфере обмена нет корректных данных о ${dialog ? 'продукции' : 'заказе'}`;
 
   const classes = useStyles();
   //const [enable_clone, setClone] = React.useState(false);
@@ -42,7 +60,7 @@ export default function FromClipboard({queryClose}) {
     try {
       const text = clipboardData.getData('text/plain');
       const tmp = JSON.parse(text);
-      if(tmp.ref && tmp.class_name === 'doc.calc_order') {
+      if(tmp?.ref && !dialog && tmp?.class_name === 'doc.calc_order') {
         setRaw(tmp);
         // если заказ существует в текущем кластере - разрешаем только копирование
         // если сохраненного заказа нет и у пользователя мощная роль - разрешаем клон
@@ -50,12 +68,10 @@ export default function FromClipboard({queryClose}) {
         const {current_user, doc: {calc_order}} = $p;
         const doc = await calc_order.get(tmp.ref, 'promise');
         setCopy(true);
-        // if(doc.is_new() &&
-        //   (current_user.role_available('СогласованиеРасчетовЗаказов') ||
-        //     current_user.role_available('РедактированиеЦен') ||
-        //     current_user.roles.includes('doc_full'))) {
-        //   setClone(true);
-        // }
+      }
+      else if(dialog && tmp?.class_name === 'cat.characteristics') {
+        setRaw(tmp);
+        setCopy(true);
       }
       else {
         setRaw(wrong);
@@ -76,6 +92,10 @@ export default function FromClipboard({queryClose}) {
   };
 
   const copy = () => {
+    if(dialog) {
+      queryClose();
+      dialog.cmd.fin(raw, refill);
+    }
     const src = raw;
     Object.defineProperty(src, 'refill_props', {
       value: refill,
@@ -105,7 +125,7 @@ export default function FromClipboard({queryClose}) {
 
   return <Dialog
     open
-    title="Импорт заказа"
+    title={`Импорт ${dialog ? 'продукции' : 'заказа'}`}
     onClose={queryClose}
     actions={[
       <FormControlLabel
@@ -113,7 +133,7 @@ export default function FromClipboard({queryClose}) {
         label="Свойства из системы"
       />,
       //<Button key="clone" onClick={clone} disabled={!enable_clone}>Вставить клон</Button>,
-      <Button key="copy" onClick={copy} disabled={!enable_copy}>Создать копию</Button>,
+      <Button key="copy" onClick={copy} disabled={!enable_copy}>{`Создать ${dialog ? 'продукцию' : 'копию'}`}</Button>,
       <Button key="cancel" onClick={queryClose} color="primary">Закрыть</Button>
     ]}
   >
