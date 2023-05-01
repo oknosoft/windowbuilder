@@ -153,6 +153,24 @@ class SchemeLayers {
         tree.openItem(layer.key);
       });
 
+      const {builder_props} = project.ox;
+
+      // Вид эскиза
+      tree.addItem('mode', '<div id="tree-mode" style="display: flex;">Режим эскиза </div>', 0);
+      tree.disableCheckbox('mode');
+      const divMode = tree.cont.querySelector('#tree-mode');
+      const comboMode = new dhtmlXCombo(divMode, 'combo_mode', '200px');
+      const mvalues = ['Основной', 'Скелетон', 'Ряд -1 (перед элементом)', 'Ряд 1 (внутри элемента)', 'Ряд 2 (за элементом)'];
+      comboMode.addOption(mvalues.map((v, i) => [i, v]));
+      comboMode.selectOption(builder_props.mode);
+      comboMode.attachEvent("onChange", function(mode, text){
+        project.ox.builder_props = {mode};
+        project.register_change();
+      });
+      const cntMode = divMode.querySelector('.dhxcombo_dhx_terrace');
+      cntMode.style.marginTop = '5px';
+      cntMode.style.marginLeft = '6px';
+
       const props = {
         auto_lines: 'Авторазмерные линии',
         custom_lines: 'Доп. размерные линии',
@@ -165,26 +183,28 @@ class SchemeLayers {
       for (const prop in props) {
         tree.addItem(prop, props[prop], 0);
       }
-
-      const {builder_props} = project.ox;
       for (const prop in builder_props) {
         props[prop] && builder_props[prop] && tree.checkItem(prop);
       }
+
+      // Номера профилей
       tree.addItem('articles', '<div id="tree-articles" style="display: flex;">Номера профилей </div>', 0);
       tree.disableCheckbox('articles');
       const divArticles = tree.cont.querySelector('#tree-articles');
-      const comboArticles = new dhtmlXCombo(divArticles,"combo_articles","160px");
+      const comboArticles = new dhtmlXCombo(divArticles, 'combo_articles', '160px');
       const avalues = ['Нет', 'Номер', 'Вставка', 'Номенклатура', 'Номер + Вставка', 'Номер + Номенклатура'];
       comboArticles.addOption(avalues.map((v, i) => [i, v]));
       comboArticles.selectOption(builder_props.articles);
-      comboArticles.attachEvent("onChange", function(value, text){
-        project.ox.builder_props = {articles: value};
+      comboArticles.attachEvent("onChange", function(articles, text){
+        project.ox.builder_props = {articles};
         project.register_change();
       });
       const cntArticles = divArticles.querySelector('.dhxcombo_dhx_terrace');
       cntArticles.style.marginTop = '5px';
       cntArticles.style.marginLeft = '6px';
+
     }
+
   }
 
   drop_layer() {
@@ -1379,18 +1399,6 @@ class Editor extends $p.EditorInvisible {
     };
 
     const _scheme = new $p.EditorInvisible.Scheme(_canvas, _editor);
-    // это свойство для отладки... можно будет удалить
-    Object.defineProperty(_scheme, '_activeLayer', {
-      get() {
-        return this.__activeLayer;
-      },
-      set(v) {
-        if(v && !(v instanceof paper.Layer) && v.layer) {
-          v = v.layer;
-        }
-        this.__activeLayer = v;
-      }
-    });
     const pwnd_resize_finish = () => {
       _editor.project.resize_canvas(_editor._layout.cells("a").getWidth(), _editor._layout.cells("a").getHeight());
     };
