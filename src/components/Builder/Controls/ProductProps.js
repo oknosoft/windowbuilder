@@ -26,7 +26,7 @@ export default function ProductProps(props) {
 
   return <>
     <RootToolbar project={project} ox={ox} _dp={_dp} />
-    <PropField _obj={_dp} _fld="sys"/>
+    <PropField _obj={_dp} _fld="sys" ox={ox}/>
     <FieldClr _obj={_dp} _fld="clr" _meta={cmeta} clr_group={clr_group}/>
     <LinkedProps ts={ox.params} cnstr={0} inset={elm.inset.ref} project={project}/>
 

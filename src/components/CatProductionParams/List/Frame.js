@@ -15,6 +15,10 @@ const styles = ({spacing, palette}) => {
       backgroundColor: grey[200],
       paddingLeft: spacing(),
     },
+    divider: {
+      marginLeft: spacing(),
+      marginRight: spacing(),
+    }
   };
 };
 
@@ -67,13 +71,26 @@ class ProductionParamsList extends MDNRComponent {
     this._current = elm;
   };
 
+  resetTemplate = () => {
+    const {_owner, _mgr} = this.props;
+    const {ox, _obj, _meta} = _owner.props;
+    ox.base_block = '';
+    $p.cat.templates._select_template.permitted_sys_meta(ox, _meta);
+    this.tree = buildTree({
+      _mgr,
+      _owner,
+      selected: this.state.parent,
+    });
+    this.forceUpdate();
+  };
+
   render() {
     const {props, tree, context: {dnr: {frameRect}}, state: {parent, value, columns}} = this;
     const width = frameRect?.width || window.innerWidth * .5;
     const height = frameRect?.height || window.innerHeight * .6;
     const list = (tree.findNode(parent) || tree).list;
     return <>
-      <Toolbar {...props} handleSelect={this.handleSelect}/>
+      <Toolbar {...props} handleSelect={this.handleSelect} resetTemplate={this.resetTemplate}/>
       <div style={{position: 'relative', height: height-48, width}}>
         <Resize handleWidth="6px" handleColor={grey[200]}>
           <ResizeHorizon width={`${(width /3).toFixed()}px`} minWidth="200px">
