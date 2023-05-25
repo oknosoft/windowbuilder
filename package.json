@@ -1,13 +1,13 @@
 {
   "name": "windowbuilder",
-  "version": "2.1.264",
+  "version": "2.1.265",
   "description": "Order dealer for windows and stained glass",
   "repository": {
     "type": "git",
     "url": "https://github.com/oknosoft/windowbuilder.git"
   },
   "engines": {
-    "node": "^16.13",
+    "node": ">=16.13",
     "yarn": "^1.22"
   },
   "keywords": [
@@ -42,15 +42,14 @@
     "@turf/points-within-polygon": "^6.5",
     "dxf-writer": "^1.18",
     "md5-file": "^5.0",
-    "metadata-dhtmlx": "2.0.33-beta.2",
-    "metadata-react": "2.0.33-beta.2",
-    "metadata-redux": "2.0.33-beta.2",
+    "metadata-dhtmlx": "2.0.33-beta.3",
+    "metadata-react": "2.0.33-beta.3",
+    "metadata-redux": "2.0.33-beta.3",
     "react-highlight-words": "^0.20",
-    "react-number-format": "^5.1.4",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#2e262e2104b7fe3dd302f4d1bc874ce8251f5e1c",
-    "wb-cutting": "github:oknosoft/genetic-cutting#da74a4a12254f351c1364e86bbf0c0454550701d",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#80f8036da5dc3758b9ad5a126d1c7d01253d8b2c"
+    "wb-core": "github:oknosoft/windowbuilder-core#78299862636e46f6481e9cfd786fdf71df2fff80",
+    "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
+    "wb-forms": "github:oknosoft/windowbuilder-forms#e1833cae1366289804688f500d28dacb92e38b94"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
