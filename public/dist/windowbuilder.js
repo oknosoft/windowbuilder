@@ -2810,7 +2810,8 @@ class ToolAngle extends ToolElement {
         paths.set('callout1', current.clone());
         this.mode = 1;
         return ;
-      case 1:
+
+      case 1: {
         if(paths.has('callout2')) {
           paths.get('callout2').remove();
           paths.delete('callout2');
@@ -2847,50 +2848,35 @@ class ToolAngle extends ToolElement {
           });
         }
         return ;
+      }
+
       case 2:
         if(paths.has('arc')) {
           this.mode = 3;
         }
         return ;
-      case 3:
 
-        return ;
-    }
-    let callout = paths.get('callout1');
-    if(swap) {
-      [b, e] = [e, b];
-      callout = paths.get('callout2');
-      sign = -sign;
-    }
-    if(mode === 2) {
-      // создать линию
-      const attr = {
-        elm1: b.profile,
-        elm2: e.profile,
-        p1: b.point_name,
-        p2: e.point_name,
-        parent: b.profile.layer.l_dimensions,
-        project,
-      };
-      if(rect_pos !== 'free') {
-        attr.fix_angle = true;
-        attr.angle = paths.get('size').getTangentAt(0).angle;
+      case 3: {
+        const callout1 = paths.get('callout1');
+        const callout2 = paths.get('callout2');
+        const text = paths.get('text');
+        const arc = paths.get('arc');
+        const through = arc.getPointAt(arc.length / 2);
+        // создать линию
+        const attr = {
+          o: [callout1.firstSegment.point.x, callout1.firstSegment.point.y],
+          p1: [callout1.lastSegment.point.x, callout1.lastSegment.point.y],
+          p2: [callout2.lastSegment.point.x, callout2.lastSegment.point.y],
+          through: [through.x, through.y],
+          pos: [text.position.x, text.position.y],
+          content: text.content,
+          parent: project.l_connective,
+          project,
+        };
+        new Editor.DimensionAngle(attr);
+        project.register_change(true);
+        return this.on_deactivate();
       }
-      attr.offset = sign * callout.length;
-      new Editor.DimensionLineCustom(attr);
-      project.register_change(true);
-      return this.on_deactivate();
-    }
-    if(!hitPoint) {
-      return;
-    }
-    if(!mode) {
-      this.mode = 1;
-      this.b = hitPoint;
-    }
-    else if(mode === 1) {
-      this.mode = 2;
-      this.e = hitPoint;
     }
   }
 
@@ -2911,7 +2897,7 @@ class ToolAngle extends ToolElement {
         }
         else {
           paths.set('current', new paper.Path({
-            parent: project.l_dimensions,
+            parent: project.l_connective,
             segments: [pt1, pt2],
             strokeColor: 'black',
             strokeWidth: 3,
@@ -2958,7 +2944,7 @@ class ToolAngle extends ToolElement {
           from: callout1.lastSegment.point,
           through: event.point,
           to: callout2.lastSegment.point,
-          parent: project.l_dimensions,
+          parent: project.l_connective,
           strokeColor: 'black',
           strokeWidth: 2,
           strokeScaling: false,
@@ -2981,7 +2967,7 @@ class ToolAngle extends ToolElement {
         paths.get('text').remove();
       }
       paths.set('text', new paper.PointText({
-        parent: project.l_dimensions,
+        parent: project.l_connective,
         position: event.point,
         fillColor: 'black',
         fontFamily: paper.consts?.font_family,
