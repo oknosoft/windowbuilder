@@ -15,9 +15,6 @@ class ToolAngle extends ToolElement {
       mode: 0,        // 1 - выбрана первый луч, 2 - второй, 3 - выбрано положение дуги и надписи
       hitItem: null,  // текущий сегмент
       hitPoint: null, // текущая точка на сегменте
-      b: null,        // начальный луч
-      e: null,        // конечный луч
-      o: null,        // точка пересечения лучей
       paths: new Map(),
       rect_pos: '',
       swap: false,
@@ -227,11 +224,11 @@ class ToolAngle extends ToolElement {
       }
       paths.set('text', new paper.PointText({
         parent: project.l_connective,
-        position: event.point,
         fillColor: 'black',
         fontFamily: paper.consts?.font_family,
         fontSize: Editor.DimensionLine._font_size(project.bounds),
         content: this.content(),
+        position: event.point,
       }));
     }
   }
@@ -295,6 +292,10 @@ class ToolAngle extends ToolElement {
     const v2 = callout2.getNormalAt(0);
     const angle = v1.getAngle(v2).toFixed(1);
     return `${angle}°`;
+  }
+
+  get is_smart_size() {
+    return true;
   }
 }
 

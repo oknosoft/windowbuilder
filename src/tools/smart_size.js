@@ -221,6 +221,10 @@ class ToolSmartSize extends ToolElement {
     }
   }
 
+  get is_smart_size() {
+    return true;
+  }
+
 }
 
 Editor.ToolSmartSize = ToolSmartSize;

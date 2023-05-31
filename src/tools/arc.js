@@ -318,6 +318,10 @@ class ToolArc extends ToolElement{
     return true;
   }
 
+  get is_smart_size() {
+    return true;
+  }
+
 }
 
 Editor.ToolArc = ToolArc;
