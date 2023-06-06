@@ -725,10 +725,10 @@ class ToolSelectNode extends ToolElement {
     <div id="sz_btn_left" class="sz_btn tb_align_hor" title="${tip}слева"></div>
     <input class="sz_input" type="number" step="10" value="${size.toFixed()}"/>
     <div id="sz_btn_right" class="sz_btn tb_align_hor" title="${tip}справа"></div>
-    <div id="sz_btn_rateably" class="sz_btn tb_align_hor2" title="${tip}пропорционально"></div>
-</div>`;
+</div>
+<div id="sz_btn_rateably" class="sz_btn tb_align_hor2" title="${tip}пропорционально"></div>`;
       div.style.top = `${point.y - 12}px`;
-      div.style.left = `${point.x - 49}px`;
+      div.style.left = `${point.x - 59}px`;
     }
     else {
       div.innerHTML = `<div id="sz_btn_top" class="sz_btn tb_align_vert" title="${tip}сверху"></div>

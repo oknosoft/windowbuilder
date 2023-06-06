@@ -302,8 +302,6 @@
                   rsvg_click(search.ref, 0);
                 }, 200);
               }
-
-
             })
             .catch(() => {
               delete o._data._reload;
