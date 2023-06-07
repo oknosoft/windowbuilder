@@ -47,7 +47,7 @@
     "metadata-redux": "2.0.33-beta.3",
     "react-highlight-words": "^0.20",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#112534395bc59357a67a6093a50c7ffce69a8494",
+    "wb-core": "github:oknosoft/windowbuilder-core#26a376502a3de19d2dbf1c4aa12050c08b745694",
     "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
     "wb-forms": "github:oknosoft/windowbuilder-forms#e1833cae1366289804688f500d28dacb92e38b94"
   },
@@ -115,7 +115,8 @@
     "webpack": "^5.64.4",
     "webpack-dev-server": "^4.6.0",
     "webpack-manifest-plugin": "^4.0.2",
-    "workbox-webpack-plugin": "^6.4.1"
+    "workbox-webpack-plugin": "^6.4.1",
+    "xlsx": "^0.18.5"
   },
   "packageManager": "^yarn@1.22",
   "files": [
