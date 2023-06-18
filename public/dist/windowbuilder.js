@@ -5841,7 +5841,7 @@ class ToolPen extends ToolElement {
     this.last_profile = null;
     const {elm_types} = $p.enm;
 
-    if([elm_types.Добор, elm_types.Соединитель, elm_types.Примыкание].includes(this.profile.elm_type)) {
+    if([elm_types.addition, elm_types.glbead, elm_types.linking, elm_types.adjoining].includes(this.profile.elm_type)) {
       // для доборов и соединителей, создаём элемент, если есть addl_hit
       if(this.addl_hit) {
       }
@@ -5860,8 +5860,8 @@ class ToolPen extends ToolElement {
     const {_scope, addl_hit, profile, project, group} = this;
     const {
       enm: {elm_types},
-      EditorInvisible: {Sectional, ProfileAddl, ProfileConnective, Onlay, BaseLine, ProfileCut, ProfileAdjoining,
-        Profile, ProfileItem, Filling, Contour}} = $p;
+      EditorInvisible: {Sectional, ProfileAddl, ProfileGlBead, ProfileConnective, Onlay, BaseLine, ProfileCut,
+        ProfileAdjoining, Profile, ProfileItem, Filling, Contour}} = $p;
 
     group && group.removeChildren();
 
@@ -5878,7 +5878,7 @@ class ToolPen extends ToolElement {
     if(addl_hit){
 
       // рисуем доборный профиль
-      if(addl_hit.glass && profile.elm_type == elm_types.Добор && !profile.inset.empty()){
+      if(addl_hit.glass && profile.elm_type == elm_types.addition && !profile.inset.empty()){
         new ProfileAddl({
           generatrix: addl_hit.generatrix,
           proto: profile,
@@ -5886,8 +5886,17 @@ class ToolPen extends ToolElement {
           side: addl_hit.side
         });
       }
+      else if(addl_hit.glass && profile.elm_type == elm_types.glbead && !profile.inset.empty()){
+        new ProfileGlBead({
+          generatrix: addl_hit.generatrix,
+          proto: profile,
+          parent: addl_hit.profile,
+          side: addl_hit.side,
+          glass: addl_hit.glass,
+        });
+      }
       // рисуем соединительный профиль
-      else if(profile.elm_type == elm_types.Соединитель && !profile.inset.empty()){
+      else if(profile.elm_type == elm_types.linking && !profile.inset.empty()){
 
         const connective = new ProfileConnective({
           generatrix: addl_hit.generatrix,
@@ -5907,7 +5916,7 @@ class ToolPen extends ToolElement {
           layer && layer.notify && layer.notify({profiles: [rama], points: []}, _scope.consts.move_points);
         });
       }
-      else if(profile.elm_type == elm_types.Примыкание) {
+      else if(profile.elm_type == elm_types.adjoining) {
         const adjoining = new ProfileAdjoining({
           b: addl_hit.b,
           e: addl_hit.e,
@@ -6610,6 +6619,7 @@ class ToolPen extends ToolElement {
 
     switch (this.profile.elm_type) {
     case elm_types.addition:
+    case elm_types.glbead:
       this.hitTest_addl(event);
       break;
     case elm_types.Соединитель:
@@ -7570,8 +7580,8 @@ class ToolSelectNode extends ToolElement {
       for(let path of project.selectedItems){
         // при зажатом space добавляем элемент иначе - узел
         if (modifiers.space) {
-          if(path.parent instanceof Editor.Profile &&
-              !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)) {
+          if(path.parent instanceof Editor.Profile && !(path instanceof Editor.ProfileAddl ||
+            path instanceof Editor.ProfileGlBead || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)) {
 
             const cnn_point = path.parent.cnn_point('e');
             cnn_point && cnn_point.profile && cnn_point.profile.rays.clear(true);
@@ -7589,8 +7599,8 @@ class ToolSelectNode extends ToolElement {
         }
         else if (modifiers.shift || path.parent instanceof Editor.Sectional) {
           let do_select = false, j;
-          if(path.parent instanceof Editor.GeneratrixElement &&
-              !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)){
+          if(path.parent instanceof Editor.GeneratrixElement && !(path instanceof Editor.ProfileAddl ||
+            path instanceof Editor.ProfileGlBead || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)){
             for (j = 0; j < path.segments.length; j++) {
               segment = path.segments[j];
               if (segment.selected){
@@ -7616,8 +7626,8 @@ class ToolSelectNode extends ToolElement {
             }
           }
         }
-        else if(path.parent instanceof Editor.Profile && !path.parent.segms?.length &&
-            !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)) {
+        else if(path.parent instanceof Editor.Profile && !path.parent.segms?.length && !(path instanceof Editor.ProfileAddl ||
+          path instanceof Editor.ProfileGlBead || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)) {
           $p.ui.dialogs.input_value({
             title: 'Деление профиля (связка)',
             text: 'Укажите число сегментов',
@@ -7704,7 +7714,7 @@ class ToolSelectNode extends ToolElement {
           return true;
         }
         else if(path.parent instanceof Editor.GeneratrixElement){
-          if(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment){
+          if(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileGlBead || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment){
             path.remove();
           }
           else{

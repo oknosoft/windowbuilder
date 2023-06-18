@@ -429,8 +429,8 @@ class ToolSelectNode extends ToolElement {
       for(let path of project.selectedItems){
         // при зажатом space добавляем элемент иначе - узел
         if (modifiers.space) {
-          if(path.parent instanceof Editor.Profile &&
-              !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)) {
+          if(path.parent instanceof Editor.Profile && !(path instanceof Editor.ProfileAddl ||
+            path instanceof Editor.ProfileGlBead || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)) {
 
             const cnn_point = path.parent.cnn_point('e');
             cnn_point && cnn_point.profile && cnn_point.profile.rays.clear(true);
@@ -448,8 +448,8 @@ class ToolSelectNode extends ToolElement {
         }
         else if (modifiers.shift || path.parent instanceof Editor.Sectional) {
           let do_select = false, j;
-          if(path.parent instanceof Editor.GeneratrixElement &&
-              !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)){
+          if(path.parent instanceof Editor.GeneratrixElement && !(path instanceof Editor.ProfileAddl ||
+            path instanceof Editor.ProfileGlBead || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)){
             for (j = 0; j < path.segments.length; j++) {
               segment = path.segments[j];
               if (segment.selected){
@@ -475,8 +475,8 @@ class ToolSelectNode extends ToolElement {
             }
           }
         }
-        else if(path.parent instanceof Editor.Profile && !path.parent.segms?.length &&
-            !(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)) {
+        else if(path.parent instanceof Editor.Profile && !path.parent.segms?.length && !(path instanceof Editor.ProfileAddl ||
+          path instanceof Editor.ProfileGlBead || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment)) {
           $p.ui.dialogs.input_value({
             title: 'Деление профиля (связка)',
             text: 'Укажите число сегментов',
@@ -563,7 +563,7 @@ class ToolSelectNode extends ToolElement {
           return true;
         }
         else if(path.parent instanceof Editor.GeneratrixElement){
-          if(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment){
+          if(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileGlBead || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment){
             path.remove();
           }
           else{
