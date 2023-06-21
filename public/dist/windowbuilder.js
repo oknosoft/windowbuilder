@@ -5887,13 +5887,8 @@ class ToolPen extends ToolElement {
         });
       }
       else if(addl_hit.glass && profile.elm_type == elm_types.glbead && !profile.inset.empty()){
-        new ProfileGlBead({
-          generatrix: addl_hit.generatrix,
-          proto: profile,
-          parent: addl_hit.profile,
-          side: addl_hit.side,
-          glass: addl_hit.glass,
-        });
+        const {point, rib, ...other} = addl_hit;
+        new ProfileGlBead({parent: addl_hit.profile.layer, proto: profile, ...other});
       }
       // рисуем соединительный профиль
       else if(profile.elm_type == elm_types.linking && !profile.inset.empty()){
@@ -6323,8 +6318,10 @@ class ToolPen extends ToolElement {
     if(!this.addl_hit.generatrix){
       this.addl_hit.generatrix = new paper.Path({insert: false});
     }
-    p1 = prev.profile.generatrix.getNearestPoint(p1);
-    p2 = next.profile.generatrix.getNearestPoint(p2);
+    if(!this.profile.elm_type.is('glbead')) {
+      p1 = prev.profile.generatrix.getNearestPoint(p1);
+      p2 = next.profile.generatrix.getNearestPoint(p2);
+    }
     this.addl_hit.generatrix.removeSegments();
     this.addl_hit.generatrix.addSegments(path_curr.get_subpath(p1, p2).segments);
 
