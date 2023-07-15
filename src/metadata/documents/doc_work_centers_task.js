@@ -1,7 +1,6 @@
 /**
- * ### Модуль менеджера и документа Задание на производство
+ * @summary Модуль менеджера и документа Задание на производство
  *
- * @module work_centers_task
  */
 
 import FrmObj from 'wb-forms/dist/WorkCentersTask';
@@ -124,19 +123,21 @@ export default function ({
                   return;
                 }
               }
-              cutting.add({
-                production: obj,
-                specimen,
-                elm: row.elm,
-                nom: row.nom,
-                characteristic: row.characteristic.empty() ? row.clr : row.characteristic,
-                len: (row.len * 1000).round(0),
-                width: (row.width * 1000).round(0),
-                orientation: coord.orientation,
-                elm_type: coord.elm_type,
-                alp1: row.alp1,
-                alp2: row.alp2,
-              });
+              for(let qty = 1;  qty <= row.qty; qty++) {
+                cutting.add({
+                  production: obj,
+                  specimen,
+                  elm: row.elm,
+                  nom: row.nom,
+                  characteristic: row.characteristic.empty() ? row.clr : row.characteristic,
+                  len: (row.len * 1000).round(0),
+                  width: (row.width * 1000).round(0),
+                  orientation: coord.orientation,
+                  elm_type: coord.elm_type,
+                  alp1: row.alp1,
+                  alp2: row.alp2,
+                });
+              }
             });
           });
         });
