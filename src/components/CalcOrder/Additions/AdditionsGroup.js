@@ -76,6 +76,23 @@ class AdditionsGroup extends React.Component {
     }
   };
 
+  onGridKeyUp = (e) => {
+    switch (e.key) {
+      case 'F9':
+        this.handleCopy();
+        return;
+      case 'Delete':
+        if(e.ctrlKey) {
+          this.handleRemove();
+        }
+        return;
+      case 'Insert':
+        if(e.ctrlKey) {
+          this.handleAdd();
+        }
+    }
+  };
+
   render() {
 
     const {props, state: {count}} = this;
@@ -93,15 +110,15 @@ class AdditionsGroup extends React.Component {
 
     return <div style={style}>
       <ListItem disableGutters className={classes.listitem}>
-        <IconButton title="Добавить строку" onClick={this.handleAdd}><AddIcon/></IconButton>
-        <IconButton title="Скопировать строку" disabled={!count} onClick={this.handleCopy}><CopyIcon/></IconButton>
-        <IconButton title="Удалить строку" disabled={!count} onClick={this.handleRemove}><RemoveIcon/></IconButton>
+        <IconButton title="Добавить строку {Ctrl+Insert}" onClick={this.handleAdd}><AddIcon/></IconButton>
+        <IconButton title="Скопировать строку {F9}" disabled={!count} onClick={this.handleCopy}><CopyIcon/></IconButton>
+        <IconButton title="Удалить строку {Ctrl+Delete}" disabled={!count} onClick={this.handleRemove}><RemoveIcon/></IconButton>
         <ListItemText classes={count ? {primary: classes.groupTitle} : {}} primary={presentation}/>
         <ListItemSecondaryAction className={classes.secondary}>{count ? `${pieces()} шт` : ''}</ListItemSecondaryAction>
       </ListItem>
 
       <Collapse in={!!count} timeout={100} classes={{entered: classes.entered}}>
-        <div style={{height: (style.minHeight || 0) + 35}}>
+        <div style={{height: (style.minHeight || 0) + 35}} onKeyUp={this.onGridKeyUp}>
           <Renderer
             tref={(el) => this.tabular = el}
             minHeight={style.minHeight}
