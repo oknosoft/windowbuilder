@@ -10,6 +10,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
 import LinkedProp from 'wb-forms/dist/Common/LinkedProp';
+import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
+import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
 
 class ElmInsetProps extends React.Component {
 
@@ -41,6 +43,17 @@ class ElmInsetProps extends React.Component {
     };
   }
 
+  select_b = () => {
+    const {elm} = this.props;
+    elm.b.selected = true;
+    elm.e.selected = false;
+  };
+  select_e = () => {
+    const {elm} = this.props;
+    elm.e.selected = true;
+    elm.b.selected = false;
+  };
+
   render() {
     const {elm, row, inset} = this.props;
     if(!elm || !row) {
@@ -53,10 +66,11 @@ class ElmInsetProps extends React.Component {
       const _obj = row.region ? elm.region(row.region) : elm;
       const {fields} = _obj._metadata;
       if(row.region) {
+        const clr_group = $p.cat.clrs.selection_exclude_service(fields.clr, _obj, elm.ox);
         content.push(
-          <PropField key="aip-clr" _obj={row} _fld="clr" empty_text="Авто"/>,
-          <PropField key="aip-cnn1" _obj={_obj} _fld="cnn1" _meta={fields.cnn1} get_ref={this.ref_fn('cnn1')} empty_text="Авто"/>,
-          <PropField key="aip-cnn2" _obj={_obj} _fld="cnn2" _meta={fields.cnn2} get_ref={this.ref_fn('cnn2')} empty_text="Авто"/>,
+          <FieldClr key="aip-clr" _obj={row} _fld="clr" _meta={fields.clr} clr_group={clr_group}/>,
+          <FieldEndConnection key="aip-cnn1" elm1={_obj} node="b" _fld="cnn1" onClick={this.select_b}/>,
+          <FieldEndConnection key="aip-cnn2" elm1={_obj} node="e" _fld="cnn2" onClick={this.select_e}/>
         );
       }
       _obj.elm_props(row.inset).forEach((param) => {

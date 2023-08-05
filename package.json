@@ -33,10 +33,10 @@
   "proxy6": "http://localhost:3016/",
   "proxy7": "https://quick.ecookna.ru/",
   "proxy8": "https://crystallit.oknosoft.ru/",
-  "proxy9": "https://brusnika.oknosoft.ru:2210/",
+  "proxy": "https://brusnika.oknosoft.ru:2210/",
   "proxy10": "https://brusnika.oknosoft.ru:2227/",
   "proxy11": "https://start.phototech.ru/",
-  "proxy": "https://tg.oknosoft.ru:2310/",
+  "proxy12": "https://tg.oknosoft.ru:2310/",
   "proxy13": "https://steklotorg.oknosoft.ru:2310/",
   "dependencies": {
     "@turf/points-within-polygon": "^6.5",
@@ -47,9 +47,9 @@
     "metadata-redux": "2.0.33-beta.4",
     "react-highlight-words": "^0.20",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#6900bbbabf88b38f7a81fb037f3a0118a4413999",
+    "wb-core": "github:oknosoft/windowbuilder-core#afe14fdad2edca70d4a95e6569b049e19ee025a9",
     "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#073c4c6cf3bf6722e02a6b85963e42fdc174359f"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#c91229f5b8a14511025b61fb79b5304750c01ea2"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
