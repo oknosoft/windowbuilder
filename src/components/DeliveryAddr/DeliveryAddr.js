@@ -18,7 +18,6 @@ import TextField  from '@material-ui/core/TextField';
 import IconButton  from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import LiveHelp from '@material-ui/icons/LiveHelp';
-import GoogleMap from './GoogleMap';
 import YaMap from './YaMap';
 import YaSuggest from './YaSuggest';
 import {ReactDadata} from './DadataTyped/index.tsx';
@@ -74,7 +73,6 @@ class DeliveryAddr extends Component {
     };
     t.v = new $p.classes.WndAddressData(t);
     _mgr.on('update', this.onDataChange);
-    t.geo_map = $p.job_prm.builder.geo_map;
   }
 
   componentWillUnmount() {
@@ -271,8 +269,8 @@ class DeliveryAddr extends Component {
   }
 
   content() {
-    const {obj, state: {cpresentation, suggest_type, error}, props: {delivery, classes}, geo_map} = this;
-    const ComponentMap = geo_map.includes('google') ? GoogleMap : YaMap;
+    const {obj, state: {cpresentation, suggest_type, error}, props: {delivery, classes}} = this;
+    const ComponentMap = YaMap;
     const addr = suggest_type === 'dadata' ?
       <ReactDadata
         key="row_addr"
@@ -300,7 +298,7 @@ class DeliveryAddr extends Component {
       onKeyPress={this.coordinatesKeyPress}
     />;
     return [
-      !geo_map.includes('without_area') && <FormGroup key="row1" row>
+      <FormGroup key="row1" row>
         <DataField _obj={obj} _fld="delivery_area"/>
         {coordin}
         {error ? <Typography
@@ -308,8 +306,8 @@ class DeliveryAddr extends Component {
           style={{display: 'flex', alignItems: 'flex-end', marginLeft: 16}}
         >{error}</Typography> : null}
       </FormGroup>,
-      !geo_map.includes('without_area') && addr,
-      geo_map.includes('without_area') && <FormGroup key="row" row>
+      addr,
+      <FormGroup key="row" row>
         {addr}
         {coordin}
         {error ? <Typography color="error">{error}</Typography> : null}
@@ -318,7 +316,6 @@ class DeliveryAddr extends Component {
         key="map"
         mapRef={this.mapRef}
         v={this.v}
-        larger={geo_map.includes('without_area')}
       />
     ];
   }

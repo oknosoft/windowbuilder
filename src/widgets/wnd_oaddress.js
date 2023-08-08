@@ -597,14 +597,14 @@ class WndAddress {
     // если есть строка адреса, пытаемся геокодировать
     // если есть координаты $p.ipinfo, используем их
     // иначе - Москва
-    const {maps} = google;
-    const mapParams = {
-      center: new maps.LatLng(v.latitude, v.longitude),
-      zoom: v.street ? 14 : 11,
-      mapTypeId: maps.MapTypeId.ROADMAP
-    };
-    elmnts.map = elmnts.cell_map.attachMap(mapParams);
-    v.init_map(elmnts.map, mapParams.center);
+    // const {maps} = google;
+    // const mapParams = {
+    //   center: new maps.LatLng(v.latitude, v.longitude),
+    //   zoom: v.street ? 14 : 11,
+    //   mapTypeId: maps.MapTypeId.ROADMAP
+    // };
+    // elmnts.map = elmnts.cell_map.attachMap(mapParams);
+    // v.init_map(elmnts.map, mapParams.center);
 
     this.refresh_grid();
   }
@@ -824,24 +824,15 @@ class eXcell_addr extends eXcell {
   }
 
   open_selection(e) {
-    const v = this.grid.get_cell_field();
-    const {iface, job_prm: {builder}, enm: {geo_map_kind}} = $p;
 
-    if(v && v.field) {
-      switch(builder.geo_map) {
-      case undefined:
-      case 'dhtmlx_google':
-        new WndAddress({grid: this.grid}._mixin(v));
-        break;
-      case 'react_google':
-      case 'react_google_without_area':
-      case 'react_yandex':
-      case 'react_yandex_without_area':
-        this.grid.xcell_action && this.grid.xcell_action('DeliveryAddr', v.field);
-      }
+    const {grid} = this;
+    const v = grid?.get_cell_field();
+
+    if(v?.field) {
+      grid?.xcell_action('DeliveryAddr', v.field);
     }
 
-    return iface.cancel_bubble(e);
+    return $p.iface.cancel_bubble(e);
   }
 
 
