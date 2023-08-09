@@ -679,11 +679,10 @@ class ToolPen extends ToolElement {
 
     this.hitTest(event);
 
-    if(this.profile.elm_type.is('tearing')) {
+    const {project, addl_hit, _scope, profile} = this;
+    if(profile.elm_type.is('tearing')) {
       return;
     }
-
-    const {project, addl_hit} = this;
 
     // елси есть addl_hit - рисуем прототип элемента
     if(addl_hit){
@@ -721,7 +720,7 @@ class ToolPen extends ToolElement {
           invert = false,
           handlePos;
 
-        if (delta.length < this._scope.consts.sticking){
+        if (delta.length < _scope.consts.sticking){
           return;
         }
 
@@ -749,9 +748,9 @@ class ToolPen extends ToolElement {
         }
 
         if (dragIn || dragOut) {
-          let res, bind = this.profile.bind_node ? "node_" : "";
+          let res, bind = profile.bind_node ? "node_" : "";
 
-          if(this.profile.bind_generatrix){
+          if(profile.bind_generatrix){
             bind += "generatrix";
           }
 
@@ -790,16 +789,17 @@ class ToolPen extends ToolElement {
             // попытаемся привязать начало пути к профилям (и или заполнениям - для раскладок) контура
             if(!this.start_binded){
 
-              if(this.profile.elm_type == elm_types.Раскладка){
-
-                res = Editor.Onlay.prototype.bind_node(this.path.firstSegment.point, project.activeLayer.glasses(false, true));
-                if(res.binded){
-                  this.path.firstSegment.point = this.point1 = res.point;
+              if(profile.elm_type == elm_types.Раскладка){
+                for(const glass of project.activeLayer.glasses(false, true)) {
+                  const np = glass.path.getNearestPoint(this.path.firstSegment.point);
+                  if(np.getDistance(this.path.firstSegment.point) < _scope.consts.sticking0){
+                    this.path.firstSegment.point = this.point1 = np;
+                    break;
+                  }
                 }
-
               }
               // привязка к узлам для рамы уже случилась - вяжем для импоста
-              else if([elm_types.Импост, elm_types.Примыкание].includes(this.profile.elm_type)){
+              else if([elm_types.Импост, elm_types.Примыкание].includes(profile.elm_type)){
 
                 res = {distance: Infinity};
                 project.activeLayer.profiles.some((element) => {
@@ -830,14 +830,16 @@ class ToolPen extends ToolElement {
             }
 
             // попытаемся привязать конец пути к профилям (и или заполнениям - для раскладок) контура
-            if(this.profile.elm_type == elm_types.Раскладка){
-
-              res = Editor.Onlay.prototype.bind_node(this.path.lastSegment.point, project.activeLayer.glasses(false, true));
-              if(res.binded)
-                this.path.lastSegment.point = res.point;
-
+            if(profile.elm_type == elm_types.Раскладка){
+              for(const glass of project.activeLayer.glasses(false, true)) {
+                const np = glass.path.getNearestPoint(this.path.lastSegment.point);
+                if(np.getDistance(this.path.lastSegment.point) < _scope.consts.sticking0){
+                  this.path.lastSegment.point = this.point1 = np;
+                  break;
+                }
+              }
             }
-            else if(this.profile.elm_type == elm_types.Импост){
+            else if(profile.elm_type == elm_types.Импост){
 
               res = {distance: Infinity};
               project.activeLayer.profiles.some((element) => {
