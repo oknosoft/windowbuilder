@@ -69,9 +69,8 @@ class ControlsFrame extends React.Component {
   };
 
   elm_removed = (elm) => {
-    const {eve, project, constructor: {ProfileConnective}} = this.props.editor;
-    const isConnective = elm instanceof ProfileConnective;
-    eve.emit('elm_activated', isConnective ? project : (elm.layer || project));
+    const {eve} = this.props.editor;
+    eve.emit('elm_activated', null);
   };
 
   // при смене фурнитуры
