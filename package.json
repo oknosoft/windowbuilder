@@ -32,7 +32,7 @@
   "proxy5": "https://info.tmk-online.ru/",
   "proxy6": "http://localhost:3016/",
   "proxy7": "https://quick.ecookna.ru/",
-  "proxy8": "https://crystallit.oknosoft.ru/",
+  "proxy8": "https://start.kaleva.ru/",
   "proxy9": "https://brusnika.oknosoft.ru:2210/",
   "proxy10": "https://brusnika.oknosoft.ru:2227/",
   "proxy11": "https://start.phototech.ru/",
@@ -47,7 +47,7 @@
     "metadata-redux": "2.0.33-beta.4",
     "react-highlight-words": "^0.20",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#09630ecc207d68468248d0f4a602cbe762c608ff",
+    "wb-core": "github:oknosoft/windowbuilder-core#18a8528bebfd5cf89aab7796290bbe76993f9b64",
     "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
     "wb-forms": "github:oknosoft/windowbuilder-forms#97e2cfca179ae1a52d49c4b78d5d2b94385ba623"
   },
