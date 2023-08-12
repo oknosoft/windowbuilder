@@ -133,6 +133,18 @@ const items = [
         need_meta: true,
         need_user: true,
       },
+      {
+        text: 'Заказ поставщику',
+        navigate: '/doc.purchase_order/list',
+        need_meta: true,
+        need_user: true,
+      },
+      {
+        text: 'Задание на производство',
+        navigate: '/doc.work_centers_task/list',
+        need_meta: true,
+        need_user: true,
+      },
       // {
       //   text: 'Банк приход',
       //   navigate: '/doc.debit_bank_order/list',
@@ -160,12 +172,6 @@ const items = [
       {
         text: 'Событие планирования',
         navigate: '/doc.planning_event/list',
-        need_meta: true,
-        need_user: true,
-      },
-      {
-        text: 'Задание на производство',
-        navigate: '/doc.work_centers_task/list',
         need_meta: true,
         need_user: true,
       },

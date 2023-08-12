@@ -7,6 +7,7 @@ import doc_credit_cash_order from './doc_credit_cash_order';
 import doc_debit_cash_order from './doc_debit_cash_order';
 import doc_debit_bank_order from './doc_debit_bank_order';
 import doc_selling from './doc_selling';
+import doc_purchase_order from './doc_purchase_order';
 
 //import doc_calc_order_print from './doc_calc_order_print';
 //import doc_calc_order_recalc from './doc_calc_order_recalc';
@@ -20,4 +21,5 @@ export default function ($p) {
   doc_debit_cash_order($p);
   doc_debit_bank_order($p);
   doc_selling($p);
+  doc_purchase_order($p);
 }
