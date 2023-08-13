@@ -4,18 +4,19 @@ import WindowSizer from 'metadata-react/WindowSize';
 import LoadingModal from 'metadata-react/DumbLoader/LoadingModal';
 import Head from './Head';
 import Goods from './Goods';
+import Toolbar from './ObjToolbar';
 
-function PurchaseOrderObj(props) {
+function PurchaseOrderObj({match, _mgr, handlers}) {
 
-  const {ref} = props.match.params;
+  const {ref} = match.params;
   const [obj, setObj] = React.useState(null);
   const [err, setErr] = React.useState(null);
 
   React.useEffect(() => {
-    props._mgr.get(ref, 'promise')
+    _mgr.get(ref, 'promise')
       .then((obj) => {
         setObj(obj);
-        props.handlers.handleIfaceState({
+        handlers.handleIfaceState({
           component: '',
           name: 'title',
           value: obj.presentation,
@@ -31,6 +32,7 @@ function PurchaseOrderObj(props) {
     return <LoadingModal open text="Читаем документ из базы..." />;
   }
   return <>
+    <Toolbar obj={obj} _mgr={_mgr} handlers={handlers}/>
     <Head obj={obj} />
     <Goods obj={obj} />
   </>;

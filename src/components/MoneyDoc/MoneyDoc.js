@@ -8,7 +8,7 @@
 
 import React from 'react';
 import FormGroup from '@material-ui/core/FormGroup';
-import DataField from 'metadata-react/DataField';
+import DataField from 'metadata-react/DataField/PropField';
 import TabularSection from 'metadata-react/TabularSection';
 import DataObj from 'metadata-react/FrmObj/DataObj';
 import withStyles from 'metadata-react/styles/paper600';
@@ -21,8 +21,8 @@ class MoneyDoc extends DataObj {
 
     return [
       <FormGroup row key="group_sys">
-        <DataField _obj={_obj} _fld="number_doc"/>
-        <DataField _obj={_obj} _fld="date"/>
+        <DataField _obj={_obj} _fld="number_doc" fullWidth={false} />
+        <DataField _obj={_obj} _fld="date" fullWidth={false}/>
       </FormGroup>,
       <FormGroup row key="row1">
         <DataField _obj={_obj} _fld="organization"/>
