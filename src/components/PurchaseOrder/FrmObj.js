@@ -37,7 +37,7 @@ class PurchaseOrderObj extends DataObj {
 
   renderTabularSections() {
     const {_obj} = this.state;
-    return <TabularSection _obj={_obj} _tabular="goods" btns={<FillByPlanBtn _obj={_obj}/>}/>;
+    return <TabularSection _obj={_obj} _tabular="goods" disable_cache btns={<FillByPlanBtn _obj={_obj} />}/>;
   }
 
 }

@@ -8,7 +8,21 @@ import FillByPlan from './FillByPlan';
 export default function FillByPlanBtn({_obj}) {
   const [open, rawSetOpen] = React.useState(false);
   const setClose = () => rawSetOpen(false);
-  const setOpen = () => rawSetOpen(true);
+  const setOpen = () => {
+    if(_obj.posted) {
+      return $p.ui.dialogs.alert({
+        title: 'Документ проведён',
+        text: 'Для продолжения операции, отмените проведение документа'
+      });
+    }
+    if(_obj.goods.count()) {
+      return $p.ui.dialogs.alert({
+        title: 'Строки в табчасти',
+        text: 'Для продолжения операции, удалите строки из табчасти'
+      });
+    }
+    rawSetOpen(true);
+  };
 
   return <>
     <IconButton disabled>|</IconButton>

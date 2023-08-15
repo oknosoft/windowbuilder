@@ -3,6 +3,7 @@ import React from 'react';
 import Button from '@material-ui/core/Button';
 import Dialog from 'metadata-react/App/Dialog';
 import DataField from 'metadata-react/DataField/PropField';
+import LoadingModal from 'metadata-react/DumbLoader/LoadingModal';
 
 const {classes: {BaseDataObj}, utils: {blank}, adapters: {pouch}, ui: {dialogs}} = $p;
 
@@ -39,6 +40,8 @@ class ParamObj extends BaseDataObj {
 
 export default function FillByPlan({open, setClose, _obj}) {
 
+  const [fetching, setFetching] = React.useState(false);
+
   const [param, fill] = React.useMemo(() => {
     const param = new ParamObj({_obj});
     const fill = () => {
@@ -50,25 +53,49 @@ export default function FillByPlan({open, setClose, _obj}) {
         });
       }
       else {
-        pouch.fetch(`/adm/api/needs/totals?calc_order=${param.basis.ref}&detail=planing_key`);
+        setFetching(true);
+        pouch.fetch(`/adm/api/needs/totals?calc_order=${param.basis.ref}&detail=planing_key`)
+          .then((res) => res.json())
+          .then(({rows}) => {
+            for(const row of rows) {
+              _obj.goods.add({
+                nom: row.nom,
+                characteristic: row.characteristic,
+                quantity: row.quantity,
+                params: {planing_key: row.planing_key}
+              }, false, null, true);
+            }
+            setFetching(false);
+            setClose();
+          })
+          .catch((err) => {
+            setFetching(false);
+            dialogs.alert({
+              title: 'Остатки потребности',
+              text: `Ошибка при получении данных с сервера ${err?.message}`
+            });
+          });
       }
     };
     return [param, fill];
   }, [_obj]);
 
-  return <Dialog
-    open={open}
-    initFullScreen
-    large
-    title="Параметры остатков потребности"
-    onClose={setClose}
-    actions={<>
-      <Button onClick={fill}>Заполнить</Button>
-      <Button onClick={setClose} color="primary">Отмена</Button>
-    </>}
-  >
-    <DataField _obj={param} _fld="date" read_only/>
-    <DataField _obj={param} _fld="stage" read_only/>
-    <DataField _obj={param} _fld="basis"/>
-  </Dialog>;
+  return <>
+    <LoadingModal open={fetching} text="Читаем остатки потребности..." />
+    <Dialog
+      open={open}
+      initFullScreen
+      large
+      title="Параметры остатков потребности"
+      onClose={setClose}
+      actions={<>
+        <Button onClick={fill}>Заполнить</Button>
+        <Button onClick={setClose} color="primary">Отмена</Button>
+      </>}
+    >
+      <DataField _obj={param} _fld="date" read_only/>
+      <DataField _obj={param} _fld="stage" read_only/>
+      <DataField _obj={param} _fld="basis"/>
+    </Dialog>
+  </>;
 }
