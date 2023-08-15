@@ -5,6 +5,7 @@ import IconButton from '@material-ui/core/IconButton';
 import VerticalAlignTopIcon from '@material-ui/icons/VerticalAlignTop';
 import ZoomOutMapIcon from '@material-ui/icons/ZoomOutMap';
 import LinkOffIcon from '@material-ui/icons/LinkOff';
+import Link from '@material-ui/icons/Link';
 import Tip from 'metadata-react/App/Tip';
 import InfoButton from 'metadata-react/App/InfoButton';
 import SmallButton from '../../Toolbar/IconButton';
@@ -51,8 +52,12 @@ function ProfileToolbar({editor, elm, classes}) {
   const {msg} = $p;
   const {inset} = elm;
   let unlink = !Array.isArray(elm) && ((elm.b.selected && !elm.e.selected) || (elm.e.selected && !elm.b.selected));
-  if(unlink && ((elm.b.selected && elm.rays.b.is_i) || (elm.e.selected && elm.rays.e.is_i))) {
-    unlink = false;
+  let link = false;
+  if(unlink) {
+    if(((elm.b.selected && elm.rays.b.is_i) || (elm.e.selected && elm.rays.e.is_i))) {
+      unlink = false;
+      link = true;
+    }
   }
 
   return <Toolbar disableGutters>
@@ -73,6 +78,19 @@ function ProfileToolbar({editor, elm, classes}) {
     </Tip>
     {unlink && <Tip title="Оторвать узел">
       <SmallButton onClick={() => elm.unlink?.()}><LinkOffIcon /></SmallButton>
+    </Tip>}
+    {link && <Tip title="Привязать узел">
+      <SmallButton onClick={() => {
+        try {
+          elm.link?.();
+        }
+        catch (e) {
+          $p.ui.dialogs.alert({
+            title: 'Привязка узла',
+            text: e.message,
+          });
+        }
+      }}><Link /></SmallButton>
     </Tip>}
 
     <div className={classes.title}/>
