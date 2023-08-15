@@ -1,5 +1,5 @@
 
-import FrmObj from '../../components/PurchaseOrder/FrmObj';
+import FrmObj from '../../components/PurchaseOrder/FrmObjLazy';
 
 export default function ({doc, DocPurchase_order}) {
 

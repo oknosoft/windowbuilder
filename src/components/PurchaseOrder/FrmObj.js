@@ -7,7 +7,7 @@ import DataObj from 'metadata-react/FrmObj/DataObj';
 import withStyles from 'metadata-react/styles/paper600';
 import {withIface} from 'metadata-redux';
 
-import FillByPlan from './FillByPlan';
+import FillByPlanBtn from './FillByPlanBtn';
 
 class PurchaseOrderObj extends DataObj {
 
@@ -37,7 +37,7 @@ class PurchaseOrderObj extends DataObj {
 
   renderTabularSections() {
     const {_obj} = this.state;
-    return <TabularSection _obj={_obj} _tabular="goods" btns={<FillByPlan _obj={_obj}/>}/>;
+    return <TabularSection _obj={_obj} _tabular="goods" btns={<FillByPlanBtn _obj={_obj}/>}/>;
   }
 
 }

@@ -306,10 +306,8 @@ class DeliveryAddr extends Component {
           style={{display: 'flex', alignItems: 'flex-end', marginLeft: 16}}
         >{error}</Typography> : null}
       </FormGroup>,
-      addr,
       <FormGroup key="row" row>
         {addr}
-        {coordin}
         {error ? <Typography color="error">{error}</Typography> : null}
       </FormGroup>,
       <ComponentMap
