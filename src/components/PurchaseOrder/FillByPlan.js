@@ -62,6 +62,7 @@ export default function FillByPlan({open, setClose, _obj}) {
                 nom: row.nom,
                 characteristic: row.characteristic,
                 quantity: row.quantity,
+                calc_order: param.basis,
                 params: {planing_key: row.planing_key}
               }, false, null, true);
             }
