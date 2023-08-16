@@ -163,7 +163,7 @@ class ToolLayImpost extends ToolElement {
     let bounds, gen, hit = !!hitItem;
 
     if(hit) {
-      bounds = (profile.elm_type.is('layout') || event.modifiers.control || event.modifiers.option || !hitItem.bounds_light) ?
+      bounds = (event.modifiers.control || event.modifiers.option || !hitItem.bounds_light) ?
         hitItem.bounds :
         hitItem.bounds_light().expand((inset_by_x || inset_by_y).width(), (inset_by_y || inset_by_x).width());
       gen = hitItem.path;
@@ -218,7 +218,7 @@ class ToolLayImpost extends ToolElement {
 
     const {positions} = $p.enm;
 
-    function get_points(p1, p2) {
+    function get_points(p1, p2, bind) {
 
       let res = {
           p1: new paper.Point(p1),
@@ -227,10 +227,24 @@ class ToolLayImpost extends ToolElement {
         c1 = gen.contains(res.p1),
         c2 = gen.contains(res.p2);
 
-      if (c1 && c2)
+      if (c1 && c2 && !bind) {
         return res;
+      }
 
       const intersect = gen.getIntersections(new paper.Path({insert: false, segments: [res.p1, res.p2]}));
+
+      if(!intersect.length && bind) {
+        const p1 = gen.getNearestPoint(res.p1);
+        const p2 = gen.getNearestPoint(res.p2);
+        const d1 = p1.getDistance(res.p1);
+        const d2 = p2.getDistance(res.p2);
+        if(d1 < consts.sticking0) {
+          res.p1 = p1;
+        }
+        if(p2 < consts.sticking0) {
+          res.p2 = p2;
+        }
+      }
 
       if (c1) {
         intersect.reduce((sum, curr) => {
@@ -282,7 +296,10 @@ class ToolLayImpost extends ToolElement {
 
         // в зависимости от типа деления, рисуем прямые или разорванные отрезки
         if (!by_y.length || profile.split.empty() || profile.split.is('hor') || profile.split.is('crossing')) {
-          const pts = get_points([by_x[i], bounds.bottom], [by_x[i], bounds.top]);
+          const pts = get_points(
+            [by_x[i], bounds.bottom],
+            [by_x[i], bounds.top],
+            i === 0 || (i === by_x.length - 1));
           if (pts) {
             get_path([
               [pts.p1.x - w2x, pts.p1.y],
@@ -295,7 +312,7 @@ class ToolLayImpost extends ToolElement {
           by_y.sort((a, b) => b - a);
           for (j = 0; j < by_y.length; j++) {
             if (j === 0) {
-              const pts = get_points([by_x[i], bounds.bottom], [by_x[i], by_y[j]]);
+              const pts = get_points([by_x[i], bounds.bottom], [by_x[i], by_y[j]], true);
               if (hit && pts) {
                 get_path([
                   [pts.p1.x - w2x, pts.p1.y],
@@ -305,7 +322,10 @@ class ToolLayImpost extends ToolElement {
               }
             }
             else {
-              const pts = get_points([by_x[i], by_y[j - 1]], [by_x[i], by_y[j]]);
+              const pts = get_points(
+                [by_x[i], by_y[j - 1]],
+                [by_x[i], by_y[j]],
+                i === 0 || (i === by_x.length - 1) || j === 0 || (j === by_y.length - 1));
               if (pts) {
                 get_path([
                   [pts.p1.x - w2x, pts.p1.y - w2x],
@@ -315,7 +335,7 @@ class ToolLayImpost extends ToolElement {
               }
             }
             if (j === by_y.length - 1) {
-              const pts = get_points([by_x[i], by_y[j]], [by_x[i], bounds.top]);
+              const pts = get_points([by_x[i], by_y[j]], [by_x[i], bounds.top], true);
               if (hit && pts) {
                 get_path([
                   [pts.p1.x - w2x, pts.p1.y - w2x],
@@ -334,7 +354,11 @@ class ToolLayImpost extends ToolElement {
 
         // в зависимости от типа деления, рисуем прямые или разорванные отрезки
         if (!by_x.length || profile.split.empty() || profile.split.is('vert') || profile.split.is('crossing')) {
-          const pts = get_points([bounds.left, by_y[i]], [bounds.right, by_y[i]]);
+          const pts = get_points(
+            [bounds.left, by_y[i]],
+            [bounds.right, by_y[i]],
+            i === 0 || (i === by_y.length - 1)
+          );
           if (pts) {
             get_path([
               [pts.p1.x, pts.p1.y - w2y],
@@ -347,7 +371,7 @@ class ToolLayImpost extends ToolElement {
           by_x.sort((a, b) => a - b);
           for (j = 0; j < by_x.length; j++) {
             if (j === 0) {
-              const pts = get_points([bounds.left, by_y[i]], [by_x[j], by_y[i]]);
+              const pts = get_points([bounds.left, by_y[i]], [by_x[j], by_y[i]], true);
               if (hit && pts) {
                 get_path([
                   [pts.p1.x, pts.p1.y - w2y],
@@ -357,7 +381,10 @@ class ToolLayImpost extends ToolElement {
               }
             }
             else {
-              const pts = get_points([by_x[j - 1], by_y[i]], [by_x[j], by_y[i]]);
+              const pts = get_points(
+                [by_x[j - 1], by_y[i]],
+                [by_x[j], by_y[i]],
+                i === 0 || (i === by_y.length - 1) || j === 0 || (j === by_x.length - 1));
               if (pts) {
                 get_path([
                   [pts.p1.x + w2y, pts.p1.y - w2y],
@@ -367,7 +394,7 @@ class ToolLayImpost extends ToolElement {
               }
             }
             if (j === by_x.length - 1) {
-              const pts = get_points([by_x[j], by_y[i]], [bounds.right, by_y[i]]);
+              const pts = get_points([by_x[j], by_y[i]], [bounds.right, by_y[i]], true);
               if (hit && pts) {
                 get_path([
                   [pts.p1.x + w2y, pts.p1.y - w2y],
