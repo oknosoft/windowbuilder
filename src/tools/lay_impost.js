@@ -236,12 +236,10 @@ class ToolLayImpost extends ToolElement {
       if(!intersect.length && bind) {
         const p1 = gen.getNearestPoint(res.p1);
         const p2 = gen.getNearestPoint(res.p2);
-        const d1 = p1.getDistance(res.p1);
-        const d2 = p2.getDistance(res.p2);
-        if(d1 < consts.sticking0) {
+        if(p1.getDistance(res.p1) < consts.sticking0) {
           res.p1 = p1;
         }
-        if(p2 < consts.sticking0) {
+        if(p2.getDistance(res.p2) < consts.sticking0) {
           res.p2 = p2;
         }
       }
@@ -434,7 +432,8 @@ class ToolLayImpost extends ToolElement {
             by_y.push(pos);
         }
 
-      } else if (profile.align_by_y == positions.top) {
+      }
+      else if (profile.align_by_y == positions.top) {
 
         if (hit) {
           for (i = 1; i <= county; i++) {
@@ -450,7 +449,8 @@ class ToolLayImpost extends ToolElement {
           }
         }
 
-      } else if (profile.align_by_y == positions.bottom) {
+      }
+      else if (profile.align_by_y == positions.bottom) {
 
         if (hit) {
           for (i = 1; i <= county; i++) {
@@ -494,7 +494,8 @@ class ToolLayImpost extends ToolElement {
             by_x.push(pos);
         }
 
-      } else if (profile.align_by_x == positions.left) {
+      }
+      else if (profile.align_by_x == positions.left) {
 
         if (hit) {
           for (i = 1; i <= countx; i++) {
@@ -511,7 +512,8 @@ class ToolLayImpost extends ToolElement {
         }
 
 
-      } else if (profile.align_by_x == positions.right) {
+      }
+      else if (profile.align_by_x == positions.right) {
 
         if (hit) {
           for (i = 1; i <= countx; i++) {
