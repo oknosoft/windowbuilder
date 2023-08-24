@@ -10,6 +10,7 @@ export default function ElmProps(props) {
   const {elm} = props;
   if(elm instanceof BuilderElement) {
     const {fields} = elm.__metadata(false);
+    fields.r.type.fraction = 0;
     const CProps = elm instanceof ProfileItem ? ProfileProps : (elm instanceof Filling ? GlassProps : SectionalProps);
     return <CProps {...props} fields={fields}/>;
   }
