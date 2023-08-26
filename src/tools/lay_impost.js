@@ -297,7 +297,7 @@ class ToolLayImpost extends ToolElement {
           const pts = get_points(
             [by_x[i], bounds.bottom],
             [by_x[i], bounds.top],
-            i === 0 || (i === by_x.length - 1));
+            true);
           if (pts) {
             get_path([
               [pts.p1.x - w2x, pts.p1.y],
@@ -355,7 +355,7 @@ class ToolLayImpost extends ToolElement {
           const pts = get_points(
             [bounds.left, by_y[i]],
             [bounds.right, by_y[i]],
-            i === 0 || (i === by_y.length - 1)
+            true
           );
           if (pts) {
             get_path([
