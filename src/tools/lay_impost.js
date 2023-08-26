@@ -236,10 +236,10 @@ class ToolLayImpost extends ToolElement {
       if(!intersect.length && bind) {
         const p1 = gen.getNearestPoint(res.p1);
         const p2 = gen.getNearestPoint(res.p2);
-        if(p1.getDistance(res.p1) < consts.sticking0) {
+        if(p1.getDistance(res.p1) < (consts.sticking0 / 2)) {
           res.p1 = p1;
         }
-        if(p2.getDistance(res.p2) < consts.sticking0) {
+        if(p2.getDistance(res.p2) < (consts.sticking0 / 2)) {
           res.p2 = p2;
         }
       }
@@ -297,7 +297,7 @@ class ToolLayImpost extends ToolElement {
           const pts = get_points(
             [by_x[i], bounds.bottom],
             [by_x[i], bounds.top],
-            true);
+            i === 0 || (i === by_x.length - 1) || !by_y.length);
           if (pts) {
             get_path([
               [pts.p1.x - w2x, pts.p1.y],
@@ -355,8 +355,7 @@ class ToolLayImpost extends ToolElement {
           const pts = get_points(
             [bounds.left, by_y[i]],
             [bounds.right, by_y[i]],
-            true
-          );
+            i === 0 || (i === by_y.length - 1) || !by_x.length);
           if (pts) {
             get_path([
               [pts.p1.x, pts.p1.y - w2y],
