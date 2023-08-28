@@ -125,7 +125,16 @@ class ElmInsets extends React.Component {
   };
 
   handleRemove = () => {
-    this._grid.handleRemove();
+    const row = this._grid.handleRemove();
+    if(row?.region) {
+      const {_ranges, paths} = this.props.elm._attr;
+      _ranges.delete(row.region);
+      _ranges.delete(`cnns${row.region}`);
+      if(paths.get(row.region)) {
+        paths.get(row.region).remove();
+        paths.delete(row.region);
+      }
+    }
     this.setState({row: null, inset: null}, this.props.update_length);
   };
 
