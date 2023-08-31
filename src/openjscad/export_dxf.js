@@ -7,6 +7,9 @@ function serialize(scheme) { /* eslint-disable-line */
 }
 
 export default function ($p) {
+
+  $p.ui.dxf = () => import('dxf-writer/src/Drawing').then(jscad => jscad.default || jscad);
+
   $p.md.on({
 
     dxf(scheme) {

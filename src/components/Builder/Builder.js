@@ -92,8 +92,11 @@ class Builder extends DhtmlxCell {
     if(!this._editor || !this._editor.project || loc.pathname.match(/\/templates/)) {
       return true;
     }
-    const {ox} = this._editor.project;
-    return ox && ox._modified ? `Изделие ${ox.prod_name(true)} изменено.\n\nЗакрыть без сохранения?` : true;
+    if(loc.pathname.match(/\/doc.calc_order/)) {
+      const {ox} = this._editor.project;
+      return ox && ox._modified ? `Изделие ${ox.prod_name(true)} изменено.\n\nЗакрыть без сохранения?` : true;
+    }
+    return false;
   };
 
   render() {
