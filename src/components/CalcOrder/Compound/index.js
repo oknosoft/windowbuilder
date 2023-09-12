@@ -7,6 +7,7 @@ const scheme = scheme_settings.find({obj: 'dp.buyers_order.production', name: 'Ð
 const crow = prm && scheme?.fields?.find({field: prm?.ref});
 
 if(crow) {
+  crow.use = true;
   const base = prm.ref.substring(0, 34);
 
   crow.formatter = formulas.create({
