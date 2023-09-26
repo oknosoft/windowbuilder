@@ -244,7 +244,19 @@ class ToolLayImpost extends ToolElement {
         }
       }
 
-      if (c1) {
+      if (c1 && c2) {
+        for(const curr of intersect) {
+          const d1 = res.p1.getDistance(curr.point);
+          const d2 = res.p2.getDistance(curr.point);
+          if(d1 < (consts.sticking0 / 2)) {
+            res.p1 = curr.point;
+          }
+          else if(d2 < (consts.sticking0 / 2)) {
+            res.p2 = curr.point;
+          }
+        }
+      }
+      else if (c1) {
         intersect.reduce((sum, curr) => {
           const dist = sum.point.getDistance(curr.point);
           if (dist < sum.dist) {
