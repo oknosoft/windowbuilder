@@ -30,9 +30,27 @@ export default function cnnsData(elm) {
       const path = elm._attr.paths.get(row.region);
       for(const gls of profiles) {
         const index = profiles.indexOf(gls);
-        const profile = gls.profile.nearest() || gls.profile;
-        const side = profile.cnn_side(this, interior);
-        const cnn = cnns.nom_cnn(nom, profile, cnn_types.acn.ii, false, side.is('outer'))[0];
+
+        let profile = gls.profile.nearest() || gls.profile;
+        let side = profile.cnn_side(elm, interior);
+        const elm2 = [{profile, side}];
+        if(gls.profile !== profile) {
+          elm2.push({profile: gls.profile, side: gls.profile.cnn_side(elm, interior)});
+        }
+        const cnn = cnns.region_cnn({
+          region: row.region,
+          elm1: elm,
+          nom1: nom,
+          elm2,
+          art1glass: true,
+          cnn_types: cnn_types.acn.ii,
+        });
+        if(cnn.sd2) {
+          if(!side.is('outer')) {
+            side = side._manager.outer;
+          }
+          profile = gls.profile;
+        }
         const size = cnn?.size(elm, profile, row.region) || 0;
 
         rows.push({
@@ -41,7 +59,7 @@ export default function cnnsData(elm) {
           profile: profile.info,
           nom: `${nom?.name} (${nom?.id})`,
           cnn: cnnp(cnn),
-          size,
+          size: `${size.round(1)} (от ${cnn.sd1 ? 'створки' : 'рамы, импоста'})`,
         });
       }
     }

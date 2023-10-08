@@ -5,5 +5,5 @@ export default [
   { key: "nom", name: "Номенклатура"},
   { key: "profile", name: "Профиль"},
   { key: "cnn", name: "Соединение"},
-  { key: "size", name: "Размер", width: 80},
+  { key: "size", name: "Размер"},
 ];
