@@ -21,7 +21,6 @@ import RemoveIcon from '@material-ui/icons/DeleteOutline';
 import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
 import ElmInsetProps from './ElmInsetProps';
-import RegionEditor from './ElmInsetRegion';
 import useStyles from './stylesAccordion';
 
 function tune_meta(elm) {
@@ -98,12 +97,6 @@ class ElmInsets extends React.Component {
     return res;
   };
 
-  defferedUpdate = () => {
-    setTimeout(() => {
-      this._grid && this._grid.forceUpdate();
-    }, 100);
-  };
-
   handleAdd = () => {
     const {elm, update_length} = this.props;
     const {ox, elm: cnstr, inset} = elm;
@@ -149,14 +142,6 @@ class ElmInsets extends React.Component {
     this.setState({row, inset: (!row || row.inset.empty()) ? null : row.inset});
   };
 
-  // установим для колонки "Ряд", индивидуальный элемент управления
-  handleColumnsChange = ({scheme, columns}) => { /* eslint-disable-line */
-    const region = columns.find(({key}) => key === 'region');
-    if(region) {
-      region.editor = RegionEditor;
-    }
-  };
-
 
   render() {
 
@@ -185,8 +170,6 @@ class ElmInsets extends React.Component {
               hideToolbar
               denyReorder
               onCellSelected={this.handleCellSelected}
-              columnsChange={this.handleColumnsChange}
-              //onRowUpdated={this.defferedUpdate}
             />
           </div>
           <ElmInsetProps elm={elm} inset={inset} row={row}/>
