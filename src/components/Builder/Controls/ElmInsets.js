@@ -120,7 +120,8 @@ class ElmInsets extends React.Component {
           this._grid.cache_actual = false;
         }
         this.setState({row, inset: row.inset}, update_length);
-      });
+      })
+      .catch(() => null);
   };
 
   handleRemove = () => {
