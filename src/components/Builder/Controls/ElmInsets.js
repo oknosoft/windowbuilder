@@ -22,6 +22,7 @@ import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
 import ElmInsetProps from './ElmInsetProps';
 import useStyles from './stylesAccordion';
+import {useOpenContext} from './OpenContext';
 
 function tune_meta(elm) {
   const {cat, utils} = $p;
@@ -46,7 +47,12 @@ export default function AccordionElmInsets(props) {
     set_length(elm.ox.inserts.find_rows({cnstr: -elm.elm}).length);
   };
 
-  return <Accordion square elevation={0} classes={{expanded: classes.rootExpanded}}>
+  const {open, openChange} = useOpenContext();
+  const onChange = (e, insets) => {
+    openChange({insets});
+  };
+
+  return <Accordion square elevation={0} classes={{expanded: classes.rootExpanded}} expanded={open.insets} onChange={onChange}>
     <AccordionSummary classes={{
       root: classes.summary,
       content: classes.summaryContent,
@@ -119,15 +125,6 @@ class ElmInsets extends React.Component {
 
   handleRemove = () => {
     const row = this._grid.handleRemove();
-    if(row?.region) {
-      const {_ranges, paths} = this.props.elm._attr;
-      _ranges.delete(row.region);
-      _ranges.delete(`cnns${row.region}`);
-      if(paths.get(row.region)) {
-        paths.get(row.region).remove();
-        paths.delete(row.region);
-      }
-    }
     this.setState({row: null, inset: null}, this.props.update_length);
   };
 

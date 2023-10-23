@@ -6,6 +6,7 @@ const prefix = 'builder_controls_';
 const defaultOpen = {
   composite: wsql.get_user_param(`${prefix}composite`, 'boolean'),
   coordinates: wsql.get_user_param(`${prefix}coordinates`, 'boolean'),
+  insets: wsql.get_user_param(`${prefix}insets`, 'boolean'),
   set(state) {
     const key = Object.keys(state)[0];
     wsql.set_user_param(`${prefix}${key}`, state[key]);
