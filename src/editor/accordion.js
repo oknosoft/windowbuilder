@@ -304,6 +304,7 @@ class EditorAccordion {
         {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: msg.bld_new_stv, float: 'left'},
         {name: 'nested_layer', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить вложенное изделие', float: 'left'},
         {name: 'virtual_layer', text: '<i class="fa fa-file-excel-o fa-fw"></i>', tooltip: 'Вставить виртуальный слой', float: 'left'},
+        {name: 'region_layer', text: '<i class="fa fa-file-powerpoint-o fa-fw"></i>', tooltip: 'Добавить cлой ряда', float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_product, float: 'left'},
 
@@ -315,7 +316,7 @@ class EditorAccordion {
 
         case 'new_stv':
         case 'nested_layer':
-        case 'virtual_layer':
+        case 'virtual_layer': {
           const fillings = _editor.project.getItems({class: Editor.Filling, selected: true});
           if(fillings.length) {
             if(name === 'nested_layer') {
@@ -358,16 +359,22 @@ class EditorAccordion {
             });
           }
           break;
+        }
 
         case 'drop_layer':
           this.tree_layers.drop_layer();
           break;
 
         case 'new_layer':
-
           // создаём пустой новый слой
           Editor.Contour.create({project: _editor.project});
           break;
+
+        case 'region_layer': {
+          // слой ряда в текущем слое
+          ui.dialogs.region_layer(_editor.project);
+          break;
+        }
 
         case 'inserts_to_product':
           // дополнительные вставки в изделие
