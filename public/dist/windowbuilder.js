@@ -136,8 +136,10 @@ class SchemeLayers {
   }
 
   load_layer(layer) {
-    this.tree.addItem(layer.key, layer.presentation(), layer.parent ? layer.parent.key : 0);
-    this.tree.checkItem(layer.key);
+    this.tree.addItem(layer.key, layer.presentation(), layer.layer?.key || 0);
+    if(!layer.hidden) {
+      this.tree.checkItem(layer.key);
+    }
     layer.contours.concat(layer.tearings).forEach((l) => this.load_layer(l));
   }
 
@@ -5945,7 +5947,12 @@ class ToolPen extends ToolElement {
       }
       else if(addl_hit.glass && profile.elm_type == elm_types.glbead && !profile.inset.empty()){
         const {point, rib, ...other} = addl_hit;
-        new ProfileGlBead({parent: addl_hit.profile.layer, proto: profile, ...other});
+        new ProfileGlBead({
+          layer: addl_hit.profile.layer,
+          parent: addl_hit.profile.layer.children.profules,
+          proto: profile,
+          ...other
+        });
       }
       // рисуем соединительный профиль
       else if(profile.elm_type == elm_types.linking && !profile.inset.empty()){
@@ -6022,7 +6029,7 @@ class ToolPen extends ToolElement {
         // рисуем разрыв заполнения
         const tearing = Contour.create({
           kind: 4,
-          parent: this.hitItem.item.layer,
+          layer: this.hitItem.item.layer,
           project,
         });
         tearing.initialize({
@@ -6036,7 +6043,11 @@ class ToolPen extends ToolElement {
 
       default:
         // рисуем профиль
-        this.last_profile = new Profile({generatrix: this.path, proto: profile});
+        this.last_profile = new Profile({
+          generatrix: this.path,
+          parent: project.activeLayer?.children?.profiles,
+          proto: profile,
+        });
       }
 
       this.path = null;

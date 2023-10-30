@@ -53,13 +53,18 @@ export function region_layer({Editor, ui: {dialogs}}) {
 
     return pre
       .then((region) => {
-        return dialogs.alert({
-          title: `Ряд для ${layer.info}`,
-          hide_btn: true,
-          timeout: 180000,
-          Component: RegionLayer,
-          props: {project, layer, region}
-        });
+        region = parseInt(region);
+        const parent = region > 0 ? layer.children.bottomLayers : layer.children.topLayers;
+        for(const rl of parent.children) {
+          if(rl.dop.region === region) {
+            return dialogs.alert({
+              title: `Ряд для ${layer.info}`,
+              text: `Слой ряда №${region} уже существует`,
+              timeout: 10000,
+            });
+          }
+        }
+        const rl = Editor.Contour.create({kind: 5, region, project, layer, parent});
       })
       .catch(() => null);
   };
