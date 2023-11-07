@@ -74,24 +74,23 @@ class BaseItem {
 }
 
 class Layer extends BaseItem {
-  constructor({name, owner, parent, cnstr=0}) {
+  constructor({name, owner, parent, specimen, cnstr=0}) {
     super({
       parent,
       owner,
-      name,
-      key: cnstr ? `${owner.valueOf()}:${cnstr}` : owner.valueOf(),
+      name: `${name} (${specimen})`,
+      key: `${owner.valueOf()}:${specimen}:${cnstr}`,
     });
     this.toggled = true;
 
-
-    owner.constructions.find_rows({parent: cnstr}, (row) => {
-      this.children.push(new Layer({
-        parent: this,
-        owner: owner,
-        cnstr: row.cnstr,
-        name: row.parent ? `Створка №${row.cnstr}` : `Рама №${row.cnstr}`,
-      }));
-    });
+    // owner.constructions.find_rows({parent: cnstr}, (row) => {
+    //   this.children.push(new Layer({
+    //     parent: this,
+    //     owner: owner,
+    //     cnstr: row.cnstr,
+    //     name: row.parent ? `Створка №${row.cnstr}` : `Рама №${row.cnstr}`,
+    //   }));
+    // });
   }
 }
 
@@ -106,15 +105,21 @@ export function get_tree(calc_order, selected) {
   });
   tree.toggled = true;
 
-  for(const {characteristic} of calc_order.production) {
-    if(characteristic.constructions.count()) {
-      const curr = new Layer({
-        parent: tree,
-        owner: characteristic,
-        name: characteristic.prod_name(true),
-      });
-      tree.children.push(curr);
+  for(const {characteristic, quantity} of calc_order.production) {
+
+    for(let i = 1; i <= quantity; i++) {
+      if(characteristic.constructions.count()) {
+        const curr = new Layer({
+          parent: tree,
+          owner: characteristic,
+          name: characteristic.prod_name(true),
+          specimen: i,
+        });
+        tree.children.push(curr);
+      }
     }
+
+
   }
 
   tree.keys = new Set();
@@ -141,4 +146,16 @@ export function get_tree(calc_order, selected) {
   });
 
   return tree;
+}
+
+export function get_text(calc_order, selected) {
+  let res = [];
+  selected?.keys?.forEach((key) => {
+    const parts = key.split(':'); // ref:specimen:cnstr
+    const row = calc_order.production.find({characteristic: parts[0]});
+    if(row) {
+      res.push(`${row.row}:${parts[1]}:${parts[2]}`);
+    }
+  });
+  return res.join(', ');
 }

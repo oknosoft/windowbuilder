@@ -3,7 +3,7 @@ import {Editors} from 'react-data-grid-addons';
 import Button from '@material-ui/core/Button';
 import Dialog from 'metadata-react/App/Dialog';
 import Layers from './Layers';
-import {get_tree} from './data';
+import {get_tree, get_text} from './data';
 
 class CompoundEditor extends Editors.SimpleTextEditor {
 
@@ -21,9 +21,12 @@ class CompoundEditor extends Editors.SimpleTextEditor {
   };
 
   render() {
-    const {rowData, onCommit, onCommitCancel} = this.props;
+    const {rowData, onCommit, onCommitCancel, column} = this.props;
     const {calc_order} = rowData._owner._owner;
-    const text = 'Editor';
+    const text = get_text(calc_order, rowData[column.key]);
+    if(column._meta?.read_only) {
+      return <input readOnly value={text} style={{cursor: 'not-allowed'}}></input>
+    }
     return <>
       <input readOnly value={text}></input>
       <Dialog
