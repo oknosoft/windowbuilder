@@ -25,9 +25,10 @@ class YaMap extends React.Component {
 
   componentDidMount() {
     if(!this.state.script) {
+      const {keys} = $p.job_prm;
       const s = document.createElement('script');
       s.type = 'text/javascript';
-      s.src = `https://api-maps.yandex.ru/2.1?apikey=${$p.job_prm.keys.yandex}&lang=ru_RU`;
+      s.src = `https://api-maps.yandex.ru/2.1?apikey=${keys.yandex}&suggest_apikey=${keys.yasuggest}&lang=ru_RU`;
       s.async = false;
       const listener = () => {
         s.removeEventListener('load', listener);
