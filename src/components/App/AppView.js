@@ -5,6 +5,7 @@ import {Switch, Route} from 'react-router';
 import Snack from 'metadata-react/App/Snack';       // сообщения в верхней части страницы (например, обновить после первого запуска)
 import Alert from 'metadata-react/App/Alert';       // диалог сообщения пользователю
 import Confirm from 'metadata-react/App/Confirm';   // диалог вопросов пользователю (да, нет)
+import Popup from 'metadata-react/App/Popup';       // контекстное меню и прочие всплывающие штучки
 import WindowPortal from 'metadata-react/App/WindowPortal';     // контент в новом окне (например, для печати)
 import Login, {FrmLogin} from 'metadata-react/FrmLogin/Proxy';  // логин и свойства подключения
 import NeedAuth from 'metadata-react/App/NeedAuth'; // страница "необхлдима авторизация"
@@ -71,7 +72,7 @@ class AppRoot extends Component {
 
   render() {
     const {props} = this;
-    const {snack, alert, confirm, wnd_portal, meta_loaded, doc_ram_loaded, nom_prices_step, page, user, couch_direct,
+    const {snack, alert, confirm, popup, wnd_portal, meta_loaded, doc_ram_loaded, nom_prices_step, page, user, couch_direct,
       offline, title, idle, handleNavigate, handleIfaceState, handleLock, handleUnLock, handleLogin, handleLogOut} = props;
     const iprops = item_props();
 
@@ -136,7 +137,7 @@ class AppRoot extends Component {
         ),
 
       // всплывающтй snackbar оповещений пользователя
-      ((snack && snack.open) || (props.first_run && doc_ram_loaded)) &&
+      (snack?.open || (props.first_run && doc_ram_loaded)) &&
       <Snack
         key="snack"
         snack={snack}
@@ -144,13 +145,16 @@ class AppRoot extends Component {
       />,
 
       // диалог сообщений пользователю
-      alert && alert.open && <Alert key="alert" {...alert} handleOk={alert.handleOk || this.handleDialogClose.bind(this, 'alert')}/>,
+      alert?.open && <Alert key="alert" {...alert} handleOk={alert.handleOk || this.handleDialogClose.bind(this, 'alert')}/>,
 
       // диалог вопросов пользователю (да, нет)
-      confirm && confirm.open && <Confirm key="confirm" {...confirm}/>,
+      confirm?.open && <Confirm key="confirm" {...confirm}/>,
+
+      // конткстный popup
+      popup?.open && <Popup key="popup" {...popup}/>,
 
       // popup окно печатных форм
-      wnd_portal && wnd_portal.open && <WindowPortal key="wnd_portal" {...wnd_portal}/>,
+      wnd_portal?.open && <WindowPortal key="wnd_portal" {...wnd_portal}/>,
 
       // обрыв связи
       couch_direct && user.logged_in && !offline && props.complete_loaded && !props.sync_started && $p.job_prm.use_ram !== false &&
