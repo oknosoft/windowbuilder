@@ -24,7 +24,8 @@ export function region_layer({Editor, ui: {dialogs}}) {
     }
     const insets = new Set;
     const regions = new Set;
-    for(const {inset} of layer.profiles) {
+    const {profiles, info, children} = layer;
+    for(const {inset} of profiles) {
       for(const row of inset.inserts) {
         if(row.inset.region) {
           insets.add(row.inset);
@@ -34,7 +35,7 @@ export function region_layer({Editor, ui: {dialogs}}) {
     }
     if(!insets.size) {
       return dialogs.alert({
-        title: `Ряд для ${layer.info}`,
+        title: `Ряд для ${info}`,
         text: 'Вставки профилей текущего слоя не содержат рекомендуемых вставок рядов',
         timeout: 10000,
       });
@@ -44,7 +45,7 @@ export function region_layer({Editor, ui: {dialogs}}) {
     let pre = Promise.resolve(initialValue);
     if(regions.size > 1) {
       pre = dialogs.input_value({
-        title: `Ряд для ${layer.info}`,
+        title: `Ряд для ${info}`,
         text: 'Уточните номер ряда',
         list: values,
         timeout: 10000,
@@ -54,17 +55,32 @@ export function region_layer({Editor, ui: {dialogs}}) {
     return pre
       .then((region) => {
         region = parseInt(region);
-        const parent = region > 0 ? layer.children.bottomLayers : layer.children.topLayers;
+        const parent = region > 0 ? children.bottomLayers : children.topLayers;
         for(const rl of parent.children) {
           if(rl.dop.region === region) {
             return dialogs.alert({
-              title: `Ряд для ${layer.info}`,
+              title: `Ряд для ${info}`,
               text: `Слой ряда №${region} уже существует`,
               timeout: 10000,
             });
           }
         }
+        // создаём слой ряда
         const rl = Editor.Contour.create({kind: 5, region, project, layer, parent});
+        // создаём профили ряда
+        for(const {generatrix, inset} of profiles) {
+          for(const row of inset.inserts) {
+            if(row.inset.region === region) {
+              new Editor.ProfileRegion({
+                layer: rl,
+                parent: rl.children.profiles,
+                generatrix: generatrix.clone({insert: false}),
+                proto: {inset: row.inset},
+              });
+              break;
+            }
+          }
+        }
       })
       .catch(() => null);
   };

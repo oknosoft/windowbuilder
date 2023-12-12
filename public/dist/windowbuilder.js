@@ -157,6 +157,7 @@ class SchemeLayers {
 
       const {builder_props} = project.ox;
 
+      /*
       // Вид эскиза
       tree.addItem('mode', '<div id="tree-mode" style="display: flex;">Режим эскиза </div>', 0);
       tree.disableCheckbox('mode');
@@ -172,6 +173,7 @@ class SchemeLayers {
       const cntMode = divMode.querySelector('.dhxcombo_dhx_terrace');
       cntMode.style.marginTop = '5px';
       cntMode.style.marginLeft = '6px';
+      */
 
       const props = {
         auto_lines: 'Авторазмерные линии',
