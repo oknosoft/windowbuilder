@@ -6,6 +6,7 @@ import VerticalAlignTopIcon from '@material-ui/icons/VerticalAlignTop';
 import ZoomOutMapIcon from '@material-ui/icons/ZoomOutMap';
 import LinkOffIcon from '@material-ui/icons/LinkOff';
 import Link from '@material-ui/icons/Link';
+import FlipIcon from '@material-ui/icons/Flip';
 import Tip from 'metadata-react/App/Tip';
 import InfoButton from 'metadata-react/App/InfoButton';
 import SmallButton from '../../Toolbar/IconButton';
@@ -50,8 +51,10 @@ const btnClick = (editor, name) => {
 
 function ProfileToolbar({editor, elm, classes}) {
   const {msg} = $p;
-  const {inset} = elm;
-  let unlink = !Array.isArray(elm) && ((elm.b.selected && !elm.e.selected) || (elm.e.selected && !elm.b.selected));
+  const isElm = !Array.isArray(elm);
+  const inset = isElm && elm.inset;
+  const impost = isElm && elm.elm_type.is('impost');
+  let unlink = isElm && ((elm.b.selected && !elm.e.selected) || (elm.e.selected && !elm.b.selected));
   let link = false;
   if(unlink) {
     if(((elm.b.selected && elm.rays.b.is_i) || (elm.e.selected && elm.rays.e.is_i))) {
@@ -91,6 +94,9 @@ function ProfileToolbar({editor, elm, classes}) {
           });
         }
       }}><Link /></SmallButton>
+    </Tip>}
+    {impost && <Tip title="Перевернуть профиль">
+      <SmallButton onClick={() => elm.flip?.()}><FlipIcon /></SmallButton>
     </Tip>}
 
     <div className={classes.title}/>
