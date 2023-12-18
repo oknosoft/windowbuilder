@@ -103,6 +103,12 @@ class ToolSelectNode extends ToolElement {
       if (modifiers.space) {
         if(item instanceof Editor.Filling) {
           item = item.nearest(point);
+          if(project.selected_elements.includes(item)) {
+            const nearest = item?.nearest?.();
+            if(nearest) {
+              item = nearest;
+            }
+          }
         }
         else {
           const nearest = item?.nearest?.();

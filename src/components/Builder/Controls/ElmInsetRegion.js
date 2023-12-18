@@ -13,7 +13,7 @@ export default class RegionEditor extends EditorBase {
 
   getValue() {
     const {props: {rowData}, state: {value, initialValue}} = this;
-    let region = parseFloat(value.replace(',', '.'));
+    let region = parseInt(value, 10);
     if(rowData.inset.region) {
       if(!region) {
         region = initialValue || rowData.inset.region;
