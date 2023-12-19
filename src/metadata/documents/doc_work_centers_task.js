@@ -5,6 +5,17 @@
 
 import FrmObj from 'wb-forms/dist/WorkCentersTask';
 
+const defaults = {
+  iterations: 3000,
+  size: 200,
+  crossover: 0.2,
+  mutation: 0.3,
+  random: 0.1,
+  skip: 60,
+  webWorkers: true,
+  batch: 108, // размер партии
+};
+
 export default function ({
                            DocWork_centers_task,
                            DocWork_centers_taskCutsRow,
@@ -144,11 +155,12 @@ export default function ({
     },
 
     /**
-     * Возвращает свёрнутую структуру номенклатур и характеристик раскроя
+     * Возвращает свёрнутую структуру номенклатур, характеристик и партий раскроя
      */
     fragments() {
       const res = new Map();
-      this.cutting.forEach((row) => {
+      const fin = [];
+      for(const row of this.cutting) {
         if(!res.has(row.nom)) {
           res.set(row.nom, new Map());
         }
@@ -158,8 +170,43 @@ export default function ({
         }
         const characteristic = nom.get(row.characteristic);
         characteristic.push(row);
-      });
-      return res;
+      }
+      // расставим партии
+      for(const [nom, characteristics] of res) {
+        for(const [characteristic, rows] of characteristics) {
+          if(rows.length > defaults.batch) {
+            rows.sort(utils.sort('len'));
+            const parts = (rows.length / defaults.batch + 0.5).round();
+            const part = (rows.length / parts).round();
+            for(let i1 = 0; i1 < part; i1++) {
+              for(let i2 = 0; i2 < parts; i2++) {
+                const rowNum = i1 * parts + i2;
+                if(rowNum >= rows.length) {
+                  continue;
+                }
+                const row = rows[rowNum];
+                if(!row.pair) {
+                  row.part = i2;
+                }
+                else {
+                  for(const prow of rows) {
+                    if(prow.pair === row.pair) {
+                      prow.part = i2;
+                    }
+                  }
+                }
+              }
+            }
+            for(let part = 0; part < parts; part++) {
+              fin.push({nom, characteristic, part, rows: rows.filter((row) => row.part === part)});
+            }
+          }
+          else {
+            fin.push({nom, characteristic, part: 0, rows});
+          }
+        }
+      }
+      return fin;
     },
 
     /**
@@ -170,15 +217,10 @@ export default function ({
     optimize(opts) {
       return import('wb-cutting')
         .then(({default: Cutting}) => {
-          const fragments = this.fragments();
-
           let queue = Promise.resolve();
-          fragments.forEach((characteristics) => {
-            /* eslint-disable no-unused-vars */
-            for(const [characteristic, rows] of characteristics) {
-              queue = queue.then(() => this.optimize_fragment(new Cutting('1D'), rows, opts.onStep));
-            }
-          });
+          for(const {nom, characteristic, part, rows} of this.fragments()) {
+            queue = queue.then(() => this.optimize_fragment(new Cutting('1D'), rows, opts.onStep));
+          }
           return queue;
         });
     },
@@ -198,23 +240,17 @@ export default function ({
         if(cut_row) {
           // ищем запись в расходе - её туда могли положить руками, либо подтянулось из остатков
           this.cuts.find_rows({
-            record_kind: debit_credit_kinds.credit,
+            record_kind: debit_credit_kinds.debit,
             nom: cut_row.nom,
             characteristic: cut_row.characteristic,
           }, (row) => {
-            workpieces.push(row);
+            if(row.len >= rows[0].len) {
+              workpieces.push(row);
+            }
           });
         }
 
-        const config = {
-          iterations: 3000,
-          size: 200,
-          crossover: 0.2,
-          mutation: 0.3,
-          random: 0.1,
-          skip: 60,
-          webWorkers: true,
-        };
+        const config = Object.assign({}, defaults);
         const userData = {
           products: rows.map((row) => row.len),
           workpieces: workpieces.map((row) => row.len),
