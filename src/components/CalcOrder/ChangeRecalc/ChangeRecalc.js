@@ -23,6 +23,7 @@ class ChangeRecalc extends React.Component {
     this.state = {ready: false, stamp: 0, loading: false};
     this.obj = _mgr.get(ref);
     const dp = this.dp = $p.dp.buyers_order.create();
+    dp.clr = $p.cat.clrs.get();
     dp.production.load(this.obj.production);
     dp.production.forEach((row) => {
       row.use = row.characteristic.coordinates.count();
