@@ -6,14 +6,14 @@
 import FrmObj from 'wb-forms/dist/WorkCentersTask';
 
 const defaults = {
-  iterations: 3000,
-  size: 200,
+  iterations: 2900,
+  size: 210,        // размер популяции
   crossover: 0.2,
-  mutation: 0.3,
-  random: 0.1,
-  skip: 60,
+  mutation: 0.28,
+  random: 0.22,
+  skip: 55,         // прекращаем итерации, если решение не улучшилось за 55 шагов
   webWorkers: true,
-  batch: 108, // размер партии
+  batch: 101,       // размер партии
 };
 
 export default function ({
@@ -22,6 +22,7 @@ export default function ({
                            enm: {cutting_optimization_types, debit_credit_kinds},
                            doc: {work_centers_task, calc_order},
                            utils,
+                           job_prm,
                          }) {
 
   // подключаем особую форму объекта
@@ -157,7 +158,7 @@ export default function ({
     /**
      * Возвращает свёрнутую структуру номенклатур, характеристик и партий раскроя
      */
-    fragments() {
+    fragments(noParts) {
       const res = new Map();
       const fin = [];
       for(const row of this.cutting) {
@@ -169,7 +170,14 @@ export default function ({
           nom.set(row.characteristic, []);
         }
         const characteristic = nom.get(row.characteristic);
+        if(!noParts) {
+          row.stick = 0;
+          row.part = 0;
+        }
         characteristic.push(row);
+      }
+      if(noParts) {
+        return res;
       }
       // расставим партии
       for(const [nom, characteristics] of res) {
@@ -198,11 +206,11 @@ export default function ({
               }
             }
             for(let part = 0; part < parts; part++) {
-              fin.push({nom, characteristic, part, rows: rows.filter((row) => row.part === part)});
+              fin.push({nom, characteristic, part, parts, rows: rows.filter((row) => row.part === part)});
             }
           }
           else {
-            fin.push({nom, characteristic, part: 0, rows});
+            fin.push({nom, characteristic, part: 0, parts: 1, rows});
           }
         }
       }
@@ -214,12 +222,18 @@ export default function ({
      * @param opts
      * @return {Promise<void>}
      */
-    optimize(opts) {
+    optimize({onStep}) {
       return import('wb-cutting')
         .then(({default: Cutting}) => {
           let queue = Promise.resolve();
-          for(const {nom, characteristic, part, rows} of this.fragments()) {
-            queue = queue.then(() => this.optimize_fragment(new Cutting('1D'), rows, opts.onStep));
+          for(const {nom, characteristic, part, parts, rows} of this.fragments()) {
+            queue = queue.then(() => this.optimize_fragment({
+              cutting: new Cutting('1D'),
+              rows,
+              part,
+              parts,
+              onStep,
+            }));
           }
           return queue;
         });
@@ -230,7 +244,7 @@ export default function ({
      * @param opts
      * @return {Promise<void>}
      */
-    optimize_fragment(cutting, rows, onStep) {
+    optimize_fragment({cutting, rows, onStep, part, parts}) {
 
       return new Promise((resolve) => {
 
@@ -240,11 +254,12 @@ export default function ({
         if(cut_row) {
           // ищем запись в расходе - её туда могли положить руками, либо подтянулось из остатков
           this.cuts.find_rows({
-            record_kind: debit_credit_kinds.debit,
+            _top: 10e6,
+            //record_kind: debit_credit_kinds.debit,
             nom: cut_row.nom,
             characteristic: cut_row.characteristic,
           }, (row) => {
-            if(row.len >= rows[0].len) {
+            if((row.len - row.used) >= rows[0].len) {
               workpieces.push(row);
             }
           });
@@ -253,15 +268,19 @@ export default function ({
         const config = Object.assign({}, defaults);
         const userData = {
           products: rows.map((row) => row.len),
-          workpieces: workpieces.map((row) => row.len),
+          workpieces: workpieces.map((row) => row.len - row.used),
           overmeasure: 0,
           wrongsnipmin: 0,
           wrongsnipmax: 0,
           sticklength: cut_row.nom.len || 6000,
           knifewidth: cut_row.nom.knifewidth || 7,
-          usefulscrap: cut_row.nom.usefulscrap || 600,
+          usefulscrap: cut_row.nom.usefulscrap || 620,
         };
         cutting.genetic.notification = function(pop, generation, stats, isFinished) {
+
+          if(job_prm.idle) {
+            job_prm.idle.activity = Date.now();
+          }
 
           if(!generation) {
             return;
@@ -273,7 +292,9 @@ export default function ({
             userData,
             cuts: workpieces,
             rows,
-            progress: isFinished ? 1 : generation / this.configuration.iterations
+            part,
+            parts,
+            progress: isFinished ? 1 : generation / this.configuration.iterations,
           }, this.fitness(pop[0].entity, true));
 
           // обновляем интерфейс
@@ -299,7 +320,12 @@ export default function ({
       // сначала добавляем заготовки
       for(let i = 0; i < decision.workpieces.length; i++) {
         let workpiece = decision.cuts[i];
-        if(!workpiece) {
+
+        if(workpiece) {
+          workpiece.used = workpiece.len - decision.workpieces[i];
+          //workpiece.quantity = decision.workpieces[i] / 1000;
+        }
+        else {
           workpiece = this.cuts.add({
             record_kind: debit_credit_kinds.credit,
             nom: decision.cut_row.nom,
@@ -310,20 +336,27 @@ export default function ({
           decision.cuts.push(workpiece);
         }
         if(decision.workpieces[i] > decision.userData.usefulscrap) {
-          this.cuts.add({
-            record_kind: debit_credit_kinds.debit,
-            nom: decision.cut_row.nom,
-            characteristic: decision.cut_row.characteristic,
-            len: decision.workpieces[i],
-            quantity: decision.workpieces[i] / 1000,
-            stick: workpiece.stick,
-          });
+          // this.cuts.add({
+          //   record_kind: debit_credit_kinds.debit,
+          //   nom: decision.cut_row.nom,
+          //   characteristic: decision.cut_row.characteristic,
+          //   len: decision.workpieces[i],
+          //   quantity: decision.workpieces[i] / 1000,
+          //   stick: workpiece.stick,
+          // });
         }
       }
 
       // проставляем номера палок в раскрое
       for(let i = 0; i < decision.res.length; i++) {
-        decision.rows[i].stick = decision.cuts[decision.res[i]].stick;
+        const {stick} = decision.cuts[decision.res[i]];
+        decision.rows[i].stick = stick;
+      }
+      for(let i = 0; i < decision.res.length; i++) {
+        const cut_row = decision.cuts[decision.res[i]];
+        const rows = this.cutting.find_rows({stick: cut_row.stick});
+        const len = rows.reduce((sum, row) => sum + row.len + decision.userData.knifewidth, 0);
+        cut_row.used = len;
       }
 
     }
