@@ -59,22 +59,28 @@ class Additions extends React.Component {
     const {props: {dialog}, doc} = this;
     const calc_order = $p.doc.calc_order.get(dialog.ref);
     const {production} = dialog.wnd ? dialog.wnd.elmnts.grids : {};
-    doc.cuts.clear({record_kind: 'Расход'});
-    doc.cuts.group_by(['nom', 'characteristic'], ['quantity']);
-    doc.cuts.forEach((row) => {
-      if(!row.quantity) {
-        return;
-      }
-      const order_row = calc_order.production.add({
-        nom: row.nom,
-        characteristic: row.characteristic,
-        qty: 1,
-      });
-      order_row.quantity = row.quantity.round(3);
-      if(production) {
-        production.refresh_row(order_row);
-      }
+    // группируем данные во временном документе
+    const tmp = doc._manager.create({}, false, true);
+    doc.cuts.find_rows({record_kind: 'Расход'}, ({nom, characteristic, len}) => {
+      tmp.cuts.add({nom, characteristic, len});
     });
+    for(const {nom, characteristic, len} of doc.cutting) {
+      tmp.cutting.add({nom, characteristic, len});
+    }
+    tmp.cuts.group_by(['nom', 'characteristic'], ['len']);
+    tmp.cutting.group_by(['nom', 'characteristic'], ['len']);
+
+    for(const {nom, characteristic, len} of tmp.cuts) {
+      const crow = tmp.cutting.find({nom, characteristic});
+      if(crow && len > crow.len) {
+        const order_row = calc_order.production.add({nom, characteristic, qty: 1});
+        order_row.quantity = ((len - crow.len) / 1000).round(3);
+        if(production) {
+          production.refresh_row(order_row);
+        }
+      }
+    }
+    tmp.unload();
     return Promise.resolve();
   }
 

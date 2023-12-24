@@ -31,7 +31,11 @@ class RootProvider extends React.Component {
     // подгрузим стили асинхронно
     import('metadata-dhtmlx/dhx_terrace.css')
       .then(() => import('metadata-dhtmlx/metadata.css'))
-      .then(() => import('./styles/windowbuilder.css'));
+      .then(() => import('./styles/windowbuilder.css'))
+      .then(() => import('wb-cutting'))
+      .then((module) => {
+        $p.classes.Cutting = module.default;
+      });
 
   }
 
@@ -52,7 +56,7 @@ root.render(<RootProvider />);
 //serviceWorker.unregister();
 serviceWorker.register({
   onUpdate() {
-    if($p && $p.eve) {
+    if($p?.eve) {
       $p.eve.redirect = true;
     }
     alert('Код программы обновлён, необходимо перезагрузить страницу');
