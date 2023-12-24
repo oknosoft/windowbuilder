@@ -15,6 +15,8 @@ import Stepper from './Stepper';
 
 const title = 'Пересчет с заменой параметров';
 
+const {cat: {clrs}, dp: {buyers_order}, ui: {dialogs}} = $p;
+
 class ChangeRecalc extends React.Component {
 
   constructor(props, context) {
@@ -22,8 +24,8 @@ class ChangeRecalc extends React.Component {
     super(props, context);
     this.state = {ready: false, stamp: 0, loading: false};
     this.obj = _mgr.get(ref);
-    const dp = this.dp = $p.dp.buyers_order.create();
-    dp.clr = $p.cat.clrs.get();
+    const dp = this.dp = buyers_order.create();
+    dp.clr = clrs.get();
     dp.production.load(this.obj.production);
     dp.production.forEach((row) => {
       row.use = row.characteristic.coordinates.count();
@@ -42,7 +44,7 @@ class ChangeRecalc extends React.Component {
   value_change = (obj, flds) => {
     if(obj?._owner?._owner === this.dp && flds) {
       if(flds.use) {
-        Object.assign(this.dp, {sys: '', clr: '', inset: ''});
+        Object.assign(this.dp, {sys: '', clr: clrs.get(), inset: ''});
         this.dp.sys_furn.clear();
       }
       if(flds.value) {
@@ -62,7 +64,7 @@ class ChangeRecalc extends React.Component {
       .then(this.handleCancel)
       .catch((err) => {
         this.setState({loading: false});
-        $p.ui.dialogs.alert({title, text: err.message});
+        dialogs.alert({title, text: err.message});
       });
   };
 
