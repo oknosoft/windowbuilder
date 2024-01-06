@@ -33,11 +33,11 @@
   "proxy6": "http://localhost:3016/",
   "proxy7": "https://quick.ecookna.ru/",
   "proxy8": "https://start.kaleva.ru/",
-  "proxy": "https://brusnika.oknosoft.ru:2210/",
+  "proxy9": "https://brusnika.oknosoft.ru:2210/",
   "proxy10": "https://brusnika.oknosoft.ru:2227/",
   "proxy11": "https://start.phototech.ru/",
   "proxy12": "https://phototech.oknosoft.ru:2300/",
-  "proxy13": "https://tg.oknosoft.ru:2310/",
+  "proxy": "https://tg.oknosoft.ru:2310/",
   "proxy14": "https://steklotorg.oknosoft.ru:2310/",
   "dependencies": {
     "@turf/points-within-polygon": "^6.5",
@@ -48,7 +48,7 @@
     "metadata-redux": "2.0.34-beta.2",
     "react-highlight-words": "^0.20",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#e64d36790550f13e9ee04e0ca807b661c7417a81",
+    "wb-core": "github:oknosoft/windowbuilder-core#1c19a63f3575704b9f444031398557d24dd161b1",
     "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
     "wb-forms": "github:oknosoft/windowbuilder-forms#8f3273d4793f4c51ab37ffc81ffa6215ff3f25ea"
   },
