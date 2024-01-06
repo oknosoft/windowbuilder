@@ -197,7 +197,7 @@ export function find_inset(insert_type) {
 
 function mapStateToProps(state, props) {
   return {
-    handleCalck() {
+    handleCalck(...attr) {
       const {additions} = this;
       const {dp} = additions;
       return dp ?
@@ -206,7 +206,7 @@ function mapStateToProps(state, props) {
             dp.calc_order.production.sync_grid(props.dialog.wnd.elmnts.grids.production);
           })
         :
-        additions.handleCalck();
+        additions.handleCalck(...attr);
     },
     handleCancel() {
       props.handlers.handleIfaceState({

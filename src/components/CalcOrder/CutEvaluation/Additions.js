@@ -54,10 +54,11 @@ class Additions extends React.Component {
     this.doc && this.doc.unload();
   }
 
-  // закидываем обрезки в заказ
-  handleCalck() {
+  // закидываем обрезки в заказ или продукции заказа
+  handleCalck(attr) {
     const {props: {dialog}, doc} = this;
-    const calc_order = $p.doc.calc_order.get(dialog.ref);
+    const {doc: {calc_order: mgr}, CatClrs} = $p;
+    const calc_order = mgr.get(dialog.ref);
     const {production} = dialog.wnd ? dialog.wnd.elmnts.grids : {};
     // группируем данные во временном документе
     const tmp = doc._manager.create({}, false, true);
@@ -70,18 +71,82 @@ class Additions extends React.Component {
     tmp.cuts.group_by(['nom', 'characteristic'], ['len']);
     tmp.cutting.group_by(['nom', 'characteristic'], ['len']);
 
+    // чистим возможные прежние распределения
+    calc_order.reset_specify();
+    // сводная спецификация заказа поставщику
+    const full = calc_order.aggregate_specification();
+    const aggregates = new Map();
+
     for(const {nom, characteristic, len} of tmp.cuts) {
       const crow = tmp.cutting.find({nom, characteristic});
       if(crow && len > crow.len) {
-        const order_row = calc_order.production.add({nom, characteristic, qty: 1});
-        order_row.quantity = ((len - crow.len) / 1000).round(3);
-        if(production) {
-          production.refresh_row(order_row);
+        if(attr?.calck) {
+          // строка потребности всего заказа
+          const frow = characteristic instanceof CatClrs ?
+            full.specification.find({nom, clr: characteristic}) :
+            full.specification.find({nom, nom_characteristic: characteristic});
+          if(frow) {
+            for(const orow of calc_order.production) {
+              if(orow.characteristic.calc_order === calc_order) {
+                // строка потребности текущего изделия
+                if(!aggregates.has(orow)) {
+                  aggregates.set(orow, calc_order.aggregate_specification(orow));
+                }
+                const curr = aggregates.get(orow);
+                // строка потребности текущей продукции
+                const ccrow = characteristic instanceof CatClrs ?
+                  curr.specification.find({nom, clr: characteristic}) :
+                  curr.specification.find({nom, nom_characteristic: characteristic});
+                if(ccrow) {
+                  // общая дельта
+                  const adelta = (len / 1000) - frow.quantity;
+                  // взвешенная дельта в единицах хранения
+                  const ddelta = adelta * ccrow.quantity / frow.quantity;
+
+                  // вклад в рублях deposit += ddelta * prow.price;
+                  if(ddelta) {
+                    const erow = characteristic instanceof CatClrs ?
+                      orow.characteristic.specification.find({nom, clr: characteristic}) :
+                      orow.characteristic.specification.find({nom, characteristic});
+                    if(erow && erow.len && !nom.cutting_optimization_type.is('no') ) {
+                      const {nom, characteristic, clr, price, amount_marged, totqty1} = erow;
+                      const drow = orow.characteristic.specification.add({
+                        nom,
+                        characteristic,
+                        clr,
+                        dop: -3,
+                        qty: 1,
+                        len: ddelta * 1000,
+                        totqty: ddelta,
+                        totqty1: ddelta,
+                        price,
+                        amount: price * ddelta,
+                        amount_marged: (amount_marged / totqty1) * ddelta,
+                      });
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        else {
+          const orow = calc_order.production.add({nom, characteristic, qty: 1});
+          orow.quantity = ((len - crow.len) / 1000).round(3);
+          production?.refresh_row(orow);
         }
       }
     }
+    if(attr?.calck) {
+      calc_order._slave_recalc = true;
+      for(const orow of calc_order.production) {
+        orow.value_change('quantity', 'update', orow.quantity);
+        production.refresh_row(orow);
+      }
+      calc_order._slave_recalc = false;
+    }
     tmp.unload();
-    return Promise.resolve();
+    return Promise.resolve({close: true});
   }
 
   handleNext = () => {

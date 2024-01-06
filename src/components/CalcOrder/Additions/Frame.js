@@ -23,7 +23,7 @@ class ParametricFrame extends React.Component {
   }
 
   handleOk = () => {
-    this.props.handleCalck.call(this)
+    this.props.handleCalck.call(this, {ok: true})
       .then(this.handleCancel)
       .catch((err) => {
         this.setState({msg: err.msg || err.message});
@@ -31,7 +31,12 @@ class ParametricFrame extends React.Component {
   };
 
   handleCalck = () => {
-    this.props.handleCalck.call(this)
+    this.props.handleCalck.call(this, {calck: true})
+      .then((res) => {
+        if(res?.close) {
+          return this.handleCancel();
+        }
+      })
       .catch((err) => {
         this.setState({msg: err.msg || err.message});
       });
