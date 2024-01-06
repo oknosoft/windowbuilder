@@ -5951,7 +5951,7 @@ class ToolPen extends ToolElement {
         const {point, rib, ...other} = addl_hit;
         new ProfileGlBead({
           layer: addl_hit.profile.layer,
-          parent: addl_hit.profile.layer.children.profules,
+          parent: addl_hit.profile.layer.children.profiles,
           proto: profile,
           ...other
         });
@@ -6047,6 +6047,7 @@ class ToolPen extends ToolElement {
         // рисуем профиль
         this.last_profile = new Profile({
           generatrix: this.path,
+          layer: project.activeLayer,
           parent: project.activeLayer?.children?.profiles,
           proto: profile,
         });
@@ -6745,17 +6746,21 @@ class ToolPen extends ToolElement {
   add_sequence(points) {
     const profiles = [];
     const {profile, project} = this;
+    const {activeLayer: layer} = project;
     points.forEach((segments) => {
       profiles.push(new Editor.Profile({
         generatrix: new paper.Path({
           strokeColor: 'black',
           segments: segments
-        }), proto: profile
+        }),
+        layer,
+        parent: layer?.children?.profiles,
+        proto: profile
       }));
     });
-    profile.bind_sys && project.activeLayer.on_sys_changed(true);
+    profile.bind_sys && layer?.on_sys_changed(true);
     project.register_change(true, () => {
-      project.activeLayer.on_sys_changed();
+      layer?.on_sys_changed();
     });
     return profiles;
   }
