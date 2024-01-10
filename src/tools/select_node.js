@@ -96,7 +96,7 @@ class ToolSelectNode extends ToolElement {
         return;
       }
 
-      let item = hitItem.item.parent;
+      let item = hitItem.item._owner || hitItem.item.parent;
       if(!(item instanceof Editor.BuilderElement) && item.parent) {
         item = item.parent;
       }
