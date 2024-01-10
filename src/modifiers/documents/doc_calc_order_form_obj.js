@@ -388,6 +388,8 @@
      */
     function toolbar_click(btn_id) {
 
+      const {ui, dp: {buyers_order}} = $p;
+
       switch (btn_id) {
 
       case 'btn_sent':
@@ -435,11 +437,11 @@
         break;
 
       case 'btn_add_product':
-        $p.dp.buyers_order.open_component(wnd, o, handlers, 'AdditionsExt');
+        buyers_order.open_component(wnd, o, handlers, 'AdditionsExt');
         break;
 
       case 'btn_additions':
-        $p.dp.buyers_order.open_component(wnd, o, handlers, 'Additions');
+        buyers_order.open_component(wnd, o, handlers, 'Additions');
         break;
 
       case 'btn_jalousie':
@@ -451,7 +453,7 @@
         break;
 
       case 'btn_share':
-        $p.dp.buyers_order.open_component(wnd, {ref: o.ref, cmd: btn_id}, handlers, 'PushUtils');
+        buyers_order.open_component(wnd, {ref: o.ref, cmd: btn_id}, handlers, 'PushUtils');
         break;
 
       case 'btn_add_material':
@@ -495,7 +497,7 @@
         break;
 
       case 'btn_history':
-        $p.dp.buyers_order.open_component(wnd, {
+        buyers_order.open_component(wnd, {
           ref: o.ref,
           cmd: {hfields: null, db: null},
           _mgr
@@ -503,7 +505,7 @@
         break;
 
       case 'btn_number':
-        const {current_user, ui} = $p;
+        const {current_user} = $p;
         const {_manager, obj_delivery_state, number_doc, date} = o;
         const title = `Заказ №${number_doc} от ${moment(date).format(moment._masks.date_time)}`;
         if (current_user.role_available('ИзменениеТехнологическойНСИ') || current_user.role_available('СогласованиеРасчетовЗаказов')) {
@@ -540,6 +542,16 @@
 
       case 'calc_order':
         clone_calc_order(o);
+        break;
+
+      case 'btn_print':
+        const {_spacer} = this;
+        ui.dialogs.popup({
+          anchorEl: _spacer,
+          _mgr,
+          handlePrint: (model) => _mgr.print(o, model),
+          variant: 'hidden',
+        });
         break;
     }
 

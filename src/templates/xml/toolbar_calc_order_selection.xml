@@ -11,7 +11,7 @@
   <item id="btn_delete" type="button" text="&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;" title="Удалить"/>
   <item id="sep2" type="separator"/>
 
-  <item type="buttonSelect" id="bs_print" text="&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt; Печать" openAll="true">
+  <item type="button" id="btn_print" text="&lt;i class='fa fa-print fa-fw'&gt;&lt;/i&gt; Печать" openAll="true">
   </item>
 
   <item type="buttonSelect" id="bs_create_by_virtue" text="&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;" title="Создать на основании" openAll="true">

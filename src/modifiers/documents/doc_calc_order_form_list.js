@@ -148,7 +148,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                   return rows.length ? {rows} : doc.query('doc/number_doc', {
                     include_docs: true,
                     key: ['doc.calc_order', date_till.getFullYear() - 1, filter]
-                  })
+                  });
                 })
                 .then(({rows}) => {
                   return {docs: rows.map((v) => v.doc)};
@@ -180,7 +180,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       attr.on_close = () => {
         elmnts.svgs && elmnts.svgs.unload();
         dep && dep.unload();
-      }
+      };
 
 
       /**
@@ -209,7 +209,6 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                 handlers.handleNavigate(`/?ref=${ref}`);
                 ui.dialogs.alert({title: msg.main_title, text: err.message});
               });
-            ;
           }
           else {
             ui.dialogs.alert({title: msg.main_title, text: msg.no_selected_row.replace('%1', '')});
@@ -268,11 +267,22 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           }
           return false;
 
+        case 'btn_print':
+          if(ref) {
+            const {_spacer} = elmnts.toolbar;
+            ui.dialogs.popup({
+              anchorEl: _spacer,
+              _mgr: calc_order,
+              handlePrint: (model) => calc_order.print(ref, model),
+              variant: 'hidden',
+            });
+          }
+          break;
         }
-      }
+      };
 
       resolve(wnd);
-    }
+    };
 
     attr.toolbar_struct = $p.injected_data['toolbar_calc_order_selection.xml'];
 
