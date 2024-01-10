@@ -826,7 +826,8 @@ class ToolLayImpost extends ToolElement {
               generatrix: new paper.Path({
                 segments: [p.b, p.e],
               }),
-              parent: layer,
+              layer,
+              parent: layer?.children?.profiles,
               proto: proto,
             }));
           }
