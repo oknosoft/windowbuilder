@@ -6033,6 +6033,7 @@ class ToolPen extends ToolElement {
         const tearing = Contour.create({
           kind: 4,
           layer: this.hitItem.item.layer,
+          parent: this.hitItem.item.parent.children?.tearings,
           project,
         });
         tearing.initialize({
