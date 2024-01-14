@@ -1214,8 +1214,8 @@ class ToolPen extends ToolElement {
         size: [240, 240],
         insert: false,
       });
-      const intersections = this.hitItem.item.getIntersections(rect);
-      if(intersections.length) {
+      const intersections = this.hitItem.item?.getIntersections?.(rect);
+      if(intersections?.length) {
         this._scope.canvas_cursor('cursor-pen-freehand');
         this.mode = null;
         this.path && this.path.remove();
