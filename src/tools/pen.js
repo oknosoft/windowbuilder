@@ -245,7 +245,7 @@ class ToolPen extends ToolElement {
     $p.wsql.restore_options('editor', this.options);
     this.options.wnd.on_close = this.on_close;
 
-    ['elm_type', 'inset', 'bind_generatrix', 'bind_node'].forEach((prop) => {
+    ['elm_type', 'inset', 'bind_generatrix', 'bind_node', 'bind_sys'].forEach((prop) => {
       if(prop == 'bind_generatrix' || prop == 'bind_node' || this.options.wnd[prop]) {
         profile[prop] = this.options.wnd[prop];
       }
@@ -290,72 +290,15 @@ class ToolPen extends ToolElement {
     // дополняем свойства поля цвет отбором по служебным цветам
     $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this, project);
 
-    this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
-    this._grid = this.wnd.attachHeadFields({
-      obj: profile
-    });
+    this.wnd = {
+      wnd_options(opt){
+        opt.bind_generatrix = profile.bind_generatrix;
+        opt.bind_node = profile.bind_node;
+        opt.bind_sys = profile.bind_sys;
+      },
+      close() {
 
-    // панелька с командой типовых форм
-    this.wnd.tb_mode = new $p.iface.OTooolBar({
-      wrapper: this.wnd.cell,
-      width: '100%',
-      height: '28px',
-      class_name: '',
-      name: 'tb_mode',
-      buttons: [{
-        name: 'standard_form',
-        text: '<i class="fa fa-file-image-o fa-fw"></i>',
-        tooltip: 'Добавить типовую форму',
-        float: 'left',
-        sub: {
-          width: '120px',
-          height:'174px',
-          buttons: [
-            {name: 'square', img: 'square.png', float: 'left'},
-            {name: 'triangle1', img: 'triangle1.png', float: 'left'},
-            {name: 'triangle2', img: 'triangle2.png', float: 'left'},
-            {name: 'triangle3', img: 'triangle3.png', float: 'right'},
-            {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
-            {name: 'semicircle2', img: 'semicircle2.png', float: 'left'},
-            {name: 'arc1',      img: 'arc1.png', float: 'left'},
-            {name: 'circle',    img: 'circle.png', float: 'right'},
-            {name: 'circle1',   css: 'tb_circle1', float: 'left'},
-            {name: 'circle2',   css: 'tb_circle2', float: 'left'},
-            {name: 'circle3',   css: 'tb_circle3', float: 'left'},
-            {name: 'circle4',   css: 'tb_circle4', float: 'right'},
-            {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
-            {name: 'trapeze2',  img: 'trapeze2.png', float: 'left'},
-            {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
-            {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
-            {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-            {name: 'trapeze6',  img: 'trapeze6.png', float: 'left'},
-            {name: 'trapeze7',  img: 'trapeze7.png', float: 'left'},
-            {name: 'trapeze8',  img: 'trapeze8.png', float: 'right'},
-            {name: 'trapeze9',  img: 'trapeze9.png', float: 'left'},
-            {name: 'trapeze10', img: 'trapeze10.png', float: 'left'},
-          ]},
-      }],
-      image_path: '/imgs/',
-      onclick: (name) => this.standard_form(name)
-    });
-    this.wnd.tb_mode.cell.style.backgroundColor = '#f5f5f5';
-    this.wnd.cell.firstChild.style.marginTop = '22px';
-    const {standard_form} = this.wnd.tb_mode.buttons;
-    const {onmouseover} = standard_form;
-    const wnddiv = this.wnd.cell.parentElement;
-    standard_form.onmouseover = function() {
-      if(wnddiv.style.transform) {
-        wnddiv.style.transform = '';
       }
-      onmouseover.call(this);
-    };
-
-    // подмешиваем в метод wnd_options() установку доппараметров
-    const wnd_options = this.wnd.wnd_options;
-    this.wnd.wnd_options = (opt) => {
-      wnd_options.call(this.wnd, opt);
-      opt.bind_generatrix = profile.bind_generatrix;
-      opt.bind_node = profile.bind_node;
     };
   }
 
