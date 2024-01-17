@@ -40,10 +40,12 @@ export default function StandardForms({editor, layer, elm_type}) {
   const classes = useStyles();
 
   const onClick = ({target}) => {
-    $p.ui.dialogs.confirm({
-      title: 'Типовая форма',
-      text: `Добавить форму ${target.title} в слой ${layer.presentation()}`,
-    })
+    let text = `Добавить форму ${target.title} в слой ${layer.presentation()}`;
+    if(layer.profiles.length) {
+      text = `В слое ${layer.presentation()} уже есть профили\n
+Уверены, что хотите добавить форму ${target.title} в этот слой?`;
+    }
+    $p.ui.dialogs.confirm({title: 'Типовая форма', text})
       .then(() => {
         editor.tool?.standard_form(target.alt);
       })

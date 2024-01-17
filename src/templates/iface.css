@@ -4,6 +4,8 @@
   }
 }
 
+.gl.disabled { pointer-events: none; opacity: 0.4}
+
 .md_column320 {
 	width: 48%;
 	min-width: 320px;
