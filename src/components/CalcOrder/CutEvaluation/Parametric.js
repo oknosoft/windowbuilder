@@ -12,7 +12,7 @@ export default function Parametric(props) {
   return <Frame
     Content={Additions}
     title="Раскрой"
-    actions={{ok: 'Добавить обрезь в заказ', calck: 'Добавить обрезь в изделия'}}
+    actions={{pre: 'Удалить обрезь', ok: 'Добавить обрезь в заказ', calck: 'Добавить обрезь в изделия'}}
     {...props}
   />;
 }

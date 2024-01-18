@@ -25,7 +25,7 @@
     "url": "https://github.com/oknosoft/windowbuilder/issues"
   },
   "homepage": "https://light.oknosoft.ru/",
-  "proxy": "https://develop.ecookna.ru/",
+  "proxy1": "https://develop.ecookna.ru/",
   "proxy2": "https://start.ecookna.ru/",
   "proxy3": "https://start.phototech.ru/",
   "proxy4": "https://zakaz.kaleva.ru:2019/",
@@ -33,7 +33,7 @@
   "proxy6": "http://localhost:3016/",
   "proxy7": "https://quick.ecookna.ru/",
   "proxy8": "https://start.kaleva.ru/",
-  "proxy9": "https://brusnika.oknosoft.ru:2210/",
+  "proxy": "https://brusnika.oknosoft.ru:2210/",
   "proxy10": "https://brusnika.oknosoft.ru:2227/",
   "proxy11": "https://start.phototech.ru/",
   "proxy12": "https://phototech.oknosoft.ru:2300/",
@@ -48,7 +48,7 @@
     "metadata-redux": "2.0.34-beta.2",
     "react-highlight-words": "^0.20",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#69b69086d21cdd984a5dcbf4a9f3ffe0b4662d32",
+    "wb-core": "github:oknosoft/windowbuilder-core#289cfe7ee95af276ca6b030c01540f8bb158fbd8",
     "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
     "wb-forms": "github:oknosoft/windowbuilder-forms#2f745c2896ab1e3acca8f8721d913dfc4017dc61"
   },

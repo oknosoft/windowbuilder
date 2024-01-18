@@ -54,11 +54,22 @@ class Additions extends React.Component {
     this.doc && this.doc.unload();
   }
 
+  handlePre(attr) {
+    console.log(attr);
+  }
+
   // закидываем обрезки в заказ или продукции заказа
   handleCalck(attr) {
     const {props: {dialog}, doc} = this;
     const {doc: {calc_order: mgr}, CatClrs} = $p;
     const calc_order = mgr.get(dialog.ref);
+
+    // чистим возможные прежние распределения
+    calc_order.reset_specify();
+    if(attr?.pre) {
+      return Promise.resolve({close: true});
+    }
+
     const {production} = dialog.wnd ? dialog.wnd.elmnts.grids : {};
     // группируем данные во временном документе
     const tmp = doc._manager.create({}, false, true);
@@ -71,8 +82,6 @@ class Additions extends React.Component {
     tmp.cuts.group_by(['nom', 'characteristic'], ['len']);
     tmp.cutting.group_by(['nom', 'characteristic'], ['len']);
 
-    // чистим возможные прежние распределения
-    calc_order.reset_specify();
     // сводная спецификация заказа поставщику
     const full = calc_order.aggregate_specification();
     const aggregates = new Map();
@@ -101,7 +110,7 @@ class Additions extends React.Component {
                   // общая дельта
                   const adelta = (len / 1000) - frow.quantity;
                   // взвешенная дельта в единицах хранения
-                  const ddelta = adelta * ccrow.quantity / frow.quantity;
+                  const ddelta = (adelta * ccrow.quantity / frow.quantity) / (orow.quantity || 1);
 
                   // вклад в рублях deposit += ddelta * prow.price;
                   if(ddelta) {
@@ -116,7 +125,7 @@ class Additions extends React.Component {
                         clr,
                         dop: -3,
                         qty: 1,
-                        len: ddelta * 1000,
+                        len: ddelta,
                         totqty: ddelta,
                         totqty1: ddelta,
                         price,
