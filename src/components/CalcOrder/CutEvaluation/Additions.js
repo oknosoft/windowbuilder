@@ -140,7 +140,7 @@ class Additions extends React.Component {
           }
         }
         else {
-          const orow = calc_order.production.add({nom, characteristic, qty: 1});
+          const orow = calc_order.production.add({nom, characteristic, qty: 1, changed: 3});
           orow.quantity = ((len - crow.len) / 1000).round(3);
           production?.refresh_row(orow);
         }
