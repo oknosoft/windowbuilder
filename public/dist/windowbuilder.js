@@ -5963,12 +5963,21 @@ class ToolPen extends ToolElement {
 
       case elm_types.Линия:
         // рисуем линию
-        this.last_profile = new BaseLine({generatrix: this.path, proto: profile});
+        this.last_profile = new BaseLine({
+          generatrix: this.path,
+          layer: project.l_connective,
+          parent: project.l_connective,
+          proto: profile});
         break;
 
       case elm_types.Сечение:
         // рисуем линию
-        this.last_profile = new ProfileCut({generatrix: this.path, proto: profile});
+        this.last_profile = new ProfileCut({
+          generatrix: this.path,
+          layer: project.l_connective,
+          parent: project.l_connective,
+          proto: profile
+        });
         break;
 
       case elm_types.tearing:
