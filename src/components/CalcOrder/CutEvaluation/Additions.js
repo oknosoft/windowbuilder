@@ -73,7 +73,7 @@ class Additions extends React.Component {
     const {production} = dialog.wnd ? dialog.wnd.elmnts.grids : {};
     // группируем данные во временном документе
     const tmp = doc._manager.create({}, false, true);
-    doc.cuts.find_rows({record_kind: 'Расход'}, ({nom, characteristic, len}) => {
+    doc.cuts.find_rows({record_kind: 'Расход', _top: 10e6}, ({nom, characteristic, len}) => {
       tmp.cuts.add({nom, characteristic, len});
     });
     for(const {nom, characteristic, len} of doc.cutting) {
@@ -155,6 +155,7 @@ class Additions extends React.Component {
       calc_order._slave_recalc = false;
     }
     tmp.unload();
+    calc_order.production.sync_grid(dialog.wnd.elmnts.grids.production);
     return Promise.resolve({close: true});
   }
 
