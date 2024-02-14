@@ -7,7 +7,7 @@
     "url": "https://github.com/oknosoft/windowbuilder.git"
   },
   "engines": {
-    "node": ">=16.13",
+    "node": ">=18.16",
     "yarn": "^1.22"
   },
   "keywords": [
@@ -48,7 +48,7 @@
     "metadata-redux": "2.0.34-beta.2",
     "react-highlight-words": "^0.20",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#85031a6392a84a1dc42d45cbede4d1520bd4d0af",
+    "wb-core": "github:oknosoft/windowbuilder-core#a7494c4cfa39732f58b7155cfd7b45cc0f44fd54",
     "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
     "wb-forms": "github:oknosoft/windowbuilder-forms#2f745c2896ab1e3acca8f8721d913dfc4017dc61"
   },
@@ -119,7 +119,7 @@
     "workbox-webpack-plugin": "^6.4.1",
     "xlsx": "^0.18.5"
   },
-  "packageManager": "^yarn@1.22",
+  "packageManager": "yarn@1.22.21",
   "files": [
     "LICENSE",
     "LICENSE.ru.md"
