@@ -516,7 +516,12 @@ class ToolPen extends ToolElement {
 
       case elm_types.Водоотлив:
         // рисуем разрез
-        this.last_profile = new Sectional({generatrix: this.path, proto: profile});
+        this.last_profile = new Sectional({
+          generatrix: this.path,
+          layer: project.activeLayer,
+          parent: project.activeLayer?.children?.profiles,
+          proto: profile
+        });
         break;
 
       case elm_types.Линия:
