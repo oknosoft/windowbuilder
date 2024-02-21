@@ -48,7 +48,7 @@
     "metadata-redux": "2.0.34-beta.2",
     "react-highlight-words": "^0.20",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#fd357d23cc81c4d98511599e4587166bad5c0e7e",
+    "wb-core": "github:oknosoft/windowbuilder-core#bc1682753c74fa01824e807fe1c1f9194792957d",
     "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
     "wb-forms": "github:oknosoft/windowbuilder-forms#2f745c2896ab1e3acca8f8721d913dfc4017dc61"
   },
