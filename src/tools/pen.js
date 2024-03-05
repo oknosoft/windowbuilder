@@ -666,7 +666,7 @@ class ToolPen extends ToolElement {
       }
 
       this.path.removeSegments();
-      this.group && this.group.removeChildren();
+      this.group?.removeChildren?.();
 
       if(addl_hit.glass){
         this.draw_addl();
