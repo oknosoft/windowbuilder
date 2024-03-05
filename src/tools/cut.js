@@ -262,7 +262,12 @@ class ToolCut extends ToolElement{
     const {enm: {cnn_types, orientations}, cat} = $p;
     let cnn = rack.profile.cnn_point('e');
     const base = cnn.cnn;
-    cnn && cnn.profile && cnn.profile_point && cnn.profile.rays[cnn.profile_point].clear(true);
+    const pcnn = cnn?.profile?.rays?.[cnn.profile_point];
+    let _cnno;
+    if(pcnn) {
+      _cnno = rack.profile.elm === pcnn._cnno?.elm2 && pcnn._cnno;
+      pcnn.clear(true);
+    }
     cnn.clear(true);
     impost.profile.rays[impost.point].clear(true);
 
@@ -272,7 +277,15 @@ class ToolCut extends ToolElement{
     }
 
     const loc = generatrix.getNearestLocation(impost.profile[impost.point]);
-    const rack2 = new Editor.Profile({generatrix: generatrix.splitAt(loc), proto: rack.profile});
+    const rack2 = new Editor.Profile({
+      generatrix: generatrix.splitAt(loc),
+      layer: rack.profile.layer,
+      parent: rack.profile.parent,
+      proto: {
+        inset: rack.profile.inset,
+        clr: rack.profile.clr,
+      },
+    });
 
     // соединения конца нового профиля из разрыва
     cnn = rack2.cnn_point('e');
@@ -286,10 +299,15 @@ class ToolCut extends ToolElement{
           cnn.cnn = cnns[0];
         }
       }
-      cnn = cnn.profile.cnn_point(cnn.profile_point);
-      if(cnn.profile === rack2) {
-        cnn.cnn = null;
+      if(cnn.profile_point) {
+        cnn = cnn.profile.cnn_point(cnn.profile_point);
+        if(cnn.profile === rack2) {
+          cnn.cnn = null;
+        }
       }
+    }
+    if(_cnno) {
+      _cnno.elm2 = rack2.elm;
     }
     const atypes = [cnn_types.short, cnn_types.t];
     if(rack2.orientation === orientations.vert) {
