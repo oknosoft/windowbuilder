@@ -449,7 +449,8 @@ class ToolPen extends ToolElement {
           side: addl_hit.side
         });
       }
-      else if(addl_hit.glass && profile.elm_type == elm_types.glbead && !profile.inset.empty()){
+      // рисуем штапик
+      else if(addl_hit.glass && profile.elm_type.is('glbead') && !profile.inset.empty()){
         const {point, rib, ...other} = addl_hit;
         new ProfileGlBead({
           layer: addl_hit.profile.layer,
@@ -459,7 +460,7 @@ class ToolPen extends ToolElement {
         });
       }
       // рисуем соединительный профиль
-      else if(profile.elm_type == elm_types.linking && !profile.inset.empty()){
+      else if(profile.elm_type.is('linking') && !profile.inset.empty()){
 
         const connective = new ProfileConnective({
           generatrix: addl_hit.generatrix,
@@ -479,7 +480,8 @@ class ToolPen extends ToolElement {
           layer && layer.notify && layer.notify({profiles: [rama], points: []}, _scope.consts.move_points);
         });
       }
-      else if(profile.elm_type == elm_types.adjoining) {
+      // примыкание
+      else if(profile.elm_type.is('adjoining')) {
         const adjoining = new ProfileAdjoining({
           b: addl_hit.b,
           e: addl_hit.e,
