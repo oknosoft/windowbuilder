@@ -189,6 +189,9 @@ export default function ($p) {
     case 'CutEvaluation':
       imodule = import('../../components/CalcOrder/CutEvaluation');
       break;
+    case 'CutEvaluation2D':
+        imodule = import('../../components/CalcOrder/CutEvaluation/C2D');
+        break;
     case 'DeliveryAddr':
       imodule = import('../../components/DeliveryAddr');
       break;

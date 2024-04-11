@@ -16,7 +16,8 @@
   <item type="buttonSelect" id="bs_create_by_virtue" text="&lt;i class='fa fa-bolt fa-fw'&gt;&lt;/i&gt;" title="Создать на основании" openAll="true">
     <item type="button" id="planning_event" enabled="false" text="Событие"/>
     <item type="button" id="calc_order" text="Расчет"/>
-    <item type="button" id="cut_evaluation" text="Оценка раскроя"/>
+    <item type="button" id="cut_evaluation" text="Оценка линейного раскроя"/>
+    <item type="button" id="cut_evaluation_2d" text="Оценка раскроя стёкол"/>
     <item type="button" id="debit_cash_order" enabled="false" text="Наличная оплата"/>
     <item type="button" id="credit_card_order" enabled="false" text="Оплата картой"/>
     <item type="button" id="selling" enabled="false" text="Реализация товаров услуг"/>
