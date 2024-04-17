@@ -521,7 +521,7 @@ class ToolPen extends ToolElement {
         this.last_profile = new Sectional({
           generatrix: this.path,
           layer: project.activeLayer,
-          parent: project.activeLayer?.children?.profiles,
+          parent: project.activeLayer?.children?.sectionals,
           proto: profile
         });
         break;
