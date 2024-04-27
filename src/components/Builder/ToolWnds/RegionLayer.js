@@ -25,12 +25,12 @@ export function region_layer({Editor, ui: {dialogs}}) {
     const insets = new Set;
     const regions = new Set;
     const {profiles, info, children} = layer;
-    for(const {inset} of profiles) {
-      for(const row of inset.inserts) {
-        if(row.inset.region) {
-          insets.add(row.inset);
-          regions.add(row.inset.region);
-        }
+    const irows = project._dp.sys.inserts('region', 'rows', profiles.length ? profiles[0] : project);
+
+    for(const {nom} of irows) {
+      if(nom.region) {
+        insets.add(nom);
+        regions.add(nom.region);
       }
     }
     if(!insets.size) {
@@ -68,14 +68,14 @@ export function region_layer({Editor, ui: {dialogs}}) {
         // создаём слой ряда
         const rl = Editor.Contour.create({kind: 5, region, project, layer, parent});
         // создаём профили ряда
-        for(const {generatrix, inset} of profiles) {
-          for(const row of inset.inserts) {
-            if(row.inset.region === region) {
+        for(const {generatrix} of profiles) {
+          for(const inset of insets) {
+            if(inset.region == region) {
               new Editor.ProfileRegion({
                 layer: rl,
                 parent: rl.children.profiles,
                 generatrix: generatrix.clone({insert: false}),
-                proto: {inset: row.inset},
+                proto: {inset},
               });
               break;
             }
