@@ -234,15 +234,15 @@ class ToolPen extends ToolElement {
 
   // подключает окно редактора
   tool_wnd() {
-
+    const {dp, wsql, enm: {elm_types}, cat, utils} = $p;
     // создаём экземпляр обработки
-    this.profile = $p.dp.builder_pen.create();
+    this.profile = dp.builder_pen.create();
 
     const {project, profile} = this;
     this.sys = project._dp.sys;
 
     // восстанавливаем сохранённые параметры
-    $p.wsql.restore_options('editor', this.options);
+    wsql.restore_options('editor', this.options);
     this.options.wnd.on_close = this.on_close;
 
     ['elm_type', 'inset', 'bind_generatrix', 'bind_node', 'bind_sys'].forEach((prop) => {
@@ -252,17 +252,20 @@ class ToolPen extends ToolElement {
     });
 
     // если в текущем слое есть профили, выбираем импост
-    if((profile.elm_type.empty() || profile.elm_type == $p.enm.elm_types.Рама) &&
-      project.activeLayer instanceof Editor.Contour && project.activeLayer.profiles.length) {
-      profile.elm_type = $p.enm.elm_types.Импост;
+    if(project.activeLayer instanceof Editor.ContourRegion) {
+      profile.elm_type = elm_types.Ряд;
     }
-    else if((profile.elm_type.empty() || profile.elm_type == $p.enm.elm_types.Импост) &&
+    else if((profile.elm_type.empty() || profile.elm_type == elm_types.Рама) &&
+      project.activeLayer instanceof Editor.Contour && project.activeLayer.profiles.length) {
+      profile.elm_type = elm_types.Импост;
+    }
+    else if((profile.elm_type.empty() || profile.elm_type == elm_types.Импост) &&
       project.activeLayer instanceof Editor.Contour && !project.activeLayer.profiles.length) {
-      profile.elm_type = $p.enm.elm_types.Рама;
+      profile.elm_type = elm_types.Рама;
     }
 
     // вставку по умолчанию получаем эмулируя событие изменения типа элемента
-    $p.dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
+    dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
 
     // цвет по умолчанию
     profile.clr = project.clr;
@@ -271,7 +274,7 @@ class ToolPen extends ToolElement {
     profile._metadata('inset').choice_links = [{
       name: ['selection', 'ref'],
       path: [(o, f) => {
-          if($p.utils.is_data_obj(o)){
+          if(utils.is_data_obj(o)){
             return profile.rama_impost.indexOf(o) != -1;
           }
           else{
@@ -288,7 +291,7 @@ class ToolPen extends ToolElement {
     }];
 
     // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this, project);
+    cat.clrs.selection_exclude_service(profile._metadata('clr'), this, project);
 
     this.wnd = {
       wnd_options(opt){
@@ -562,14 +565,16 @@ class ToolPen extends ToolElement {
         this.path.remove();
         break;
 
-      default:
+      default: {
         // рисуем профиль
-        this.last_profile = new Profile({
+        const {activeLayer} = project;
+        this.last_profile = new activeLayer.ProfileConstructor({
           generatrix: this.path,
-          layer: project.activeLayer,
-          parent: project.activeLayer?.children?.profiles,
+          layer: activeLayer,
+          parent: activeLayer?.children?.profiles,
           proto: profile,
         });
+      }
       }
 
       this.path = null;
