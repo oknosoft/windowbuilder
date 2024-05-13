@@ -68,14 +68,17 @@ export function region_layer({Editor, ui: {dialogs}}) {
         // создаём слой ряда
         const rl = Editor.Contour.create({kind: 5, region, project, layer, parent});
         // создаём профили ряда
-        for(const {generatrix, inset: {inserts}} of profiles) {
-          let inset;
-          for(const curr of insets) {
-            const crow = inserts.find({inset: curr});
-            if(curr.region == region && (!inset || crow)) {
-              inset = curr;
-              if(crow?.by_default) {
-                break;
+        for(const elm of profiles) {
+          const {generatrix, inset: {inserts}} = elm;
+          let inset = project.default_inset({elm_type: 'region', pos: elm.pos, elm});
+          if(!inset || !inserts.find({inset})) {
+            for(const curr of insets) {
+              const crow = inserts.find({inset: curr});
+              if(curr.region == region && (!inset || crow)) {
+                inset = curr;
+                if(crow?.by_default) {
+                  break;
+                }
               }
             }
           }
