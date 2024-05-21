@@ -1283,7 +1283,7 @@ class Editor extends $p.EditorInvisible {
   }
 
   set_text() {
-    const {handlers, project} = this;
+    const {handlers, project, tb_top} = this;
     const {props, handleIfaceState} = handlers;
     if(project._calc_order_row){
       const {ox} = project;
@@ -1293,6 +1293,18 @@ class Editor extends $p.EditorInvisible {
         name: 'title',
         value: title,
       });
+
+      const btns = ['stamp', 'save_close', 'calck', 'open_spec'];
+      if(project.ox.calc_order.is_read_only) {
+        for(const btn of btns) {
+          tb_top.buttons[btn].classList.add('disabledbutton');
+        }
+      }
+      else {
+        for(const btn of btns) {
+          tb_top.buttons[btn].classList.remove('disabledbutton');
+        }
+      }
 
       // проверяем ортогональность
       if(project.getItems({class: $p.EditorInvisible.Profile}).some((p) => {

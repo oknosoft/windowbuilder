@@ -25,8 +25,8 @@
     "url": "https://github.com/oknosoft/windowbuilder/issues"
   },
   "homepage": "https://light.oknosoft.ru/",
-  "proxy": "https://develop.ecookna.ru/",
-  "proxy2": "https://start.ecookna.ru/",
+  "proxy1": "https://develop.ecookna.ru/",
+  "proxy": "https://start.ecookna.ru/",
   "proxy3": "https://start.phototech.ru/",
   "proxy4": "https://zakaz.kaleva.ru:2019/",
   "proxy5": "https://info.tmk-online.ru/",
