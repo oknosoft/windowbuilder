@@ -103,7 +103,7 @@ export default function ($p) {
       if(field === 'len' || field === 'height') {
         this[field] = value;
         if(this.len != 0 && this.height != 0) {
-          this.s = (this.height * this.len / 1000000).round(3);
+          this.s = (this.height * this.len / 10e6).round(4);
         }
       }
 

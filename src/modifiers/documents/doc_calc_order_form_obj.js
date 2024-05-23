@@ -437,11 +437,13 @@
         break;
 
       case 'btn_add_product':
-        buyers_order.open_component(wnd, o, handlers, 'AdditionsExt');
+        (o.is_new() ? o.save() : Promise.resolve())
+          .then(() => buyers_order.open_component(wnd, o, handlers, 'AdditionsExt'));
         break;
 
       case 'btn_additions':
-        buyers_order.open_component(wnd, o, handlers, 'Additions');
+        (o.is_new() ? o.save() : Promise.resolve())
+          .then(() => buyers_order.open_component(wnd, o, handlers, 'Additions'));
         break;
 
       case 'btn_jalousie':
