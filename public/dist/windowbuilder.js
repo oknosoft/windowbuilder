@@ -6924,6 +6924,7 @@ class ToolPen extends ToolElement {
         profile.elm_type = enm.elm_types.impost;
         dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
 
+        const {activeLayer: layer} = project;
         project.register_change(true, () => {
           const impost = new Editor.Profile({
             generatrix: new paper.Path({
@@ -6931,6 +6932,8 @@ class ToolPen extends ToolElement {
               segments,
             }),
             proto: profile,
+            layer,
+            parent: layer?.children?.profiles,
           });
           project.deselectAll();
           project.zoom_fit();
@@ -6979,6 +6982,7 @@ class ToolPen extends ToolElement {
         profile.elm_type = enm.elm_types.impost;
         dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
 
+        const {activeLayer: layer} = project;
         project.register_change(true, () => {
           const segments = sign > 0 ?
             [profiles[0].e.add([delta, 0]), profiles[0].b.add([delta, 0])] :
@@ -6989,6 +6993,8 @@ class ToolPen extends ToolElement {
               segments,
             }),
             proto: profile,
+            layer,
+            parent: layer?.children?.profiles,
           });
           project.deselectAll();
           project.zoom_fit();
