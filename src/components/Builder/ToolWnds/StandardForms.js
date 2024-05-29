@@ -22,7 +22,7 @@ const frms = {
   triangle3: 'Треугольник №3',
   semicircle1: 'Полукруг №1',
   semicircle2: 'Полукруг №2',
-  circle: 'Круг',
+  circle: 'Круг без импоста',
   circle1: 'Круг №1',
   circle2: 'Круг №2',
   circle3: 'Круг №3',
