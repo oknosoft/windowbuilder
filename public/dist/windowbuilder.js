@@ -136,8 +136,10 @@ class SchemeLayers {
   }
 
   load_layer(layer) {
-    this.tree.addItem(layer.key, layer.presentation(), layer.parent ? layer.parent.key : 0);
-    this.tree.checkItem(layer.key);
+    this.tree.addItem(layer.key, layer.presentation(), layer.layer?.key || 0);
+    if(!layer.hidden) {
+      this.tree.checkItem(layer.key);
+    }
     layer.contours.concat(layer.tearings).forEach((l) => this.load_layer(l));
   }
 
@@ -155,6 +157,7 @@ class SchemeLayers {
 
       const {builder_props} = project.ox;
 
+      /*
       // Вид эскиза
       tree.addItem('mode', '<div id="tree-mode" style="display: flex;">Режим эскиза </div>', 0);
       tree.disableCheckbox('mode');
@@ -170,6 +173,7 @@ class SchemeLayers {
       const cntMode = divMode.querySelector('.dhxcombo_dhx_terrace');
       cntMode.style.marginTop = '5px';
       cntMode.style.marginLeft = '6px';
+      */
 
       const props = {
         auto_lines: 'Авторазмерные линии',
@@ -313,6 +317,7 @@ class EditorAccordion {
         {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: msg.bld_new_stv, float: 'left'},
         {name: 'nested_layer', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить вложенное изделие', float: 'left'},
         {name: 'virtual_layer', text: '<i class="fa fa-file-excel-o fa-fw"></i>', tooltip: 'Вставить виртуальный слой', float: 'left'},
+        {name: 'region_layer', text: '<i class="fa fa-file-powerpoint-o fa-fw"></i>', tooltip: 'Добавить cлой ряда', float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_product, float: 'left'},
 
@@ -324,7 +329,7 @@ class EditorAccordion {
 
         case 'new_stv':
         case 'nested_layer':
-        case 'virtual_layer':
+        case 'virtual_layer': {
           const fillings = _editor.project.getItems({class: Editor.Filling, selected: true});
           if(fillings.length) {
             if(name === 'nested_layer') {
@@ -367,16 +372,22 @@ class EditorAccordion {
             });
           }
           break;
+        }
 
         case 'drop_layer':
           this.tree_layers.drop_layer();
           break;
 
         case 'new_layer':
-
           // создаём пустой новый слой
           Editor.Contour.create({project: _editor.project});
           break;
+
+        case 'region_layer': {
+          // слой ряда в текущем слое
+          ui.dialogs.region_layer(_editor.project);
+          break;
+        }
 
         case 'inserts_to_product':
           // дополнительные вставки в изделие
@@ -1272,7 +1283,7 @@ class Editor extends $p.EditorInvisible {
   }
 
   set_text() {
-    const {handlers, project} = this;
+    const {handlers, project, tb_top} = this;
     const {props, handleIfaceState} = handlers;
     if(project._calc_order_row){
       const {ox} = project;
@@ -1282,6 +1293,18 @@ class Editor extends $p.EditorInvisible {
         name: 'title',
         value: title,
       });
+
+      const btns = ['stamp', 'save_close', 'calck', 'open_spec'];
+      if(project.ox.calc_order.is_read_only) {
+        for(const btn of btns) {
+          tb_top.buttons[btn].classList.add('disabledbutton');
+        }
+      }
+      else {
+        for(const btn of btns) {
+          tb_top.buttons[btn].classList.remove('disabledbutton');
+        }
+      }
 
       // проверяем ортогональность
       if(project.getItems({class: $p.EditorInvisible.Profile}).some((p) => {
@@ -3982,7 +4005,12 @@ class ToolCut extends ToolElement{
     const {enm: {cnn_types, orientations}, cat} = $p;
     let cnn = rack.profile.cnn_point('e');
     const base = cnn.cnn;
-    cnn && cnn.profile && cnn.profile_point && cnn.profile.rays[cnn.profile_point].clear(true);
+    const pcnn = cnn?.profile?.rays?.[cnn.profile_point];
+    let _cnno;
+    if(pcnn) {
+      _cnno = rack.profile.elm === pcnn._cnno?.elm2 && pcnn._cnno;
+      pcnn.clear(true);
+    }
     cnn.clear(true);
     impost.profile.rays[impost.point].clear(true);
 
@@ -3992,7 +4020,15 @@ class ToolCut extends ToolElement{
     }
 
     const loc = generatrix.getNearestLocation(impost.profile[impost.point]);
-    const rack2 = new Editor.Profile({generatrix: generatrix.splitAt(loc), proto: rack.profile});
+    const rack2 = new Editor.Profile({
+      generatrix: generatrix.splitAt(loc),
+      layer: rack.profile.layer,
+      parent: rack.profile.parent,
+      proto: {
+        inset: rack.profile.inset,
+        clr: rack.profile.clr,
+      },
+    });
 
     // соединения конца нового профиля из разрыва
     cnn = rack2.cnn_point('e');
@@ -4006,10 +4042,15 @@ class ToolCut extends ToolElement{
           cnn.cnn = cnns[0];
         }
       }
-      cnn = cnn.profile.cnn_point(cnn.profile_point);
-      if(cnn.profile === rack2) {
-        cnn.cnn = null;
+      if(cnn.profile_point) {
+        cnn = cnn.profile.cnn_point(cnn.profile_point);
+        if(cnn.profile === rack2) {
+          cnn.cnn = null;
+        }
       }
+    }
+    if(_cnno) {
+      _cnno.elm2 = rack2.elm;
     }
     const atypes = [cnn_types.short, cnn_types.t];
     if(rack2.orientation === orientations.vert) {
@@ -5046,7 +5087,8 @@ class ToolLayImpost extends ToolElement {
               generatrix: new paper.Path({
                 segments: [p.b, p.e],
               }),
-              parent: layer,
+              layer,
+              parent: layer?.children?.profiles,
               proto: proto,
             }));
           }
@@ -5664,35 +5706,38 @@ class ToolPen extends ToolElement {
 
   // подключает окно редактора
   tool_wnd() {
-
+    const {dp, wsql, enm: {elm_types}, cat, utils} = $p;
     // создаём экземпляр обработки
-    this.profile = $p.dp.builder_pen.create();
+    this.profile = dp.builder_pen.create();
 
     const {project, profile} = this;
     this.sys = project._dp.sys;
 
     // восстанавливаем сохранённые параметры
-    $p.wsql.restore_options('editor', this.options);
+    wsql.restore_options('editor', this.options);
     this.options.wnd.on_close = this.on_close;
 
-    ['elm_type', 'inset', 'bind_generatrix', 'bind_node'].forEach((prop) => {
+    ['elm_type', 'inset', 'bind_generatrix', 'bind_node', 'bind_sys'].forEach((prop) => {
       if(prop == 'bind_generatrix' || prop == 'bind_node' || this.options.wnd[prop]) {
         profile[prop] = this.options.wnd[prop];
       }
     });
 
     // если в текущем слое есть профили, выбираем импост
-    if((profile.elm_type.empty() || profile.elm_type == $p.enm.elm_types.Рама) &&
-      project.activeLayer instanceof Editor.Contour && project.activeLayer.profiles.length) {
-      profile.elm_type = $p.enm.elm_types.Импост;
+    if(project.activeLayer instanceof Editor.ContourRegion) {
+      profile.elm_type = elm_types.Ряд;
     }
-    else if((profile.elm_type.empty() || profile.elm_type == $p.enm.elm_types.Импост) &&
+    else if((profile.elm_type.empty() || profile.elm_type == elm_types.Рама) &&
+      project.activeLayer instanceof Editor.Contour && project.activeLayer.profiles.length) {
+      profile.elm_type = elm_types.Импост;
+    }
+    else if((profile.elm_type.empty() || profile.elm_type == elm_types.Импост) &&
       project.activeLayer instanceof Editor.Contour && !project.activeLayer.profiles.length) {
-      profile.elm_type = $p.enm.elm_types.Рама;
+      profile.elm_type = elm_types.Рама;
     }
 
     // вставку по умолчанию получаем эмулируя событие изменения типа элемента
-    $p.dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
+    dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
 
     // цвет по умолчанию
     profile.clr = project.clr;
@@ -5701,7 +5746,7 @@ class ToolPen extends ToolElement {
     profile._metadata('inset').choice_links = [{
       name: ['selection', 'ref'],
       path: [(o, f) => {
-          if($p.utils.is_data_obj(o)){
+          if(utils.is_data_obj(o)){
             return profile.rama_impost.indexOf(o) != -1;
           }
           else{
@@ -5718,74 +5763,17 @@ class ToolPen extends ToolElement {
     }];
 
     // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this, project);
+    cat.clrs.selection_exclude_service(profile._metadata('clr'), this, project);
 
-    this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
-    this._grid = this.wnd.attachHeadFields({
-      obj: profile
-    });
+    this.wnd = {
+      wnd_options(opt){
+        opt.bind_generatrix = profile.bind_generatrix;
+        opt.bind_node = profile.bind_node;
+        opt.bind_sys = profile.bind_sys;
+      },
+      close() {
 
-    // панелька с командой типовых форм
-    this.wnd.tb_mode = new $p.iface.OTooolBar({
-      wrapper: this.wnd.cell,
-      width: '100%',
-      height: '28px',
-      class_name: '',
-      name: 'tb_mode',
-      buttons: [{
-        name: 'standard_form',
-        text: '<i class="fa fa-file-image-o fa-fw"></i>',
-        tooltip: 'Добавить типовую форму',
-        float: 'left',
-        sub: {
-          width: '120px',
-          height:'174px',
-          buttons: [
-            {name: 'square', img: 'square.png', float: 'left'},
-            {name: 'triangle1', img: 'triangle1.png', float: 'left'},
-            {name: 'triangle2', img: 'triangle2.png', float: 'left'},
-            {name: 'triangle3', img: 'triangle3.png', float: 'right'},
-            {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
-            {name: 'semicircle2', img: 'semicircle2.png', float: 'left'},
-            {name: 'arc1',      img: 'arc1.png', float: 'left'},
-            {name: 'circle',    img: 'circle.png', float: 'right'},
-            {name: 'circle1',   css: 'tb_circle1', float: 'left'},
-            {name: 'circle2',   css: 'tb_circle2', float: 'left'},
-            {name: 'circle3',   css: 'tb_circle3', float: 'left'},
-            {name: 'circle4',   css: 'tb_circle4', float: 'right'},
-            {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
-            {name: 'trapeze2',  img: 'trapeze2.png', float: 'left'},
-            {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
-            {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
-            {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-            {name: 'trapeze6',  img: 'trapeze6.png', float: 'left'},
-            {name: 'trapeze7',  img: 'trapeze7.png', float: 'left'},
-            {name: 'trapeze8',  img: 'trapeze8.png', float: 'right'},
-            {name: 'trapeze9',  img: 'trapeze9.png', float: 'left'},
-            {name: 'trapeze10', img: 'trapeze10.png', float: 'left'},
-          ]},
-      }],
-      image_path: '/imgs/',
-      onclick: (name) => this.standard_form(name)
-    });
-    this.wnd.tb_mode.cell.style.backgroundColor = '#f5f5f5';
-    this.wnd.cell.firstChild.style.marginTop = '22px';
-    const {standard_form} = this.wnd.tb_mode.buttons;
-    const {onmouseover} = standard_form;
-    const wnddiv = this.wnd.cell.parentElement;
-    standard_form.onmouseover = function() {
-      if(wnddiv.style.transform) {
-        wnddiv.style.transform = '';
       }
-      onmouseover.call(this);
-    };
-
-    // подмешиваем в метод wnd_options() установку доппараметров
-    const wnd_options = this.wnd.wnd_options;
-    this.wnd.wnd_options = (opt) => {
-      wnd_options.call(this.wnd, opt);
-      opt.bind_generatrix = profile.bind_generatrix;
-      opt.bind_node = profile.bind_node;
     };
   }
 
@@ -5936,12 +5924,18 @@ class ToolPen extends ToolElement {
           side: addl_hit.side
         });
       }
-      else if(addl_hit.glass && profile.elm_type == elm_types.glbead && !profile.inset.empty()){
+      // рисуем штапик
+      else if(addl_hit.glass && profile.elm_type.is('glbead') && !profile.inset.empty()){
         const {point, rib, ...other} = addl_hit;
-        new ProfileGlBead({parent: addl_hit.profile.layer, proto: profile, ...other});
+        new ProfileGlBead({
+          layer: addl_hit.profile.layer,
+          parent: addl_hit.profile.layer.children.profiles,
+          proto: profile,
+          ...other
+        });
       }
       // рисуем соединительный профиль
-      else if(profile.elm_type == elm_types.linking && !profile.inset.empty()){
+      else if(profile.elm_type.is('linking') && !profile.inset.empty()){
 
         const connective = new ProfileConnective({
           generatrix: addl_hit.generatrix,
@@ -5961,7 +5955,8 @@ class ToolPen extends ToolElement {
           layer && layer.notify && layer.notify({profiles: [rama], points: []}, _scope.consts.move_points);
         });
       }
-      else if(profile.elm_type == elm_types.adjoining) {
+      // примыкание
+      else if(profile.elm_type.is('adjoining')) {
         const adjoining = new ProfileAdjoining({
           b: addl_hit.b,
           e: addl_hit.e,
@@ -5998,24 +5993,39 @@ class ToolPen extends ToolElement {
 
       case elm_types.Водоотлив:
         // рисуем разрез
-        this.last_profile = new Sectional({generatrix: this.path, proto: profile});
+        this.last_profile = new Sectional({
+          generatrix: this.path,
+          layer: project.activeLayer,
+          parent: project.activeLayer?.children?.sectionals,
+          proto: profile
+        });
         break;
 
       case elm_types.Линия:
         // рисуем линию
-        this.last_profile = new BaseLine({generatrix: this.path, proto: profile});
+        this.last_profile = new BaseLine({
+          generatrix: this.path,
+          layer: project.l_connective,
+          parent: project.l_connective,
+          proto: profile});
         break;
 
       case elm_types.Сечение:
         // рисуем линию
-        this.last_profile = new ProfileCut({generatrix: this.path, proto: profile});
+        this.last_profile = new ProfileCut({
+          generatrix: this.path,
+          layer: project.l_connective,
+          parent: project.l_connective,
+          proto: profile
+        });
         break;
 
       case elm_types.tearing:
         // рисуем разрыв заполнения
         const tearing = Contour.create({
           kind: 4,
-          parent: this.hitItem.item.layer,
+          layer: this.hitItem.item.layer,
+          parent: this.hitItem.item.parent.children?.tearings,
           project,
         });
         tearing.initialize({
@@ -6027,9 +6037,16 @@ class ToolPen extends ToolElement {
         this.path.remove();
         break;
 
-      default:
+      default: {
         // рисуем профиль
-        this.last_profile = new Profile({generatrix: this.path, proto: profile});
+        const {activeLayer} = project;
+        this.last_profile = new activeLayer.ProfileConstructor({
+          generatrix: this.path,
+          layer: activeLayer,
+          parent: activeLayer?.children?.profiles,
+          proto: profile,
+        });
+      }
       }
 
       this.path = null;
@@ -6128,7 +6145,7 @@ class ToolPen extends ToolElement {
       }
 
       this.path.removeSegments();
-      this.group && this.group.removeChildren();
+      this.group?.removeChildren?.();
 
       if(addl_hit.glass){
         this.draw_addl();
@@ -6633,8 +6650,8 @@ class ToolPen extends ToolElement {
         size: [240, 240],
         insert: false,
       });
-      const intersections = this.hitItem.item.getIntersections(rect);
-      if(intersections.length) {
+      const intersections = this.hitItem.item?.getIntersections?.(rect);
+      if(intersections?.length) {
         this._scope.canvas_cursor('cursor-pen-freehand');
         this.mode = null;
         this.path && this.path.remove();
@@ -6725,17 +6742,21 @@ class ToolPen extends ToolElement {
   add_sequence(points) {
     const profiles = [];
     const {profile, project} = this;
+    const {activeLayer: layer} = project;
     points.forEach((segments) => {
       profiles.push(new Editor.Profile({
         generatrix: new paper.Path({
           strokeColor: 'black',
           segments: segments
-        }), proto: profile
+        }),
+        layer,
+        parent: layer?.children?.profiles,
+        proto: profile
       }));
     });
-    profile.bind_sys && project.activeLayer.on_sys_changed(true);
+    profile.bind_sys && layer?.on_sys_changed(true);
     project.register_change(true, () => {
-      project.activeLayer.on_sys_changed();
+      layer?.on_sys_changed();
     });
     return profiles;
   }
@@ -6903,6 +6924,7 @@ class ToolPen extends ToolElement {
         profile.elm_type = enm.elm_types.impost;
         dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
 
+        const {activeLayer: layer} = project;
         project.register_change(true, () => {
           const impost = new Editor.Profile({
             generatrix: new paper.Path({
@@ -6910,6 +6932,8 @@ class ToolPen extends ToolElement {
               segments,
             }),
             proto: profile,
+            layer,
+            parent: layer?.children?.profiles,
           });
           project.deselectAll();
           project.zoom_fit();
@@ -6958,6 +6982,7 @@ class ToolPen extends ToolElement {
         profile.elm_type = enm.elm_types.impost;
         dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
 
+        const {activeLayer: layer} = project;
         project.register_change(true, () => {
           const segments = sign > 0 ?
             [profiles[0].e.add([delta, 0]), profiles[0].b.add([delta, 0])] :
@@ -6968,6 +6993,8 @@ class ToolPen extends ToolElement {
               segments,
             }),
             proto: profile,
+            layer,
+            parent: layer?.children?.profiles,
           });
           project.deselectAll();
           project.zoom_fit();
@@ -7296,13 +7323,19 @@ class ToolSelectNode extends ToolElement {
         return;
       }
 
-      let item = hitItem.item.parent;
+      let item = hitItem.item._owner || hitItem.item.parent;
       if(!(item instanceof Editor.BuilderElement) && item.parent) {
         item = item.parent;
       }
       if (modifiers.space) {
         if(item instanceof Editor.Filling) {
           item = item.nearest(point);
+          if(project.selected_elements.includes(item)) {
+            const nearest = item?.nearest?.();
+            if(nearest) {
+              item = nearest;
+            }
+          }
         }
         else {
           const nearest = item?.nearest?.();

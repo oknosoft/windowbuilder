@@ -2,11 +2,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
+import PropField from 'metadata-react/DataField/PropField';
+import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
+import FieldEndConnection from './FieldEndConnection';
 import PairToolbar from './Toolbar/PairToolbar';
 import ProfileToolbar from './Toolbar/ProfileToolbar';
-import PropField from 'metadata-react/DataField/PropField';
-import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
-import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
 
 function nearest(elm1, elm2, ProfileVirtual) {
   const nelm = elm1.nearest();

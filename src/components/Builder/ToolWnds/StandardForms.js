@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import ImageList from '@material-ui/core/ImageList';
 import ImageListItem from '@material-ui/core/ImageListItem';
-import Divider from '@material-ui/core/Divider';
 import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles((theme) => ({
@@ -23,7 +22,11 @@ const frms = {
   triangle3: 'Треугольник №3',
   semicircle1: 'Полукруг №1',
   semicircle2: 'Полукруг №2',
-  circle: 'Круг',
+  circle: 'Круг без импоста',
+  circle1: 'Круг №1',
+  circle2: 'Круг №2',
+  circle3: 'Круг №3',
+  circle4: 'Круг №4',
   arc1: 'Арка',
   trapeze1: 'Трапеция №1',
   trapeze2: 'Трапеция №2',
@@ -41,10 +44,12 @@ export default function StandardForms({editor, layer, elm_type}) {
   const classes = useStyles();
 
   const onClick = ({target}) => {
-    $p.ui.dialogs.confirm({
-      title: 'Типовая форма',
-      text: `Добавить форму ${target.title} в слой ${layer.presentation()}`,
-    })
+    let text = `Добавить форму ${target.title} в слой ${layer.presentation()}`;
+    if(layer.profiles.length) {
+      text = `В слое ${layer.presentation()} уже есть профили\n
+Уверены, что хотите добавить форму ${target.title} в этот слой?`;
+    }
+    $p.ui.dialogs.confirm({title: 'Типовая форма', text})
       .then(() => {
         editor.tool?.standard_form(target.alt);
       })

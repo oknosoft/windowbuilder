@@ -96,13 +96,19 @@ class ToolSelectNode extends ToolElement {
         return;
       }
 
-      let item = hitItem.item.parent;
+      let item = hitItem.item._owner || hitItem.item.parent;
       if(!(item instanceof Editor.BuilderElement) && item.parent) {
         item = item.parent;
       }
       if (modifiers.space) {
         if(item instanceof Editor.Filling) {
           item = item.nearest(point);
+          if(project.selected_elements.includes(item)) {
+            const nearest = item?.nearest?.();
+            if(nearest) {
+              item = nearest;
+            }
+          }
         }
         else {
           const nearest = item?.nearest?.();

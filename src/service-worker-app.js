@@ -11,8 +11,8 @@ const dkey = new Date().toJSON().substring(0, 10);
 export default function () {
   skipWaiting();
 
-  const revision = '20231101';
-  const persistent = '20230001';
+  const revision = '20240528';
+  const persistent = '20240000';
 
   precacheAndRoute([
     {url: '/dist/dhtmlx.min.js', revision: persistent },

@@ -40,7 +40,9 @@ function addImpost(elm, orienattion) {
 
   new $p.EditorInvisible.Profile({
     generatrix: path,
-    proto: {inset, clr: top.profile.clr, layer}
+    layer,
+    parent: layer?.children?.profiles,
+    proto: {inset, clr: top.profile.clr}
   });
 }
 

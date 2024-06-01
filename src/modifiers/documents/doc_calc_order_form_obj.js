@@ -437,11 +437,13 @@
         break;
 
       case 'btn_add_product':
-        buyers_order.open_component(wnd, o, handlers, 'AdditionsExt');
+        (o.is_new() ? o.save() : Promise.resolve())
+          .then(() => buyers_order.open_component(wnd, o, handlers, 'AdditionsExt'));
         break;
 
       case 'btn_additions':
-        buyers_order.open_component(wnd, o, handlers, 'Additions');
+        (o.is_new() ? o.save() : Promise.resolve())
+          .then(() => buyers_order.open_component(wnd, o, handlers, 'Additions'));
         break;
 
       case 'btn_jalousie':
@@ -449,7 +451,8 @@
         break;
 
       case 'cut_evaluation':
-        cut_evaluation();
+      case 'cut_evaluation_2d':
+        cut_evaluation(btn_id === 'cut_evaluation_2d');
         break;
 
       case 'btn_share':
@@ -1098,8 +1101,8 @@
 
     }
 
-    function cut_evaluation() {
-      $p.dp.buyers_order.open_component(wnd, {ref: o.ref, _mgr}, handlers, 'CutEvaluation');
+    function cut_evaluation(c2d) {
+      $p.dp.buyers_order.open_component(wnd, {ref: o.ref, _mgr}, handlers, c2d ? 'CutEvaluation2D' : 'CutEvaluation');
     }
 
     function open_jalousie(create_new) {

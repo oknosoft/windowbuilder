@@ -101,7 +101,8 @@ function settings(prm = {}) {
     },
   });
 
-};
+}
+
 module.exports = settings;
 
 // корректирует параметры до инициализации
@@ -124,20 +125,23 @@ settings.prm = (settings) =>{
 // корректируем параметры после инициализации
 settings.cnn = ({job_prm, wsql}) => {
   const {predefined} = _dynamic_patch_;
-  predefined.zone && wsql.get_user_param('zone') != predefined.zone && wsql.set_user_param('zone', predefined.zone);
-  'log_level,splash,keys'.split(',').forEach((name) => {
-    if(predefined.hasOwnProperty(name)) {
+  for(const name in predefined) {
+    const v = predefined[name];
+    if(name === 'zone') {
+      wsql.get_user_param('zone') != v && wsql.set_user_param('zone', predefined.zone);
+    }
+    else if(name === 'use_ram') {
+      wsql.set_user_param('use_ram', false);
+      job_prm.use_ram = false;
+    }
+    else {
       if(typeof job_prm[name] === 'object') {
-        Object.assign(job_prm[name], predefined[name]);
+        Object.assign(job_prm[name], v);
       }
       else {
-        job_prm[name] = predefined[name];
+        job_prm[name] = v;
       }
     }
-  });
 
-  if(job_prm.use_ram) {
-    wsql.set_user_param('use_ram', false);
-    job_prm.use_ram = false;
   }
 };
