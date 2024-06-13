@@ -4020,7 +4020,7 @@ class ToolCut extends ToolElement{
     }
 
     const loc = generatrix.getNearestLocation(impost.profile[impost.point]);
-    const rack2 = new Editor.Profile({
+    const rack2 = new rack.profile.layer.ProfileConstructor({
       generatrix: generatrix.splitAt(loc),
       layer: rack.profile.layer,
       parent: rack.profile.parent,
@@ -4092,6 +4092,9 @@ class ToolCut extends ToolElement{
       }
     }
 
+    rack.profile._attr._corns.length = 0;
+    rack2._attr._corns.length = 0;
+    impost.profile._attr._corns.length = 0;
     this.deselect();
   }
 
@@ -4172,6 +4175,9 @@ class ToolCut extends ToolElement{
         }
       }
     }
+
+    rack1.profile._attr._corns.length = 0;
+    impost.profile._attr._corns.length = 0;
 
     this.deselect();
   }
