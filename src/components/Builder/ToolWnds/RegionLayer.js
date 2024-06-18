@@ -24,8 +24,8 @@ export function region_layer({Editor, ui: {dialogs}}) {
     }
     const insets = new Set;
     const regions = new Set;
-    const {profiles, info, children} = layer;
-    const irows = project._dp.sys.inserts('region', 'rows', profiles.length ? profiles[0] : project);
+    const {profiles, info, children, sys} = layer;
+    const irows = sys.inserts('region', 'rows', profiles.length ? profiles[0] : project);
 
     for(const {nom} of irows) {
       if(nom.region) {
@@ -36,7 +36,7 @@ export function region_layer({Editor, ui: {dialogs}}) {
     if(!insets.size) {
       return dialogs.alert({
         title: `Ряд для ${info}`,
-        text: 'Вставки профилей текущего слоя не содержат рекомендуемых вставок рядов',
+        text: `В системе '${sys.name}' не описаны вставки рядов`,
         timeout: 10000,
       });
     }
