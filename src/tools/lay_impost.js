@@ -779,7 +779,7 @@ class ToolLayImpost extends ToolElement {
 
         if (profile.elm_type == $p.enm.elm_types.layout) {
           nprofiles.push(new Editor.Onlay({
-            generatrix: new paper.Path({segments: [p.b, p.e], , insert: false}),
+            generatrix: new paper.Path({segments: [p.b, p.e], insert: false}),
             parent: this.hitItem,
             region: profile.region,
             proto: proto,
