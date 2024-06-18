@@ -429,7 +429,7 @@ class ToolPen extends ToolElement {
       EditorInvisible: {Sectional, ProfileAddl, ProfileGlBead, ProfileConnective, Onlay, BaseLine, ProfileCut,
         ProfileAdjoining, Profile, ProfileItem, Filling, Contour}} = $p;
 
-    group && group.removeChildren();
+    group?.removeChildren();
 
     _scope.canvas_cursor('cursor-pen-freehand');
 
@@ -508,7 +508,11 @@ class ToolPen extends ToolElement {
         const pt2 = this.path.getPointAt(length * 0.9);
         project.activeLayer.glasses(false, true).some((glass) => {
           if(glass.contains(pt1) && glass.contains(pt2)){
-            new Onlay({generatrix: this.path, proto: profile, parent: glass});
+            new Onlay({
+              generatrix: this.path,
+              proto: profile,
+              parent: glass
+            });
             this.path = null;
             return true;
           }
@@ -926,16 +930,21 @@ class ToolPen extends ToolElement {
 
   draw_connective() {
 
-    const {rays, b, e} = this.addl_hit.profile;
+    const {addl_hit} = this;
+    if(!addl_hit?.profile) {
+      return;
+    }
+
+    const {rays, b, e} = addl_hit.profile;
 
     let sub_path = rays.outer.get_subpath(b, e);
 
     // получаем generatrix
-    if(!this.addl_hit.generatrix){
-      this.addl_hit.generatrix = new paper.Path({insert: false});
+    if(!addl_hit.generatrix){
+      addl_hit.generatrix = new paper.Path({insert: false});
     }
-    this.addl_hit.generatrix.removeSegments();
-    this.addl_hit.generatrix.addSegments(sub_path.segments);
+    addl_hit.generatrix.removeSegments();
+    addl_hit.generatrix.addSegments(sub_path.segments);
 
     // рисуем внутреннюю часть прототипа пути доборного профиля
     this.path.addSegments(sub_path.equidistant(this.profile.inset.nom().width / 2 || 10).segments);

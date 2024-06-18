@@ -979,7 +979,6 @@ class Editor extends $p.EditorInvisible {
         {name: 'sep_3', text: '', float: 'left'},
         {name: 'open_spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
         {name: 'dxf', text: 'DXF', tooltip: 'Экспорт в DXF', float: 'left', width: '30px'},
-        {name: 'd3d', text: '<i class="fa fa-video-camera"></i>', tooltip: 'Открыть 3D', float: 'left', width: '30px'},
         {name: 'fragment', text: 'F', tooltip: 'Фрагмент', float: 'left', width: '20px'},
         {name: 'mirror', text: '<i class="fa fa-exchange fa-fw"></i>', tooltip: 'Отразить', float: 'left', width: '20px'},
 
@@ -1035,7 +1034,6 @@ class Editor extends $p.EditorInvisible {
           break;
 
         case 'dxf':
-        case 'd3d':
         case 'copy':
         case 'paste':
         case 'paste_prop':
@@ -1095,8 +1093,6 @@ class Editor extends $p.EditorInvisible {
         }
       }
     });
-
-    this.tb_top.buttons.d3d.classList.add('disabledbutton');
 
     this._layout.base.style.backgroundColor = '#f5f5f5';
     this.tb_top.cell.style.background = '#fff';
@@ -5046,9 +5042,7 @@ class ToolLayImpost extends ToolElement {
 
         if (profile.elm_type == $p.enm.elm_types.layout) {
           nprofiles.push(new Editor.Onlay({
-            generatrix: new paper.Path({
-              segments: [p.b, p.e],
-            }),
+            generatrix: new paper.Path({segments: [p.b, p.e], , insert: false}),
             parent: this.hitItem,
             region: profile.region,
             proto: proto,
@@ -5090,9 +5084,7 @@ class ToolLayImpost extends ToolElement {
           // создаём новые профили
           if (p.e.getDistance(p.b) > proto.inset.nom().width) {
             nprofiles.push(new Editor.Profile({
-              generatrix: new paper.Path({
-                segments: [p.b, p.e],
-              }),
+              generatrix: new paper.Path({segments: [p.b, p.e], insert: false}),
               layer,
               parent: layer?.children?.profiles,
               proto: proto,
@@ -5907,7 +5899,7 @@ class ToolPen extends ToolElement {
       EditorInvisible: {Sectional, ProfileAddl, ProfileGlBead, ProfileConnective, Onlay, BaseLine, ProfileCut,
         ProfileAdjoining, Profile, ProfileItem, Filling, Contour}} = $p;
 
-    group && group.removeChildren();
+    group?.removeChildren();
 
     _scope.canvas_cursor('cursor-pen-freehand');
 
@@ -5986,7 +5978,11 @@ class ToolPen extends ToolElement {
         const pt2 = this.path.getPointAt(length * 0.9);
         project.activeLayer.glasses(false, true).some((glass) => {
           if(glass.contains(pt1) && glass.contains(pt2)){
-            new Onlay({generatrix: this.path, proto: profile, parent: glass});
+            new Onlay({
+              generatrix: this.path,
+              proto: profile,
+              parent: glass
+            });
             this.path = null;
             return true;
           }
@@ -6404,16 +6400,21 @@ class ToolPen extends ToolElement {
 
   draw_connective() {
 
-    const {rays, b, e} = this.addl_hit.profile;
+    const {addl_hit} = this;
+    if(!addl_hit?.profile) {
+      return;
+    }
+
+    const {rays, b, e} = addl_hit.profile;
 
     let sub_path = rays.outer.get_subpath(b, e);
 
     // получаем generatrix
-    if(!this.addl_hit.generatrix){
-      this.addl_hit.generatrix = new paper.Path({insert: false});
+    if(!addl_hit.generatrix){
+      addl_hit.generatrix = new paper.Path({insert: false});
     }
-    this.addl_hit.generatrix.removeSegments();
-    this.addl_hit.generatrix.addSegments(sub_path.segments);
+    addl_hit.generatrix.removeSegments();
+    addl_hit.generatrix.addSegments(sub_path.segments);
 
     // рисуем внутреннюю часть прототипа пути доборного профиля
     this.path.addSegments(sub_path.equidistant(this.profile.inset.nom().width / 2 || 10).segments);

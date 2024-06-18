@@ -779,9 +779,7 @@ class ToolLayImpost extends ToolElement {
 
         if (profile.elm_type == $p.enm.elm_types.layout) {
           nprofiles.push(new Editor.Onlay({
-            generatrix: new paper.Path({
-              segments: [p.b, p.e],
-            }),
+            generatrix: new paper.Path({segments: [p.b, p.e], , insert: false}),
             parent: this.hitItem,
             region: profile.region,
             proto: proto,
@@ -823,9 +821,7 @@ class ToolLayImpost extends ToolElement {
           // создаём новые профили
           if (p.e.getDistance(p.b) > proto.inset.nom().width) {
             nprofiles.push(new Editor.Profile({
-              generatrix: new paper.Path({
-                segments: [p.b, p.e],
-              }),
+              generatrix: new paper.Path({segments: [p.b, p.e], insert: false}),
               layer,
               parent: layer?.children?.profiles,
               proto: proto,

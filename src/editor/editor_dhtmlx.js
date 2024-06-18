@@ -213,7 +213,6 @@ class Editor extends $p.EditorInvisible {
         {name: 'sep_3', text: '', float: 'left'},
         {name: 'open_spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
         {name: 'dxf', text: 'DXF', tooltip: 'Экспорт в DXF', float: 'left', width: '30px'},
-        {name: 'd3d', text: '<i class="fa fa-video-camera"></i>', tooltip: 'Открыть 3D', float: 'left', width: '30px'},
         {name: 'fragment', text: 'F', tooltip: 'Фрагмент', float: 'left', width: '20px'},
         {name: 'mirror', text: '<i class="fa fa-exchange fa-fw"></i>', tooltip: 'Отразить', float: 'left', width: '20px'},
 
@@ -269,7 +268,6 @@ class Editor extends $p.EditorInvisible {
           break;
 
         case 'dxf':
-        case 'd3d':
         case 'copy':
         case 'paste':
         case 'paste_prop':
@@ -329,8 +327,6 @@ class Editor extends $p.EditorInvisible {
         }
       }
     });
-
-    this.tb_top.buttons.d3d.classList.add('disabledbutton');
 
     this._layout.base.style.backgroundColor = '#f5f5f5';
     this.tb_top.cell.style.background = '#fff';
