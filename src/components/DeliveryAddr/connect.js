@@ -354,7 +354,7 @@ function mapStateToProps(state, props) {
 
     handleCancel() {
       props.handlers.handleIfaceState({
-        component: 'DataObjPage',
+        component: props.dialog?.cmd?.area || 'DataObjPage',
         name: 'dialog',
         value: null,
       });

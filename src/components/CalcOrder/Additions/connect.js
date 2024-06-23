@@ -15,12 +15,11 @@ const {ItemData} = $p.cat.inserts;
 
 // заполняет компонент данными
 export function fill_data(ref, items) {
-
   if(!items) {
     items = this.items = $p.enm.inserts_types.additions_groups;
   }
   const dp = this.dp = $p.dp.buyers_order.create();
-  dp.calc_order = $p.doc.calc_order.by_ref[ref];
+  dp.calc_order = ref;
   const components = this.components = new Map();
   items.forEach(v => components.set(v, new ItemData(v, AdditionsItem)));
 
@@ -210,7 +209,7 @@ function mapStateToProps(state, props) {
     },
     handleCancel() {
       props.handlers.handleIfaceState({
-        component: 'DataObjPage',
+        component: props.dialog?.cmd?.area || 'DataObjPage',
         name: 'dialog',
         value: null,
       });

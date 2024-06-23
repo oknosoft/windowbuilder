@@ -243,7 +243,7 @@ class SchemeLayers {
 
 class EditorAccordion {
 
-  constructor(_editor, cell_acc) {
+  constructor(_editor, cell_acc, pwnd, handlers) {
 
     this._cell = cell_acc;
     const tabs = [
@@ -311,6 +311,7 @@ class EditorAccordion {
         {name: 'region_layer', text: '<i class="fa fa-file-powerpoint-o fa-fw"></i>', tooltip: 'Добавить cлой ряда', float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_product, float: 'left'},
+        {name: 'additions', text: '<i class="fa fa-cart-plus fa-fw"></i>', tooltip: 'Аксессуары изделия', float: 'left'},
 
         {name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'},
 
@@ -377,6 +378,25 @@ class EditorAccordion {
         case 'region_layer': {
           // слой ряда в текущем слое
           ui.dialogs.region_layer(_editor.project);
+          break;
+        }
+
+
+        case 'additions': {
+          // аксессуары изделия
+          const {ox} = _editor.project;
+          const o = ox.calc_order;
+          (o.is_new() ? o.save() : Promise.resolve())
+            .then(() => {
+
+              const tmp = {
+                ref: ox.ref,
+                _mgr: ox._manager,
+                cmd: {calc_order: o, area: 'Builder'}
+              };
+              $p.dp.buyers_order.open_component(pwnd, tmp, handlers, 'Additions', tmp.cmd.area);
+              //$p.dp.buyers_order.open_component(pwnd, tmp, handlers, 'ObjHistory', tmp.cmd.area);
+            });
           break;
         }
 

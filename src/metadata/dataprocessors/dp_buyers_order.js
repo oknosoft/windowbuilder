@@ -202,7 +202,8 @@ export default function ($p) {
       imodule = import('../../components/CalcOrder/List/FromClipboard');
       break;
     }
-    imodule.then((module) => handlers.handleIfaceState({
+    imodule.then((module) => {
+      handlers.handleIfaceState({
         component: area,
         name: 'dialog',
         value: {
@@ -212,7 +213,8 @@ export default function ($p) {
           wnd: wnd,
           Component: module.default
         },
-      }));
+      })
+    });
   };
 
 }

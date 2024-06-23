@@ -138,7 +138,7 @@ class Editor extends $p.EditorInvisible {
      * @type EditorAccordion
      * @private
      */
-    this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
+    this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"), pwnd, handlers);
 
     /**
      * ### Панель выбора инструментов рисовалки
