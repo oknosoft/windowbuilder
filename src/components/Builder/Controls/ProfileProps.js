@@ -45,7 +45,15 @@ export default function ProfileProps(props) {
       <FieldEndConnection elm1={elm} node="e" _fld="cnn2" onClick={select_e}/>
       {elm instanceof Onlay ? <PropField _obj={elm} _fld="region" _meta={elm._metadata.fields.region} ctrl_type="oselect" /> : null}
       {eprops.map((param, ind) => {
-        return <LinkedProp key={`ap-${ind}`} _obj={elm} _fld={param.ref} param={param} cnstr={-elm.elm} fields={fields} />;
+        return <LinkedProp
+          key={`ap-${ind}`}
+          _obj={elm}
+          _fld={param.ref}
+          param={param}
+          cnstr={-elm.elm}
+          inset={elm.inset}
+          fields={fields}
+        />;
       })}
       <Coordinates elm={elm} fields={fields} select_b={select_b} select_e={select_e} />
       <ElmInsets elm={elm}/>
