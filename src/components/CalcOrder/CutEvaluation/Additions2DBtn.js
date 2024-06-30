@@ -1,6 +1,9 @@
 import React from 'react';
 import IconButton from '@material-ui/core/IconButton';
 import ViewQuiltIcon from '@material-ui/icons/ViewQuilt';
+import LayersClearIcon from '@material-ui/icons/LayersClear';
+import LayersIcon from '@material-ui/icons/Layers';
+import {credit} from './Additions2DCutsOut';
 
 const {adapters: {pouch}, ui: {dialogs}} = $p;
 
@@ -48,7 +51,17 @@ function setSticks(obj, data) {
     docRow.dop = {svg: row.svg};
   }
   for(const row of data.scrapsOut) {
-
+    const proto = obj.cuts.find({stick: row.id});
+    const docRow = obj.cuts.add({
+      record_kind: credit,
+      stick: row.id,
+      len: row.length,
+      width: row.height,
+      x: row.x,
+      y: row.y,
+    });
+    docRow.nom = proto.nom;
+    docRow.characteristic = proto.characteristic;
   }
   for(const row of data.products) {
     const docRow = obj.cutting.get(row.id-1);
@@ -63,8 +76,27 @@ function setSticks(obj, data) {
 }
 
 export default function Additions2DBtn({obj, setBackdrop}) {
-  return <IconButton
-    title="Выполнить раскрой стекла"
-    onClick={run2D(obj, setBackdrop)}
-  ><ViewQuiltIcon/></IconButton>;
+  return <>
+    <IconButton
+      title="Выполнить раскрой стекла"
+      onClick={run2D(obj, setBackdrop)}
+    ><ViewQuiltIcon/></IconButton>
+    <IconButton
+      title="Добавить типовые заготовки"
+      onClick={() => {
+        setBackdrop(true);
+        obj.fill_cuts();
+        Promise.resolve().then(setBackdrop);
+      }}
+    ><LayersIcon/></IconButton>
+    <IconButton
+      title="Удалить данные оптимизации раскроя"
+      onClick={() => {
+        setBackdrop(true);
+        obj.reset_sticks();
+        Promise.resolve().then(setBackdrop);
+      }}
+    ><LayersClearIcon/></IconButton>
+
+  </>;
 }
