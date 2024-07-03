@@ -64,9 +64,14 @@ class Additions extends React.Component {
     const {doc: {calc_order: mgr}, CatClrs} = $p;
     const calc_order = mgr.get(dialog.ref);
 
+    // attr.pre - удалить обрезь
+    // attr.calck - добавить в изделия
+    // !attr.calck - добавить в заказ
+
     // чистим возможные прежние распределения
-    calc_order.reset_specify();
+    calc_order.reset_specify('1D');
     if(attr?.pre) {
+      calc_order.production.sync_grid(dialog.wnd.elmnts.grids.production);
       return Promise.resolve({close: true});
     }
 

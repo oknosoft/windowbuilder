@@ -24,16 +24,109 @@ class Additions2D extends React.Component {
     this.doc && this.doc.unload();
   }
 
+  // закидываем обрезки в заказ или продукции заказа
   handleCalck(attr) {
-    if(attr.pre) { // удалить обрезь
+    const {props: {dialog}, doc} = this;
+    const {doc: {calc_order: mgr}, CatClrs} = $p;
+    const calc_order = mgr.get(dialog.ref);
 
-    }
-    else if (attr.calck) { // добавить в изделия
+    // attr.pre - удалить обрезь
+    // attr.calck - добавить в изделия
+    // !attr.calck - добавить в заказ
 
+    // чистим возможные прежние распределения
+    calc_order.reset_specify('2D');
+    if(attr?.pre) {
+      calc_order.production.sync_grid(dialog.wnd.elmnts.grids.production);
+      return Promise.resolve({close: true});
     }
-    else {  // добавить в заказ
 
+    const {production} = dialog.wnd ? dialog.wnd.elmnts.grids : {};
+    // группируем данные во временном документе
+    const tmp = doc._manager.create({}, false, true);
+    doc.cuts.find_rows({record_kind: 'Приход', _top: 1e6}, ({nom, characteristic, len, width}) => {
+      tmp.cuts.add({nom, characteristic, len: len * width / 1e6});
+    });
+    for(const {nom, characteristic, len, width} of doc.cutting) {
+      tmp.cutting.add({nom, characteristic, len: len * width / 1e6});
     }
+    tmp.cuts.group_by(['nom', 'characteristic'], ['len']);
+    tmp.cutting.group_by(['nom', 'characteristic'], ['len']);
+
+    // сводная спецификация заказа поставщику
+    const full = calc_order.aggregate_specification();
+    const aggregates = new Map();
+
+    for(const {nom, characteristic, len, width} of tmp.cuts) {
+      const crow = tmp.cutting.find({nom, characteristic});
+      if(crow && len > crow.len) {
+        if(attr?.calck) {
+          // строка потребности всего заказа
+          const frow = characteristic instanceof CatClrs ?
+            full.specification.find({nom, clr: characteristic}) :
+            full.specification.find({nom, nom_characteristic: characteristic});
+          if(frow) {
+            for(const orow of calc_order.production) {
+              if(orow.characteristic.calc_order === calc_order) {
+                // строка потребности текущего изделия
+                if(!aggregates.has(orow)) {
+                  aggregates.set(orow, calc_order.aggregate_specification(orow));
+                }
+                const curr = aggregates.get(orow);
+                // строка потребности текущей продукции
+                const ccrow = characteristic instanceof CatClrs ?
+                  curr.specification.find({nom, clr: characteristic}) :
+                  curr.specification.find({nom, nom_characteristic: characteristic});
+                if(ccrow) {
+                  // общая дельта
+                  const adelta = len - frow.quantity;
+                  // взвешенная дельта в единицах хранения
+                  const ddelta = (adelta * ccrow.quantity / frow.quantity) / (orow.quantity || 1);
+
+                  // вклад в рублях deposit += ddelta * prow.price;
+                  if(ddelta) {
+                    const erow = characteristic instanceof CatClrs ?
+                      orow.characteristic.specification.find({nom, clr: characteristic}) :
+                      orow.characteristic.specification.find({nom, characteristic});
+                    if(erow && erow.s && !nom.cutting_optimization_type.is('no') ) {
+                      const {nom, characteristic, clr, price, amount_marged, totqty1} = erow;
+                      const drow = orow.characteristic.specification.add({
+                        nom,
+                        characteristic,
+                        clr,
+                        dop: -3,
+                        qty: 1,
+                        s: ddelta,
+                        totqty: ddelta,
+                        totqty1: ddelta,
+                        price,
+                        amount: price * ddelta,
+                        amount_marged: (amount_marged / totqty1) * ddelta,
+                      });
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        else {
+          const orow = calc_order.production.add({nom, characteristic, qty: 1, changed: 3});
+          orow.quantity = orow.s = ((len - crow.len)).round(3);
+          production?.refresh_row(orow);
+        }
+      }
+    }
+    if(attr?.calck) {
+      calc_order._slave_recalc = true;
+      for(const orow of calc_order.production) {
+        orow.value_change('quantity', 'update', orow.quantity);
+        production.refresh_row(orow);
+      }
+      calc_order._slave_recalc = false;
+    }
+    tmp.unload();
+    calc_order.production.sync_grid(dialog.wnd.elmnts.grids.production);
     return Promise.resolve({close: true});
   }
 
