@@ -181,7 +181,7 @@ class SchemeLayers {
         cnns: 'Соединители',
         visualization: 'Визуализация доп. элементов',
         glass_regions: 'Ряды заполнений',
-        profile_regions: 'Ряды профилей',
+        //profile_regions: 'Ряды профилей',
         txts: 'Комментарии',
         glass_numbers: 'Номера заполнений',
         bw: 'Чёрно-белый режим',

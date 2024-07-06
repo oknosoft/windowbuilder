@@ -8,6 +8,7 @@ import FieldInsetProfile from 'wb-forms/dist/CatInserts/FieldInsetProfile';
 import ProfileToolbar from './Toolbar/ProfileToolbar';
 import FieldEndConnection from './FieldEndConnection';
 import Bar from './Bar';
+import CnnProps from './ProfileCnnProps';
 import ElmInsets from './ElmInsets';
 import Coordinates from './Coordinates';
 
@@ -44,6 +45,7 @@ export default function ProfileProps(props) {
       <FieldEndConnection elm1={elm} node="b" _fld="cnn1" onClick={select_b}/>
       <FieldEndConnection elm1={elm} node="e" _fld="cnn2" onClick={select_e}/>
       {elm instanceof Onlay ? <PropField _obj={elm} _fld="region" _meta={elm._metadata.fields.region} ctrl_type="oselect" /> : null}
+      <CnnProps elm={elm}/>
       {eprops.map((param, ind) => {
         return <LinkedProp
           key={`ap-${ind}`}
