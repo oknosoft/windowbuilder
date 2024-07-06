@@ -55,6 +55,7 @@ export default function ProfileCnnProps({elm}) {
               const old = elm.dop[node1] || {};
               old[param.ref] = v?.valueOf();
               elm.dop = {[node1]: old};
+              elm.layer.redraw();
             }
           };
           res.push(<LinkedProp key={cnrow.row} _obj={_obj} param={param} fields={fields}/>);
