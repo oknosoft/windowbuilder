@@ -18,7 +18,7 @@ class SchemeLayers {
     this.layout = cell.attachLayout({
       pattern: "2E",
       cells: [
-        {id: "a", text: "tree", header: false, height: 200},
+        {id: "a", text: "tree", header: false, height: 310},
         {id: "b", text: "Доп. вставки в контур", header: true}
       ],
       offsets: {top: 0, right: 0, bottom: 0, left: 0},
@@ -75,9 +75,9 @@ class SchemeLayers {
       rows: this.listener,
     });
 
-    this.layout.cells("a").setMinHeight(180);
-    this.layout.cells("b").setMinHeight(180);
-    this.layout.cells("a").setHeight(200);
+    this.layout.cells("a").setMinHeight(220);
+    this.layout.cells("b").setMinHeight(200);
+    this.layout.cells("a").setHeight(310);
 
   }
 
@@ -171,6 +171,8 @@ class SchemeLayers {
         custom_lines: 'Доп. размерные линии',
         cnns: 'Соединители',
         visualization: 'Визуализация доп. элементов',
+        glass_regions: 'Ряды заполнений',
+        profile_regions: 'Ряды профилей',
         txts: 'Комментарии',
         glass_numbers: 'Номера заполнений',
         bw: 'Чёрно-белый режим',
