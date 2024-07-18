@@ -77,6 +77,7 @@ class DeliveryManager {
         v.city = c.city;
         v.city_long = c.city_with_type || c.city;
         v.house = c.house_type_full && c.house ? c.house_type_full + ' ' + c.house : '';
+        v.entrance = c.entrance || '';
         v.postal_code = c.postal_code || '';
         v.street = c.street_with_type || c.street || '';
       },
@@ -129,6 +130,7 @@ class DeliveryManager {
                 area_with_type: '',
                 city: '',
                 house: '',
+                entrance: '',
                 street_with_type: '',
                 geo_lat: res.coords[0],
                 geo_lon: res.coords[1],
@@ -158,6 +160,9 @@ class DeliveryManager {
                   break;
                 case 'house':
                   data.house = name;
+                  break;
+                case 'entrance':
+                  data.entrance = name;
                   break;
               }
             }
@@ -218,6 +223,9 @@ class DeliveryManager {
                   break;
                 case 'house':
                   res.data.house = name;
+                  break;
+                case 'entrance':
+                  res.data.entrance = name;
                   break;
               }
             }
@@ -342,7 +350,8 @@ class FakeAddrObj extends BaseDataObj{
 function mapStateToProps(state, props) {
   return {
     handleCalck() {
-      const {props:{dialog: {ref, _mgr}}, obj} = this;
+      const {props:{dialog: {ref, _mgr}}, obj, v} = this;
+      obj.shipping_address = v.assemble_addr(true);
       if(!obj.shipping_address) {
         return Promise.reject({msg: {text: 'Уточните адрес доставки выбором из выпадающего списка', title: 'Пустой адрес'}});
       }

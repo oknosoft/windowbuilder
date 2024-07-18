@@ -2708,6 +2708,8 @@ class WndAddressData {
     this.poly_area = null;
     this.poly_direction = null;
     this.flat = "";
+    this.floor = "";
+    this.entrance = "";
 
     this._house = "";
     this._housing = "";
@@ -2786,13 +2788,15 @@ class WndAddressData {
    * @return {string}
    */
   assemble_addr(with_flat){
-    const {country, region, city, street, postal_code, house, flat} = this;
+    const {country, region, city, street, postal_code, house, entrance, floor, flat} = this;
     const res = (region && region !== city ? (region + ', ') : '') +
       (city ? (city + ', ') : '') +
       (street ? (street.replace(/,/g, ' ') + ', ') : '') +
       (house ? (house + ', ') : '') +
+      (entrance ? (entrance + ', ') : '') +
+      (with_flat && floor ? (floor + ', ') : '') +
       (with_flat && flat ? (flat + ', ') : '');
-    return res.endsWith(', ') ? res.substr(0, res.length - 2) : res;
+    return res.endsWith(', ') ? res.substring(0, res.length - 2) : res;
   }
 
   /**
@@ -2832,7 +2836,7 @@ class WndAddressData {
 
     let suffix, index, house_type, flat_type;
 
-    let house = v.house;
+    let {house} = v;
     if(house){
       // отделяем улицу от дома, корпуса и квартиры
       for(let i in fias){
@@ -2840,7 +2844,7 @@ class WndAddressData {
           for(let syn of fias[i].syn){
             if((index = house.indexOf(syn.trimLeft())) != -1){
               house_type = i;
-              house = house.substr(index + syn.trimLeft().length).trim();
+              house = house.substring(index + syn.trimLeft().length).trim();
               break;
             }
           }
@@ -2851,21 +2855,45 @@ class WndAddressData {
       if(!house_type){
         house_type = "1010";
         if((index = house.indexOf(" ")) != -1){
-          house = house.substr(index);
+          house = house.substring(index);
         }
       }
       fields += '\n<ДопАдрЭл><Номер Тип="' + house_type +  '" Значение="' + house.trim() + '"/></ДопАдрЭл>';
     }
 
+    // подъезд
+    let {entrance} = v;
+    if(entrance){
+      for(let syn of fias["9090"].syn){
+        if((index = entrance.indexOf(syn)) != -1){
+          entrance = entrance.substring(index + syn.length).trim();
+          break;
+        }
+      }
+      fields += '\n<ДопАдрЭл ТипАдрЭл="9090" Значение="' + entrance + '"/>';
+    }
+
+    // этаж
+    let {floor} = v;
+    if(floor){
+      for(let syn of fias["8090"].syn){
+        if((index = floor.indexOf(syn)) != -1){
+          floor = floor.substring(index + syn.length).trim();
+          break;
+        }
+      }
+      fields += '\n<ДопАдрЭл ТипАдрЭл="8090" Значение="' + floor + '"/>';
+    }
+
     // квартира и тип квартиры (офиса)
-    let flat = v.flat;
+    let {flat} = v;
     if(flat){
       for(let i in fias){
         if(fias[i].type == 3){
           for(let syn of fias[i].syn){
             if((index = flat.indexOf(syn)) != -1){
               flat_type = i;
-              flat = flat.substr(index + syn.length);
+              flat = flat.substring(index + syn.length);
               break;
             }
           }
@@ -2876,14 +2904,15 @@ class WndAddressData {
       if(!flat_type){
         flat_type = "2010";
         if((index = flat.indexOf(" ")) != -1){
-          flat = flat.substr(index);
+          flat = flat.substring(index);
         }
       }
       fields += '\n<ДопАдрЭл><Номер Тип="' + flat_type +  '" Значение="' + flat.trim() + '"/></ДопАдрЭл>';
     }
 
-    if(v.postal_code)
-      fields += '<ДопАдрЭл ТипАдрЭл="10100000" Значение="' + v.postal_code + '"/>';
+    if(v.postal_code){
+      fields += '\n<ДопАдрЭл ТипАдрЭл="10100000" Значение="' + v.postal_code + '"/>';
+    }
 
     fields += '</Состав> \
 					</Состав></КонтактнаяИнформация>';
@@ -2991,6 +3020,12 @@ class WndAddressData {
             }
             else if(fias[j].type == 3){
               v.flat = fias[j].name + " " + res["ДопАдрЭл"][i][j];
+            }
+            else if(fias[j].type == 8){
+              v.floor = fias[j].name + " " + res["ДопАдрЭл"][i][j];
+            }
+            else if(fias[j].type == 9){
+              v.entrance = fias[j].name + " " + res["ДопАдрЭл"][i][j];
             }
         }
 
@@ -3453,6 +3488,9 @@ WndAddressData.fias = {
   "2040": {name: "бокс",		type: 3, order: 3, syn: ["бокс", "бкс"]},
   "2020": {name: "помещение",	type: 3, order: 4, syn: ["помещение", "пом", "помещ"]},
   "2050": {name: "комната",	type: 3, order: 5, syn: ["комн.", "комн ", "комната"]},
+
+  "8090": {name: "этаж",	type: 8, order: 6, syn: ["этаж", " эт.", " э."]},
+  "9090": {name: "подъезд",	type: 9, order: 6, syn: ["подъезд", " п.", " под "]},
 
   // Уточняющие объекты
   "10100000": {name: "Почтовый индекс"},

@@ -211,6 +211,17 @@ class DeliveryAddr extends Component {
     v.assemble_address_fields(false);
   };
 
+  floorChange = ({target}) => {
+    const {v} = this;
+    v.floor = target.value.trim();
+    if(v.floor) {
+      if(/^\d+$/.test(v.floor)) {
+        v.floor = 'этаж ' + v.floor;
+      }
+    }
+    v.assemble_address_fields(false);
+  };
+
   findArea = ({lat, lng, data}) => {
     const {obj, props: {delivery}, map} = this;
     const [area, point] = delivery.nearest({lat, lng});
@@ -288,6 +299,7 @@ class DeliveryAddr extends Component {
       v={this.v}
       onChange={this.dadataChange}
       flatChange={this.flatChange}
+      floorChange={this.floorChange}
     />;
     const coordin = <TextField
       value={cpresentation}
@@ -297,25 +309,25 @@ class DeliveryAddr extends Component {
       onBlur={this.coordinatesFin}
       onKeyPress={this.coordinatesKeyPress}
     />;
-    return [
-      <FormGroup key="row1" row>
+    return <>
+      <FormGroup row>
         <DataField _obj={obj} _fld="delivery_area"/>
         {coordin}
         {error ? <Typography
           color="error"
           style={{display: 'flex', alignItems: 'flex-end', marginLeft: 16}}
         >{error}</Typography> : null}
-      </FormGroup>,
-      <FormGroup key="row" row>
+      </FormGroup>
+      <FormGroup row>
         {addr}
         {error ? <Typography color="error">{error}</Typography> : null}
-      </FormGroup>,
+      </FormGroup>
       <ComponentMap
         key="map"
         mapRef={this.mapRef}
         v={this.v}
       />
-    ];
+    </>;
   }
 
   render() {
