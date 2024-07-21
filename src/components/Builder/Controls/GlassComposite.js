@@ -116,7 +116,7 @@ class GlassComposite extends React.Component {
   }
 
   value_change = (obj, flds) => {
-    if(obj instanceof $p.CatCharacteristicsGlass_specificationRow && ('inset' in flds || 'dop' in flds)) {
+    if(obj instanceof $p.CatCharacteristicsGlass_specificationRow && ('inset' in flds || 'dop' in flds || 'clr' in flds)) {
       reflect(this.props.elm);
       this.forceUpdate();
     }
