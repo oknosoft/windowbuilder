@@ -5962,6 +5962,9 @@ class ToolPen extends ToolElement {
           proto: profile,
           parent: project.l_connective,
         });
+        if(!connective.sizeb) {
+          connective.offset = -connective.width;
+        }
         connective.joined_nearests().forEach((rama) => {
           const {inner, outer} = rama.joined_imposts();
           for (const {profile} of inner.concat(outer)) {
