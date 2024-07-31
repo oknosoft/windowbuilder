@@ -67,6 +67,10 @@ export function region_layer({Editor, ui: {dialogs}}) {
         }
         // создаём слой ряда
         const rl = Editor.Contour.create({kind: 5, region, project, layer, parent});
+        // уточним цвет
+        const {ox, _dp} = project;
+        const clr_row = _dp.sys.clr_conformity.find({region});
+        const clr = clr_row && $p.cat.clrs.by_predefined(clr_row.clr, ox.clr, ox.clr);
         // создаём профили ряда
         for(const elm of profiles) {
           const {generatrix, inset: {inserts}, width} = elm;
@@ -90,7 +94,7 @@ export function region_layer({Editor, ui: {dialogs}}) {
               layer: rl,
               parent: rl.children.profiles,
               generatrix: generatrix.clone({insert: false}),
-              proto: {inset},
+              proto: {inset, ...(clr ? {clr} : null)},
             });
           }
         }
