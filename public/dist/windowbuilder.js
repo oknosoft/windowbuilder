@@ -1039,7 +1039,8 @@ class Editor extends $p.EditorInvisible {
           break;
 
         case 'stamp':
-          _editor.open_templates();
+          _editor._acc.tabbar.callEvent('onSelect', ['lay']);
+          Promise.resolve().then(() => _editor.open_templates());
           break;
 
         case 'back':
