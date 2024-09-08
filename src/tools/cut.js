@@ -263,8 +263,9 @@ class ToolCut extends ToolElement{
     let cnn = rack.profile.cnn_point('e');
     const base = cnn.cnn;
     const pcnn = cnn?.profile?.rays?.[cnn.profile_point];
-    let _cnno;
+    let _cnno, pcnn_cnn;
     if(pcnn) {
+      pcnn_cnn = pcnn.cnn;
       _cnno = rack.profile.elm === pcnn._cnno?.elm2 && pcnn._cnno;
       pcnn.clear(true);
     }
@@ -295,7 +296,7 @@ class ToolCut extends ToolElement{
     else if(pcnn) {
       pcnn.profile = rack2;
       pcnn.profile_point = 'e';
-      pcnn.cnn = pcnn._row.cnn;
+      pcnn.cnn = pcnn_cnn;
     }
     cnn = rack2.cnn_point('e');
     if(base && cnn && cnn.profile) {
@@ -405,7 +406,7 @@ class ToolCut extends ToolElement{
     }
     cnn && cnn.profile && cnn.profile_point && cnn.profile.rays[cnn.profile_point].clear(true);
     const imposts = rack2.profile.joined_imposts();
-    for(const ji of imposts.inner.concat(imposts.outer)) {
+    for(const {profile: ji} of imposts.inner.concat(imposts.outer)) {
       cnn = ji.cnn_point('b');
       if(cnn.profile === rack2.profile) {
         cnn.clear(true);
