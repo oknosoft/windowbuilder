@@ -833,18 +833,20 @@ class ToolLayImpost extends ToolElement {
     this.paths.length = 0;
 
     // пытаемся выполнить привязку
-    nprofiles.forEach((p) => {
-      p.cnn_point('b');
-      p.cnn_point('e');
-    });
+    const recalc_cnn_point = () => {
+      for(const profile of nprofiles) {
+        for(const node of 'be') {
+          profile.cnn_point(node);
+        }
+      }
+    };
+    recalc_cnn_point();
     // и еще раз пересчитываем соединения, т.к. на предыдущем шаге могла измениться геометрия соседей
-    nprofiles.forEach((p) => {
-      p.cnn_point('b');
-      p.cnn_point('e');
-    });
+    project.register_change(true, recalc_cnn_point);
 
-    if (!this.hitItem)
+    if (!this.hitItem) {
       setTimeout(() => this._scope && this._scope.tools[1].activate(), 100);
+    }
   }
 }
 
