@@ -184,6 +184,23 @@ class SchemeLayers {
         props[prop] && builder_props[prop] && tree.checkItem(prop);
       }
 
+      // Ряды раскладки
+      const {lay_regions} = $p.enm;
+      tree.addItem('onlay_regions', '<div id="tree-onlay-regions" style="display: flex;">Ряды раскладки </div>', 0);
+      tree.disableCheckbox('onlay_regions');
+      const divRegions = tree.cont.querySelector('#tree-onlay-regions');
+      const comboRegions = new dhtmlXCombo(divRegions, 'combo_regions', '160px');
+      const aregions = ['', 'inner', 'outer', 'all', 'r1', 'r2', 'r3'];
+      comboRegions.addOption(aregions.map((v, i) => [i, lay_regions.get(v).synonym || 'Все']));
+      comboRegions.selectOption(aregions.indexOf(builder_props.onlay_regions || ''));
+      comboRegions.attachEvent("onChange", function(v, text){
+        project.ox.builder_props = {onlay_regions: aregions[v]};
+        project.register_change();
+      });
+      const cntRegions = divRegions.querySelector('.dhxcombo_dhx_terrace');
+      cntRegions.style.marginTop = '5px';
+      cntRegions.style.marginLeft = '6px';
+
       // Номера профилей
       tree.addItem('articles', '<div id="tree-articles" style="display: flex;">Номера профилей </div>', 0);
       tree.disableCheckbox('articles');
