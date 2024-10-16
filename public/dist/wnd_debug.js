@@ -475,9 +475,12 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
             {id: 'department', path: 'o.department', synonym: 'Офис продаж', type: 'refc'},
             {id: 'warehouse', path: 'o.warehouse', synonym: 'Склад отгрузки', type: 'refc'},
           ],
-          'Итоги': [{id: 'doc_currency', path: 'o.doc_currency', synonym: 'Валюта документа', type: 'ro', txt: o['doc_currency'].toString()},
-            {id: 'doc_amount', path: 'o.doc_amount', synonym: 'Сумма', type: 'ron', txt: o['doc_amount']},
-            {id: 'amount_internal', path: 'o.amount_internal', synonym: 'Сумма внутр', type: 'ron', txt: o['amount_internal']}]
+          'Итоги': [
+            {id: 'weight', path: 'o.weight', synonym: 'Масса изделий', type: 'ron', txt: o.weight},
+            {id: 'doc_currency', path: 'o.doc_currency', synonym: 'Валюта документа', type: 'ro', txt: o['doc_currency'].toString()},
+            {id: 'doc_amount', path: 'o.doc_amount', synonym: 'Сумма', type: 'ron', txt: o.doc_amount},
+            {id: 'amount_internal', path: 'o.amount_internal', synonym: 'Сумма внутр', type: 'ron', txt: o.amount_internal},
+          ]
         }
       });
 

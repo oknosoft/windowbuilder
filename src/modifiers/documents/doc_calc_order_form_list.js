@@ -39,7 +39,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           elmnts.filter.call_event();
           $p.wsql.set_user_param('current_department', dp.department.ref);
         }
-      }
+      };
 
       // добавляем слушателя внешних событий
       if(handlers){
@@ -59,7 +59,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
               elmnts.toolbar.disableItem('btn_delete');
             }
           }
-        }
+        };
 
         wnd.handleNavigate = handlers.handleNavigate;
         wnd.handleIfaceState = handlers.handleIfaceState;
