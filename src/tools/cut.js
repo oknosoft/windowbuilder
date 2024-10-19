@@ -297,6 +297,7 @@ class ToolCut extends ToolElement{
       pcnn.profile = rack2;
       pcnn.profile_point = 'e';
       pcnn.cnn = pcnn_cnn;
+      pcnn.cnn_types = cnn_types.acn.a;
     }
     cnn = rack2.cnn_point('e');
     if(base && cnn && cnn.profile) {
