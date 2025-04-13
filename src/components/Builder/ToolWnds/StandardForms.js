@@ -38,6 +38,8 @@ const frms = {
   trapeze8: 'Трапеция №8',
   trapeze9: 'Трапеция №9',
   trapeze10: 'Трапеция №10',
+  trapeze11: 'Трапеция №11',
+  polygon: 'Многоугольник',
 };
 
 export default function StandardForms({editor, layer, elm_type}) {
