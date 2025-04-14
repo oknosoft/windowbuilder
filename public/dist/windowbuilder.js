@@ -6554,6 +6554,7 @@ class ToolPen extends ToolElement {
 
   }
 
+  // /builder/e1a5c4d0-1162-11f0-bd8b-6d87a0cb1c56?order=061af830-d7e8-11ef-8735-45ec7a768305
   hitTest_connective({point}) {
 
     const {project, _scope} = this;
@@ -7269,6 +7270,113 @@ class ToolPen extends ToolElement {
       [point.add([1000, -500]), point.add([500, 0])],
       [point.add([500, 0]), point]
     ]);
+  }
+
+  /**
+   * Рисует trapeze11
+   * @param bounds
+   */
+  add_trapeze11(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point.add([1600, 0]), point.add([0, 0])],
+      [point.add([0, 0]), point.add([420, -890])],
+      [point.add([420, -890]), point.add([1180, -890])],
+      [point.add([1180, -890]), point.add([1600, 0])]
+    ]);
+  }
+
+  /**
+   * Рисует polygon
+   * @param {Object} bounds - Объект, содержащий координаты центра
+   */
+  add_polygon(bounds) {
+    const min_side_length = this.profile.inset?.lmin;// Минимальная допустимая длина стороны
+    // Функция для вычисления длины стороны
+    const calculatePolygonSide = (radius, numberOfSides) => {
+      const centralAngle = Math.PI / numberOfSides;
+      return 2 * radius * Math.sin(centralAngle);
+    };
+    const checkingParameters = (radius, numberOfSides) => {
+      const sideLength = calculatePolygonSide(radius, numberOfSides);
+      // Проверка, что длина стороны не меньше минимальной
+      if (sideLength < min_side_length) {
+        $p.ui.dialogs.alert({
+          text: `Длина стороны (${sideLength.toFixed(0)} мм) меньше ${min_side_length} мм. Пожалуйста, введите другие значения.`,
+        });
+        return;
+      }
+      this.drawRegularPolygon(bounds, numberOfSides, sideLength);
+    };
+    // Запрос радиуса у пользователя
+    $p.ui.dialogs.input_value({
+      title: '',
+      text: 'Уточните радиус описанной окружности',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        const radius = parseFloat(r); // Используем радиус, введенный пользователем
+        if (isNaN(radius) || radius <= 0 || radius >= 3000) {
+          $p.ui.dialogs.alert({
+            text: 'Некорректный радиус. Пожалуйста, введите положительное число меньше 3000.',
+          });
+          return;
+        }
+        // Запрос количества сторон у пользователя
+        $p.ui.dialogs.input_value({
+          title: '',
+          text: 'Уточните количество сторон',
+          type: 'number',
+          initialValue: 5,
+        })
+          .then((side) => {
+            const numberOfSides = parseInt(side); // Количество сторон многоугольника (целое число)
+            if (isNaN(numberOfSides) || numberOfSides < 3) {
+              $p.ui.dialogs.alert({
+                text: 'Некорректное количество сторон. Пожалуйста, введите число больше или равное 3.',
+              });
+              return;
+            }
+            checkingParameters(radius, numberOfSides);
+          })
+          .catch((error) => {
+            $p.ui.dialogs.alert({
+              text: 'Ввод количества сторон отменен или произошла ошибка.',
+            });
+          });
+      })
+      .catch((error) => {
+        $p.ui.dialogs.alert({
+          text: 'Ввод радиуса отменен или произошла ошибка.',
+        });
+      });
+  }
+  /**
+   * Отрисовывает правильный многоугольник
+   * @param {Object} bounds - Объект, содержащий координаты центра
+   * @param {number} numberOfSides - Количество сторон
+   * @param {number} sideLength - Длина стороны
+   */
+  drawRegularPolygon(bounds, numberOfSides, sideLength) {
+    const centerX = bounds.center.x; // Центр по X
+    const centerY = bounds.center.y; // Центр по Y
+    // Вычисляем радиус описанной окружности по длине стороны
+    const radius = sideLength / (2 * Math.sin(Math.PI / numberOfSides));
+    // Создаём массив точек для многоугольника
+    const points = [];
+    for (let i = 0; i < numberOfSides; i++) {
+      const angle = (2 * Math.PI * i) / numberOfSides; // Угол в радианах
+      const x = centerX + radius * Math.cos(angle); // Координата X
+      const y = centerY + radius * Math.sin(angle); // Координата Y
+      points.push([x, y]); // Добавляем точку в массив
+    }
+    // Отрисовываем многоугольник
+    this.add_sequence(points.map((point, index) => {
+      const nextPoint = points[(index + 1) % numberOfSides]; // Следующая точка
+      return [point, nextPoint]; // Линия между текущей и следующей точкой
+    }));
   }
 
   /**
