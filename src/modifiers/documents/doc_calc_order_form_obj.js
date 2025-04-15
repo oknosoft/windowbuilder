@@ -455,6 +455,10 @@
         cut_evaluation(btn_id === 'cut_evaluation_2d');
         break;
 
+      case 'agent_order':
+        buyers_order.open_component(wnd, o, handlers, 'AgentOrder');
+        break;
+
       case 'btn_share':
         buyers_order.open_component(wnd, {ref: o.ref, cmd: btn_id}, handlers, 'PushUtils');
         break;

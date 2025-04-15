@@ -192,6 +192,9 @@ export default function ($p) {
     case 'CutEvaluation2D':
         imodule = import('../../components/CalcOrder/CutEvaluation/C2D');
         break;
+    case 'AgentOrder':
+      imodule = import('../../components/PurchaseOrder/AgentOrder');
+      break;
     case 'DeliveryAddr':
       imodule = import('../../components/DeliveryAddr');
       break;
@@ -213,7 +216,7 @@ export default function ($p) {
           wnd: wnd,
           Component: module.default
         },
-      })
+      });
     });
   };
 

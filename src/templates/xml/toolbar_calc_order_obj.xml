@@ -18,6 +18,7 @@
     <item type="button" id="calc_order" text="Расчет"/>
     <item type="button" id="cut_evaluation" text="Оценка линейного раскроя"/>
     <item type="button" id="cut_evaluation_2d" text="Оценка раскроя стёкол"/>
+    <item type="button" id="agent_order" text="Заказ поставщику-агенту"/>
     <item type="button" id="debit_cash_order" enabled="false" text="Наличная оплата"/>
     <item type="button" id="credit_card_order" enabled="false" text="Оплата картой"/>
     <item type="button" id="selling" enabled="false" text="Реализация товаров услуг"/>
