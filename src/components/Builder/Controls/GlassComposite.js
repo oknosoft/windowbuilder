@@ -22,7 +22,8 @@ import TabularSection from 'metadata-react/TabularSection';
 import Tip from 'metadata-react/App/Tip';
 import GlassLayerProps from './GlassLayerProps';
 import CompositeChains from './GlassCompositeChains';
-import GlassRegionCnns from './GlassRegionCnns/Button';
+import GlassCompositeExt from './GlassCompositeExt';
+
 import useStyles from './stylesAccordion';
 import {useOpenContext} from './OpenContext';
 
@@ -236,8 +237,7 @@ class GlassComposite extends React.Component {
       <Tip title="Перевернуть состав">
         <IconButton onClick={this.handleReverse}><FlipCameraAndroidIcon/></IconButton>
       </Tip>
-      <IconButton disabled>|</IconButton>
-      <GlassRegionCnns elm={elm}/>
+      <GlassCompositeExt elm={elm}/>
     </Toolbar>;
   };
 
