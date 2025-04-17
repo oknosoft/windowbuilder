@@ -5995,20 +5995,11 @@ class ToolPen extends ToolElement {
         if(!connective.sizeb) {
           connective.offset = -connective.width;
         }
-        const prepare = (rama) => {
-          const {inner, outer} = rama.joined_imposts();
-          for (const {profile} of inner.concat(outer)) {
-            profile.rays.clear();
-          }
-          for (const sub of rama.joined_nearests()) {
-            sub._attr._rays?.clear();
-            prepare(sub);
-          }
-          const {_attr, layer} = rama;
-          _attr._rays?.clear();
-          layer?.notify?.({profiles: [rama], points: []}, _scope.consts.move_points);
-        };
-        connective.joined_nearests().forEach(prepare);
+        if(addl_hit.profile instanceof ProfileConnective) {
+          addl_hit.profile._attr._nearest = connective;
+        }
+        connective.clear_joined();
+        connective.layer.notify?.({profiles: [this], points: []}, _scope.consts.move_points);
       }
       // примыкание
       else if(profile.elm_type.is('adjoining')) {
@@ -6464,7 +6455,8 @@ class ToolPen extends ToolElement {
 
     const {rays, b, e} = addl_hit.profile;
 
-    let sub_path = rays.outer.get_subpath(b, e);
+    let sub_path = (addl_hit.profile instanceof $p.EditorInvisible.ProfileConnective) ?
+      addl_hit.profile.generatrix.clone({insert: false}) : rays.outer.get_subpath(b, e);
 
     // получаем generatrix
     if(!addl_hit.generatrix){
