@@ -464,20 +464,23 @@ class ToolPen extends ToolElement {
       }
       // рисуем соединительный профиль
       else if(profile.elm_type.is('linking') && !profile.inset.empty()){
-
+        const {generatrix} = addl_hit;
         const connective = new ProfileConnective({
-          generatrix: addl_hit.generatrix,
+          generatrix,
           proto: profile,
           parent: project.l_connective,
         });
-        if(!connective.sizeb) {
-          connective.offset = -connective.width;
-        }
-        if(addl_hit.profile instanceof ProfileConnective) {
+        if(!addl_hit.profile._attr._nearest || addl_hit.profile instanceof ProfileConnective) {
           addl_hit.profile._attr._nearest = connective;
         }
         connective.clear_joined();
-        connective.layer.notify?.({profiles: [this], points: []}, _scope.consts.move_points);
+        if(modifiers.space) {
+          const delta = generatrix.getNormalAt(generatrix.length / 2).multiply(connective.width);
+          connective.move_points(delta, true);
+        }
+        else {
+          connective.layer.notify?.({profiles: [this], points: []}, _scope.consts.move_points);
+        }
       }
       // примыкание
       else if(profile.elm_type.is('adjoining')) {
