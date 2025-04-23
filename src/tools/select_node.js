@@ -422,11 +422,34 @@ class ToolSelectNode extends ToolElement {
     let j, segment, index, point, handle;
 
     function move(point) {
-      if(project.activeLayer?.kind === 4 && project.selectedItems.some((path) => path instanceof Editor.Filling)) {
+      const initialSelected = [...project.selectedItems];
+      if(project.activeLayer?.kind === 4 && initialSelected.some((path) => path instanceof Editor.Filling)) {
         project.activeLayer.move(point);
       }
       else{
-        project.move_points(point);
+        const deselect = [];
+        if(initialSelected.length === 1 && initialSelected[0].parent instanceof Editor.ProfileItem) {
+          const {parent} = initialSelected[0];
+          if(parent.b.selected && parent.e.selected || !parent.b.selected && !parent.e.selected) {
+            parent.select_joined?.(deselect);
+          }
+          else {
+            parent.select_joined?.(deselect, parent.b.selected ? parent.b : parent.e);
+          }
+
+        }
+        else {
+          for(const elm of initialSelected) {
+            elm.select_joined?.(deselect);
+          }
+        }
+        project.move_points(point, false);
+        for(const segm of deselect) {
+          segm.selected = false;
+          if(segm._owner) {
+            segm._owner.path.selected = false;
+          }
+        }
       }
     }
 
