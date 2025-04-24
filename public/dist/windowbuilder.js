@@ -5998,7 +5998,17 @@ class ToolPen extends ToolElement {
         connective.clear_joined();
         if(modifiers.space) {
           const delta = generatrix.getNormalAt(generatrix.length / 2).multiply(connective.width);
-          connective.move_points(delta, true);
+          project.deselectAll();
+          connective.generatrix.selected = true;
+          const deselect = [];
+          connective.select_joined?.(deselect);
+          project.move_points(delta, false);
+          for(const segm of deselect) {
+            segm.selected = false;
+            if(segm._owner) {
+              segm._owner.path.selected = false;
+            }
+          }
         }
         else {
           connective.layer.notify?.({profiles: [this], points: []}, _scope.consts.move_points);
