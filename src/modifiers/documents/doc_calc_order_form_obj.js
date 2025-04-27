@@ -552,13 +552,22 @@
         break;
 
       case 'btn_print':
-        const {_spacer} = this;
-        ui.dialogs.popup({
-          anchorEl: _spacer,
-          _mgr,
-          handlePrint: (model) => _mgr.print(o, model),
-          variant: 'hidden',
-        });
+        if(o._modified) {
+          ui.dialogs.alert({
+            title: 'Заказ не записан',
+            text: 'Перед отправкой на печать, запишите документ',
+            timeout: 10000,
+          });
+        }
+        else {
+          const {_spacer} = this;
+          ui.dialogs.popup({
+            anchorEl: _spacer,
+            _mgr,
+            handlePrint: (model) => _mgr.print(o, model),
+            variant: 'hidden',
+          });
+        }
         break;
     }
 
