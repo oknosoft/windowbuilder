@@ -4,9 +4,9 @@ import PropTypes from 'prop-types';
 import withStyles, {extClasses} from 'metadata-react/DataField/stylesPropertyGrid';
 import VitrazhTabs from './VitrazhTabs';
 
-function VitrazhWnd({editor, classes}) {
+function VitrazhWnd({editor, layer, classes}) {
   const ext = extClasses(classes);
-  return <VitrazhTabs editor={editor} ext={ext}/>;
+  return <VitrazhTabs tool={editor.tool} layer={layer} ext={ext}/>;
 }
 
 VitrazhWnd.propTypes = {

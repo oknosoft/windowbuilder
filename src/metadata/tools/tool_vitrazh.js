@@ -19,7 +19,7 @@ export default function tool_vitrazh ({Editor, dp: {builder_lay_impost}}) {
       super();
       Object.assign(this, {
         options: {name: 'vitrazh'},
-        _obj: null,
+        dp: null,
       });
       this.on({
         activate: this.on_activate,
@@ -35,36 +35,104 @@ export default function tool_vitrazh ({Editor, dp: {builder_lay_impost}}) {
         const obj = builder_lay_impost.create();
         obj.init_vitrazh(project, Editor);
       }
-      this._obj = project._attr._vitrazh;
+      this.dp = project._attr._vitrazh;
     }
 
     on_deactivate() {
-      this._obj = null;
+      this.dp = null;
     }
 
-    /**
-     * Двигает профили в соответствии с массивами размеров
-     * @param {number[]} hor
-     * @param {number[]} vert
-     */
-    apply_sizes({hor, vert}) {
+    createProfiles() {
+      const {project, dp: {h, align_by_x, align_by_y, sizes}} = this;
+      const {activeLayer} = project;
+      activeLayer.clear(true);
+      if(!h) {
+        return;
+      }
+      // стойки
+      const byX = sizes.find_rows({elm: 1, sz: {gt: 0}});
+      const xMap = new Map();
+      const profiles = [];
+      if(byX.length) {
 
-    }
+        // стойки
+        const left = align_by_x.is('left');
+        const sign = left ? 1 : -1;
+        let x = 0;
+        for(let i = 0; i <= byX.length; i++) {
+          if(i) {
+            x += sign * byX[i - 1].sz;
+          }
+          let attr;
+          if(left) {
+            attr = i ? {b: [x, -h], e: [x, 0]} : {e: [x, -h], b: [x, 0]};
+          }
+          else {
+            attr = i ? {b: [x, 0], e: [x, -h]} : {e: [x, 0], b: [x, -h]};
+          }
+          const profile = activeLayer.createProfile(attr);
+          profiles.push(profile);
+          xMap.set(x, profile);
 
-    /**
-     * Добавляет к изделию ряд ячеек
-     * при необходимости, добавляет или растягивает профили
-     * @param {('left'|'right'|'top'|'bottom')} pos
-     */
-    add_section(pos) {
+        }
 
-    }
+        // ригели
+        const byY = sizes.find_rows({elm: 0});
+        const yMap = new Map();
+        if(byY.length) {
+          const bottom = align_by_y.is('bottom');
+          x = 0;
+          for(let i = 1; i <= byX.length; i++) {
+            // находим примыкающие стойки и сообщаем их узлам
+            const cnns = {b: {profile: xMap.get(x)}};
+            x += sign * byX[i - 1].sz;
+            cnns.e = {profile: xMap.get(x)};
 
-    /**
-     * Удаляет секцию. При необходимости, удаляет или укорачивает профили
-     * @param {('left'|'right'|'top'|'bottom')} pos
-     */
-    remove_section(pos) {
+            let y = 0;
+            let prevCy = null;
+            for(let j = 0; j < byY.length; j++) {
+              y += (byY[j].sz || 0);
+              const cy = bottom ? -y : (-h + y);
+              if(cy > 0 || cy < -h) {
+                continue;
+              }
+              if(prevCy === null) {
+                prevCy = cy;
+              }
+              else {
+                if(prevCy === cy) {
+                  continue;
+                }
+                prevCy = cy;
+              }
+              let profile;
+              if(bottom && cy > -100) {
+                profile = activeLayer.createProfile({
+                  b: [cnns.e.profile.b.x, cy],
+                  e: [cnns.b.profile.b.x, cy],
+                  cnns: {b: cnns.e, e: cnns.b}
+                });
+              }
+              else {
+                profile = activeLayer.createProfile({
+                  b: [cnns.b.profile.b.x, cy],
+                  e: [cnns.e.profile.b.x, cy],
+                  cnns
+                });
+              }
+
+              profiles.push(profile);
+              if(left && i === byX.length || !left && i === 1) {
+                yMap.set(cy, profile);
+              }
+            }
+          }
+        }
+        //activeLayer.skeleton.addProfiles(profiles);
+        project.redraw();
+        project.zoom_fit();
+        project.redraw();
+      }
 
     }
 

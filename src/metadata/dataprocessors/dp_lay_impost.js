@@ -11,59 +11,17 @@ export default function ($p) {
   class DpBuilderLayImpost extends $p.DpBuilder_lay_impost {
 
     // начальное заполнение, когда обработку создали из инструмента Витраж
-    init_vitrazh() {
-
-      const {project} = paper;
+    init_vitrazh(project, Editor) {
 
       if(!project.contours.length) {
-        paper.constructor.Contour.create({project});
+        Editor.Contour.create({project});
       }
       const {bounds, l_dimensions} = project.contours[0];
       this.w = bounds.width;
-      this.h = bounds.height;
-      // надо переделать с умом, чтобы на старте дроби и или * подставлялись,
-      // а миллиметры только для ячеек, размер которых существенно выбивается из ряда
-      for(const dl of l_dimensions.ihor.sizes()) {
-        this.sizes.add({elm: 1, sz: dl.size});
-        this.elm_by_y++;
-      }
-      for(const dl of l_dimensions.ivert.sizes()) {
-        this.sizes.add({elm: 0, sz: dl.size});
-        this.elm_by_x++;
-      }
+      this.h = bounds.height || 3000;
+      this.align_by_x = 'left';
+      this.align_by_y = 'bottom';
       project._attr._vitrazh = this;
-      paper.eve.on('move_points', this.move_points.bind(this));
-    }
-
-    // сюда попадаем при изменении размера размерной линией
-    // надо пересчитать строки табчасти sizes, но сначала, понять - размер какой ячейки и в какую сторону изменился
-    // а еще, ничего пересчитывать не надо, если изменение вызвано текущим инструментом
-    move_points(an) {
-      if(paper.tool === this) {
-        return;
-      }
-    }
-
-    /**
-     * Пересчитывает табчасть, при изменении размера в некой строке
-     * @param row {DpBuilderLayImpostSizesRow}
-     * @return {{vert: number[], hor: number[]}}
-     */
-    calc_sizes(row) {
-      const {contours} = paper.project;
-      const hor = [], vert = [];
-      if(contours.length) {
-        // получаем габарит
-        const {bounds, l_dimensions} = contours[0];
-
-        // выясняем, вертикаль или горизонт
-
-        // делим с учётом автозаполнения и дробей
-
-        // формируем массивы размеров в миллиметрах
-      }
-
-      return {hor, vert};
     }
 
   }
@@ -73,7 +31,7 @@ export default function ($p) {
     // если изменили размер ячейки, надо пересчитать соседние
     value_change(field, type, value) {
       if(field === 'sz') {
-        this._owner._owner.calc_sizes(this);
+
       }
     }
   }

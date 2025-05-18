@@ -1,28 +1,42 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import ReactDataGrid from 'react-data-grid';
-import {SzEditor, SzFormatter} from './SzCell';
+import {columns} from './SzCell';
+import Toolbar from './Toolbar';
 
-const columns = [
-  {key: 'sz', name: 'Размер', editor: SzEditor, formatter: SzFormatter}
-];
+export default function Sizes({obj, ts, selection}) {
+  const [gridRef, setGridRef] = React.useState(null);
+  const [rows, setRows] = React.useState([]);
+  const [selectedRows, setSelectedRows] = React.useState(new Set());
 
-export default function Sizes({_obj, elm}) {
-  const rows = [];
-  for(const row of _obj.sizes) {
-    if(row.elm === elm) {
-      rows.push(row);
-    }
-  }
-  return <ReactDataGrid
-    columns={columns}
-    rowGetter={i => rows[i]}
-    rowsCount={rows.length}
-    enableCellSelect
-  />;
+  const getRow = () => {
+    const key = Array.from(selectedRows)[0];
+    return rows.find((row) => row.uid === key);
+  };
+
+  React.useEffect(() => {
+    const rows = $p.utils._find_rows(obj[ts], selection);
+    setRows(rows);
+  }, [obj, selection]);
+
+  return <>
+    <Toolbar
+      tabular={obj[ts]}
+      selection={selection}
+      gridRef={gridRef}
+      rows={rows}
+      getRow={getRow}
+      setRows={setRows}
+      //setBackdrop={setBackdrop}
+      //setModified={setModified}
+      setSelectedRows={setSelectedRows}
+    />
+    <ReactDataGrid
+      ref={(el) => el && setGridRef(el)}
+      columns={columns}
+      rowGetter={i => rows[i]}
+      rowsCount={rows.length}
+      enableCellSelect
+    />
+  </>;
 }
 
-Sizes.propTypes = {
-  _obj: PropTypes.object.isRequired,
-  elm: PropTypes.number,
-};
