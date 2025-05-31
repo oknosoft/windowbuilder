@@ -8,14 +8,19 @@ function SzFormatter(attr) {
 
   React.useEffect(() => {
     const {_manager} = row;
-    function update(o, flds) {
+    function update(o) {
       if(o === row) {
         setText(row.sz.toString());
       }
     }
     _manager.on({update});
+    if(row.sz.toString() !== text) {
+      update(row);
+    }
     return () => _manager.off({update});
   }, [row]);
+
+
 
   return <div>{text}</div>;
 }

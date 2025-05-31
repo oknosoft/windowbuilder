@@ -18,6 +18,19 @@ export default function TabularToolbar({tabular, selection, rows, getRow, setRow
 
   const {add, delRow, clear} = handlers({tabular, selection, rows, setRows, setSelectedRows, gridRef});
 
+  React.useEffect(() => {
+    if(row) {
+      const {_manager} = row;
+      const fkey = (ev) => {
+        if(ev.key === 'F9') {
+          add(ev, row);
+        }
+      };
+      _manager.on({fkey});
+      return () => _manager.off({fkey});
+    }
+  }, [row]);
+
   const clone = (ev) => {
     add(ev, row);
   };
@@ -36,9 +49,11 @@ export default function TabularToolbar({tabular, selection, rows, getRow, setRow
 
   };
 
+  const disabled = selection.elm === 3;
+
   return <Toolbar disableGutters>
     <HtmlTooltip title="Добавить строку {Insert}">
-      <IconButton onClick={add}><AddIcon/></IconButton>
+      <IconButton disabled={disabled} onClick={add}><AddIcon/></IconButton>
     </HtmlTooltip>
 
     <HtmlTooltip title="Добавить строку копированием текущей {F9}">

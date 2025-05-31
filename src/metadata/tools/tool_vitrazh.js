@@ -128,10 +128,11 @@ export default function tool_vitrazh ({Editor, dp: {builder_lay_impost}}) {
             }
           }
         }
-        //activeLayer.skeleton.addProfiles(profiles);
+        activeLayer.on_sys_changed(true);
+        project.redraw();
+        activeLayer.on_sys_changed(true);
         project.redraw();
         project.zoom_fit();
-        project.redraw();
       }
 
     }
