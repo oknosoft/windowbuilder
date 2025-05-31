@@ -20,18 +20,11 @@ export default function Sizes({obj, ts, selection}) {
     setSelectedRows(new Set([row.uid]));
   };
 
-  const onRef = (el) => {
-    if(el) {
-      el.grid.tabIndex = 0;
-      const onKeyDown = (ev) => {
-        if(fkeys.includes(ev.key) && !ev.defaultPrevented) {
-          ev.stopPropagation();
-          ev.preventDefault();
-          obj._manager.emit('fkey', ev);
-        }
-      };
-      el.grid.addEventListener('keydown', onKeyDown);
-      setGridRef(el);
+  const onKeyDown = (ev) => {
+    if(fkeys.includes(ev.key) && !ev.defaultPrevented) {
+      ev.stopPropagation();
+      ev.preventDefault();
+      obj._manager.emit('fkey', ev);
     }
   };
 
@@ -39,6 +32,18 @@ export default function Sizes({obj, ts, selection}) {
     const rows = $p.utils._find_rows(obj[ts], selection);
     setRows(rows);
   }, [obj, selection]);
+
+  let rowSelection;
+  if(selectedRows.size) {
+    const row = getRow();
+    if(row) {
+      rowSelection = {
+        selectBy: {
+          indexes: [rows.indexOf(row)]
+        }
+      };
+    }
+  }
 
   return <div>
     <Toolbar
@@ -53,12 +58,14 @@ export default function Sizes({obj, ts, selection}) {
       setSelectedRows={setSelectedRows}
     />
     <ReactDataGrid
-      ref={onRef}
+      ref={(el) => el && setGridRef(el)}
       columns={columns}
       rowGetter={i => rows[i]}
       rowsCount={rows.length}
       enableCellSelect
+      rowSelection={rowSelection}
       onCellSelected={onCellSelected}
+      onGridKeyDown={onKeyDown}
     />
   </div>;
 }
