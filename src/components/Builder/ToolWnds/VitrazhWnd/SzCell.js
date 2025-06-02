@@ -20,8 +20,6 @@ function SzFormatter(attr) {
     return () => _manager.off({update});
   }, [row]);
 
-
-
   return <div>{text}</div>;
 }
 

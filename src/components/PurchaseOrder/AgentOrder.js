@@ -5,14 +5,18 @@ import Dialog from 'metadata-react/App/Dialog';
 import FieldNumberNative from 'metadata-react/DataField/FieldNumberNative';
 import PropField from 'metadata-react/DataField/PropField';
 import AgencySrc from './AgencySrc';
+import AgencyAmount from './AgencyAmount';
 
+const {utils, job_prm, cat: {nom_groups}} = $p;
 
 export default function AgentOrder({dialog, handlers}) {
 
   const {ref, _mgr} = dialog;
   const calc_order = _mgr.by_ref[ref];
-  const {handleCancel, handleCommit, recalc, obj, row, orderRow, cmeta, pmeta, grouped: initGrouped} = React.useMemo(() => {
-    const {utils, job_prm, cat: {nom_groups}} = $p;
+  let [grouped, setGrouped] = React.useState([]);
+  const [dialogRef, registerDialod] = React.useState(null);
+
+  const {handleCancel, handleCommit, obj, row, orderRow, cmeta, pmeta} = React.useMemo(() => {
     const obj = calc_order.agent_order();
     const row = obj.goods.find({}) || obj.goods.add();
     if(row.nom.empty()) {
@@ -28,16 +32,6 @@ export default function AgentOrder({dialog, handlers}) {
     pmeta.fields.organization.synonym = 'Плательщик агентских';
     pmeta.fields.partner.synonym = 'Агент-поставщик';
     pmeta.tabular_sections.goods.fields.nom.synonym = 'Номенклатура услуги';
-    const grouped = [];
-    for(const prow of calc_order.production) {
-      const grow = grouped.find(v => v.nom_group === prow.nom.nom_group);
-      if(grow) {
-        grow.amount += prow.amount;
-      }
-      else {
-        grouped.push({nom_group: prow.nom.nom_group, amount: prow.amount});
-      }
-    }
 
     const handleCancel = () => {
       handlers.handleIfaceState({
@@ -47,46 +41,6 @@ export default function AgentOrder({dialog, handlers}) {
       });
     };
 
-    const recalc = (force) => {
-      let agency = 0;
-      for(const grow of grouped) {
-        let rrow;
-        for(const crow of obj.contract.condition) {
-          if(grow.nom_group._hierarchy(crow.nom_group)) {
-            rrow = crow;
-            if(grow.nom_group === crow.nom_group) {
-              break;
-            }
-          }
-        }
-        if(!rrow) {
-          for(const key in job_prm.pricing.agency) {
-            const nom_group = nom_groups.get(key);
-            if(grow.nom_group._hierarchy(nom_group)) {
-              rrow = {rate: job_prm.pricing.agency[key]};
-              if(grow.nom_group === nom_group) {
-                break;
-              }
-            }
-          }
-        }
-        if(!grow.rate || force) {
-          grow.rate = rrow ? rrow.rate : 0;
-        }
-        grow.agency = (grow.amount * grow.rate / 100).round();
-        agency += grow.agency;
-      }
-      if(row.amount !== agency || orderRow.amount !== agency) {
-        row.quantity = 1;
-        row.price = agency;
-        row.amount = agency;
-        orderRow.amount = agency;
-        orderRow.rate = 100 * orderRow.amount / calc_order.doc_amount;
-      }
-      return utils._clone(grouped);
-    };
-    recalc(true);
-
     return {
       handleCancel,
       handleCommit() {
@@ -94,32 +48,95 @@ export default function AgentOrder({dialog, handlers}) {
           .then(handleCancel)
           .catch(console.error);
       },
-      recalc,
       obj,
       row,
       orderRow,
       cmeta,
       pmeta,
-      grouped,
     };
   }, [calc_order]);
 
-  const [grouped, setGrouped] = React.useState(initGrouped);
-
-  React.useEffect(() => {
-    const update = (o, flds) => {
-      if(o === obj) {
-        if('contract' in flds || 'rate' in flds) {
-          setGrouped(recalc('contract' in flds));
+  const recalc = (force) => {
+    if(Array.isArray(force)) {
+      grouped = force;
+      force = false;
+    }
+    else {
+      grouped = [];
+      for(const prow of calc_order.production) {
+        const grow = grouped.find(v => v.nom_group === prow.nom.nom_group);
+        if(grow) {
+          grow.amount += prow.amount;
+        }
+        else {
+          grouped.push({nom_group: prow.nom.nom_group, amount: prow.amount});
         }
       }
-    };
-    obj._manager.on({update});
-    return () => obj._manager.off({update});
-  }, [obj]);
+    }
+    let agency = 0;
+    for(const grow of grouped) {
+      let rrow;
+      for(const crow of obj.contract.condition) {
+        if(grow.nom_group._hierarchy(crow.nom_group)) {
+          rrow = crow;
+          if(grow.nom_group === crow.nom_group) {
+            break;
+          }
+        }
+      }
+      if(!rrow) {
+        for(const key in job_prm.pricing.agency) {
+          const nom_group = nom_groups.get(key);
+          if(grow.nom_group._hierarchy(nom_group)) {
+            rrow = {rate: job_prm.pricing.agency[key]};
+            if(grow.nom_group === nom_group) {
+              break;
+            }
+          }
+        }
+      }
+      grow.max = rrow ? rrow.rate : 0;
+      if('force' in grow) {
+        delete grow.force;
+      }
+      else if(!grow.rate || force) {
+        grow.rate = rrow ? rrow.rate : 0;
+      }
+      if(grow.rate > grow.max) {
+        grow.rate = grow.max;
+      }
+      grow.agency = (grow.amount * grow.rate / 100).round();
+      agency += grow.agency;
+    }
+    if(row.amount !== agency || orderRow.amount !== agency) {
+      row.quantity = 1;
+      row.price = agency;
+      row.amount = agency;
+      orderRow.amount = agency;
+      orderRow.rate = 100 * orderRow.amount / calc_order.doc_amount;
+    }
+    const res = grouped.map(v => ({...v}));
+    orderRow.dop = {rates: res.map(({nom_group, ...other}) => ({...other, nom_group: nom_group.valueOf()}))};
+    const refresh = recalc.bind(null, res);
+    for(const row of res) {
+      Object.defineProperty(row, 'refresh', {value: refresh, enumerable: false});
+    }
+    setGrouped(res);
+  };
+
+  React.useEffect(() => {
+    const {rates} = orderRow.dop;
+    if(Array.isArray(rates)) {
+      for(const row of rates) {
+        row.nom_group = nom_groups.get(row.nom_group);
+      }
+    }
+    recalc(rates);
+  }, [calc_order]);
 
 
   return <Dialog
+    ref={registerDialod}
     open
     initFullScreen
     large
@@ -136,16 +153,16 @@ export default function AgentOrder({dialog, handlers}) {
         <PropField _obj={calc_order} _fld="partner" read_only _meta={cmeta.fields.partner} />
         <PropField _obj={calc_order} _fld="department" read_only />
         <PropField _obj={calc_order} _fld="branch" read_only />
-        <PropField _obj={calc_order} _fld="doc_amount" read_only _meta={cmeta.fields.doc_amount}/>
+        <PropField Component={FieldNumberNative} _obj={calc_order} _fld="doc_amount" read_only _meta={cmeta.fields.doc_amount}/>
       </Grid>
       <Grid item xs={12} sm={6}>
         <PropField _obj={obj} _fld="organization" _meta={pmeta.fields.organization}/>
         <PropField _obj={obj} _fld="partner" _meta={pmeta.fields.partner}/>
-        <PropField _obj={obj} _fld="contract" onChange={recalc} />
+        <PropField _obj={obj} _fld="contract" handleValueChange={recalc} />
         <PropField _obj={row} _fld="nom" _meta={pmeta.tabular_sections.goods.fields.nom}/>
-        <PropField Component={FieldNumberNative} _obj={orderRow} _fld="amount" _meta={cmeta.tabular_sections.orders.fields.amount}/>
+        <PropField Component={AgencyAmount} _obj={orderRow} _fld="amount" handleCalc={recalc} _meta={cmeta.tabular_sections.orders.fields.amount}/>
       </Grid>
     </Grid>
-    <AgencySrc rows={grouped} obj={obj}/>
+    <AgencySrc dialogRef={dialogRef} rows={grouped} obj={obj}/>
   </Dialog>;
 }
