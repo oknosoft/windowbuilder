@@ -1085,10 +1085,10 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           title: msg.order_sent_title,
           text: msg.order_sent_message,
           cancel: msg.cancel,
-          callback: function (btn) {
+          callback(btn) {
             if(btn) {
               // установить транспорт в "отправлено" и записать
-              o.obj_delivery_state = enm.obj_delivery_states.Отправлен;
+              o.set_route();
               do_save();
             }
           }
