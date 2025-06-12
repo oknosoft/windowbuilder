@@ -7,7 +7,18 @@ import PropField from 'metadata-react/DataField/PropField';
 import AgencySrc from './AgencySrc';
 import AgencyAmount from './AgencyAmount';
 
-const {utils, job_prm, cat: {nom_groups}} = $p;
+const {utils, job_prm, cat: {nom_groups, nom}} = $p;
+
+function nomByGrp(grp) {
+  let curr;
+  for(const key in job_prm.nom.agency) {
+    const nom_group = nom_groups.get(key);
+    if(grp._hierarchy(nom_group)) {
+      curr = nom.get(job_prm.nom.agency[key]);
+    }
+  }
+  return curr;
+}
 
 export default function AgentOrder({dialog, handlers}) {
 
@@ -16,12 +27,8 @@ export default function AgentOrder({dialog, handlers}) {
   let [grouped, setGrouped] = React.useState([]);
   const [dialogRef, registerDialod] = React.useState(null);
 
-  const {handleCancel, handleCommit, obj, row, orderRow, cmeta, pmeta} = React.useMemo(() => {
+  const {handleCancel, handleCommit, obj, orderRow, cmeta, pmeta} = React.useMemo(() => {
     const obj = calc_order.agent_order();
-    const row = obj.goods.find({}) || obj.goods.add();
-    if(row.nom.empty()) {
-      row.nom = job_prm.nom.agency;
-    }
     const orderRow = calc_order.orders.find({invoice: obj});
     const cmeta = utils._clone(calc_order._metadata());
     const pmeta = utils._clone(obj._metadata());
@@ -49,7 +56,6 @@ export default function AgentOrder({dialog, handlers}) {
           .catch(console.error);
       },
       obj,
-      row,
       orderRow,
       cmeta,
       pmeta,
@@ -73,7 +79,8 @@ export default function AgentOrder({dialog, handlers}) {
         }
       }
     }
-    let agency = 0;
+    const agency = new Map();
+    let sum = 0;
     for(const grow of grouped) {
       let rrow;
       for(const crow of obj.contract.condition) {
@@ -99,21 +106,27 @@ export default function AgentOrder({dialog, handlers}) {
       if('force' in grow) {
         delete grow.force;
       }
-      else if(!grow.rate || force) {
+      else if(force) {
         grow.rate = rrow ? rrow.rate : 0;
       }
       if(grow.rate > grow.max) {
         grow.rate = grow.max;
       }
       grow.agency = (grow.amount * grow.rate / 100).round();
-      agency += grow.agency;
+      const curr = nomByGrp(grow.nom_group);
+      if(!agency.has(curr)) {
+        ;
+      }
+      agency.set(curr, (agency.get(curr) || 0) + grow.agency);
+      sum += grow.agency;
     }
-    if(row.amount !== agency || orderRow.amount !== agency) {
-      row.quantity = 1;
-      row.price = agency;
-      row.amount = agency;
-      orderRow.amount = agency;
+    if(orderRow.amount !== sum) {
+      orderRow.amount = sum;
       orderRow.rate = 100 * orderRow.amount / calc_order.doc_amount;
+    }
+    obj.goods.clear();
+    for(const [nom, price] of agency) {
+      obj.goods.add({nom, quantity: 1, price, amount: price});
     }
     const res = grouped.map(v => ({...v}));
     orderRow.dop = {rates: res.map(({nom_group, ...other}) => ({...other, nom_group: nom_group.valueOf()}))};
@@ -159,7 +172,6 @@ export default function AgentOrder({dialog, handlers}) {
         <PropField _obj={obj} _fld="organization" _meta={pmeta.fields.organization}/>
         <PropField _obj={obj} _fld="partner" _meta={pmeta.fields.partner}/>
         <PropField _obj={obj} _fld="contract" handleValueChange={recalc} />
-        <PropField _obj={row} _fld="nom" _meta={pmeta.tabular_sections.goods.fields.nom}/>
         <PropField Component={AgencyAmount} _obj={orderRow} _fld="amount" handleCalc={recalc} _meta={cmeta.tabular_sections.orders.fields.amount}/>
       </Grid>
     </Grid>
