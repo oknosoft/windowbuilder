@@ -1295,7 +1295,7 @@ class ToolPen extends ToolElement {
 
   /**
    * ### Добавляет последовательность профилей
-   * @param points {Array}
+   * @param {Array} points
    */
   add_sequence(points) {
     const profiles = [];

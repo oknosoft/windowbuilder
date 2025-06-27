@@ -391,7 +391,8 @@ class EditorAccordion {
 
         case 'new_layer':
           // создаём пустой новый слой
-          Editor.Contour.create({project: _editor.project});
+          const tool = _editor.tools.find((v) => v.name === 'selectLayer');
+          tool.createLayer();
           break;
 
         case 'region_layer': {

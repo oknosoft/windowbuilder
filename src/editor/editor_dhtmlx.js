@@ -439,6 +439,11 @@ class Editor extends $p.EditorInvisible {
      */
     new ToolCoordinates();
 
+    /**
+     * Таблица координат
+     */
+    new ToolSelectLayer();
+
     this.tools[1].activate();
 
 
