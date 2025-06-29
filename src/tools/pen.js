@@ -429,7 +429,7 @@ class ToolPen extends ToolElement {
     const {_scope, addl_hit, profile, project, group} = this;
     const {
       enm: {elm_types},
-      EditorInvisible: {Sectional, ProfileAddl, ProfileGlBead, ProfileConnective, Onlay, BaseLine, ProfileCut,
+      EditorInvisible: {Sectional, ProfileAddl, ProfileAddlOuter, ProfileGlBead, ProfileConnective, Onlay, BaseLine, ProfileCut,
         ProfileAdjoining, Profile, ProfileItem, Filling, Contour}} = $p;
 
     group?.removeChildren();
@@ -447,7 +447,7 @@ class ToolPen extends ToolElement {
     if(addl_hit){
 
       // рисуем доборный профиль
-      if(addl_hit.glass && profile.elm_type == elm_types.addition && !profile.inset.empty()){
+      if(addl_hit.glass && profile.elm_type.is('addition') && !profile.inset.empty()){
         new ProfileAddl({
           generatrix: addl_hit.generatrix,
           proto: profile,
@@ -494,6 +494,15 @@ class ToolPen extends ToolElement {
         else {
           connective.layer.notify?.({profiles: [this], points: []}, _scope.consts.move_points);
         }
+      }
+      // добор снаружи
+      else if(profile.elm_type.is('addition_outer') && !profile.inset.empty()) {
+        const adjoining = new ProfileAddlOuter({
+          generatrix: addl_hit.generatrix,
+          proto: profile,
+          parent: addl_hit.profile,
+          side: addl_hit.side
+        });
       }
       // примыкание
       else if(profile.elm_type.is('adjoining')) {
@@ -1040,6 +1049,70 @@ class ToolPen extends ToolElement {
 
   }
 
+  hitTest_addl_outer({point}) {
+
+    const hitSize = 16;
+    const {project, _scope} = this;
+
+    if (point){
+      this.hitItem = project.hitTest(point, { stroke:true, curves:true, tolerance: hitSize });
+    }
+
+    if (this.hitItem) {
+
+      if(this.hitItem.item.layer == project.activeLayer &&
+        this.hitItem.item.parent instanceof Editor.ProfileItem && !(this.hitItem.item.parent instanceof Editor.Onlay)){
+        // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
+
+        const hit = {
+          point: this.hitItem.point,
+          profile: this.hitItem.item.parent
+        };
+
+        // выясним, с какой стороны примыкает профиль
+        if(hit.profile.rays.inner.getNearestPoint(point).getDistance(point, true) <
+          hit.profile.rays.outer.getNearestPoint(point).getDistance(point, true)){
+          hit.side = "inner";
+        }
+        else{
+          hit.side = "outer";
+        }
+
+        // бежим по всем заполнениям и находим ребро
+        hit.profile.layer.glasses(false, true).some((glass) => {
+          return glass.profiles.some((rib, index) => {
+            if(rib.profile == hit.profile && rib.sub_path && rib.sub_path.getNearestPoint(hit.point).is_nearest(hit.point, true)){
+              if(hit.side == "outer" && rib.outer || hit.side == "inner" && !rib.outer){
+                hit.rib = index;
+                hit.glass = glass;
+                return true;
+              }
+            }
+          });
+        });
+
+        if(hit.glass){
+          _scope.canvas_cursor('cursor-pen-freehand');
+        }
+        else {
+          // бежим по соседним слоям - не должно быть примыканий
+          this.addl_hit = hit;
+          _scope.canvas_cursor('cursor-pen-adjust');
+        }
+      }
+      else{
+        _scope.canvas_cursor('cursor-pen-freehand');
+      }
+
+    }
+    else {
+
+      this.hitItem = project.hitTest(point, { fill:true, visible: true, tolerance: hitSize  });
+      _scope.canvas_cursor('cursor-pen-freehand');
+    }
+
+  }
+
   // /builder/e1a5c4d0-1162-11f0-bd8b-6d87a0cb1c56?order=061af830-d7e8-11ef-8735-45ec7a768305
   hitTest_connective({point}) {
 
@@ -1246,6 +1319,9 @@ class ToolPen extends ToolElement {
     case elm_types.glbead:
       this.hitTest_addl(event);
       break;
+    case elm_types.addition_outer:
+        this.hitTest_addl_outer(event);
+        break;
     case elm_types.linking:
       this.hitTest_connective(event);
       break;

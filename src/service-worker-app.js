@@ -12,7 +12,7 @@ export default function () {
   skipWaiting();
 
   const revision = '20250627';
-  const persistent = '20240000';
+  const persistent = '20250000';
 
   precacheAndRoute([
     {url: '/dist/dhtmlx.min.js', revision: persistent },
