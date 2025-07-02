@@ -110,7 +110,15 @@ export default function AgentOrder({dialog, handlers}) {
         grow.rate = rrow ? rrow.rate : 0;
       }
       if(grow.rate > grow.max) {
-        grow.rate = grow.max;
+        if(grow.max === 0) {
+          const max = grouped.reduce((sum, curr) => Math.max(sum, curr.max), 0);
+          if(grow.rate > max) {
+            grow.rate = max;
+          }
+        }
+        else {
+          grow.rate = grow.max;
+        }
       }
       grow.agency = (grow.amount * grow.rate / 100).round();
       const curr = nomByGrp(grow.nom_group);
