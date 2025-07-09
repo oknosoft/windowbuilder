@@ -66,7 +66,10 @@ export function init(store) {
       on_log_in() {
         return load_ram($p)
           .then(() => {
-            const {roles} = $p.current_user || {};
+            const {roles, branch} = $p.current_user || {};
+            if(!sessionStorage.branch && branch && !branch.empty?.()) {
+              sessionStorage.branch = branch.ref;
+            }
             if(roles && (roles.includes('ram_editor') || roles.includes('doc_full'))) {
               pouch.local.sync.ram = pouch.remote.ram.changes({
                 since: 'now',
