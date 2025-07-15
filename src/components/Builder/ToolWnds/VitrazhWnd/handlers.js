@@ -19,6 +19,9 @@ export function handlers({tabular, selection, rows, setRows, setSelectedRows, gr
     }
     const newRow = tabular.add(proto);
     newRow._obj.uid = $p.utils.generate_guid();
+    if(!newRow.quantity) {
+      newRow.quantity = 1;
+    }
     const newRows = [...rows, newRow];
     setRows(newRows);
     setSelectedRows(new Set([newRow.uid]));

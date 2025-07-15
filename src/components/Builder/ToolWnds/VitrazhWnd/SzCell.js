@@ -2,29 +2,33 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import DataGrid from 'react-data-grid';
 
-function SzFormatter(attr) {
-  const {row, value} = attr;
-  const [text, setText] = React.useState(value?.toString());
+const formatters = {
 
-  React.useEffect(() => {
-    const {_manager} = row;
-    function update(o) {
-      if(o === row) {
-        setText(row.sz.toString());
-      }
+  get(fld) {
+    if(!this[fld]) {
+      this[fld] = function SzFormatter(attr) {
+        const {row, value} = attr;
+        const [text, setText] = React.useState(value?.toString());
+
+        React.useEffect(() => {
+          const {_manager} = row;
+          function update(o) {
+            if(o === row) {
+              setText(row[fld].toString());
+            }
+          }
+          _manager.on({update});
+          if(row[fld].toString() !== text) {
+            update(row);
+          }
+          return () => _manager.off({update});
+        }, [row]);
+
+        return <div>{text}</div>;
+      };
+      return this[fld];
     }
-    _manager.on({update});
-    if(row.sz.toString() !== text) {
-      update(row);
-    }
-    return () => _manager.off({update});
-  }, [row]);
-
-  return <div>{text}</div>;
-}
-
-SzFormatter.propTypes = {
-  value: PropTypes.any,
+  }
 };
 
 class SzEditor extends DataGrid.editors.SimpleTextEditor {
@@ -56,6 +60,7 @@ class SzEditor extends DataGrid.editors.SimpleTextEditor {
 }
 
 export const columns = [
-  {key: 'sz', name: 'Размер', editor: SzEditor, formatter: SzFormatter}
+  {key: 'sz', name: 'Размер', editor: SzEditor, formatter: formatters.get('sz')},
+  {key: 'quantity', name: 'Колич.', width: 80, editor: SzEditor, formatter: formatters.get('quantity')}
 ];
 

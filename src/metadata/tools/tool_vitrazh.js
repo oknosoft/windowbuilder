@@ -42,7 +42,22 @@ export default function tool_vitrazh ({Editor, dp: {builder_lay_impost}}) {
       this.dp = null;
     }
 
+    minHeight() {
+      const {dp} = this;
+      const byY = dp.sizes.find_rows({elm: 0});
+      let y = 0;
+      for(let j = 0; j < byY.length; j++) {
+        for(let q= 1; q <= byY[j].quantity; q++) {
+          y += (byY[j].sz || 0);
+        }
+      }
+      if(dp.h < y) {
+        dp.h = y;
+      }
+    }
+
     createProfiles() {
+      this.minHeight();
       const {project, dp: {h, align_by_x, align_by_y, sizes}} = this;
       const {activeLayer} = project;
       activeLayer.clear(true);
@@ -53,27 +68,32 @@ export default function tool_vitrazh ({Editor, dp: {builder_lay_impost}}) {
       const byX = sizes.find_rows({elm: 1, sz: {gt: 0}});
       const xMap = new Map();
       const profiles = [];
+      const left = align_by_x.is('left');
+      let attr;
       if(byX.length) {
-
         // стойки
-        const left = align_by_x.is('left');
+        if(left) {
+          attr = {e: [0, -h], b: [0, 0]};
+        }
+        else {
+          attr = {e: [0, 0], b: [0, -h]};
+        }
+        const profile = activeLayer.createProfile(attr);
+        profiles.push(profile);
+        xMap.set(0, profile);
+
         const sign = left ? 1 : -1;
         let x = 0;
-        for(let i = 0; i <= byX.length; i++) {
-          if(i) {
-            x += sign * byX[i - 1].sz;
+        for(let i = 0; i < byX.length; i++) {
+          if(byX[i].sz) {
+            for(let q= 1; q <= byX[i].quantity; q++) {
+              x += sign * byX[i].sz;
+              attr = left ? {b: [x, -h], e: [x, 0]} : {b: [x, 0], e: [x, -h]};
+              const profile = activeLayer.createProfile(attr);
+              profiles.push(profile);
+              xMap.set(x, profile);
+            }
           }
-          let attr;
-          if(left) {
-            attr = i ? {b: [x, -h], e: [x, 0]} : {e: [x, -h], b: [x, 0]};
-          }
-          else {
-            attr = i ? {b: [x, 0], e: [x, -h]} : {e: [x, 0], b: [x, -h]};
-          }
-          const profile = activeLayer.createProfile(attr);
-          profiles.push(profile);
-          xMap.set(x, profile);
-
         }
 
         // ригели
@@ -81,12 +101,12 @@ export default function tool_vitrazh ({Editor, dp: {builder_lay_impost}}) {
         const yMap = new Map();
         if(byY.length) {
           const bottom = align_by_y.is('bottom');
-          x = 0;
-          for(let i = 1; i <= byX.length; i++) {
-            // находим примыкающие стойки и сообщаем их узлам
-            const cnns = {b: {profile: xMap.get(x)}};
-            x += sign * byX[i - 1].sz;
-            cnns.e = {profile: xMap.get(x)};
+          const keys = Array.from(xMap.keys());
+          for(let i = 1; i < keys.length; i++) {
+            const cnns = {
+              b: {profile: xMap.get(keys[i - 1])},
+              e: {profile: xMap.get(keys[i])}
+            };
 
             let y = 0;
             let prevCy = null;
