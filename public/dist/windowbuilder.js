@@ -8341,7 +8341,10 @@ class ToolSelectNode extends ToolElement {
               }
             }
             // если не было обработки узлов - удаляем элемент
-            if(!do_select){
+            if(do_select) {
+              path.parent.redraw();
+            }
+            else {
               path = path.parent;
               path.remove();
             }
