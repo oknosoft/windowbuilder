@@ -473,27 +473,9 @@ class ToolPen extends ToolElement {
           proto: profile,
           parent: project.l_connective,
         });
-        if(!addl_hit.profile._attr._nearest || addl_hit.profile instanceof ProfileConnective) {
-          addl_hit.profile._attr._nearest = connective;
-        }
+        addl_hit.profile._attr._nearest = connective;
         connective.clear_joined();
-        if(modifiers.space) {
-          const delta = generatrix.getNormalAt(generatrix.length / 2).multiply(connective.width);
-          project.deselectAll();
-          connective.generatrix.selected = true;
-          const deselect = [];
-          connective.select_joined?.(deselect);
-          project.move_points(delta, false);
-          for(const segm of deselect) {
-            segm.selected = false;
-            if(segm._owner) {
-              segm._owner.path.selected = false;
-            }
-          }
-        }
-        else {
-          connective.layer.notify?.({profiles: [this], points: []}, _scope.consts.move_points);
-        }
+        connective.layer.notify?.({profiles: [this], points: []}, _scope.consts.move_points);
       }
       // добор снаружи
       else if(profile.elm_type.is('addition_outer') && !profile.inset.empty()) {
@@ -615,35 +597,41 @@ class ToolPen extends ToolElement {
         }, 40);
       }
     }
-    else if (this.hitItem && this.hitItem.item && (modifiers.shift || modifiers.control || modifiers.option)) {
+    else if (modifiers.shift || modifiers.control || modifiers.option) {
 
-      let item = this.hitItem.item.parent;
-      if(modifiers.space && item.nearest && item.nearest()) {
-        item = item.nearest();
-      }
-
-      if(modifiers.shift) {
-        item.selected = !item.selected;
-      }
-      else {
-        project.deselectAll();
-        item.selected = true;
+      if(!this.hitItem?.item) {
+        this.hitItem = project.hitTest(this._downPoint, { fill:true, visible: true, tolerance: 20 });
       }
 
-      // TODO: Выделяем элемент, если он подходящего типа
-      if(item instanceof ProfileItem && item.isInserted()) {
-        item.attache_wnd(_scope._acc.elm);
-        whas_select = true;
-        this._controls.blur();
-      }
-      else if(item instanceof Filling && item.visible) {
-        item.attache_wnd(_scope._acc.elm);
-        whas_select = true;
-        this._controls.blur();
-      }
+      if(this.hitItem?.item) {
+        let item = this.hitItem.item.parent;
+        if(modifiers.space && item.nearest && item.nearest()) {
+          item = item.nearest();
+        }
 
-      if(item.selected && item.layer){
-        item.layer.activate(true);
+        if(modifiers.shift) {
+          item.selected = !item.selected;
+        }
+        else {
+          project.deselectAll();
+          item.selected = true;
+        }
+
+        // TODO: Выделяем элемент, если он подходящего типа
+        if(item instanceof ProfileItem && item.isInserted()) {
+          item.attache_wnd(_scope._acc.elm);
+          whas_select = true;
+          this._controls.blur();
+        }
+        else if(item instanceof Filling && item.visible) {
+          item.attache_wnd(_scope._acc.elm);
+          whas_select = true;
+          this._controls.blur();
+        }
+
+        if(item.selected && item.layer){
+          item.layer.activate(true);
+        }
       }
 
     }
@@ -1146,7 +1134,7 @@ class ToolPen extends ToolElement {
       }
 
       // для соединителей, нас интересуют только внешние рёбра
-      if(hit.side == "outer"){
+      if(hit.side == "outer" && !(hit.profile instanceof $p.EditorInvisible.ProfileConnective)) {
         this.addl_hit = hit;
         _scope.canvas_cursor('cursor-pen-adjust');
       }
