@@ -173,6 +173,7 @@ class SchemeLayers {
         visualization: 'Визуализация доп. элементов',
         glass_regions: 'Ряды заполнений',
         //profile_regions: 'Ряды профилей',
+        unfolding: 'Развёртки водоотливов',
         txts: 'Комментарии',
         glass_numbers: 'Номера заполнений',
         bw: 'Чёрно-белый режим',
