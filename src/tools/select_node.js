@@ -428,19 +428,23 @@ class ToolSelectNode extends ToolElement {
       }
       else{
         const deselect = [];
-        if(initialSelected.length === 1 && initialSelected[0].parent instanceof Editor.ProfileItem) {
-          const {parent} = initialSelected[0];
-          if(parent.b.selected && parent.e.selected || !parent.b.selected && !parent.e.selected) {
-            parent.select_joined?.(deselect);
+        const filtered = initialSelected.filter(p => p.parent instanceof Editor.ProfileItem);
+        if(filtered.length === 1) {
+          const {parent} = filtered[0];
+          if(!(parent instanceof Editor.ProfileConnective)) {
+            if(parent.b.selected && parent.e.selected || !parent.b.selected && !parent.e.selected) {
+              parent.select_joined?.(deselect);
+            }
+            else {
+              parent.select_joined?.(deselect, parent.b.selected ? parent.b : parent.e);
+            }
           }
-          else {
-            parent.select_joined?.(deselect, parent.b.selected ? parent.b : parent.e);
-          }
-
         }
         else {
           for(const elm of initialSelected) {
-            elm.select_joined?.(deselect);
+            if(elm.select_joined && !(elm instanceof Editor.ProfileConnective)) {
+              elm.select_joined(deselect);
+            }
           }
         }
         project.move_points(point, false);

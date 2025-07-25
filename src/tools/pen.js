@@ -475,7 +475,11 @@ class ToolPen extends ToolElement {
         });
         addl_hit.profile._attr._nearest = connective;
         connective.clear_joined();
-        connective.layer.notify?.({profiles: [this], points: []}, _scope.consts.move_points);
+        if(!modifiers.space) {
+          project.register_change(true, () => {
+            ToolPen.move_linked(connective);
+          });
+        }
       }
       // добор снаружи
       else if(profile.elm_type.is('addition_outer') && !profile.inset.empty()) {
