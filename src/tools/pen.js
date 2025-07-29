@@ -379,6 +379,9 @@ class ToolPen extends ToolElement {
       this.project.selectedItems.forEach((path) => {
         if(path.parent instanceof Editor.ProfileItem){
           path = path.parent;
+          if(path instanceof Editor.ProfileConnective) {
+            path.move_linked(true);
+          }
           path.remove();
         }
       });
@@ -476,9 +479,7 @@ class ToolPen extends ToolElement {
         addl_hit.profile._attr._nearest = connective;
         connective.clear_joined();
         if(!modifiers.space) {
-          project.register_change(true, () => {
-            ToolPen.move_linked(connective);
-          });
+          project.register_change(true, () => connective.move_linked());
         }
       }
       // добор снаружи

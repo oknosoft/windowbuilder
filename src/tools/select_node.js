@@ -618,6 +618,9 @@ class ToolSelectNode extends ToolElement {
             }
             else {
               path = path.parent;
+              if(path instanceof Editor.ProfileConnective) {
+                path.move_linked(true);
+              }
               path.remove();
             }
           }
