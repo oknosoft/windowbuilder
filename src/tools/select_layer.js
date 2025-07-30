@@ -161,6 +161,9 @@ class ToolSelectLayer extends ToolElement {
           const offset = new _scope.Point();
           offset.bind = bind;
           bounds = layer.bounds;
+          for(const {generatrix} of layer.profiles) {
+            bounds = bounds.unite(generatrix.bounds);
+          }
           const light = 0;
           switch (bind) {
             case 'left':
