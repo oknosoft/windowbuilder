@@ -7,8 +7,8 @@ const title = 'Зеркалирование';
 
 export default function tool_mirror ({Editor, ui: {dialogs}}) {
 
-  const {ToolElement, Filling, Profile} = Editor;
-  const {Path} = Object.getPrototypeOf(Editor).prototype;
+  const {ToolElement, Contour, Profile} = Editor;
+  const {Point, Path} = Object.getPrototypeOf(Editor).prototype;
 
   /**
    * ### Зеркалирование фрагментов изделия
@@ -45,6 +45,8 @@ export default function tool_mirror ({Editor, ui: {dialogs}}) {
 
         deactivate() {
           this.layers.clear();
+          this.profilesMap?.clear();
+          this.decorate_layers(true);
         },
 
         mouseup(event) {
@@ -87,7 +89,7 @@ export default function tool_mirror ({Editor, ui: {dialogs}}) {
     /**
      * Делает полупрозрачными элементы неактивных слоёв
      */
-    decorate_layers() {
+    decorate_layers(reset) {
       const {project, layers} = this;
       function setOpacity(layer, opacity) {
         layer.opacity = opacity;
@@ -96,7 +98,69 @@ export default function tool_mirror ({Editor, ui: {dialogs}}) {
         }
       }
       for(const layer of project.contours) {
-        setOpacity(layer, layers.has(layer) ? 1 : 0.4);
+        setOpacity(layer, (reset || layers.has(layer)) ? 1 : 0.4);
+      }
+    }
+
+    mirrorProfile(profile, bounds, direction) {
+      const res = {};
+      for(const node of 'be') {
+        const point = profile[node];
+        const x = direction === 'right' ?
+          bounds.right + bounds.right - point.x :
+          bounds.left + bounds.left - point.x;
+        res[node === 'b' ? 'e' : 'b'] = new Point(x, point.y);
+      }
+      return res;
+    }
+
+    mirrored(layer, direction) {
+      const {bounds} = this.project;
+      const profilesMap = new Map();
+      this.profilesMap.set(layer, profilesMap);
+      for(const profile of layer.profiles) {
+        profilesMap.set(profile, this.mirrorProfile(profile, bounds, direction));
+      }
+    }
+
+    createProfiles(layer) {
+      const profilesMap = this.profilesMap.get(layer);
+      const parent = layer.layer ? this.profilesMap.get(layer.layer).get(layer.layer) : null;
+      const newLayer = Contour.create({project: this.project, parent});
+      profilesMap.set(layer, newLayer);
+      for(const proto of layer.profiles) {
+        const {b, e} = profilesMap.get(proto);
+        const attr = {
+          parent: newLayer.children.profiles,
+          generatrix: new Path({insert: false, segments: [b, e]}),
+          proto: {
+            layer: newLayer,
+            inset: proto.inset,
+            clr: proto.clr,
+          },
+        };
+        const profile = new newLayer.ProfileConstructor(attr);
+      }
+      for(const sub of layer.contours) {
+        this.createProfiles(sub);
+      }
+    }
+
+    execute(direction, layers) {
+      let execFin = false;
+      if(!layers) {
+        layers = this.layers;
+        this.profilesMap = new Map();
+        execFin = true;
+      }
+      for(const layer of layers) {
+        this.mirrored(layer, direction);
+        this.execute(direction, layer.contours);
+      }
+      if(execFin) {
+        for(const layer of layers) {
+          this.createProfiles(layer);
+        }
       }
     }
 
