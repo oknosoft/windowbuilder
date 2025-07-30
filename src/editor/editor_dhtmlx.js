@@ -147,7 +147,7 @@ class Editor extends $p.EditorInvisible {
      * @type OTooolBar
      * @private
      */
-    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '440px',
+    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '472px',
       image_path: '/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
@@ -174,6 +174,7 @@ class Editor extends $p.EditorInvisible {
         {name: 'stulp_flap', css: 'tb_stulp_flap', tooltip: 'Штульповые створки'},
         {name: 'vitrazh', text: '<i class="fa fa-film"></i>', tooltip: 'Витраж'},
         {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'},
+        {name: 'mirror', css: 'tb_mirror_reflect', tooltip: 'Зеркалирование слоёв'},
         {name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
       ],
       onclick: (name) => _editor.select_tool(name),
@@ -440,9 +441,14 @@ class Editor extends $p.EditorInvisible {
     new ToolCoordinates();
 
     /**
-     * Таблица координат
+     * Выбор слоя
      */
     new ToolSelectLayer();
+
+    /**
+     * Зеркалирование
+     */
+    new Editor.ToolMirror();
 
     this.tools[1].activate();
 
