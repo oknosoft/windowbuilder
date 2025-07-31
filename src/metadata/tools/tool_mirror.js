@@ -5,9 +5,9 @@ import ToolWnd from '../../components/Builder/ToolWnds/ToolMirrorWnd';
 
 const title = 'Зеркалирование';
 
-export default function tool_mirror ({Editor, ui: {dialogs}}) {
+export default function tool_mirror ({Editor}) {
 
-  const {ToolElement, Contour, Profile} = Editor;
+  const {ToolElement, Contour} = Editor;
   const {Point, Path} = Object.getPrototypeOf(Editor).prototype;
 
   /**
@@ -28,6 +28,7 @@ export default function tool_mirror ({Editor, ui: {dialogs}}) {
         distanceThreshold: 10,
         minDistance: 10,
         layers: new Set(),
+        profilesMap: new Map(),
         mode: 'copy',
       });
 
@@ -35,17 +36,19 @@ export default function tool_mirror ({Editor, ui: {dialogs}}) {
 
         activate() {
           this.on_activate('cursor-arrow-white');
-          const {project : {contours}, _scope, options} = this;
+          const {project, _scope, options} = this;
+          const {contours} = project;
           if(contours.length === 1) {
             this.layers.add(contours[0]);
           }
           this.decorate_layers();
+          project.deselectAll();
           _scope.tb_left?.select(options.name);
         },
 
         deactivate() {
           this.layers.clear();
-          this.profilesMap?.clear();
+          this.profilesMap.clear();
           this.decorate_layers(true);
         },
 
@@ -58,7 +61,7 @@ export default function tool_mirror ({Editor, ui: {dialogs}}) {
             else {
               layers.add(hitLayer);
             }
-            this.emit('layers_change')
+            this.emit('layers_change');
           }
           this.decorate_layers();
         },
@@ -124,9 +127,10 @@ export default function tool_mirror ({Editor, ui: {dialogs}}) {
     }
 
     createProfiles(layer) {
+      const {project} = this;
       const profilesMap = this.profilesMap.get(layer);
       const parent = layer.layer ? this.profilesMap.get(layer.layer).get(layer.layer) : null;
-      const newLayer = Contour.create({project: this.project, parent});
+      const newLayer = Contour.create({project, parent});
       profilesMap.set(layer, newLayer);
       for(const proto of layer.profiles) {
         const {b, e} = profilesMap.get(proto);
@@ -141,6 +145,16 @@ export default function tool_mirror ({Editor, ui: {dialogs}}) {
         };
         const profile = new newLayer.ProfileConstructor(attr);
       }
+      if(parent) {
+        const {params} = project.ox;
+        newLayer.direction = layer.direction.inverse;
+        newLayer.furn = layer.furn;
+        newLayer.h_ruch = layer.h_ruch;
+        params.find_rows({cnstr: layer.cnstr}, ({inset, param, value, hide}) => {
+          const prow = params.find({cnstr: newLayer.cnstr, inset, param}) || params.add({cnstr: newLayer.cnstr, inset, param, value, hide});
+          prow.value = value;
+        });
+      }
       for(const sub of layer.contours) {
         this.createProfiles(sub);
       }
@@ -150,7 +164,7 @@ export default function tool_mirror ({Editor, ui: {dialogs}}) {
       let execFin = false;
       if(!layers) {
         layers = this.layers;
-        this.profilesMap = new Map();
+        this.profilesMap.clear();
         execFin = true;
       }
       for(const layer of layers) {
@@ -160,7 +174,21 @@ export default function tool_mirror ({Editor, ui: {dialogs}}) {
       if(execFin) {
         for(const layer of layers) {
           this.createProfiles(layer);
+          if(this.mode !== 'copy') {
+            layer.remove();
+          }
         }
+        for(const [layer, map] of this.profilesMap) {
+          map.get(layer).redraw();
+          map.clear();
+        }
+        this.profilesMap.clear();
+        this.layers.clear();
+        const {project} = this;
+        project.register_change(true, () => {
+          project.zoom_fit();
+          this.decorate_layers();
+        });
       }
     }
 
