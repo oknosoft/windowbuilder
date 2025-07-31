@@ -107,15 +107,15 @@ export default function tool_mirror ({Editor}) {
     }
 
     mirrorProfile(profile, bounds, direction) {
-      const res = {};
+      const mapped = {};
       for(const node of 'be') {
         const point = profile[node];
         const x = direction === 'right' ?
           bounds.right + bounds.right - point.x :
           bounds.left + bounds.left - point.x;
-        res[node === 'b' ? 'e' : 'b'] = new Point(x, point.y);
+        mapped[node === 'b' ? 'e' : 'b'] = new Point(x, point.y);
       }
-      return res;
+      return mapped;
     }
 
     mirrored(layer, direction) {
@@ -131,14 +131,14 @@ export default function tool_mirror ({Editor}) {
       const {project} = this;
       const profilesMap = this.profilesMap.get(layer);
       const parent = layer.layer ? this.profilesMap.get(layer.layer).get(layer.layer) : null;
-      const newLayer = Contour.create({project, parent});
+      const newLayer = Contour.create({project, parent, kind: layer.kind});
+      newLayer.sys = layer.sys;
       profilesMap.set(layer, newLayer);
-      // TODO: указать nearest для створок и вложений
-      // TODO: система в виртуальных слоях
       // TODO: соединители
       // TODO: разрывы и типы заполнений /builder/10e86ca0-5b34-11f0-a440-e31382da7398?order=6aec9930-5731-11f0-aebe-475b4b61bfad
       for(const proto of layer.profiles) {
-        const {b, e} = profilesMap.get(proto);
+        const mapped = profilesMap.get(proto);
+        const {b, e} = mapped;
         const attr = {
           parent: newLayer.children.profiles,
           generatrix: new Path({insert: false, segments: [b, e]}),
@@ -148,7 +148,12 @@ export default function tool_mirror ({Editor}) {
             clr: proto.clr,
           },
         };
-        const profile = new newLayer.ProfileConstructor(attr);
+        const nearest = proto.nearest(true);
+        if(nearest) {
+          const profilesMap = this.profilesMap.get(nearest.layer);
+          attr._nearest = profilesMap.get(nearest).profile;
+        }
+        mapped.profile = new newLayer.ProfileConstructor(attr);
       }
       if(parent) {
         const {params} = project.ox;
