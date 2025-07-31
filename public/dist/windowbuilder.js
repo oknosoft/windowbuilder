@@ -6487,9 +6487,27 @@ class ToolPen extends ToolElement {
     }
 
     const {rays, b, e} = addl_hit.profile;
+    const {ProfileConnective, ProfileAddlOuter} = $p.EditorInvisible;
 
-    let sub_path = (addl_hit.profile instanceof $p.EditorInvisible.ProfileConnective) ?
+    let sub_path = (addl_hit.profile instanceof ProfileConnective) ?
       addl_hit.profile.generatrix.clone({insert: false}) : rays.outer.get_subpath(b, e);
+    let addls = rays.b.profile?.addls?.filter(p => p instanceof ProfileAddlOuter);
+    if(addls?.length) {
+      const {generatrix, width} = addls[0];
+      const pt = sub_path.intersect_point(generatrix, b, width * 2, null, true);
+      if(pt) {
+        sub_path.firstSegment.point = pt;
+      }
+    }
+    addls = rays.e.profile?.addls?.filter(p => p instanceof ProfileAddlOuter);
+    if(addls?.length) {
+      const {generatrix, width} = addls[0];
+      const pt = sub_path.intersect_point(generatrix, e, width * 2, null, true);
+      if(pt) {
+        sub_path.lastSegment.point = pt;
+      }
+    }
+
 
     // получаем generatrix
     if(!addl_hit.generatrix){

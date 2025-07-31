@@ -50,6 +50,7 @@ export default function tool_mirror ({Editor}) {
           this.layers.clear();
           this.profilesMap.clear();
           this.decorate_layers(true);
+          this.project.register_change();
         },
 
         mouseup(event) {
@@ -132,6 +133,10 @@ export default function tool_mirror ({Editor}) {
       const parent = layer.layer ? this.profilesMap.get(layer.layer).get(layer.layer) : null;
       const newLayer = Contour.create({project, parent});
       profilesMap.set(layer, newLayer);
+      // TODO: указать nearest для створок и вложений
+      // TODO: система в виртуальных слоях
+      // TODO: соединители
+      // TODO: разрывы и типы заполнений /builder/10e86ca0-5b34-11f0-a440-e31382da7398?order=6aec9930-5731-11f0-aebe-475b4b61bfad
       for(const proto of layer.profiles) {
         const {b, e} = profilesMap.get(proto);
         const attr = {
@@ -184,10 +189,10 @@ export default function tool_mirror ({Editor}) {
         }
         this.profilesMap.clear();
         this.layers.clear();
+        this.decorate_layers();
         const {project} = this;
         project.register_change(true, () => {
           project.zoom_fit();
-          this.decorate_layers();
         });
       }
     }
