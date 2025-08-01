@@ -7,7 +7,7 @@ const title = 'Зеркалирование';
 
 export default function tool_mirror ({Editor}) {
 
-  const {ToolElement, Contour} = Editor;
+  const {ToolElement, Contour, Filling} = Editor;
   const {Point, Path} = Object.getPrototypeOf(Editor).prototype;
 
   /**
@@ -127,12 +127,46 @@ export default function tool_mirror ({Editor}) {
       }
     }
 
-    createProfiles(layer) {
+    createGlasses(srcLayer, layer, map) {
+      const {glass_specification} = this.project.ox;
+      for(const src of srcLayer.glasses(false, true)) {
+        const path = src.generatrix.clone({insert: false});
+        const filling = new Filling({
+          layer,
+          parent: layer.children.fillings,
+          path,
+          proto: {inset: src.inset, clr: src.clr},
+        });
+        map.set(src, filling);
+        glass_specification.find_rows({elm: src.elm}, (trow) => {
+          const gproto = Object.assign({}, trow._obj);
+          gproto.elm = filling.elm;
+          glass_specification.add(gproto);
+        });
+        for(const impost of src.imposts) {
+
+        }
+        for(const tearing of src.children.tearings.children) {
+          this.createProfiles(tearing, filling.children.tearings);
+        }
+      }
+    }
+
+    createProfiles(layer, parent) {
       const {project} = this;
       const profilesMap = this.profilesMap.get(layer);
-      const parent = layer.layer ? this.profilesMap.get(layer.layer).get(layer.layer) : null;
+      let dop;
+      if(!parent) {
+        parent = layer.layer ? this.profilesMap.get(layer.layer).get(layer.layer) : null;
+      }
+      else {
+        dop = {grp: 'top', parent: parent.parent.elm};
+      }
       const newLayer = Contour.create({project, parent, kind: layer.kind});
       newLayer.sys = layer.sys;
+      if(dop) {
+        newLayer.dop = layer.sys;
+      }
       profilesMap.set(layer, newLayer);
       // TODO: соединители
       // TODO: разрывы и типы заполнений /builder/10e86ca0-5b34-11f0-a440-e31382da7398?order=6aec9930-5731-11f0-aebe-475b4b61bfad
@@ -155,6 +189,9 @@ export default function tool_mirror ({Editor}) {
         }
         mapped.profile = new newLayer.ProfileConstructor(attr);
       }
+
+      this.createGlasses(layer, newLayer, profilesMap);
+
       if(parent) {
         const {params} = project.ox;
         newLayer.direction = layer.direction.inverse;
@@ -179,7 +216,7 @@ export default function tool_mirror ({Editor}) {
       }
       for(const layer of layers) {
         this.mirrored(layer, direction);
-        this.execute(direction, layer.contours);
+        this.execute(direction, layer.contours.concat(layer.tearings));
       }
       if(execFin) {
         for(const layer of layers) {
