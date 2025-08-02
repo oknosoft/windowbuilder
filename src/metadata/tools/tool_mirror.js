@@ -7,7 +7,7 @@ const title = 'Зеркалирование';
 
 export default function tool_mirror ({Editor}) {
 
-  const {ToolElement, Contour, Filling} = Editor;
+  const {ToolElement, Contour, Filling, ProfileConnective, ConnectiveLayer} = Editor;
   const {Point, Path} = Object.getPrototypeOf(Editor).prototype;
 
   /**
@@ -119,11 +119,22 @@ export default function tool_mirror ({Editor}) {
     }
 
     mirrored(layer, direction) {
-      const {bounds} = this.project;
+      const {bounds, l_connective} = this.project;
       const profilesMap = new Map();
       this.profilesMap.set(layer, profilesMap);
       for(const profile of layer.profiles) {
         profilesMap.set(profile, this.mirrorProfile(profile, bounds, direction));
+        const nearest = profile.nearest(true);
+        if(nearest instanceof ProfileConnective) {
+          let cnnMap = this.profilesMap.get(l_connective);
+          if(!cnnMap) {
+            cnnMap = new Map();
+            this.profilesMap.set(l_connective, cnnMap);
+          }
+          if(!cnnMap.has(nearest)) {
+            cnnMap.set(nearest, this.mirrorProfile(nearest, bounds, direction));
+          }
+        }
       }
     }
 
@@ -169,6 +180,7 @@ export default function tool_mirror ({Editor}) {
       }
       profilesMap.set(layer, newLayer);
       // TODO: соединители
+      // TODO: раскладки
       // TODO: разрывы и типы заполнений /builder/10e86ca0-5b34-11f0-a440-e31382da7398?order=6aec9930-5731-11f0-aebe-475b4b61bfad
       for(const proto of layer.profiles) {
         const mapped = profilesMap.get(proto);
@@ -207,6 +219,25 @@ export default function tool_mirror ({Editor}) {
       }
     }
 
+    createConnectives() {
+      const layer = this.project.l_connective;
+      const cnnMap = this.profilesMap.get(layer);
+      if(cnnMap) {
+        for(const [proto, mapped] of cnnMap) {
+          const {b, e} = mapped;
+          const attr = {
+            parent: layer,
+            generatrix: new Path({insert: false, segments: [b, e]}),
+            proto: {
+              inset: proto.inset,
+              clr: proto.clr,
+            },
+          };
+          mapped.profile = new ProfileConnective(attr);
+        }
+      }
+    }
+
     execute(direction, layers) {
       let execFin = false;
       if(!layers) {
@@ -219,6 +250,7 @@ export default function tool_mirror ({Editor}) {
         this.execute(direction, layer.contours.concat(layer.tearings));
       }
       if(execFin) {
+        this.createConnectives();
         for(const layer of layers) {
           this.createProfiles(layer);
           if(this.mode !== 'copy') {
@@ -226,7 +258,12 @@ export default function tool_mirror ({Editor}) {
           }
         }
         for(const [layer, map] of this.profilesMap) {
-          map.get(layer).redraw();
+          if(this.mode !== 'copy' && layer instanceof ConnectiveLayer) {
+            for(const [profile] of map) {
+              profile.remove();
+            }
+          }
+          map.get(layer)?.redraw();
           map.clear();
         }
         this.profilesMap.clear();
