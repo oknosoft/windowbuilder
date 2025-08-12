@@ -111,39 +111,41 @@ export default function tool_vitrazh ({Editor, dp: {builder_lay_impost}}) {
             let y = 0;
             let prevCy = null;
             for(let j = 0; j < byY.length; j++) {
-              y += (byY[j].sz || 0);
-              const cy = bottom ? -y : (-h + y);
-              if(cy > 0 || cy < -h) {
-                continue;
-              }
-              if(prevCy === null) {
-                prevCy = cy;
-              }
-              else {
-                if(prevCy === cy) {
+              for(let q= 1; q <= byY[j].quantity; q++) {
+                y += (byY[j].sz || 0);
+                const cy = bottom ? -y : (-h + y);
+                if(cy > 0 || cy < -h) {
                   continue;
                 }
-                prevCy = cy;
-              }
-              let profile;
-              if(bottom && cy > -100) {
-                profile = activeLayer.createProfile({
-                  b: [cnns.e.profile.b.x, cy],
-                  e: [cnns.b.profile.b.x, cy],
-                  cnns: {b: cnns.e, e: cnns.b}
-                });
-              }
-              else {
-                profile = activeLayer.createProfile({
-                  b: [cnns.b.profile.b.x, cy],
-                  e: [cnns.e.profile.b.x, cy],
-                  cnns
-                });
-              }
+                if(prevCy === null) {
+                  prevCy = cy;
+                }
+                else {
+                  if(prevCy === cy) {
+                    continue;
+                  }
+                  prevCy = cy;
+                }
+                let profile;
+                if(bottom && cy > -100) {
+                  profile = activeLayer.createProfile({
+                    b: [cnns.e.profile.b.x, cy],
+                    e: [cnns.b.profile.b.x, cy],
+                    cnns: {b: cnns.e, e: cnns.b}
+                  });
+                }
+                else {
+                  profile = activeLayer.createProfile({
+                    b: [cnns.b.profile.b.x, cy],
+                    e: [cnns.e.profile.b.x, cy],
+                    cnns
+                  });
+                }
 
-              profiles.push(profile);
-              if(left && i === byX.length || !left && i === 1) {
-                yMap.set(cy, profile);
+                profiles.push(profile);
+                if(left && i === byX.length || !left && i === 1) {
+                  yMap.set(cy, profile);
+                }
               }
             }
           }
