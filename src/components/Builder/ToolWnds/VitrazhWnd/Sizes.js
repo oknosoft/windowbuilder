@@ -18,7 +18,7 @@ export default function Sizes({obj, ts, selection}) {
 
   const onCellSelected = (v) => {
     const row = rows[v.rowIdx];
-    setSelectedRows(new Set([row.uid]));
+    setSelectedRows(new Set(row ? [row.uid] : undefined));
   };
 
   const onKeyDown = (ev) => {
