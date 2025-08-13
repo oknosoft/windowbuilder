@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDataGrid from 'react-data-grid';
 import {columns} from './SzCell';
 import Toolbar from './Toolbar';
+import {select} from './handlers';
 
 const fkeys = ['F9', 'Insert'];
 
@@ -31,6 +32,13 @@ export default function Sizes({obj, ts, selection}) {
   React.useEffect(() => {
     const rows = $p.utils._find_rows(obj[ts], selection);
     setRows(rows);
+    if(rows.length && gridRef) {
+      const pos = {idx: 1, rowIdx: 0};
+      gridRef.selectCell(pos);
+      pos.idx = 0;
+      onCellSelected(pos);
+      select(gridRef, pos);
+    }
   }, [obj, selection]);
 
   let rowSelection;

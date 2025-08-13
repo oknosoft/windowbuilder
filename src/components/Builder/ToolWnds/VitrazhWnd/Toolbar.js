@@ -7,14 +7,16 @@ import ArrowUp from '@material-ui/icons/ArrowUpward';
 import FlipCameraAndroid from '@material-ui/icons/FlipCameraAndroid';
 import DeleteOutlineIcon from '@material-ui/icons/DeleteOutline';
 import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
+import DoneAllIcon from '@material-ui/icons/DoneAll';
 import Divider from '@material-ui/core/Divider';
 import Toolbar from '@material-ui/core/Toolbar';
 import HtmlTooltip from 'metadata-react/App/Tip';
-import {handlers} from './handlers';
+import {handlers, select} from './handlers';
 
 export default function TabularToolbar({tabular, selection, rows, getRow, setRows, setSelectedRows, gridRef}) {
 
   const row = getRow();
+  const index = rows.indexOf(row);
 
   const {add, delRow, clear} = handlers({tabular, selection, rows, setRows, setSelectedRows, gridRef});
 
@@ -38,15 +40,22 @@ export default function TabularToolbar({tabular, selection, rows, getRow, setRow
   const del = () => delRow(row);
 
   const handleUp = () => {
-
+    tabular.swap(row.row-1, rows[index-1].row-1);
+    const newRows = $p.utils._find_rows(tabular, selection);
+    setRows(newRows);
+    select(gridRef,{idx: 0, rowIdx: newRows.indexOf(row)});
   };
 
   const handleDown = () => {
-
+    tabular.swap(row.row-1, rows[index+1].row-1);
+    const newRows = $p.utils._find_rows(tabular, selection);
+    setRows(newRows);
+    select(gridRef, {idx: 0, rowIdx: newRows.indexOf(row)});
   };
 
-  const handleReverse = () => {
-
+  const handleRebuild = () => {
+    const {_owner} = tabular;
+    _owner._manager.emit('rows', _owner, {sizes: null});
   };
 
   const disabled = selection.elm === 3;
@@ -73,15 +82,17 @@ export default function TabularToolbar({tabular, selection, rows, getRow, setRow
     <Divider orientation="vertical" flexItem sx={{m: 1}} />
 
     <HtmlTooltip title="Переместить вверх">
-      <IconButton disabled onClick={handleUp}><ArrowUp/></IconButton>
+      <IconButton disabled={!row || index===0} onClick={handleUp}><ArrowUp/></IconButton>
     </HtmlTooltip>
 
     <HtmlTooltip title="Переместить вниз">
-      <IconButton disabled onClick={handleDown}><ArrowDown/></IconButton>
+      <IconButton disabled={!row || index===(rows.length-1)} onClick={handleDown}><ArrowDown/></IconButton>
     </HtmlTooltip>
 
-    <HtmlTooltip title="Перевернуть состав">
-      <IconButton disabled onClick={handleReverse}><FlipCameraAndroid/></IconButton>
+    <Divider orientation="vertical" flexItem sx={{m: 1}} />
+
+    <HtmlTooltip title="Перестроить сетку витража">
+      <IconButton onClick={handleRebuild}><DoneAllIcon/></IconButton>
     </HtmlTooltip>
 
 

@@ -1,5 +1,5 @@
 
-function select(gridRef, pos) {
+export function select(gridRef, pos) {
   setTimeout(() => {
     gridRef?.grid?.focus();
     gridRef?.scrollToColumn?.(pos);
