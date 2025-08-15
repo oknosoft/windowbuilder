@@ -91,8 +91,6 @@ export function init(store) {
       },
     });
     md.once('predefined_elmnts_inited', () => {
-      const {current_user, job_prm} = $p;
-      job_prm.builder.ign_tech_restrictions = current_user.role_available('ИгнорироватьОграниченияТехнологии');
       pouch.emit('pouch_complete_loaded');
     });
 

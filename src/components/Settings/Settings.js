@@ -23,22 +23,10 @@ import {compose} from 'redux';
 
 class Settings extends Component {
 
-  static propTypes = {
-    zone: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-    couch_path: PropTypes.string,
-    title: PropTypes.string,
-    couch_direct: PropTypes.bool,
-    enable_save_pwd: PropTypes.bool,
-    ram_indexer: PropTypes.bool,
-    handleSetPrm: PropTypes.func.isRequired,
-    handleIfaceState: PropTypes.func.isRequired,
-    classes: PropTypes.object,
-  };
-
   constructor(props) {
     super(props);
-    const {zone, couch_path, enable_save_pwd, couch_direct, ram_indexer} = props;
-    const {wsql, cat, current_user, pricing} = $p;
+    const {zone, couch_path, couch_direct, ram_indexer} = props;
+    const {wsql, cat, current_user, pricing, job_prm} = $p;
 
     let hide_price;
     if(wsql.get_user_param('hide_price_dealer')) {
@@ -80,13 +68,19 @@ class Settings extends Component {
     }
 
     this.state = {
-      zone, couch_path, enable_save_pwd, couch_direct, ram_indexer, hide_price,
-      confirm_reset: false, surcharge_internal, discount_percent_internal, surcharge_disabled
+      zone, couch_path, couch_direct, ram_indexer, hide_price,
+      confirm_reset: false, surcharge_internal, discount_percent_internal, surcharge_disabled,
+      ign_tech_restrictions: false,
     };
   }
 
   componentDidMount() {
     this.shouldComponentUpdate(this.props);
+    const {current_user, job_prm} = $p;
+    this.setState({
+      enable_restrictions: current_user && (/doc_full|_admin/.test(current_user.roles) || current_user.role_available('ИгнорироватьОграниченияТехнологии')),
+      ign_tech_restrictions: Boolean(job_prm.builder?.ign_tech_restrictions)
+    });
   }
 
   shouldComponentUpdate({handleIfaceState, title}) {
@@ -103,7 +97,7 @@ class Settings extends Component {
   }
 
   handleSetPrm = () => {
-    const {hide_price, ...state} = this.state;
+    const {hide_price, ign_tech_restrictions, enable_restrictions, ...state} = this.state;
     if(hide_price == 'dealer') {
       state.hide_price_dealer = true;
       state.hide_price_manufacturer = '';
@@ -146,9 +140,11 @@ class Settings extends Component {
   render() {
     const {classes} = this.props;
     const {
-      zone, couch_path, enable_save_pwd, couch_direct, ram_indexer, confirm_reset, hide_price,
-      surcharge_internal, discount_percent_internal, surcharge_disabled
+      zone, couch_path, couch_direct, ram_indexer, confirm_reset, hide_price,
+      surcharge_internal, discount_percent_internal, surcharge_disabled, ign_tech_restrictions, enable_restrictions,
     } = this.state;
+
+    const {current_user, job_prm} = $p;
 
     return (
       <Paper className={classes.root} elevation={4}>
@@ -187,22 +183,28 @@ class Settings extends Component {
           <FormControl>
             <FormControlLabel
               control={<Switch
-                onChange={(event, checked) => this.setState({enable_save_pwd: checked})}
-                checked={Boolean(enable_save_pwd)}/>}
-              label="Разрешить сохранение пароля"
-            />
-            <FormHelperText style={{marginTop: -4}}>Не требовать повторного ввода пароля</FormHelperText>
-          </FormControl>
-
-          <FormControl>
-            <FormControlLabel
-              control={<Switch
                 onChange={(event, checked) => this.setState({ram_indexer: checked})}
                 checked={Boolean(ram_indexer)}/>}
               label="Использовать Indexer Postgres"
             />
             <FormHelperText style={{marginTop: -4}}>Новый источник данных для динсписков</FormHelperText>
           </FormControl>
+
+          {
+            <FormControl>
+              <FormControlLabel
+                control={<Switch
+                disabled={!enable_restrictions}
+                onChange={(event, checked) => {
+                  job_prm.builder.ign_tech_restrictions = checked;
+                  this.setState({ign_tech_restrictions: checked});
+                }}
+                checked={ign_tech_restrictions}/>}
+                label="Игнорировать ограничения технологии"
+              />
+              <FormHelperText style={{marginTop: -4}}>Делает доступными все цвета и фурнитуры + отключает связи параметров в полях ввода</FormHelperText>
+            </FormControl>
+          }
 
         </FormGroup>
 
