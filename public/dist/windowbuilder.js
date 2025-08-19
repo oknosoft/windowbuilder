@@ -5753,6 +5753,7 @@ class ToolPen extends ToolElement {
       hitItem: null,
       originalContent: null,
       start_binded: false,
+      activeLayers: new Set(),
     });
 
     this.on({
@@ -5861,6 +5862,12 @@ class ToolPen extends ToolElement {
     // при изменении системы, переоткрываем окно доступных вставок
     this.eve.on("scheme_changed", this.scheme_changed);
 
+    this.activeLayers.clear();
+    const {activeLayer, l_connective} = this.project;
+    if(activeLayer && activeLayer !== l_connective) {
+      this.activeLayers.add(activeLayer);
+    }
+
     this.decorate_layers();
   }
 
@@ -5941,16 +5948,20 @@ class ToolPen extends ToolElement {
   }
 
   on_mousedown({event}) {
-    this.project.deselectAll();
+    const {elm_types} = $p.enm;
+    const {elm_type} = this.profile;
+
+    if(![elm_types.linking, elm_types.addition_outer].includes(elm_type)) {
+      this.project.deselectAll();
+    }
 
     if(event && event.which && event.which > 1){
       return this.on_keydown({event: {code: 'Escape'}});
     }
 
     this.last_profile = null;
-    const {elm_types} = $p.enm;
 
-    if([elm_types.addition, elm_types.glbead, elm_types.linking, elm_types.adjoining].includes(this.profile.elm_type)) {
+    if([elm_types.addition, elm_types.addition_outer, elm_types.glbead, elm_types.linking, elm_types.adjoining].includes(elm_type)) {
       // для доборов и соединителей, создаём элемент, если есть addl_hit
       if(this.addl_hit) {
       }
@@ -6151,11 +6162,12 @@ class ToolPen extends ToolElement {
           item = item.nearest();
         }
 
-        if(modifiers.shift) {
+        if(modifiers.shift || modifiers.control) {
           item.selected = !item.selected;
         }
         else {
           project.deselectAll();
+          this.activeLayers.clear();
           item.selected = true;
         }
 
@@ -6171,8 +6183,18 @@ class ToolPen extends ToolElement {
           this._controls.blur();
         }
 
-        if(item.selected && item.layer){
-          item.layer.activate(true);
+        if(item.layer){
+          if(item.selected) {
+            if(!profile.elm_type.is('linking') && !profile.elm_type.is('addition_outer')) {
+              this.activeLayers.clear();
+            }
+            this.activeLayers.add(item.layer);
+            item.layer.activate(true);
+          }
+          else {
+            this.activeLayers.delete(item.layer);
+          }
+          this.decorate_layers();
         }
       }
 
@@ -6481,28 +6503,55 @@ class ToolPen extends ToolElement {
 
   draw_connective() {
 
-    const {addl_hit} = this;
+    const {addl_hit, activeLayers, project: {l_connective}} = this;
     if(!addl_hit?.profile) {
       return;
     }
 
-    const {rays, b, e} = addl_hit.profile;
+    const {rays, b, e, layer} = addl_hit.profile;
     const {ProfileConnective, ProfileAddlOuter} = $p.EditorInvisible;
+    let rb = rays.b, re = rays.e;
 
     let sub_path = (addl_hit.profile instanceof ProfileConnective) ?
       addl_hit.profile.generatrix.clone({insert: false}) : rays.outer.get_subpath(b, e);
-    let addls = rays.b.profile?.addls?.filter(p => p instanceof ProfileAddlOuter);
+    for(const current of activeLayers) {
+      if(current !== layer && current !== l_connective && current.isInserted()) {
+        // ищем близкий профиль того же направления
+        for(const profile of current.profiles) {
+          if(profile.is_collinear(addl_hit.profile)) {
+            if(profile.b.is_nearest(e, true)) {
+              const pt = profile.rays.outer.getNearestPoint(profile.e);
+              const np = sub_path.getNearestPoint(pt);
+              if(np.is_nearest(sub_path.lastSegment.point)) {
+                sub_path.lastSegment.point = pt;
+                re = profile.rays.e;
+              }
+            }
+            else if(profile.e.is_nearest(b, true)) {
+              const pt = profile.rays.outer.getNearestPoint(profile.b);
+              const np = sub_path.getNearestPoint(pt);
+              if(np.is_nearest(sub_path.firstSegment.point)) {
+                sub_path.firstSegment.point = pt;
+                rb = profile.rays.b;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    let addls = rb.profile?.addls?.filter(p => p instanceof ProfileAddlOuter);
     if(addls?.length) {
       const {generatrix, width} = addls[0];
-      const pt = sub_path.intersect_point(generatrix, b, width * 2, null, true);
+      const pt = sub_path.intersect_point(generatrix, sub_path.firstSegment.point, width * 2, null, true);
       if(pt) {
         sub_path.firstSegment.point = pt;
       }
     }
-    addls = rays.e.profile?.addls?.filter(p => p instanceof ProfileAddlOuter);
+    addls = re.profile?.addls?.filter(p => p instanceof ProfileAddlOuter);
     if(addls?.length) {
       const {generatrix, width} = addls[0];
-      const pt = sub_path.intersect_point(generatrix, e, width * 2, null, true);
+      const pt = sub_path.intersect_point(generatrix, sub_path.lastSegment.point, width * 2, null, true);
       if(pt) {
         sub_path.lastSegment.point = pt;
       }
@@ -6666,10 +6715,17 @@ class ToolPen extends ToolElement {
 
     const {project, _scope} = this;
 
-
     if (point){
       let rootLayer = project.l_connective;
       this.hitItem = rootLayer.hitTest(point, ToolPen.root_match(rootLayer));
+      if(!this.hitItem) {
+        for(const layer of this.activeLayers) {
+          this.hitItem = layer.hitTest(point, ToolPen.root_match(layer));
+          if(this.hitItem) {
+            break;
+          }
+        }
+      }
       if(!this.hitItem) {
         rootLayer = project.rootLayer();
         this.hitItem = rootLayer.hitTest(point, ToolPen.root_match(rootLayer));
@@ -7494,9 +7550,10 @@ class ToolPen extends ToolElement {
    * @param reset
    */
   decorate_layers(reset) {
-    const {activeLayer} = this.project;
-    this.project.getItems({class: Editor.Contour}).forEach((l) => {
-      l.opacity = (l == activeLayer || reset) ? 1 : 0.5;
+    const {project: {activeLayer}, profile: {elm_type}, activeLayers} = this;
+    const isLinking = elm_type.is('linking') || elm_type.is('addition_outer');
+    this.project.getItems({class: Editor.Contour}).forEach((layer) => {
+      layer.opacity = (reset || (isLinking ? activeLayers.has(layer) : layer === activeLayer)) ? 1 : 0.4;
     });
   }
 
