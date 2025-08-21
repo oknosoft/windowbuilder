@@ -1968,11 +1968,9 @@ class Editor extends $p.EditorInvisible {
       }
 
       // если выделено несколько, запланируем групповое выравнивание
-      if(name != 'delete' && profiles.length > 1){
-
+      if(name != 'delete'){
         if(changed){
           project.register_change(true);
-          setTimeout(this.profile_group_align.bind(this, name, profiles), 100);
         }
         else{
           this.profile_group_align(name);
@@ -1995,7 +1993,7 @@ class Editor extends $p.EditorInvisible {
     let	coordin = name == 'left' || name == 'bottom' ? Infinity : 0;
 
     if(!profiles){
-      profiles = this.project.selected_profiles();
+      profiles = this.project.selected_profiles(true);
     }
 
     if(!profiles.length){
@@ -2005,44 +2003,75 @@ class Editor extends $p.EditorInvisible {
     profiles.forEach(function (p) {
       switch (name){
         case 'left':
-          if(p.x1 < coordin)
+          if(p.x1 < coordin && (p.b.selected || !p.b.selected && !p.e.selected))
             coordin = p.x1;
-          if(p.x2 < coordin)
+          if(p.x2 < coordin && (p.e.selected || !p.e.selected && !p.b.selected))
             coordin = p.x2;
           break;
         case 'bottom':
-          if(p.y1 < coordin)
+          if(p.y1 < coordin && (p.b.selected || !p.b.selected && !p.e.selected))
             coordin = p.y1;
-          if(p.y2 < coordin)
+          if(p.y2 < coordin && (p.e.selected || !p.e.selected && !p.b.selected))
             coordin = p.y2;
           break;
         case 'top':
-          if(p.y1 > coordin)
+          if(p.y1 > coordin && (p.b.selected || !p.b.selected && !p.e.selected))
             coordin = p.y1;
-          if(p.y2 > coordin)
+          if(p.y2 > coordin && (p.e.selected || !p.e.selected && !p.b.selected))
             coordin = p.y2;
           break;
         case 'right':
-          if(p.x1 > coordin)
+          if(p.x1 > coordin && (p.b.selected || !p.b.selected && !p.e.selected))
             coordin = p.x1;
-          if(p.x2 > coordin)
+          if(p.x2 > coordin && (p.e.selected || !p.e.selected && !p.b.selected))
             coordin = p.x2;
           break;
       }
     });
 
+    let moved_selected;
+
     profiles.forEach(function (p) {
       switch (name){
         case 'left':
         case 'right':
-          p.x1 = p.x2 = coordin;
+          if(p.b.selected && !p.e.selected) {
+            p.x1 = coordin;
+            moved_selected = true;
+          }
+          else if(p.e.selected && !p.b.selected) {
+            p.x2 = coordin;
+            moved_selected = true;
+          }
           break;
         case 'bottom':
         case 'top':
-          p.y1 = p.y2 = coordin;
+          if(p.b.selected && !p.e.selected) {
+            p.y1 = coordin;
+            moved_selected = true;
+          }
+          else if(p.e.selected && !p.b.selected) {
+            p.y2 = coordin;
+            moved_selected = true;
+          }
           break;
       }
     });
+
+    if(!moved_selected) {
+      profiles.forEach(function (p) {
+        switch (name){
+          case 'left':
+          case 'right':
+            p.x1 = p.x2 = coordin;
+            break;
+          case 'bottom':
+          case 'top':
+            p.y1 = p.y2 = coordin;
+            break;
+        }
+      });
+    }
 
   }
 
