@@ -446,6 +446,11 @@
           .then(() => buyers_order.open_component(wnd, o, handlers, 'Additions'));
         break;
 
+      case 'btn_composition':
+        (o.is_new() ? o.save() : Promise.resolve())
+          .then(() => buyers_order.open_component(wnd, o, handlers, 'Composition'));
+        break;
+
       case 'btn_jalousie':
         open_jalousie(true);
         break;

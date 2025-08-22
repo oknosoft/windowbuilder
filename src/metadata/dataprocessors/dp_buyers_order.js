@@ -177,6 +177,9 @@ export default function ($p) {
     case 'AdditionsExt':
       imodule = import('../../components/CalcOrder/AdditionsExt');
       break;
+    case 'Composition':
+      imodule = import('../../components/CalcOrder/Compound/Frame');
+      break;
     case 'Jalousie':
       imodule = import('../../components/CalcOrder/Jalousie');
       break;
