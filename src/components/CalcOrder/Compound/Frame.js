@@ -3,12 +3,13 @@ import Frame from '../Additions/Frame';
 import Button from '@material-ui/core/Button';
 import Dialog from 'metadata-react/App/Dialog';
 import Composition from './Composition';
+import useStyles from '../../Builder/Controls/stylesAccordion';
 
 export default function CompositionFrame({dialog, handlers}) {
 
   const {ref, _mgr} = dialog;
   const calc_order = _mgr.by_ref[ref];
-
+  const classes = useStyles();
   const [dialogRef, registerDialod] = React.useState(null);
 
   const {handleCancel, handleCommit, obj, orderRow, cmeta, pmeta} = React.useMemo(() => {
@@ -45,7 +46,7 @@ export default function CompositionFrame({dialog, handlers}) {
       <Button key="cancel" onClick={handleCancel} color="secondary">Отмена</Button>
     ]}
   >
-    <Composition dialog={dialog} dialogRef={dialogRef}/>
+    <Composition dialog={dialog} dialogRef={dialogRef} classes={classes}/>
   </Dialog>;
 }
 

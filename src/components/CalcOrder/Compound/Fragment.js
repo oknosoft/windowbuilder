@@ -1,47 +1,9 @@
 import React from 'react';
-import Typography from '@material-ui/core/Typography';
 import ReactDataGrid from 'react-data-grid';
-import {Editors} from 'react-data-grid-addons';
+import {columns} from './columns';
+import GroupedSelect from './GroupedSelect';
 
-function UseFormatter({row}) {
-  const [index, setIndex] = React.useState(0);
-  const value = row.use;
-  const text = value ? (value.empty() ? 'Авто' : value.toString()) : 'Нет';
-  React.useEffect(() => {
-    row.onUpdate = () => setIndex((index) => index + 1);
-    return () => row.onUpdate = null;
-  }, [row]);
-  return <div title={text}>{text}</div>;
-}
-
-class UseEditor extends Editors.SimpleTextEditor {
-
-  // props.column.key, props.rowData(._row)
-
-  getValue() {
-    const {column, rowData} = this.props;
-    return {[column.key]: rowData[column.key]};
-  }
-
-  render() {
-
-    const {rowData, column, onCommit, options} = this.props;
-
-    return <select value={rowData[column.key]} onChange={(e) => {
-      const {value} = e.target;
-      rowData[column.key] = value;
-      onCommit(value);
-    }}>
-      {options.map((v, index) => <option key={`o-${index}`} value={v.value}>{v.text}</option>)}
-    </select>;
-  }
-}
-
-export const baseColumns = [
-  {key: 'ox', name: 'Продукция', formatter({row, value}) {return value?.toString()}},
-  {key: 'use', name: 'Использование', formatter: UseFormatter, editable: true},
-];
-
+const {utils, cat: {inserts: manager}} = $p;
 
 class CompositionRow {
   constructor(attr) {
@@ -49,58 +11,43 @@ class CompositionRow {
   }
 
   get manager() {
-    return this.inserts[0]._manager;
-  }
-
-  get utils() {
-    return this.manager._owner.$p.utils;
+    return manager;
   }
 
   get use() {
     const {_v} = this;
-    return (_v || typeof _v === 'boolean') ? _v : this.manager.get();
+    return (_v || typeof _v === 'boolean') ? _v : manager.get();
   }
   set use(v) {
-    const {utils, manager} = this;
-    this._v = utils.is_guid(v) ? manager.get(v) : false;
+    if(utils.is_empty_guid(v)) {
+      delete this._v;
+    }
+    else if(utils.is_guid(v)) {
+      this._v = manager.get(v);
+    }
+    else {
+      this._v = false;
+    }
     this.onUpdate?.();
   }
 }
 
 export default function CompositionFragment({obj, composition, compoundable, folder, dialogRef}) {
 
-  const [rows, columns] = React.useMemo(() => {
+  const [rows, proto] = React.useMemo(() => {
     const rows = [];
     const compoundRow = composition.find(v => v.insert_type == folder.valueOf());
-    const {param, inserts} = compoundable.get(folder);
+    const proto = {...compoundable.get(folder), composition, folder};
     for(const row of obj.production) {
       if(row.characteristic.calc_order === obj) {
-        rows.push(new CompositionRow({ox: row.characteristic, param, inserts}));
+        rows.push(new CompositionRow({ox: row.characteristic, ...proto}));
       }
     }
-    const columns = baseColumns.map(v => ({...v}));
-    const {DropDownEditor} = Editors;
-    const options = [
-      {
-        id: 0,
-        value: inserts[0]._manager.get(),
-        text: 'Авто',
-        title: 'Авто',
-      },
-      {
-        id: 1,
-        value: false,
-        text: 'Нет',
-        title: 'Нет',
-      },
-      ...inserts.map((value, index) => ({id: index + 2, value, text: value.toString(), title: value.toString()})),
-    ];
-    columns[1].editor = <UseEditor options={options}/>;
-    return [rows, columns];
+    return [rows, proto];
   }, [obj, folder]);
 
   return <>
-    <Typography variant="h6">{folder.name}</Typography>
+    <GroupedSelect obj={{manager, ...proto}} rows={rows} />
     <div style={{width: 'calc(100% - 8px)'}}>
       <ReactDataGrid
         columns={columns}
