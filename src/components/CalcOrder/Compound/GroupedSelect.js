@@ -7,11 +7,31 @@ import baseStyles from 'metadata-react/DataField/styles';
 import withStyles, {extClasses} from 'metadata-react/DataField/stylesPropertyGrid';
 import {renderOptions} from './columns';
 
-function GroupedSelect({obj, rows, extClasses, classes, value}) {
+const {utils} = $p;
+
+function GroupedSelect({obj, rows, extClasses, classes}) {
+
+  let compoundRow = React.useMemo(() => rows[0].compoundRow(), [obj.calc_order, obj.folder]);
+  const [value, setValue] = React.useState(compoundRow ? compoundRow.value.all : "");
 
   const onChange = ({target: {value}}) => {
+    if(utils.is_empty_guid(value)) {
+      if(compoundRow) {
+        obj.composition.splice(obj.composition.indexOf(compoundRow), 1);
+        compoundRow = null;
+      }
+      setValue(utils.blank.guid);
+    }
+    else {
+      compoundRow = rows[0].compoundRow(true);
+      compoundRow.value.all = utils.is_guid(value) ? value.valueOf() : false;
+      Object.keys(compoundRow.value).forEach(key => {
+        key !== 'all' && delete compoundRow.value[key];
+      });
+      setValue(compoundRow.value.all);
+    }
     for(const row of rows) {
-      row.use = value;
+      row.onUpdate?.();
     }
   };
 
@@ -24,14 +44,13 @@ function GroupedSelect({obj, rows, extClasses, classes, value}) {
     <InputLabel classes={extClasses && extClasses.label ? extClasses.label : null}>Установить для всех</InputLabel>
     <Select
       native
-      value=""
+      value={value}
       onChange={onChange}
       input={<Input classes={
         Object.assign({input: classes.input}, extClasses?.input)
       }/>}
-      inputProps={{title: value?.toString()}}
     >
-      <option disabled value="">Выбор из списка</option>
+      {value === '' ? <option disabled value="">Выберите из списка...</option> : null}
       {renderOptions(obj)}
     </Select>
   </FormControl>;

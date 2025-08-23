@@ -14,37 +14,67 @@ class CompositionRow {
     return manager;
   }
 
+  compoundRow(force) {
+    const {composition, folder} = this;
+    let row = composition.find(v => v.insert_type == folder.valueOf());
+    if(!row && force) {
+      row = {insert_type: folder.valueOf(), value: {}};
+      composition.push(row);
+    }
+    return row;
+  }
+
   get use() {
-    const {_v} = this;
-    return (_v || typeof _v === 'boolean') ? _v : manager.get();
+    const {ox} = this;
+    const row = this.compoundRow();
+    const ref = ox.valueOf();
+    const v = row ? (ref in row.value ? row.value[ref] : row.value.all) : undefined;
+    return typeof v === 'boolean' ? v : manager.get(v);
   }
   set use(v) {
+    const {ox, onUpdate} = this;
+    const row = this.compoundRow(true);
+    const ref = ox.valueOf();
     if(utils.is_empty_guid(v)) {
-      delete this._v;
+      if(!row.value.hasOwnProperty('all') || row.value.all == v) {
+        delete row.value[ref];
+      }
+      else {
+        row.value[ref] = v.valueOf();
+      }
     }
     else if(utils.is_guid(v)) {
-      this._v = manager.get(v);
+      if(row.value.all == v) {
+        delete row.value[ref];
+      }
+      else {
+        row.value[ref] = v.valueOf();
+      }
     }
     else {
-      this._v = false;
+      if(row.value.all === false) {
+        delete row.value[ref];
+      }
+      else {
+        row.value[ref] = false;
+      }
     }
-    this.onUpdate?.();
+    onUpdate?.();
   }
 }
 
-export default function CompositionFragment({obj, composition, compoundable, folder, dialogRef}) {
+export default function CompositionFragment({calc_order, composition, compoundable, folder, dialogRef}) {
 
   const [rows, proto] = React.useMemo(() => {
     const rows = [];
-    const compoundRow = composition.find(v => v.insert_type == folder.valueOf());
     const proto = {...compoundable.get(folder), composition, folder};
-    for(const row of obj.production) {
-      if(row.characteristic.calc_order === obj) {
+    for(const row of calc_order.production) {
+      if(row.characteristic.calc_order === calc_order) {
         rows.push(new CompositionRow({ox: row.characteristic, ...proto}));
       }
     }
     return [rows, proto];
-  }, [obj, folder]);
+  }, [calc_order, folder]);
 
   return <>
     <GroupedSelect obj={{manager, ...proto}} rows={rows} />

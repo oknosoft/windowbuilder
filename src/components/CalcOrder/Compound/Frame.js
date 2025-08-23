@@ -12,7 +12,17 @@ export default function CompositionFrame({dialog, handlers}) {
   const classes = useStyles();
   const [dialogRef, registerDialod] = React.useState(null);
 
-  const {handleCancel, handleCommit, obj, orderRow, cmeta, pmeta} = React.useMemo(() => {
+  const {handleCancel, handleCommit, prms} = React.useMemo(() => {
+
+    const composition = calc_order.composition.toJSON().map(v => ({...v}));
+
+    const {job_prm: {properties: {compoundable}}, cat: {inserts}, ui, msg} = $p;
+    const prms = {calc_order, compoundable: new Map(), composition};
+    for(const ref in compoundable) {
+      const param = compoundable[ref];
+      const folder = inserts.get(ref);
+      prms.compoundable.set(folder, {param, inserts: folder._children()});
+    }
 
     const handleCancel = () => {
       handlers.handleIfaceState({
@@ -22,13 +32,33 @@ export default function CompositionFrame({dialog, handlers}) {
       });
     };
 
+    const handleCommit = () => {
+      Promise.resolve(handleCancel())
+        .then(() => {
+          calc_order.composition = composition;
+          const {wnd} = dialog;
+          wnd.progressOn();
+          calc_order.recalc({save: true})
+            .catch((err) => {
+              ui.dialogs.alert({
+                title: 'Пересчёт заказа',
+                type: 'alert-error',
+                text: err.stack || err.message,
+                timeout: 5000,
+              });
+            })
+            .then(() => {
+              wnd.progressOff();
+              wnd.set_text();
+            });
+        })
+        .catch(console.error);
+    };
+
     return {
+      prms,
       handleCancel,
-      handleCommit() {
-        Promise.resolve()
-          .then(handleCancel)
-          .catch(console.error);
-      },
+      handleCommit,
     };
   }, [calc_order]);
 
@@ -46,7 +76,7 @@ export default function CompositionFrame({dialog, handlers}) {
       <Button key="cancel" onClick={handleCancel} color="secondary">Отмена</Button>
     ]}
   >
-    <Composition dialog={dialog} dialogRef={dialogRef} classes={classes}/>
+    <Composition dialog={dialog} dialogRef={dialogRef} classes={classes} prms={prms}/>
   </Dialog>;
 }
 
