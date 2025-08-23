@@ -72,7 +72,7 @@ export default function CompositionFrame({dialog, handlers}) {
     title={`Редактор состава к ${calc_order.presentation}`}
     onClose={handleCancel}
     actions={[
-      <Button key="ok" onClick={handleCommit} color="primary">Записать</Button>,
+      <Button key="ok" onClick={handleCommit} color="primary">Рассчитать и записать</Button>,
       <Button key="cancel" onClick={handleCancel} color="secondary">Отмена</Button>
     ]}
   >

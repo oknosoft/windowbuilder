@@ -12,7 +12,7 @@ const {utils} = $p;
 function GroupedSelect({obj, rows, extClasses, classes}) {
 
   let compoundRow = React.useMemo(() => rows[0].compoundRow(), [obj.calc_order, obj.folder]);
-  const [value, setValue] = React.useState(compoundRow ? compoundRow.value.all : "");
+  const [value, setValue] = React.useState(compoundRow ? (compoundRow.value.all || '') : '');
 
   const onChange = ({target: {value}}) => {
     if(utils.is_empty_guid(value)) {
