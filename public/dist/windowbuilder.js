@@ -6054,6 +6054,10 @@ class ToolPen extends ToolElement {
           parent: project.l_connective,
         });
         addl_hit.profile._attr._nearest = connective;
+        if(addl_hit.profile instanceof ProfileConnective) {
+          const normal = generatrix.getNormalAt(generatrix.length).normalize(connective.width);
+          generatrix.translate(normal);
+        }
         connective.clear_joined();
         if(!modifiers.space) {
           project.register_change(true, () => connective.move_linked());
@@ -6779,7 +6783,7 @@ class ToolPen extends ToolElement {
       }
 
       // для соединителей, нас интересуют только внешние рёбра
-      if(hit.side == "outer" && !(hit.profile instanceof $p.EditorInvisible.ProfileConnective)) {
+      if(hit.side == "outer") {
         this.addl_hit = hit;
         _scope.canvas_cursor('cursor-pen-adjust');
       }
