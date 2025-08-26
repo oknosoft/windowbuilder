@@ -6055,7 +6055,7 @@ class ToolPen extends ToolElement {
         });
         addl_hit.profile._attr._nearest = connective;
         if(addl_hit.profile instanceof ProfileConnective) {
-          const normal = generatrix.getNormalAt(generatrix.length).normalize(connective.width);
+          const normal = generatrix.getNormalAt(generatrix.length / 2).normalize(-connective.d2);
           generatrix.translate(normal);
         }
         connective.clear_joined();
