@@ -7,14 +7,14 @@ import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import CompositionFragment from './Fragment';
 
 
-export default function Composition({prms, classes, dialogRef}) {
+export default function Composition({prms, classes, dialogRef, currentProd}) {
 
   const rows = Array.from(prms.compoundable.keys());
   if(rows.length === 1) {
     const folder = rows[0];
     return <>
       <Typography variant="h6">{folder.name}</Typography>
-      <CompositionFragment folder={folder} {...prms} dialogRef={dialogRef}/>
+      <CompositionFragment folder={folder} {...prms} dialogRef={dialogRef} currentProd={currentProd}/>
     </>;
   }
   return rows.map((folder) => {
@@ -28,7 +28,7 @@ export default function Composition({prms, classes, dialogRef}) {
         <Typography variant="h6">{folder.name}</Typography>
       </AccordionSummary>
       <AccordionDetails classes={{root: classes.details}}>
-        <CompositionFragment folder={folder} {...prms} dialogRef={dialogRef}/>
+        <CompositionFragment folder={folder} {...prms} dialogRef={dialogRef} currentProd={currentProd}/>
       </AccordionDetails>
     </Accordion>;
   });

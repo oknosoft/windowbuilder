@@ -63,7 +63,7 @@ class CompositionRow {
   }
 }
 
-export default function CompositionFragment({calc_order, composition, compoundable, folder, dialogRef}) {
+export default function CompositionFragment({calc_order, composition, compoundable, folder, dialogRef, currentProd, setProd}) {
 
   const [rows, proto] = React.useMemo(() => {
     const rows = [];
@@ -76,6 +76,19 @@ export default function CompositionFragment({calc_order, composition, compoundab
     return [rows, proto];
   }, [calc_order, folder]);
 
+  const currentRow = rows.find(row => row.ox === currentProd);
+  const rowSelection = currentRow ? {
+    showCheckbox: false,
+    enableShiftSelect: false,
+    selectBy: {
+      indexes: [rows.indexOf(currentRow)]
+    }
+  } : null;
+  const onCellSelected = (v) => {
+    const row = rows[v.rowIdx];
+    setProd(row.ox);
+  };
+
   return <>
     <GroupedSelect obj={{manager, ...proto}} rows={rows} />
     <div style={{width: 'calc(100% - 8px)'}}>
@@ -84,6 +97,8 @@ export default function CompositionFragment({calc_order, composition, compoundab
         rowGetter={i => rows[i]}
         rowsCount={rows.length}
         enableCellSelect
+        rowSelection={rowSelection}
+        onCellSelected={onCellSelected}
         editorPortalTarget={dialogRef?.portalTarget()}
       />
     </div>
