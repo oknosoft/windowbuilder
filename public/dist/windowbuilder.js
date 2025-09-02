@@ -2380,7 +2380,7 @@ class Magnetism {
           const da = rSegm.angle_to(rNext, segm.profile[be]);
 
           let p0 = rSegm.intersect_point(rNext, ps);
-          if(!p0 || da < 4) {
+          if(!p0 || da < 4 || da > 358) {
             p0 = rNext.getNearestPoint(segm.profile[be]);
           }
           const delta = p0.subtract(ps);
