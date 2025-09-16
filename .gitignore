@@ -11,7 +11,7 @@ doc/out/
 public/dist/print/
 public/dist/dhtmlx_debug.js
 public/templates/
-public/ram/
+public/dynamic-settings.js
 src/templates/imgs
 src/templates/printing_plates/20160408/
 src/templates/printing_plates/invoice_signature.png

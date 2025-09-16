@@ -21,27 +21,140 @@ function addImpost(elm, orienattion) {
     pos: positions[orienattion],
   });
   const pt = elm.interiorPoint();
-  const {top, bottom, left, right} = elm.profiles_by_side();
+  let {top, bottom, left, right} = elm.profiles_by_side();
   const {layer} = elm;
 
   const gen = (profile) => !layer.level || profile.elm_type.is('impost') ? profile.generatrix : profile.rays.outer;
 
   let path;
   if(orienattion == 'vert') {
-    path = new paper.Path([pt.add([0, 10000]), pt.add([0, -10000])]);
-    path.firstSegment.point = path.intersect_point(gen(bottom.profile));
-    path.lastSegment.point = path.intersect_point(gen(top.profile));
+    if(Math.abs(bottom.profile.b.x - pt.x) < 100) {
+      pt.x = bottom.profile.generatrix.getPointAt(150).x;
+    }
+    if(Math.abs(bottom.profile.e.x - pt.x) < 100) {
+      pt.x = bottom.profile.generatrix.getPointAt(bottom.profile.generatrix.length - 150).x;
+    }
+    if(Math.abs(top.profile.b.x - pt.x) < 100) {
+      pt.x = top.profile.generatrix.getPointAt(150).x;
+    }
+    if(Math.abs(top.profile.e.x - pt.x) < 100) {
+      pt.x = top.profile.generatrix.getPointAt(top.profile.generatrix.length - 150).x;
+    }
+    path = new paper.Path({insert: false, segments: [pt.add([0, 10000]), pt.add([0, -10000])]});
+    let b = path.intersect_point(gen(bottom.profile));
+    let e = path.intersect_point(gen(top.profile));
+    if(b && e) {
+      path.firstSegment.point = b;
+      path.lastSegment.point = e;
+    }
+    else {
+      let tmp;
+      if(!b) {
+        for(const segm of elm.profiles) {
+          if(segm.profile !== top.profile && segm.profile !== bottom.profile) {
+            tmp = path.intersect_point(segm.sub_path);
+            if(tmp) {
+              bottom = segm;
+              break;
+            }
+          }
+        }
+        if(!tmp) {
+          pt.x = bottom.profile.generatrix.getPointAt(bottom.profile.generatrix.length / 2).x;
+        }
+      }
+      else if(!e) {
+        for(const segm of elm.profiles) {
+          if(segm.profile !== top.profile && segm.profile !== bottom.profile) {
+            tmp = path.intersect_point(segm.sub_path);
+            if(tmp) {
+              top = segm;
+              break;
+            }
+          }
+        }
+        if(!tmp) {
+          pt.x = top.profile.generatrix.getPointAt(top.profile.generatrix.length / 2).x;
+        }
+      }
+      path = new paper.Path({insert: false, segments: [pt.add([0, 10000]), pt.add([0, -10000])]});
+      path.firstSegment.point = path.intersect_point(gen(bottom.profile));
+      path.lastSegment.point = path.intersect_point(gen(top.profile));
+    }
   }
   else {
-    path = new paper.Path([pt.add([-10000, 0]), pt.add([10000, 0])]);
-    path.firstSegment.point = path.intersect_point(gen(left.profile));
-    path.lastSegment.point = path.intersect_point(gen(right.profile));
+    if(Math.abs(left.profile.b.y - pt.y) < 100) {
+      pt.y = left.profile.generatrix.getPointAt(150).y;
+    }
+    if(Math.abs(left.profile.e.y - pt.y) < 100) {
+      pt.y = left.profile.generatrix.getPointAt(left.profile.generatrix.length - 150).y;
+    }
+    if(Math.abs(right.profile.b.y - pt.y) < 100) {
+      pt.y = right.profile.generatrix.getPointAt(150).y;
+    }
+    if(Math.abs(right.profile.e.y - pt.y) < 100) {
+      pt.y = right.profile.generatrix.getPointAt(right.profile.generatrix.length - 150).y;
+    }
+    path = new paper.Path({insert: false, segments: [pt.add([-10000, 0]), pt.add([10000, 0])]});
+    let b = path.intersect_point(gen(left.profile));
+    let e = path.intersect_point(gen(right.profile));
+    if(b && e) {
+      path.firstSegment.point = b;
+      path.lastSegment.point = e;
+    }
+    else {
+      let tmp;
+      if(!b) {
+        for(const segm of elm.profiles) {
+          if(segm.profile !== left.profile && segm.profile !== right.profile) {
+            tmp = path.intersect_point(segm.sub_path);
+            if(tmp) {
+              left = segm;
+              break;
+            }
+          }
+        }
+        if(!tmp) {
+          pt.y = left.profile.generatrix.getPointAt(left.profile.generatrix.length / 2).y;
+        }
+      }
+      else if(!e) {
+        for(const segm of elm.profiles) {
+          if(segm.profile !== left.profile && segm.profile !== right.profile) {
+            tmp = path.intersect_point(segm.sub_path);
+            if(tmp) {
+              right = segm;
+              break;
+            }
+          }
+        }
+        if(!tmp) {
+          pt.y = right.profile.generatrix.getPointAt(right.profile.generatrix.length / 2).y;
+        }
+      }
+      path = new paper.Path({insert: false, segments: [pt.add([-10000, 0]), pt.add([10000, 0])]});
+      path.firstSegment.point = path.intersect_point(gen(left.profile));
+      path.lastSegment.point = path.intersect_point(gen(right.profile));
+    }
   }
 
-  new $p.EditorInvisible.Profile({
+  const {profiles} = layer;
+  const impost = new $p.EditorInvisible.Profile({
     generatrix: path,
-    proto: {inset, clr: top.profile.clr, layer}
+    layer,
+    parent: layer.children?.profiles,
+    proto: {inset, clr: top.profile.clr}
   });
+  for(const inode of 'be') {
+    const pt = impost[inode];
+    for(const profile of profiles) {
+      for(const pnode of 'be') {
+        if(profile[pnode].is_nearest(pt, true) && impost.isAbove(profile)) {
+          impost.insertBelow(profile);
+        }
+      }
+    }
+  }
 }
 
 function GlassToolbar({editor, elm, classes}) {

@@ -156,16 +156,20 @@ class Magnetism {
           const da = rSegm.angle_to(rNext, segm.profile[be]);
 
           let p0 = rSegm.intersect_point(rNext, ps);
-          if(!p0 || da < 4) {
+          if(!p0 || da < 4 || da > 358) {
             p0 = rNext.getNearestPoint(segm.profile[be]);
           }
           const delta = p0.subtract(ps);
-          selected.profile.move_points(delta, true);
-          for(const node of ['b', 'e']) {
-            try {
-              selected.profile.do_sub_bind(selected.profile.rays[node].profile, node);
+          if(delta.length) {
+            selected.profile.move_points(delta, true);
+            for(const node of ['b', 'e']) {
+              try {
+                selected.profile.do_sub_bind(selected.profile.rays[node].profile, node);
+              }
+              catch (e) {}
             }
-            catch (e) {}
+            selected.profile.insertBelow(prev.profile);
+            selected.profile.insertBelow(next.profile);
           }
         }
         else {

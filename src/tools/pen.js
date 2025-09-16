@@ -216,6 +216,7 @@ class ToolPen extends ToolElement {
       hitItem: null,
       originalContent: null,
       start_binded: false,
+      activeLayers: new Set(),
     });
 
     this.on({
@@ -234,44 +235,45 @@ class ToolPen extends ToolElement {
 
   // подключает окно редактора
   tool_wnd() {
+    const {dp, wsql, enm: {elm_types}, cat, utils} = $p;
+    let {project, profile} = this;
 
-    // создаём экземпляр обработки
-    this.profile = $p.dp.builder_pen.create();
-
-    const {project, profile} = this;
     this.sys = project._dp.sys;
 
     // восстанавливаем сохранённые параметры
-    $p.wsql.restore_options('editor', this.options);
+    wsql.restore_options('editor', this.options);
     this.options.wnd.on_close = this.on_close;
 
-    ['elm_type', 'inset', 'bind_generatrix', 'bind_node'].forEach((prop) => {
-      if(prop == 'bind_generatrix' || prop == 'bind_node' || this.options.wnd[prop]) {
-        profile[prop] = this.options.wnd[prop];
+    // создаём экземпляр обработки
+    if(!profile) {
+      this.profile = profile = dp.builder_pen.create();
+      ['elm_type', 'inset', 'bind_generatrix', 'bind_node', 'bind_sys'].forEach((prop) => {
+        if(prop == 'bind_generatrix' || prop == 'bind_node' || this.options.wnd[prop]) {
+          profile[prop] = this.options.wnd[prop];
+        }
+      });
+
+      // если в текущем слое есть профили, выбираем импост
+      if(project.activeLayer instanceof Editor.ContourRegion) {
+        profile.elm_type = elm_types.Ряд;
       }
-    });
+      else if((profile.elm_type.empty() || profile.elm_type == elm_types.Рама) &&
+        project.activeLayer instanceof Editor.Contour && project.activeLayer.profiles.length) {
+        profile.elm_type = elm_types.Импост;
+      }
+      else if((profile.elm_type.empty() || profile.elm_type == elm_types.Импост) &&
+        project.activeLayer instanceof Editor.Contour && !project.activeLayer.profiles.length) {
+        profile.elm_type = elm_types.Рама;
+      }
 
-    // если в текущем слое есть профили, выбираем импост
-    if((profile.elm_type.empty() || profile.elm_type == $p.enm.elm_types.Рама) &&
-      project.activeLayer instanceof Editor.Contour && project.activeLayer.profiles.length) {
-      profile.elm_type = $p.enm.elm_types.Импост;
-    }
-    else if((profile.elm_type.empty() || profile.elm_type == $p.enm.elm_types.Импост) &&
-      project.activeLayer instanceof Editor.Contour && !project.activeLayer.profiles.length) {
-      profile.elm_type = $p.enm.elm_types.Рама;
-    }
+      // вставку по умолчанию получаем эмулируя событие изменения типа элемента
+      dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
 
-    // вставку по умолчанию получаем эмулируя событие изменения типа элемента
-    $p.dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
-
-    // цвет по умолчанию
-    profile.clr = project.clr;
-
-    // параметры отбора для выбора вставок
-    profile._metadata('inset').choice_links = [{
-      name: ['selection', 'ref'],
-      path: [(o, f) => {
-          if($p.utils.is_data_obj(o)){
+      // параметры отбора для выбора вставок
+      profile._metadata('inset').choice_links = [{
+        name: ['selection', 'ref'],
+        path: [(o, f) => {
+          if(utils.is_data_obj(o)){
             return profile.rama_impost.indexOf(o) != -1;
           }
           else{
@@ -285,77 +287,27 @@ class ToolPen extends ToolElement {
             return '_t_.ref in (' + refs + ')';
           }
         }]
-    }];
+      }];
+    }
+
+
+    // цвет по умолчанию
+    profile.clr = project.clr;
+
+
 
     // дополняем свойства поля цвет отбором по служебным цветам
-    $p.cat.clrs.selection_exclude_service(profile._metadata('clr'), this, project);
+    cat.clrs.selection_exclude_service(profile._metadata('clr'), this, project);
 
-    this.wnd = $p.iface.dat_blank(this._scope._dxw, this.options.wnd);
-    this._grid = this.wnd.attachHeadFields({
-      obj: profile
-    });
+    this.wnd = {
+      wnd_options(opt){
+        opt.bind_generatrix = profile.bind_generatrix;
+        opt.bind_node = profile.bind_node;
+        opt.bind_sys = profile.bind_sys;
+      },
+      close() {
 
-    // панелька с командой типовых форм
-    this.wnd.tb_mode = new $p.iface.OTooolBar({
-      wrapper: this.wnd.cell,
-      width: '100%',
-      height: '28px',
-      class_name: '',
-      name: 'tb_mode',
-      buttons: [{
-        name: 'standard_form',
-        text: '<i class="fa fa-file-image-o fa-fw"></i>',
-        tooltip: 'Добавить типовую форму',
-        float: 'left',
-        sub: {
-          width: '120px',
-          height:'174px',
-          buttons: [
-            {name: 'square', img: 'square.png', float: 'left'},
-            {name: 'triangle1', img: 'triangle1.png', float: 'left'},
-            {name: 'triangle2', img: 'triangle2.png', float: 'left'},
-            {name: 'triangle3', img: 'triangle3.png', float: 'right'},
-            {name: 'semicircle1', img: 'semicircle1.png', float: 'left'},
-            {name: 'semicircle2', img: 'semicircle2.png', float: 'left'},
-            {name: 'arc1',      img: 'arc1.png', float: 'left'},
-            {name: 'circle',    img: 'circle.png', float: 'right'},
-            {name: 'circle1',   css: 'tb_circle1', float: 'left'},
-            {name: 'circle2',   css: 'tb_circle2', float: 'left'},
-            {name: 'circle3',   css: 'tb_circle3', float: 'left'},
-            {name: 'circle4',   css: 'tb_circle4', float: 'right'},
-            {name: 'trapeze1',  img: 'trapeze1.png', float: 'left'},
-            {name: 'trapeze2',  img: 'trapeze2.png', float: 'left'},
-            {name: 'trapeze3',  img: 'trapeze3.png', float: 'left'},
-            {name: 'trapeze4',  img: 'trapeze4.png', float: 'right'},
-            {name: 'trapeze5',  img: 'trapeze5.png', float: 'left'},
-            {name: 'trapeze6',  img: 'trapeze6.png', float: 'left'},
-            {name: 'trapeze7',  img: 'trapeze7.png', float: 'left'},
-            {name: 'trapeze8',  img: 'trapeze8.png', float: 'right'},
-            {name: 'trapeze9',  img: 'trapeze9.png', float: 'left'},
-            {name: 'trapeze10', img: 'trapeze10.png', float: 'left'},
-          ]},
-      }],
-      image_path: '/imgs/',
-      onclick: (name) => this.standard_form(name)
-    });
-    this.wnd.tb_mode.cell.style.backgroundColor = '#f5f5f5';
-    this.wnd.cell.firstChild.style.marginTop = '22px';
-    const {standard_form} = this.wnd.tb_mode.buttons;
-    const {onmouseover} = standard_form;
-    const wnddiv = this.wnd.cell.parentElement;
-    standard_form.onmouseover = function() {
-      if(wnddiv.style.transform) {
-        wnddiv.style.transform = '';
       }
-      onmouseover.call(this);
-    };
-
-    // подмешиваем в метод wnd_options() установку доппараметров
-    const wnd_options = this.wnd.wnd_options;
-    this.wnd.wnd_options = (opt) => {
-      wnd_options.call(this.wnd, opt);
-      opt.bind_generatrix = profile.bind_generatrix;
-      opt.bind_node = profile.bind_node;
     };
   }
 
@@ -372,6 +324,12 @@ class ToolPen extends ToolElement {
 
     // при изменении системы, переоткрываем окно доступных вставок
     this.eve.on("scheme_changed", this.scheme_changed);
+
+    this.activeLayers.clear();
+    const {activeLayer, l_connective} = this.project;
+    if(activeLayer && activeLayer !== l_connective) {
+      this.activeLayers.add(activeLayer);
+    }
 
     this.decorate_layers();
   }
@@ -399,9 +357,7 @@ class ToolPen extends ToolElement {
 
     this.decorate_layers(true);
 
-    delete this.profile._metadata('inset').choice_links;
-
-    this.detache_wnd();
+    this.detache_wnd(true);
 
     if(this.path){
       this.path.removeSegments();
@@ -430,6 +386,9 @@ class ToolPen extends ToolElement {
       this.project.selectedItems.forEach((path) => {
         if(path.parent instanceof Editor.ProfileItem){
           path = path.parent;
+          if(path instanceof Editor.ProfileConnective) {
+            path.move_linked(true);
+          }
           path.remove();
         }
       });
@@ -452,16 +411,20 @@ class ToolPen extends ToolElement {
   }
 
   on_mousedown({event}) {
-    this.project.deselectAll();
+    const {elm_types} = $p.enm;
+    const {elm_type} = this.profile;
+
+    if(![elm_types.linking, elm_types.addition_outer].includes(elm_type)) {
+      this.project.deselectAll();
+    }
 
     if(event && event.which && event.which > 1){
       return this.on_keydown({event: {code: 'Escape'}});
     }
 
     this.last_profile = null;
-    const {elm_types} = $p.enm;
 
-    if([elm_types.addition, elm_types.glbead, elm_types.linking, elm_types.adjoining].includes(this.profile.elm_type)) {
+    if([elm_types.addition, elm_types.addition_outer, elm_types.glbead, elm_types.linking, elm_types.adjoining].includes(elm_type)) {
       // для доборов и соединителей, создаём элемент, если есть addl_hit
       if(this.addl_hit) {
       }
@@ -480,10 +443,10 @@ class ToolPen extends ToolElement {
     const {_scope, addl_hit, profile, project, group} = this;
     const {
       enm: {elm_types},
-      EditorInvisible: {Sectional, ProfileAddl, ProfileGlBead, ProfileConnective, Onlay, BaseLine, ProfileCut,
+      EditorInvisible: {Sectional, ProfileAddl, ProfileAddlOuter, ProfileGlBead, ProfileConnective, Onlay, BaseLine, ProfileCut,
         ProfileAdjoining, Profile, ProfileItem, Filling, Contour}} = $p;
 
-    group && group.removeChildren();
+    group?.removeChildren();
 
     _scope.canvas_cursor('cursor-pen-freehand');
 
@@ -498,7 +461,7 @@ class ToolPen extends ToolElement {
     if(addl_hit){
 
       // рисуем доборный профиль
-      if(addl_hit.glass && profile.elm_type == elm_types.addition && !profile.inset.empty()){
+      if(addl_hit.glass && profile.elm_type.is('addition') && !profile.inset.empty()){
         new ProfileAddl({
           generatrix: addl_hit.generatrix,
           proto: profile,
@@ -506,32 +469,45 @@ class ToolPen extends ToolElement {
           side: addl_hit.side
         });
       }
-      else if(addl_hit.glass && profile.elm_type == elm_types.glbead && !profile.inset.empty()){
+      // рисуем штапик
+      else if(addl_hit.glass && profile.elm_type.is('glbead') && !profile.inset.empty()){
         const {point, rib, ...other} = addl_hit;
-        new ProfileGlBead({parent: addl_hit.profile.layer, proto: profile, ...other});
+        new ProfileGlBead({
+          layer: addl_hit.profile.layer,
+          parent: addl_hit.profile.layer.children.profiles,
+          proto: profile,
+          ...other
+        });
       }
       // рисуем соединительный профиль
-      else if(profile.elm_type == elm_types.linking && !profile.inset.empty()){
-
+      else if(profile.elm_type.is('linking') && !profile.inset.empty()){
+        const {generatrix} = addl_hit;
         const connective = new ProfileConnective({
-          generatrix: addl_hit.generatrix,
+          generatrix,
           proto: profile,
           parent: project.l_connective,
         });
-        connective.joined_nearests().forEach((rama) => {
-          const {inner, outer} = rama.joined_imposts();
-          for (const {profile} of inner.concat(outer)) {
-            profile.rays.clear();
-          }
-          for (const {_attr, elm} of rama.joined_nearests()) {
-            _attr._rays && _attr._rays.clear();
-          }
-          const {_attr, layer} = rama;
-          _attr._rays && _attr._rays.clear();
-          layer && layer.notify && layer.notify({profiles: [rama], points: []}, _scope.consts.move_points);
+        addl_hit.profile._attr._nearest = connective;
+        if(addl_hit.profile instanceof ProfileConnective) {
+          const normal = generatrix.getNormalAt(generatrix.length / 2).normalize(-connective.d2);
+          generatrix.translate(normal);
+        }
+        connective.clear_joined();
+        if(!modifiers.space) {
+          project.register_change(true, () => connective.move_linked());
+        }
+      }
+      // добор снаружи
+      else if(profile.elm_type.is('addition_outer') && !profile.inset.empty()) {
+        const adjoining = new ProfileAddlOuter({
+          generatrix: addl_hit.generatrix,
+          proto: profile,
+          parent: addl_hit.profile,
+          side: addl_hit.side
         });
       }
-      else if(profile.elm_type == elm_types.adjoining) {
+      // примыкание
+      else if(profile.elm_type.is('adjoining')) {
         const adjoining = new ProfileAdjoining({
           b: addl_hit.b,
           e: addl_hit.e,
@@ -555,7 +531,11 @@ class ToolPen extends ToolElement {
         const pt2 = this.path.getPointAt(length * 0.9);
         project.activeLayer.glasses(false, true).some((glass) => {
           if(glass.contains(pt1) && glass.contains(pt2)){
-            new Onlay({generatrix: this.path, proto: profile, parent: glass});
+            new Onlay({
+              generatrix: this.path,
+              proto: profile,
+              parent: glass
+            });
             this.path = null;
             return true;
           }
@@ -568,24 +548,39 @@ class ToolPen extends ToolElement {
 
       case elm_types.Водоотлив:
         // рисуем разрез
-        this.last_profile = new Sectional({generatrix: this.path, proto: profile});
+        this.last_profile = new Sectional({
+          generatrix: this.path,
+          layer: project.activeLayer,
+          parent: project.activeLayer?.children?.sectionals,
+          proto: profile
+        });
         break;
 
       case elm_types.Линия:
         // рисуем линию
-        this.last_profile = new BaseLine({generatrix: this.path, proto: profile});
+        this.last_profile = new BaseLine({
+          generatrix: this.path,
+          layer: project.l_connective,
+          parent: project.l_connective,
+          proto: profile});
         break;
 
       case elm_types.Сечение:
         // рисуем линию
-        this.last_profile = new ProfileCut({generatrix: this.path, proto: profile});
+        this.last_profile = new ProfileCut({
+          generatrix: this.path,
+          layer: project.l_connective,
+          parent: project.l_connective,
+          proto: profile
+        });
         break;
 
       case elm_types.tearing:
         // рисуем разрыв заполнения
         const tearing = Contour.create({
           kind: 4,
-          parent: this.hitItem.item.layer,
+          layer: this.hitItem.item.layer,
+          parent: this.hitItem.item.parent.children?.tearings,
           project,
         });
         tearing.initialize({
@@ -597,9 +592,16 @@ class ToolPen extends ToolElement {
         this.path.remove();
         break;
 
-      default:
+      default: {
         // рисуем профиль
-        this.last_profile = new Profile({generatrix: this.path, proto: profile});
+        const {activeLayer} = project;
+        this.last_profile = new activeLayer.ProfileConstructor({
+          generatrix: this.path,
+          layer: activeLayer,
+          parent: activeLayer?.children?.profiles,
+          proto: profile,
+        });
+      }
       }
 
       this.path = null;
@@ -615,35 +617,52 @@ class ToolPen extends ToolElement {
         }, 40);
       }
     }
-    else if (this.hitItem && this.hitItem.item && (modifiers.shift || modifiers.control || modifiers.option)) {
+    else if (modifiers.shift || modifiers.control || modifiers.option) {
 
-      let item = this.hitItem.item.parent;
-      if(modifiers.space && item.nearest && item.nearest()) {
-        item = item.nearest();
-      }
-
-      if(modifiers.shift) {
-        item.selected = !item.selected;
-      }
-      else {
-        project.deselectAll();
-        item.selected = true;
+      if(!this.hitItem?.item) {
+        this.hitItem = project.hitTest(this._downPoint, { fill:true, visible: true, tolerance: 20 });
       }
 
-      // TODO: Выделяем элемент, если он подходящего типа
-      if(item instanceof ProfileItem && item.isInserted()) {
-        item.attache_wnd(_scope._acc.elm);
-        whas_select = true;
-        this._controls.blur();
-      }
-      else if(item instanceof Filling && item.visible) {
-        item.attache_wnd(_scope._acc.elm);
-        whas_select = true;
-        this._controls.blur();
-      }
+      if(this.hitItem?.item) {
+        let item = this.hitItem.item.parent;
+        if(modifiers.space && item.nearest && item.nearest()) {
+          item = item.nearest();
+        }
 
-      if(item.selected && item.layer){
-        item.layer.activate(true);
+        if(modifiers.shift || modifiers.control) {
+          item.selected = !item.selected;
+        }
+        else {
+          project.deselectAll();
+          this.activeLayers.clear();
+          item.selected = true;
+        }
+
+        // TODO: Выделяем элемент, если он подходящего типа
+        if(item instanceof ProfileItem && item.isInserted()) {
+          item.attache_wnd(_scope._acc.elm);
+          whas_select = true;
+          this._controls.blur();
+        }
+        else if(item instanceof Filling && item.visible) {
+          item.attache_wnd(_scope._acc.elm);
+          whas_select = true;
+          this._controls.blur();
+        }
+
+        if(item.layer){
+          if(item.selected) {
+            if(!profile.elm_type.is('linking') && !profile.elm_type.is('addition_outer')) {
+              this.activeLayers.clear();
+            }
+            this.activeLayers.add(item.layer);
+            item.layer.activate(true);
+          }
+          else {
+            this.activeLayers.delete(item.layer);
+          }
+          this.decorate_layers();
+        }
       }
 
     }
@@ -677,9 +696,22 @@ class ToolPen extends ToolElement {
 
   on_mousemove(event) {
 
+    const {project, addl_hit, _scope, profile, activeLayers} = this;
+
+    // если соединитель или добор снаружи, активируем корневой слой
+    const {elm_type} = profile;
+    if(project.activeLayer?.layer && (elm_type.is('linking') || elm_type.is('addition_outer'))) {
+      while (project.activeLayer.layer) {
+        project.activeLayer.layer.activate();
+      }
+      activeLayers.clear();
+      activeLayers.add(project.activeLayer);
+      this.decorate_layers();
+    }
+
     this.hitTest(event);
 
-    const {project, addl_hit, _scope, profile} = this;
+
     if(profile.elm_type.is('tearing')) {
       return;
     }
@@ -698,7 +730,7 @@ class ToolPen extends ToolElement {
       }
 
       this.path.removeSegments();
-      this.group && this.group.removeChildren();
+      this.group?.removeChildren?.();
 
       if(addl_hit.glass){
         this.draw_addl();
@@ -951,27 +983,80 @@ class ToolPen extends ToolElement {
 
   draw_connective() {
 
-    const {rays, b, e} = this.addl_hit.profile;
+    const {addl_hit, activeLayers, project: {l_connective}} = this;
+    if(!addl_hit?.profile) {
+      return;
+    }
 
-    let sub_path = rays.outer.get_subpath(b, e);
+    const {rays, b, e, layer} = addl_hit.profile;
+    const {ProfileConnective, ProfileAddlOuter} = $p.EditorInvisible;
+    let rb = rays.b, re = rays.e;
+
+    let sub_path = (addl_hit.profile instanceof ProfileConnective) ?
+      addl_hit.profile.generatrix.clone({insert: false}) : rays.outer.get_subpath(b, e);
+    for(const current of activeLayers) {
+      if(current !== layer && current !== l_connective && current.isInserted()) {
+        // ищем близкий профиль того же направления
+        for(const profile of current.profiles) {
+          if(profile.is_collinear(addl_hit.profile)) {
+            if(profile.b.is_nearest(e, true)) {
+              const pt = profile.rays.outer.getNearestPoint(profile.e);
+              const np = sub_path.getNearestPoint(pt);
+              if(np.is_nearest(sub_path.lastSegment.point)) {
+                sub_path.lastSegment.point = pt;
+                re = profile.rays.e;
+              }
+            }
+            else if(profile.e.is_nearest(b, true)) {
+              const pt = profile.rays.outer.getNearestPoint(profile.b);
+              const np = sub_path.getNearestPoint(pt);
+              if(np.is_nearest(sub_path.firstSegment.point)) {
+                sub_path.firstSegment.point = pt;
+                rb = profile.rays.b;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    let addls = rb.profile?.addls?.filter(p => p instanceof ProfileAddlOuter);
+    if(addls?.length) {
+      const {generatrix, width} = addls[0];
+      const pt = sub_path.intersect_point(generatrix, sub_path.firstSegment.point, width * 2, null, true);
+      if(pt) {
+        sub_path.firstSegment.point = pt;
+      }
+    }
+    addls = re.profile?.addls?.filter(p => p instanceof ProfileAddlOuter);
+    if(addls?.length) {
+      const {generatrix, width} = addls[0];
+      const pt = sub_path.intersect_point(generatrix, sub_path.lastSegment.point, width * 2, null, true);
+      if(pt) {
+        sub_path.lastSegment.point = pt;
+      }
+    }
+
 
     // получаем generatrix
-    if(!this.addl_hit.generatrix){
-      this.addl_hit.generatrix = new paper.Path({insert: false});
+    if(!addl_hit.generatrix){
+      addl_hit.generatrix = new paper.Path({insert: false});
     }
-    this.addl_hit.generatrix.removeSegments();
-    this.addl_hit.generatrix.addSegments(sub_path.segments);
+    addl_hit.generatrix.removeSegments();
+    addl_hit.generatrix.addSegments(sub_path.segments);
 
     // рисуем внутреннюю часть прототипа пути доборного профиля
-    this.path.addSegments(sub_path.equidistant(this.profile.inset.nom().width / 2 || 10).segments);
+    const nom = this.profile.inset.nom();
+    this.path.addSegments(sub_path.equidistant(nom.width / 2 || 10).segments);
 
     // завершим рисование прототипа пути доборного профиля
-    sub_path = sub_path.equidistant(-(this.profile.inset.nom().width || 10));
+    sub_path = sub_path.equidistant(-(nom.width || 10));
     sub_path.reverse();
     this.path.addSegments(sub_path.segments);
     sub_path.removeSegments();
     sub_path.remove();
     this.path.closePath();
+    this.path.bringToFront();
 
   }
 
@@ -1041,13 +1126,90 @@ class ToolPen extends ToolElement {
 
   }
 
+  hitTest_addl_outer({point}) {
+
+    const hitSize = 16;
+    const {project, _scope} = this;
+
+    if (point){
+      this.hitItem = project.hitTest(point, { stroke:true, curves:true, tolerance: hitSize });
+    }
+
+    if (this.hitItem) {
+
+      if(this.hitItem.item.layer == project.activeLayer &&
+        this.hitItem.item.parent instanceof Editor.ProfileItem && !(this.hitItem.item.parent instanceof Editor.Onlay)){
+        // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
+
+        const hit = {
+          point: this.hitItem.point,
+          profile: this.hitItem.item.parent
+        };
+
+        // выясним, с какой стороны примыкает профиль
+        if(hit.profile.rays.inner.getNearestPoint(point).getDistance(point, true) <
+          hit.profile.rays.outer.getNearestPoint(point).getDistance(point, true)){
+          hit.side = "inner";
+        }
+        else{
+          hit.side = "outer";
+        }
+
+        // бежим по всем заполнениям и находим ребро
+        hit.profile.layer.glasses(false, true).some((glass) => {
+          return glass.profiles.some((rib, index) => {
+            if(rib.profile == hit.profile && rib.sub_path && rib.sub_path.getNearestPoint(hit.point).is_nearest(hit.point, true)){
+              if(hit.side == "outer" && rib.outer || hit.side == "inner" && !rib.outer){
+                hit.rib = index;
+                hit.glass = glass;
+                return true;
+              }
+            }
+          });
+        });
+
+        if(hit.glass){
+          _scope.canvas_cursor('cursor-pen-freehand');
+        }
+        else {
+          // бежим по соседним слоям - не должно быть примыканий
+          this.addl_hit = hit;
+          _scope.canvas_cursor('cursor-pen-adjust');
+        }
+      }
+      else{
+        _scope.canvas_cursor('cursor-pen-freehand');
+      }
+
+    }
+    else {
+
+      this.hitItem = project.hitTest(point, { fill:true, visible: true, tolerance: hitSize  });
+      _scope.canvas_cursor('cursor-pen-freehand');
+    }
+
+  }
+
+  // /builder/e1a5c4d0-1162-11f0-bd8b-6d87a0cb1c56?order=061af830-d7e8-11ef-8735-45ec7a768305
   hitTest_connective({point}) {
 
     const {project, _scope} = this;
-    const rootLayer = project.rootLayer();
 
     if (point){
+      let rootLayer = project.l_connective;
       this.hitItem = rootLayer.hitTest(point, ToolPen.root_match(rootLayer));
+      if(!this.hitItem) {
+        for(const layer of this.activeLayers) {
+          this.hitItem = layer.hitTest(point, ToolPen.root_match(layer));
+          if(this.hitItem) {
+            break;
+          }
+        }
+      }
+      if(!this.hitItem) {
+        rootLayer = project.rootLayer();
+        this.hitItem = rootLayer.hitTest(point, ToolPen.root_match(rootLayer));
+      }
     }
 
     if(this.hitItem){
@@ -1068,7 +1230,7 @@ class ToolPen extends ToolElement {
       }
 
       // для соединителей, нас интересуют только внешние рёбра
-      if(hit.side == "outer"){
+      if(hit.side == "outer") {
         this.addl_hit = hit;
         _scope.canvas_cursor('cursor-pen-adjust');
       }
@@ -1203,8 +1365,8 @@ class ToolPen extends ToolElement {
         size: [240, 240],
         insert: false,
       });
-      const intersections = this.hitItem.item.getIntersections(rect);
-      if(intersections.length) {
+      const intersections = this.hitItem.item?.getIntersections?.(rect);
+      if(intersections?.length) {
         this._scope.canvas_cursor('cursor-pen-freehand');
         this.mode = null;
         this.path && this.path.remove();
@@ -1241,7 +1403,10 @@ class ToolPen extends ToolElement {
     case elm_types.glbead:
       this.hitTest_addl(event);
       break;
-    case elm_types.Соединитель:
+    case elm_types.addition_outer:
+        this.hitTest_addl_outer(event);
+        break;
+    case elm_types.linking:
       this.hitTest_connective(event);
       break;
     case elm_types.adjoining:
@@ -1290,22 +1455,26 @@ class ToolPen extends ToolElement {
 
   /**
    * ### Добавляет последовательность профилей
-   * @param points {Array}
+   * @param {Array} points
    */
   add_sequence(points) {
     const profiles = [];
     const {profile, project} = this;
+    const {activeLayer: layer} = project;
     points.forEach((segments) => {
       profiles.push(new Editor.Profile({
         generatrix: new paper.Path({
           strokeColor: 'black',
           segments: segments
-        }), proto: profile
+        }),
+        layer,
+        parent: layer?.children?.profiles,
+        proto: profile
       }));
     });
-    profile.bind_sys && project.activeLayer.on_sys_changed(true);
+    profile.bind_sys && layer?.on_sys_changed(true);
     project.register_change(true, () => {
-      project.activeLayer.on_sys_changed();
+      layer?.on_sys_changed();
     });
     return profiles;
   }
@@ -1473,6 +1642,7 @@ class ToolPen extends ToolElement {
         profile.elm_type = enm.elm_types.impost;
         dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
 
+        const {activeLayer: layer} = project;
         project.register_change(true, () => {
           const impost = new Editor.Profile({
             generatrix: new paper.Path({
@@ -1480,9 +1650,13 @@ class ToolPen extends ToolElement {
               segments,
             }),
             proto: profile,
+            layer,
+            parent: layer?.children?.profiles,
           });
           project.deselectAll();
           project.zoom_fit();
+          impost.insertBelow(profiles[0]);
+          impost.insertBelow(profiles[1]);
           _scope.select_tool('select_node');
           setTimeout(() => {
             project.register_change(true, () => {
@@ -1528,6 +1702,7 @@ class ToolPen extends ToolElement {
         profile.elm_type = enm.elm_types.impost;
         dp.builder_pen.emit('value_change', {field: 'elm_type'}, profile);
 
+        const {activeLayer: layer} = project;
         project.register_change(true, () => {
           const segments = sign > 0 ?
             [profiles[0].e.add([delta, 0]), profiles[0].b.add([delta, 0])] :
@@ -1538,9 +1713,13 @@ class ToolPen extends ToolElement {
               segments,
             }),
             proto: profile,
+            layer,
+            parent: layer?.children?.profiles,
           });
           project.deselectAll();
           project.zoom_fit();
+          impost.insertBelow(profiles[0]);
+          impost.insertBelow(profiles[1]);
           _scope.select_tool('select_node');
           setTimeout(() => {
             project.register_change(true, () => {
@@ -1740,13 +1919,121 @@ class ToolPen extends ToolElement {
   }
 
   /**
+   * Рисует trapeze11
+   * @param bounds
+   */
+  add_trapeze11(bounds) {
+    // находим правую нижнюю точку
+    const point = bounds.bottomRight;
+    this.add_sequence([
+      [point.add([1600, 0]), point.add([0, 0])],
+      [point.add([0, 0]), point.add([420, -890])],
+      [point.add([420, -890]), point.add([1180, -890])],
+      [point.add([1180, -890]), point.add([1600, 0])]
+    ]);
+  }
+
+  /**
+   * Рисует polygon
+   * @param {Object} bounds - Объект, содержащий координаты центра
+   */
+  add_polygon(bounds) {
+    const min_side_length = this.profile.inset?.lmin;// Минимальная допустимая длина стороны
+    // Функция для вычисления длины стороны
+    const calculatePolygonSide = (radius, numberOfSides) => {
+      const centralAngle = Math.PI / numberOfSides;
+      return 2 * radius * Math.sin(centralAngle);
+    };
+    const checkingParameters = (radius, numberOfSides) => {
+      const sideLength = calculatePolygonSide(radius, numberOfSides);
+      // Проверка, что длина стороны не меньше минимальной
+      if (sideLength < min_side_length) {
+        $p.ui.dialogs.alert({
+          text: `Длина стороны (${sideLength.toFixed(0)} мм) меньше ${min_side_length} мм. Пожалуйста, введите другие значения.`,
+        });
+        return;
+      }
+      this.drawRegularPolygon(bounds, numberOfSides, sideLength);
+    };
+    // Запрос радиуса у пользователя
+    $p.ui.dialogs.input_value({
+      title: '',
+      text: 'Уточните радиус описанной окружности',
+      type: 'number',
+      initialValue: 500,
+    })
+      .then((r) => {
+        const radius = parseFloat(r); // Используем радиус, введенный пользователем
+        if (isNaN(radius) || radius <= 0 || radius >= 3000) {
+          $p.ui.dialogs.alert({
+            text: 'Некорректный радиус. Пожалуйста, введите положительное число меньше 3000.',
+          });
+          return;
+        }
+        // Запрос количества сторон у пользователя
+        $p.ui.dialogs.input_value({
+          title: '',
+          text: 'Уточните количество сторон',
+          type: 'number',
+          initialValue: 5,
+        })
+          .then((side) => {
+            const numberOfSides = parseInt(side); // Количество сторон многоугольника (целое число)
+            if (isNaN(numberOfSides) || numberOfSides < 3) {
+              $p.ui.dialogs.alert({
+                text: 'Некорректное количество сторон. Пожалуйста, введите число больше или равное 3.',
+              });
+              return;
+            }
+            checkingParameters(radius, numberOfSides);
+          })
+          .catch((error) => {
+            $p.ui.dialogs.alert({
+              text: 'Ввод количества сторон отменен или произошла ошибка.',
+            });
+          });
+      })
+      .catch((error) => {
+        $p.ui.dialogs.alert({
+          text: 'Ввод радиуса отменен или произошла ошибка.',
+        });
+      });
+  }
+  /**
+   * Отрисовывает правильный многоугольник
+   * @param {Object} bounds - Объект, содержащий координаты центра
+   * @param {number} numberOfSides - Количество сторон
+   * @param {number} sideLength - Длина стороны
+   */
+  drawRegularPolygon(bounds, numberOfSides, sideLength) {
+    const centerX = bounds.center.x; // Центр по X
+    const centerY = bounds.center.y; // Центр по Y
+    // Вычисляем радиус описанной окружности по длине стороны
+    const radius = sideLength / (2 * Math.sin(Math.PI / numberOfSides));
+    // Создаём массив точек для многоугольника
+    const points = [];
+    for (let i = 0; i < numberOfSides; i++) {
+      const angle = (2 * Math.PI * i) / numberOfSides; // Угол в радианах
+      const x = centerX + radius * Math.cos(angle); // Координата X
+      const y = centerY + radius * Math.sin(angle); // Координата Y
+      points.push([x, y]); // Добавляем точку в массив
+    }
+    // Отрисовываем многоугольник
+    this.add_sequence(points.map((point, index) => {
+      const nextPoint = points[(index + 1) % numberOfSides]; // Следующая точка
+      return [point, nextPoint]; // Линия между текущей и следующей точкой
+    }));
+  }
+
+  /**
    * Делает полупрозрачными элементы неактивных контуров
    * @param reset
    */
   decorate_layers(reset) {
-    const {activeLayer} = this.project;
-    this.project.getItems({class: Editor.Contour}).forEach((l) => {
-      l.opacity = (l == activeLayer || reset) ? 1 : 0.5;
+    const {project: {activeLayer}, profile: {elm_type}, activeLayers} = this;
+    const isLinking = elm_type.is('linking') || elm_type.is('addition_outer');
+    this.project.getItems({class: Editor.Contour}).forEach((layer) => {
+      layer.opacity = (reset || (isLinking ? activeLayers.has(layer) : layer === activeLayer)) ? 1 : 0.4;
     });
   }
 

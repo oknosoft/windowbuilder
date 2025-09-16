@@ -15,12 +15,11 @@ const {ItemData} = $p.cat.inserts;
 
 // заполняет компонент данными
 export function fill_data(ref, items) {
-
   if(!items) {
     items = this.items = $p.enm.inserts_types.additions_groups;
   }
   const dp = this.dp = $p.dp.buyers_order.create();
-  dp.calc_order = $p.doc.calc_order.by_ref[ref];
+  dp.calc_order = ref;
   const components = this.components = new Map();
   items.forEach(v => components.set(v, new ItemData(v, AdditionsItem)));
 
@@ -147,20 +146,23 @@ export function handleCopy() {
 export function handleRemove() {
   const {props, tabular, state, selectedRow} = this;
   if(tabular && selectedRow){
-    const {calc_order_row} = selectedRow.characteristic;
-    selectedRow._owner.del(selectedRow);
-    this.selectedRow = null;
-    tabular.cache_actual = false;
-    tabular.setState({selected: {rowIdx: 0}});
-    if(state.count) {
-      this.setState({
-        count: state.count - 1,
+    return $p.utils.sleep(120)
+      .then(() => {
+        const {calc_order_row} = selectedRow.characteristic;
+        selectedRow._owner.del(selectedRow);
+        this.selectedRow = null;
+        tabular.cache_actual = false;
+        tabular.setState({selected: {rowIdx: 0}});
+        if(state.count) {
+          this.setState({
+            count: state.count - 1,
+          });
+        }
+        if(calc_order_row){
+          calc_order_row._owner.del(calc_order_row);
+        }
+        props.onSelect && props.onSelect(null);
       });
-    }
-    if(calc_order_row){
-      calc_order_row._owner.del(calc_order_row);
-    }
-    props.onSelect && props.onSelect(null);
   }
   else{
     $p.msg.show_msg({
@@ -197,20 +199,21 @@ export function find_inset(insert_type) {
 
 function mapStateToProps(state, props) {
   return {
-    handleCalck() {
+    handleCalck(...attr) {
       const {additions} = this;
       const {dp} = additions;
-      return dp ?
-        dp.calc_order.process_add_product_list(dp)
-          .then(() => {
-            dp.calc_order.production.sync_grid(props.dialog.wnd.elmnts.grids.production);
-          })
-        :
-        additions.handleCalck();
+      return $p.utils.sleep(120)
+        .then(() => dp ?
+          dp.calc_order.process_add_product_list(dp)
+            .then(() => {
+              dp.calc_order.production.sync_grid(props.dialog.wnd.elmnts.grids.production);
+            })
+          :
+          additions.handleCalck(...attr));
     },
     handleCancel() {
       props.handlers.handleIfaceState({
-        component: 'DataObjPage',
+        component: props.dialog?.cmd?.area || 'DataObjPage',
         name: 'dialog',
         value: null,
       });

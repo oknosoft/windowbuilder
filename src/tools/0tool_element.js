@@ -34,9 +34,9 @@ class ToolElement extends Editor.ToolElement {
    *
    * @method detache_wnd
    * @for ToolElement
-   * @param tool
+   * @param {Boolean} [save_profile]
    */
-  detache_wnd() {
+  detache_wnd(save_profile) {
     if (this.wnd) {
 
       if (this._grid && this._grid.destructor) {
@@ -56,7 +56,9 @@ class ToolElement extends Editor.ToolElement {
 
       delete this.wnd;
     }
-    this.profile = null;
+    if(!save_profile) {
+      this.profile = null;
+    }
   }
 
   on_close(wnd) {

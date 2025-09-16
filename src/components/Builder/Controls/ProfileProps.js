@@ -3,11 +3,12 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import PropField from 'metadata-react/DataField/PropField';
 import LinkedProp from 'wb-forms/dist/Common/LinkedProp';
-import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
 import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
 import FieldInsetProfile from 'wb-forms/dist/CatInserts/FieldInsetProfile';
 import ProfileToolbar from './Toolbar/ProfileToolbar';
+import FieldEndConnection from './FieldEndConnection';
 import Bar from './Bar';
+import CnnProps from './ProfileCnnProps';
 import ElmInsets from './ElmInsets';
 import Coordinates from './Coordinates';
 
@@ -44,8 +45,17 @@ export default function ProfileProps(props) {
       <FieldEndConnection elm1={elm} node="b" _fld="cnn1" onClick={select_b}/>
       <FieldEndConnection elm1={elm} node="e" _fld="cnn2" onClick={select_e}/>
       {elm instanceof Onlay ? <PropField _obj={elm} _fld="region" _meta={elm._metadata.fields.region} ctrl_type="oselect" /> : null}
+      <CnnProps elm={elm} sb={elm.b.selected} se={elm.e.selected}/>
       {eprops.map((param, ind) => {
-        return <LinkedProp key={`ap-${ind}`} _obj={elm} _fld={param.ref} param={param} cnstr={-elm.elm} fields={fields} />;
+        return <LinkedProp
+          key={`ap-${ind}`}
+          _obj={elm}
+          _fld={param.ref}
+          param={param}
+          cnstr={-elm.elm}
+          inset={elm.inset}
+          fields={fields}
+        />;
       })}
       <Coordinates elm={elm} fields={fields} select_b={select_b} select_e={select_e} />
       <ElmInsets elm={elm}/>

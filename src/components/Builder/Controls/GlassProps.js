@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import Typography from '@material-ui/core/Typography';
 import PropField from 'metadata-react/DataField/PropField';
 import GlassToolbar from './Toolbar/GlassToolbar';
 import Bar from './Bar';
@@ -110,6 +111,9 @@ export default class GlassProps extends React.Component {
     const {state: {elm, row, index}, fields} = this;
 
     const {info, inset, ox} = elm;
+    if(elm.isInserted && !elm.isInserted()) {
+      return <Typography>Текущий элемент не выбран</Typography>;
+    }
     const props = elm.elm_props();
     const clr_group = $p.cat.clrs.selection_exclude_service(fields.clr, inset, ox);
     const is_composite = inset.insert_type.is('Стеклопакет');

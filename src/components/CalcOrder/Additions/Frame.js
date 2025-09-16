@@ -23,7 +23,7 @@ class ParametricFrame extends React.Component {
   }
 
   handleOk = () => {
-    this.props.handleCalck.call(this)
+    this.props.handleCalck.call(this, {ok: true})
       .then(this.handleCancel)
       .catch((err) => {
         this.setState({msg: err.msg || err.message});
@@ -31,7 +31,24 @@ class ParametricFrame extends React.Component {
   };
 
   handleCalck = () => {
-    this.props.handleCalck.call(this)
+    this.props.handleCalck.call(this, {calck: true})
+      .then((res) => {
+        if(res?.close) {
+          return this.handleCancel();
+        }
+      })
+      .catch((err) => {
+        this.setState({msg: err.msg || err.message});
+      });
+  };
+
+  handlePre = () => {
+    this.props.handleCalck.call(this, {pre: true})
+      .then((res) => {
+        if(res?.close) {
+          return this.handleCancel();
+        }
+      })
       .catch((err) => {
         this.setState({msg: err.msg || err.message});
       });
@@ -56,6 +73,7 @@ class ParametricFrame extends React.Component {
       title={title}
       onClose={this.queryClose}
       actions={[
+        actions && actions.pre && <Button key="pre" onClick={this.handlePre} color="primary">{actions.pre}</Button>,
         !actions && <Button key="ok" onClick={this.handleOk} color="primary">Рассчитать и закрыть</Button>,
         actions && actions.ok && <Button key="ok" onClick={this.handleOk} color="primary">{actions.ok}</Button>,
         !actions && <Button key="calck" onClick={this.handleCalck} color="primary">Рассчитать</Button>,

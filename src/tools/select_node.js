@@ -96,7 +96,7 @@ class ToolSelectNode extends ToolElement {
         return;
       }
 
-      let item = hitItem.item.parent;
+      let item = hitItem.item._owner || hitItem.item.parent;
       if(!(item instanceof Editor.BuilderElement) && item.parent) {
         item = item.parent;
       }
@@ -422,11 +422,38 @@ class ToolSelectNode extends ToolElement {
     let j, segment, index, point, handle;
 
     function move(point) {
-      if(project.activeLayer?.kind === 4 && project.selectedItems.some((path) => path instanceof Editor.Filling)) {
+      const initialSelected = [...project.selectedItems];
+      if(project.activeLayer?.kind === 4 && initialSelected.some((path) => path instanceof Editor.Filling)) {
         project.activeLayer.move(point);
       }
       else{
-        project.move_points(point);
+        const deselect = [];
+        const filtered = initialSelected.filter(p => p.parent instanceof Editor.ProfileItem);
+        if(filtered.length === 1) {
+          const {parent} = filtered[0];
+          if(!(parent instanceof Editor.ProfileConnective)) {
+            if(parent.b.selected && parent.e.selected || !parent.b.selected && !parent.e.selected) {
+              parent.select_joined?.(deselect);
+            }
+            else {
+              parent.select_joined?.(deselect, parent.b.selected ? parent.b : parent.e);
+            }
+          }
+        }
+        else {
+          for(const elm of initialSelected) {
+            if(elm.select_joined && !(elm instanceof Editor.ProfileConnective)) {
+              elm.select_joined(deselect);
+            }
+          }
+        }
+        project.move_points(point, false);
+        for(const segm of deselect) {
+          segm.selected = false;
+          if(segm._owner) {
+            segm._owner.path.selected = false;
+          }
+        }
       }
     }
 
@@ -569,7 +596,7 @@ class ToolSelectNode extends ToolElement {
           return true;
         }
         else if(path.parent instanceof Editor.GeneratrixElement){
-          if(path instanceof Editor.ProfileAddl || path instanceof Editor.ProfileGlBead || path instanceof Editor.ProfileAdjoining || path instanceof Editor.ProfileSegment){
+          if(path instanceof Editor.GeneratrixElement){
             path.remove();
           }
           else{
@@ -586,8 +613,14 @@ class ToolSelectNode extends ToolElement {
               }
             }
             // если не было обработки узлов - удаляем элемент
-            if(!do_select){
+            if(do_select) {
+              path.parent.redraw();
+            }
+            else {
               path = path.parent;
+              if(path instanceof Editor.ProfileConnective) {
+                path.move_linked(true);
+              }
               path.remove();
             }
           }

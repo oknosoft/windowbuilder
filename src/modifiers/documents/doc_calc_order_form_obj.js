@@ -39,18 +39,18 @@
         // TODO: штуки сейчас спрятаны в ro и имеют нулевую ширину
         if($p.wsql.get_user_param('hide_price_dealer')) {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
-          source.widths = '40,200,*,220,0,0,0,70,70,40,70,70,90,0,0,0';
-          source.min_widths = '30,200,220,150,0,0,0,70,70,70,70,70,90,0,0,0';
+          source.widths = '40,200,*,220,0,0,0,90,70,40,70,70,90,0,0,0';
+          source.min_widths = '30,200,220,140,0,0,0,80,70,70,70,70,90,0,0,0';
         }
         else if($p.wsql.get_user_param('hide_price_manufacturer')) {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка,Цена,Сумма';
-          source.widths = '40,200,*,220,0,0,0,70,70,40,0,0,0,70,70,90';
-          source.min_widths = '30,200,220,150,0,0,0,70,70,70,0,0,0,70,70,90';
+          source.widths = '40,200,*,220,0,0,0,90,70,40,0,0,0,70,70,90';
+          source.min_widths = '30,200,220,140,0,0,0,80,70,70,0,0,0,70,70,90';
         }
         else {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка&nbsp;пост,Цена&nbsp;пост,Сумма&nbsp;пост,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
-          source.widths = '40,200,*,220,0,0,0,70,70,40,70,70,90,70,70,90';
-          source.min_widths = '30,200,220,150,0,0,0,70,70,70,70,70,90,70,70,90';
+          source.widths = '40,200,*,220,0,0,0,90,70,40,70,70,90,70,70,90';
+          source.min_widths = '30,200,220,140,0,0,0,80,70,70,70,70,90,70,70,90';
         }
 
         if(user.role_available('СогласованиеРасчетовЗаказов') || user.role_available('РедактированиеЦен') || user.role_available('РедактированиеСкидок')) {
@@ -162,16 +162,22 @@
         read_only: wnd.elmnts.ro,
         oxml: {
           'Налоги': ['vat_consider', 'vat_included'],
-          'Аналитика': ['project',
+          'Аналитика': [
+            {id: 'branch', path: 'o.branch', synonym: 'Отдел', type: 'ro'},
+            'project',
             {id: 'organization', path: 'o.organization', synonym: 'Организация', type: 'refc'},
             {id: 'contract', path: 'o.contract', synonym: 'Договор', type: 'refc'},
             {id: 'bank_account', path: 'o.bank_account', synonym: 'Счет организации', type: 'refc'},
             {id: 'department', path: 'o.department', synonym: 'Офис продаж', type: 'refc'},
             {id: 'warehouse', path: 'o.warehouse', synonym: 'Склад отгрузки', type: 'refc'},
           ],
-          'Итоги': [{id: 'doc_currency', path: 'o.doc_currency', synonym: 'Валюта документа', type: 'ro', txt: o['doc_currency'].toString()},
-            {id: 'doc_amount', path: 'o.doc_amount', synonym: 'Сумма', type: 'ron', txt: o['doc_amount']},
-            {id: 'amount_internal', path: 'o.amount_internal', synonym: 'Сумма внутр', type: 'ron', txt: o['amount_internal']}]
+          'Итоги': [
+            {id: 'weight', path: 'o.weight', synonym: 'Масса изделий, кг', type: 'ron', txt: o.weight},
+            {id: 'areas', path: 'o.areas', synonym: 'Площадь изделий, м²', type: 'ro', txt: o.areas},
+            {id: 'doc_currency', path: 'o.doc_currency', synonym: 'Валюта документа', type: 'ro', txt: o['doc_currency'].toString()},
+            {id: 'doc_amount', path: 'o.doc_amount', synonym: 'Сумма', type: 'ron', txt: o.doc_amount},
+            {id: 'amount_internal', path: 'o.amount_internal', synonym: 'Сумма внутр', type: 'ron', txt: o.amount_internal},
+          ]
         }
       });
 
@@ -232,13 +238,7 @@
                 columns: ",,,,#stat_t,,,#stat_s,,,,,#stat_t,,,#stat_t",
                 _in_header_stat_s (tag, index, data) {
                   const calck = function () {
-                    let sum = 0;
-                    for(const row of o.production) {
-                      if(row.characteristic.leading_product.calc_order !== o) {
-                        sum += row.s * row.quantity;
-                      }
-                    }
-                    return sum.round(2).toLocaleString('ru-RU');
+                    return o.areas;
                   };
                   this._stat_in_header(tag, calck, index, data);
                 },
@@ -437,11 +437,18 @@
         break;
 
       case 'btn_add_product':
-        buyers_order.open_component(wnd, o, handlers, 'AdditionsExt');
+        (o.is_new() ? o.save() : Promise.resolve())
+          .then(() => buyers_order.open_component(wnd, o, handlers, 'AdditionsExt'));
         break;
 
       case 'btn_additions':
-        buyers_order.open_component(wnd, o, handlers, 'Additions');
+        (o.is_new() ? o.save() : Promise.resolve())
+          .then(() => buyers_order.open_component(wnd, o, handlers, 'Additions'));
+        break;
+
+      case 'btn_composition':
+        (o.is_new() ? o.save() : Promise.resolve())
+          .then(() => buyers_order.open_component(wnd, o, handlers, 'Composition'));
         break;
 
       case 'btn_jalousie':
@@ -449,7 +456,12 @@
         break;
 
       case 'cut_evaluation':
-        cut_evaluation();
+      case 'cut_evaluation_2d':
+        cut_evaluation(btn_id === 'cut_evaluation_2d');
+        break;
+
+      case 'agent_order':
+        buyers_order.open_component(wnd, o, handlers, 'AgentOrder');
         break;
 
       case 'btn_share':
@@ -545,13 +557,22 @@
         break;
 
       case 'btn_print':
-        const {_spacer} = this;
-        ui.dialogs.popup({
-          anchorEl: _spacer,
-          _mgr,
-          handlePrint: (model) => _mgr.print(o, model),
-          variant: 'hidden',
-        });
+        if(o._modified) {
+          ui.dialogs.alert({
+            title: 'Заказ не записан',
+            text: 'Перед отправкой на печать, запишите документ',
+            timeout: 10000,
+          });
+        }
+        else {
+          const {_spacer} = this;
+          ui.dialogs.popup({
+            anchorEl: _spacer,
+            _mgr,
+            handlePrint: (model) => _mgr.print(o, model),
+            variant: 'hidden',
+          });
+        }
         break;
     }
 
@@ -763,10 +784,10 @@
           title: msg.order_sent_title,
           text: msg.order_sent_message,
           cancel: msg.cancel,
-          callback: function (btn) {
+          callback(btn) {
             if(btn) {
               // установить транспорт в "отправлено" и записать
-              o.obj_delivery_state = enm.obj_delivery_states.Отправлен;
+              o.set_route();
               do_save();
             }
           }
@@ -962,8 +983,8 @@
             not_production();
           }
           else if(row.characteristic.coordinates.count()) {
-            const json = JSON.stringify(utils._mixin({}, row.characteristic._obj, [],
-              'ref,_rev,name,calc_order,product,leading_product,leading_elm,origin,partner,department,specification,svg'.split(',')));
+            const json = JSON.stringify(utils._mixin({class_name: row.characteristic.class_name}, row.characteristic._obj, [],
+              'ref,_rev,branch,name,calc_order,product,leading_product,leading_elm,origin,partner,department,specification,svg,class_name'.split(',')));
             navigator.clipboard.writeText(json)
               .then(() => dialogs.alert({
                 title: 'Экспорт данных',
@@ -1098,8 +1119,8 @@
 
     }
 
-    function cut_evaluation() {
-      $p.dp.buyers_order.open_component(wnd, {ref: o.ref, _mgr}, handlers, 'CutEvaluation');
+    function cut_evaluation(c2d) {
+      $p.dp.buyers_order.open_component(wnd, {ref: o.ref, _mgr}, handlers, c2d ? 'CutEvaluation2D' : 'CutEvaluation');
     }
 
     function open_jalousie(create_new) {

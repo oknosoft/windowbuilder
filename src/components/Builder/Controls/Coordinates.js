@@ -49,10 +49,14 @@ export default function Coordinates({elm, fields, read_only, select_b, select_e}
       </FormControl>
     </AccordionSummary>
     <AccordionDetails classes={{root: classes.details}}>
-      {read_only ? null : <PropField Component={FieldNumberNative} _obj={elm} _fld="offset" _meta={fields.offset}/>}
-      {read_only ? null : <PropField Component={FieldNumberNative} _obj={elm} _fld="r" _meta={fields.r} allowNegative={false}/>}
-      {read_only ? null : <PropField Component={FieldNumberNative} _obj={elm} _fld="arc_h" _meta={fields.arc_h} allowNegative={false}/>}
-      {read_only ? null : <PropField Component={FieldCheckbox} _obj={elm} _fld="arc_ccw" _meta={fields.arc_ccw} allowNegative={false}/>}
+      {read_only ? null : <>
+        <PropField Component={FieldNumberNative} _obj={elm} _fld="offset" _meta={fields.offset}/>
+        <PropField Component={FieldNumberNative} _obj={elm} _fld="r" _meta={fields.r} allowNegative={false}/>
+        <PropField Component={FieldNumberNative} _obj={elm} _fld="rinner" _meta={fields.rinner} read_only/>
+        <PropField Component={FieldNumberNative} _obj={elm} _fld="router" _meta={fields.router} read_only/>
+        <PropField Component={FieldNumberNative} _obj={elm} _fld="arc_h" _meta={fields.arc_h} allowNegative={false}/>
+        <PropField Component={FieldCheckbox} _obj={elm} _fld="arc_ccw" _meta={fields.arc_ccw} allowNegative={false}/>
+      </>}
       <PropField Component={FieldNumberNative} _obj={elm} _fld="x1" _meta={fields.x1} readOnly={read_only} onClick={select_b}/>
       <PropField Component={FieldNumberNative} _obj={elm} _fld="y1" _meta={fields.y1} readOnly={read_only} onClick={select_b}/>
       <PropField Component={FieldNumberNative} _obj={elm} _fld="x2" _meta={fields.x2} readOnly={read_only} onClick={select_e}/>

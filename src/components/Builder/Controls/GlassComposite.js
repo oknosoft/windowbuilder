@@ -22,7 +22,8 @@ import TabularSection from 'metadata-react/TabularSection';
 import Tip from 'metadata-react/App/Tip';
 import GlassLayerProps from './GlassLayerProps';
 import CompositeChains from './GlassCompositeChains';
-import GlassRegionCnns from './GlassRegionCnns/Button';
+import GlassCompositeExt from './GlassCompositeExt';
+
 import useStyles from './stylesAccordion';
 import {useOpenContext} from './OpenContext';
 
@@ -116,7 +117,11 @@ class GlassComposite extends React.Component {
   }
 
   value_change = (obj, flds) => {
-    if(obj instanceof $p.CatCharacteristicsGlass_specificationRow && ('inset' in flds || 'dop' in flds)) {
+    if(obj instanceof $p.CatCharacteristicsGlass_specificationRow && ('inset' in flds || 'dop' in flds || 'clr' in flds)) {
+      // значения по умолчанию
+      if('inset' in flds) {
+        this.props.elm.default_params();
+      }
       reflect(this.props.elm);
       this.forceUpdate();
     }
@@ -156,6 +161,7 @@ class GlassComposite extends React.Component {
       const {selected} = _grid.state;
       if(selected && selected.hasOwnProperty('rowIdx')) {
         _grid.handleRemove();
+        elm.default_params();
         reflect(elm);
         update_length();
         if(_grid.rowGetter(0)) {
@@ -231,8 +237,7 @@ class GlassComposite extends React.Component {
       <Tip title="Перевернуть состав">
         <IconButton onClick={this.handleReverse}><FlipCameraAndroidIcon/></IconButton>
       </Tip>
-      <IconButton disabled>|</IconButton>
-      <GlassRegionCnns elm={elm}/>
+      <GlassCompositeExt elm={elm}/>
     </Toolbar>;
   };
 

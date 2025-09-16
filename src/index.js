@@ -26,10 +26,17 @@ class RootProvider extends React.Component {
 
     // скрипт инициализации структуры метаданных и модификаторы
     import('./metadata')
-      .then((module) => module.init(store));
+      .then((module) => module.init(store))
+      .then(() => new Promise((resolve) => {
+        setTimeout(() => import('wb-cutting').then(resolve), 1000);
+      }))
+      .then((module) => {
+        $p.classes.Cutting = module.default;
+      });
 
     // подгрузим стили асинхронно
-    import('metadata-dhtmlx/dhx_terrace.css')
+    Promise.resolve()
+      .then(() => import('metadata-dhtmlx/dhx_terrace.css'))
       .then(() => import('metadata-dhtmlx/metadata.css'))
       .then(() => import('./styles/windowbuilder.css'));
 
@@ -52,7 +59,7 @@ root.render(<RootProvider />);
 //serviceWorker.unregister();
 serviceWorker.register({
   onUpdate() {
-    if($p && $p.eve) {
+    if($p?.eve) {
       $p.eve.redirect = true;
     }
     alert('Код программы обновлён, необходимо перезагрузить страницу');
@@ -62,17 +69,3 @@ serviceWorker.register({
 
 // https://pretagteam.com/question/how-to-focus-opener-window-in-chrome
 window.name = `principal-${Date.now()}`;
-window.addEventListener("message", handleMessage, false);
-function handleMessage(event) {
-  if(event.source === window.d3d_wnd) {
-    const {action} = event.data;
-    switch (action) {
-    case 'focus':
-      this.focus();
-      document.body.classList.remove("disabled");
-      break;
-    default:
-      console.log(event);
-    }
-  }
-}

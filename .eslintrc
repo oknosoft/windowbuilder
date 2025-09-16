@@ -53,7 +53,7 @@
     "no-mixed-spaces-and-tabs": 1,
     "quotes": [0, "single", "avoid-escape"],
     "indent": [0, 2, { "SwitchCase": 1 }],
-    "react/prop-types": 1,
+    "react/prop-types": 0,
     "react/display-name": 1,
     "react/no-find-dom-node": 1,
     "react/jsx-key": 1,

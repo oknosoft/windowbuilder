@@ -1,5 +1,5 @@
 /**
- * ### Добавдение штульповых створок
+ * ### Добавление штульповых створок
  *
  * Created 25.08.2015
  *
@@ -235,7 +235,7 @@ export default function tool_stulp_flap ({Editor, classes: {BaseDataObj}, dp: {b
       const {layer, clr} = top.profile;
       const shtulp = new Profile({
         generatrix: path,
-        proto: {inset, clr, parent: layer}
+        proto: {inset, clr, parent: layer.children.profiles}
       });
       layer.redraw();
       while (project._ch.length) {

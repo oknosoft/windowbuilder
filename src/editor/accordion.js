@@ -18,7 +18,7 @@ class SchemeLayers {
     this.layout = cell.attachLayout({
       pattern: "2E",
       cells: [
-        {id: "a", text: "tree", header: false, height: 200},
+        {id: "a", text: "tree", header: false, height: 310},
         {id: "b", text: "Доп. вставки в контур", header: true}
       ],
       offsets: {top: 0, right: 0, bottom: 0, left: 0},
@@ -75,9 +75,9 @@ class SchemeLayers {
       rows: this.listener,
     });
 
-    this.layout.cells("a").setMinHeight(180);
-    this.layout.cells("b").setMinHeight(180);
-    this.layout.cells("a").setHeight(200);
+    this.layout.cells("a").setMinHeight(220);
+    this.layout.cells("b").setMinHeight(200);
+    this.layout.cells("a").setHeight(310);
 
   }
 
@@ -127,8 +127,10 @@ class SchemeLayers {
   }
 
   load_layer(layer) {
-    this.tree.addItem(layer.key, layer.presentation(), layer.parent ? layer.parent.key : 0);
-    this.tree.checkItem(layer.key);
+    this.tree.addItem(layer.key, layer.presentation(), layer.layer?.key || 0);
+    if(!layer.hidden) {
+      this.tree.checkItem(layer.key);
+    }
     layer.contours.concat(layer.tearings).forEach((l) => this.load_layer(l));
   }
 
@@ -146,6 +148,7 @@ class SchemeLayers {
 
       const {builder_props} = project.ox;
 
+      /*
       // Вид эскиза
       tree.addItem('mode', '<div id="tree-mode" style="display: flex;">Режим эскиза </div>', 0);
       tree.disableCheckbox('mode');
@@ -161,12 +164,16 @@ class SchemeLayers {
       const cntMode = divMode.querySelector('.dhxcombo_dhx_terrace');
       cntMode.style.marginTop = '5px';
       cntMode.style.marginLeft = '6px';
+      */
 
       const props = {
         auto_lines: 'Авторазмерные линии',
         custom_lines: 'Доп. размерные линии',
         cnns: 'Соединители',
         visualization: 'Визуализация доп. элементов',
+        glass_regions: 'Ряды заполнений',
+        //profile_regions: 'Ряды профилей',
+        unfolding: 'Развёртки водоотливов',
         txts: 'Комментарии',
         glass_numbers: 'Номера заполнений',
         bw: 'Чёрно-белый режим',
@@ -177,6 +184,23 @@ class SchemeLayers {
       for (const prop in builder_props) {
         props[prop] && builder_props[prop] && tree.checkItem(prop);
       }
+
+      // Ряды раскладки
+      const {lay_regions} = $p.enm;
+      tree.addItem('onlay_regions', '<div id="tree-onlay-regions" style="display: flex;">Ряды раскладки </div>', 0);
+      tree.disableCheckbox('onlay_regions');
+      const divRegions = tree.cont.querySelector('#tree-onlay-regions');
+      const comboRegions = new dhtmlXCombo(divRegions, 'combo_regions', '160px');
+      const aregions = ['', 'inner', 'outer', 'all', 'r1', 'r2', 'r3'];
+      comboRegions.addOption(aregions.map((v, i) => [i, lay_regions.get(v).synonym || 'Все']));
+      comboRegions.selectOption(aregions.indexOf(builder_props.onlay_regions || ''));
+      comboRegions.attachEvent("onChange", function(v, text){
+        project.ox.builder_props = {onlay_regions: aregions[v]};
+        project.register_change();
+      });
+      const cntRegions = divRegions.querySelector('.dhxcombo_dhx_terrace');
+      cntRegions.style.marginTop = '5px';
+      cntRegions.style.marginLeft = '6px';
 
       // Номера профилей
       tree.addItem('articles', '<div id="tree-articles" style="display: flex;">Номера профилей </div>', 0);
@@ -239,7 +263,7 @@ class SchemeLayers {
 
 class EditorAccordion {
 
-  constructor(_editor, cell_acc) {
+  constructor(_editor, cell_acc, pwnd, handlers) {
 
     this._cell = cell_acc;
     const tabs = [
@@ -302,10 +326,12 @@ class EditorAccordion {
       buttons: [
         {name: 'new_layer', text: '<i class="fa fa-file-o fa-fw"></i>', tooltip: 'Добавить рамный контур', float: 'left'},
         {name: 'new_stv', text: '<i class="fa fa-file-code-o fa-fw"></i>', tooltip: msg.bld_new_stv, float: 'left'},
-        {name: 'nested_layer', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить вложенное изделие', float: 'left'},
+        //{name: 'nested_layer', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить вложенное изделие', float: 'left'},
         {name: 'virtual_layer', text: '<i class="fa fa-file-excel-o fa-fw"></i>', tooltip: 'Вставить виртуальный слой', float: 'left'},
+        {name: 'region_layer', text: '<i class="fa fa-file-powerpoint-o fa-fw"></i>', tooltip: 'Добавить cлой ряда', float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_product, float: 'left'},
+        {name: 'additions', text: '<i class="fa fa-cart-plus fa-fw"></i>', tooltip: 'Аксессуары изделия', float: 'left'},
 
         {name: 'drop_layer', text: '<i class="fa fa-trash-o fa-fw"></i>', tooltip: 'Удалить слой', float: 'right', paddingRight: '20px'},
 
@@ -315,7 +341,7 @@ class EditorAccordion {
 
         case 'new_stv':
         case 'nested_layer':
-        case 'virtual_layer':
+        case 'virtual_layer': {
           const fillings = _editor.project.getItems({class: Editor.Filling, selected: true});
           if(fillings.length) {
             if(name === 'nested_layer') {
@@ -358,16 +384,42 @@ class EditorAccordion {
             });
           }
           break;
+        }
 
         case 'drop_layer':
           this.tree_layers.drop_layer();
           break;
 
         case 'new_layer':
-
           // создаём пустой новый слой
-          Editor.Contour.create({project: _editor.project});
+          const tool = _editor.tools.find((v) => v.name === 'selectLayer');
+          tool.createLayer();
           break;
+
+        case 'region_layer': {
+          // слой ряда в текущем слое
+          ui.dialogs.region_layer(_editor.project);
+          break;
+        }
+
+
+        case 'additions': {
+          // аксессуары изделия
+          const {ox} = _editor.project;
+          const o = ox.calc_order;
+          (o.is_new() ? o.save() : Promise.resolve())
+            .then(() => {
+
+              const tmp = {
+                ref: ox.ref,
+                _mgr: ox._manager,
+                cmd: {calc_order: o, area: 'Builder'}
+              };
+              $p.dp.buyers_order.open_component(pwnd, tmp, handlers, 'Additions', tmp.cmd.area);
+              //$p.dp.buyers_order.open_component(pwnd, tmp, handlers, 'ObjHistory', tmp.cmd.area);
+            });
+          break;
+        }
 
         case 'inserts_to_product':
           // дополнительные вставки в изделие

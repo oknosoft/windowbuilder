@@ -11,7 +11,7 @@ import FieldFlipped from 'wb-forms/dist/CatClrs/FieldFlipped';
 
 export default function LayerProps(props) {
   const {layer, ox} = props;
-  if(!layer) {
+  if(!layer || !layer.isInserted()) {
     return <Typography>Текущий слой не выбран</Typography>;
   }
   const {utils: {blank}, job_prm: {builder}}  = $p;

@@ -779,9 +779,7 @@ class ToolLayImpost extends ToolElement {
 
         if (profile.elm_type == $p.enm.elm_types.layout) {
           nprofiles.push(new Editor.Onlay({
-            generatrix: new paper.Path({
-              segments: [p.b, p.e],
-            }),
+            generatrix: new paper.Path({segments: [p.b, p.e], insert: false}),
             parent: this.hitItem,
             region: profile.region,
             proto: proto,
@@ -823,10 +821,9 @@ class ToolLayImpost extends ToolElement {
           // создаём новые профили
           if (p.e.getDistance(p.b) > proto.inset.nom().width) {
             nprofiles.push(new Editor.Profile({
-              generatrix: new paper.Path({
-                segments: [p.b, p.e],
-              }),
-              parent: layer,
+              generatrix: new paper.Path({segments: [p.b, p.e], insert: false}),
+              layer,
+              parent: layer?.children?.profiles,
               proto: proto,
             }));
           }
@@ -836,18 +833,20 @@ class ToolLayImpost extends ToolElement {
     this.paths.length = 0;
 
     // пытаемся выполнить привязку
-    nprofiles.forEach((p) => {
-      p.cnn_point('b');
-      p.cnn_point('e');
-    });
+    const recalc_cnn_point = () => {
+      for(const profile of nprofiles) {
+        for(const node of 'be') {
+          profile.cnn_point(node);
+        }
+      }
+    };
+    recalc_cnn_point();
     // и еще раз пересчитываем соединения, т.к. на предыдущем шаге могла измениться геометрия соседей
-    nprofiles.forEach((p) => {
-      p.cnn_point('b');
-      p.cnn_point('e');
-    });
+    project.register_change(true, recalc_cnn_point);
 
-    if (!this.hitItem)
+    if (!this.hitItem) {
       setTimeout(() => this._scope && this._scope.tools[1].activate(), 100);
+    }
   }
 }
 

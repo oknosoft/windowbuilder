@@ -21,8 +21,8 @@ import RemoveIcon from '@material-ui/icons/DeleteOutline';
 import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
 import ElmInsetProps from './ElmInsetProps';
-import RegionEditor from './ElmInsetRegion';
 import useStyles from './stylesAccordion';
+import {useOpenContext} from './OpenContext';
 
 function tune_meta(elm) {
   const {cat, utils} = $p;
@@ -47,7 +47,12 @@ export default function AccordionElmInsets(props) {
     set_length(elm.ox.inserts.find_rows({cnstr: -elm.elm}).length);
   };
 
-  return <Accordion square elevation={0} classes={{expanded: classes.rootExpanded}}>
+  const {open, openChange} = useOpenContext();
+  const onChange = (e, insets) => {
+    openChange({insets});
+  };
+
+  return <Accordion square elevation={0} classes={{expanded: classes.rootExpanded}} expanded={open.insets} onChange={onChange}>
     <AccordionSummary classes={{
       root: classes.summary,
       content: classes.summaryContent,
@@ -98,12 +103,6 @@ class ElmInsets extends React.Component {
     return res;
   };
 
-  defferedUpdate = () => {
-    setTimeout(() => {
-      this._grid && this._grid.forceUpdate();
-    }, 100);
-  };
-
   handleAdd = () => {
     const {elm, update_length} = this.props;
     const {ox, elm: cnstr, inset} = elm;
@@ -121,20 +120,12 @@ class ElmInsets extends React.Component {
           this._grid.cache_actual = false;
         }
         this.setState({row, inset: row.inset}, update_length);
-      });
+      })
+      .catch(() => null);
   };
 
   handleRemove = () => {
     const row = this._grid.handleRemove();
-    if(row?.region) {
-      const {_ranges, paths} = this.props.elm._attr;
-      _ranges.delete(row.region);
-      _ranges.delete(`cnns${row.region}`);
-      if(paths.get(row.region)) {
-        paths.get(row.region).remove();
-        paths.delete(row.region);
-      }
-    }
     this.setState({row: null, inset: null}, this.props.update_length);
   };
 
@@ -147,14 +138,6 @@ class ElmInsets extends React.Component {
       row = this._grid.rowGetter(sel.rowIdx);
     }
     this.setState({row, inset: (!row || row.inset.empty()) ? null : row.inset});
-  };
-
-  // установим для колонки "Ряд", индивидуальный элемент управления
-  handleColumnsChange = ({scheme, columns}) => { /* eslint-disable-line */
-    const region = columns.find(({key}) => key === 'region');
-    if(region) {
-      region.editor = RegionEditor;
-    }
   };
 
 
@@ -185,8 +168,6 @@ class ElmInsets extends React.Component {
               hideToolbar
               denyReorder
               onCellSelected={this.handleCellSelected}
-              columnsChange={this.handleColumnsChange}
-              //onRowUpdated={this.defferedUpdate}
             />
           </div>
           <ElmInsetProps elm={elm} inset={inset} row={row}/>

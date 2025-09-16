@@ -7,6 +7,7 @@ import ZoomOutMapIcon from '@material-ui/icons/ZoomOutMap';
 import LinkOffIcon from '@material-ui/icons/LinkOff';
 import Link from '@material-ui/icons/Link';
 import FlipIcon from '@material-ui/icons/Flip';
+import BelowIcon from '@material-ui/icons/LowPriority';
 import Tip from 'metadata-react/App/Tip';
 import InfoButton from 'metadata-react/App/InfoButton';
 import SmallButton from '../../Toolbar/IconButton';
@@ -53,7 +54,7 @@ function ProfileToolbar({editor, elm, classes}) {
   const {msg} = $p;
   const isElm = !Array.isArray(elm);
   const inset = isElm && elm.inset;
-  const impost = isElm && elm.elm_type.is('impost');
+  const allowFlip = isElm && !elm.nearest(true);
   let unlink = isElm && ((elm.b.selected && !elm.e.selected) || (elm.e.selected && !elm.b.selected));
   let link = false;
   if(unlink) {
@@ -79,9 +80,17 @@ function ProfileToolbar({editor, elm, classes}) {
     <Tip title={msg.align_all}>
       <SmallButton onClick={btnClick(editor, 'all')}><ZoomOutMapIcon /></SmallButton>
     </Tip>
-    {unlink && <Tip title="Оторвать узел">
-      <SmallButton onClick={() => elm.unlink?.()}><LinkOffIcon /></SmallButton>
-    </Tip>}
+    {unlink && <>
+      <Tip title="Оторвать узел">
+        <SmallButton onClick={() => elm.unlink?.()}><LinkOffIcon /></SmallButton>
+      </Tip>
+      <Tip title="На задний план">
+        <SmallButton onClick={() => elm.bringDown?.()}><BelowIcon /></SmallButton>
+      </Tip>
+      <Tip title="На передний план">
+        <SmallButton onClick={() => elm.bringUp?.()}><BelowIcon style={{transform: 'scaleY(-1)'}} /></SmallButton>
+      </Tip>
+    </>}
     {link && <Tip title="Привязать узел">
       <SmallButton onClick={() => {
         try {
@@ -95,7 +104,7 @@ function ProfileToolbar({editor, elm, classes}) {
         }
       }}><Link /></SmallButton>
     </Tip>}
-    {impost && <Tip title="Перевернуть профиль">
+    {allowFlip && <Tip title="Перевернуть профиль">
       <SmallButton onClick={() => elm.flip?.()}><FlipIcon /></SmallButton>
     </Tip>}
 

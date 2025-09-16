@@ -262,7 +262,13 @@ class ToolCut extends ToolElement{
     const {enm: {cnn_types, orientations}, cat} = $p;
     let cnn = rack.profile.cnn_point('e');
     const base = cnn.cnn;
-    cnn && cnn.profile && cnn.profile_point && cnn.profile.rays[cnn.profile_point].clear(true);
+    const pcnn = cnn?.profile?.rays?.[cnn.profile_point];
+    let _cnno, pcnn_cnn;
+    if(pcnn) {
+      pcnn_cnn = pcnn.cnn;
+      _cnno = rack.profile.elm === pcnn._cnno?.elm2 && pcnn._cnno;
+      pcnn.clear(true);
+    }
     cnn.clear(true);
     impost.profile.rays[impost.point].clear(true);
 
@@ -272,9 +278,27 @@ class ToolCut extends ToolElement{
     }
 
     const loc = generatrix.getNearestLocation(impost.profile[impost.point]);
-    const rack2 = new Editor.Profile({generatrix: generatrix.splitAt(loc), proto: rack.profile});
+    const rack2 = new rack.profile.layer.ProfileConstructor({
+      generatrix: generatrix.splitAt(loc),
+      layer: rack.profile.layer,
+      parent: rack.profile.parent,
+      proto: {
+        inset: rack.profile.inset,
+        clr: rack.profile.clr,
+      },
+    });
 
     // соединения конца нового профиля из разрыва
+    if(_cnno) {
+      _cnno.elm2 = rack2.elm;
+      _cnno.node2 = 'e';
+    }
+    else if(pcnn) {
+      pcnn.profile = rack2;
+      pcnn.profile_point = 'e';
+      pcnn.cnn = pcnn_cnn;
+      pcnn.cnn_types = cnn_types.acn.a;
+    }
     cnn = rack2.cnn_point('e');
     if(base && cnn && cnn.profile) {
       if(!cnn.cnn || cnn.cnn.cnn_type !== base.cnn_type) {
@@ -285,10 +309,6 @@ class ToolCut extends ToolElement{
         else if(cnns.length) {
           cnn.cnn = cnns[0];
         }
-      }
-      cnn = cnn.profile.cnn_point(cnn.profile_point);
-      if(cnn.profile === rack2) {
-        cnn.cnn = null;
       }
     }
     const atypes = [cnn_types.short, cnn_types.t];
@@ -302,14 +322,14 @@ class ToolCut extends ToolElement{
     cnn = rack2.cnn_point('b');
     if(cnn && cnn.profile === impost.profile) {
       const cnns = cat.cnns.nom_cnn(rack2, cnn.profile, atypes);
-      if(cnns.length) {
+      if(cnns.length && !cnns.includes(cnn.cnn)) {
         cnn.cnn = cnns[0];
       }
     }
     cnn = rack.profile.cnn_point('e');
     if(cnn && cnn.profile === impost.profile) {
       const cnns = cat.cnns.nom_cnn(rack.profile, cnn.profile, atypes);
-      if(cnns.length) {
+      if(cnns.length && !cnns.includes(cnn.cnn)) {
         cnn.cnn = cnns[0];
       }
     }
@@ -326,11 +346,16 @@ class ToolCut extends ToolElement{
     if(cnn) {
       const cnns = cat.cnns.nom_cnn(impost.profile, rack.profile, atypes);
       if(cnns.length) {
-        cnn.cnn = cnns[0];
-        cnn.set_cnno(cnns[0]);
+        if(!cnns.includes(cnn.cnn)) {
+          cnn.cnn = cnns[0];
+        }
+        cnn.set_cnno(cnn.cnn);
       }
     }
 
+    rack.profile._attr._corns.length = 0;
+    rack2._attr._corns.length = 0;
+    impost.profile._attr._corns.length = 0;
     this.deselect();
   }
 
@@ -382,7 +407,7 @@ class ToolCut extends ToolElement{
     }
     cnn && cnn.profile && cnn.profile_point && cnn.profile.rays[cnn.profile_point].clear(true);
     const imposts = rack2.profile.joined_imposts();
-    for(const ji of imposts.inner.concat(imposts.outer)) {
+    for(const {profile: ji} of imposts.inner.concat(imposts.outer)) {
       cnn = ji.cnn_point('b');
       if(cnn.profile === rack2.profile) {
         cnn.clear(true);
@@ -411,6 +436,9 @@ class ToolCut extends ToolElement{
         }
       }
     }
+
+    rack1.profile._attr._corns.length = 0;
+    impost.profile._attr._corns.length = 0;
 
     this.deselect();
   }

@@ -138,7 +138,7 @@ class Editor extends $p.EditorInvisible {
      * @type EditorAccordion
      * @private
      */
-    this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"));
+    this._acc = new EditorAccordion(_editor, _editor._layout.cells("b"), pwnd, handlers);
 
     /**
      * ### Панель выбора инструментов рисовалки
@@ -147,7 +147,7 @@ class Editor extends $p.EditorInvisible {
      * @type OTooolBar
      * @private
      */
-    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '440px',
+    this.tb_left = new $p.iface.OTooolBar({wrapper: _editor._wrapper, top: '14px', left: '8px', name: 'left', height: '472px',
       image_path: '/imgs/',
       buttons: [
         {name: 'select_node', css: 'tb_icon-arrow-white', title: $p.injected_data['tip_select_node.html']},
@@ -174,6 +174,7 @@ class Editor extends $p.EditorInvisible {
         {name: 'stulp_flap', css: 'tb_stulp_flap', tooltip: 'Штульповые створки'},
         {name: 'vitrazh', text: '<i class="fa fa-film"></i>', tooltip: 'Витраж'},
         {name: 'text', css: 'tb_text', tooltip: 'Произвольный текст'},
+        {name: 'mirror', css: 'tb_mirror_reflect', tooltip: 'Зеркалирование слоёв'},
         {name: 'grid', css: 'tb_grid', tooltip: 'Таблица координат'},
       ],
       onclick: (name) => _editor.select_tool(name),
@@ -213,7 +214,6 @@ class Editor extends $p.EditorInvisible {
         {name: 'sep_3', text: '', float: 'left'},
         {name: 'open_spec', text: '<i class="fa fa-table fa-fw"></i>', tooltip: 'Открыть спецификацию изделия', float: 'left'},
         {name: 'dxf', text: 'DXF', tooltip: 'Экспорт в DXF', float: 'left', width: '30px'},
-        {name: 'd3d', text: '<i class="fa fa-video-camera"></i>', tooltip: 'Открыть 3D', float: 'left', width: '30px'},
         {name: 'fragment', text: 'F', tooltip: 'Фрагмент', float: 'left', width: '20px'},
         {name: 'mirror', text: '<i class="fa fa-exchange fa-fw"></i>', tooltip: 'Отразить', float: 'left', width: '20px'},
 
@@ -222,13 +222,19 @@ class Editor extends $p.EditorInvisible {
 
 
       ], onclick: function (name) {
+        function fin() {
+          _editor?.activate?.();
+          pwnd?.progressOff?.();
+        }
         switch (name) {
 
         case 'save_close':
           if(_editor.project) {
             Promise.resolve(pwnd.progressOn())
+              .then(() => _editor._acc.tabbar._setTabActive('lay'))
               .then(() => _editor.project.save_coordinates({save: true, close: true}))
-              .catch(() => pwnd.progressOff && pwnd.progressOff());
+              .then(fin)
+              .catch(fin);
           }
           break;
 
@@ -238,21 +244,17 @@ class Editor extends $p.EditorInvisible {
 
         case 'calck':
           if(_editor.project) {
-            pwnd.progressOn();
-            Promise.resolve()
+            Promise.resolve(pwnd.progressOn())
+              .then(() => _editor._acc.tabbar._setTabActive('lay'))
               .then(() => _editor.project.save_coordinates({save: true}))
-              .then(() => {
-                pwnd.progressOff && setTimeout(() => {
-                  _editor.activate();
-                   pwnd.progressOff();
-                }, 700);
-              })
-              .catch(() => pwnd.progressOff && pwnd.progressOff());
+              .then(fin)
+              .catch(fin);
           }
           break;
 
         case 'stamp':
-          _editor.open_templates();
+          _editor._acc.tabbar._setTabActive('lay');
+          Promise.resolve().then(() => _editor.open_templates());
           break;
 
         case 'back':
@@ -269,7 +271,6 @@ class Editor extends $p.EditorInvisible {
           break;
 
         case 'dxf':
-        case 'd3d':
         case 'copy':
         case 'paste':
         case 'paste_prop':
@@ -329,8 +330,6 @@ class Editor extends $p.EditorInvisible {
         }
       }
     });
-
-    this.tb_top.buttons.d3d.classList.add('disabledbutton');
 
     this._layout.base.style.backgroundColor = '#f5f5f5';
     this.tb_top.cell.style.background = '#fff';
@@ -441,6 +440,16 @@ class Editor extends $p.EditorInvisible {
      */
     new ToolCoordinates();
 
+    /**
+     * Выбор слоя
+     */
+    new ToolSelectLayer();
+
+    /**
+     * Зеркалирование
+     */
+    new Editor.ToolMirror();
+
     this.tools[1].activate();
 
 
@@ -517,7 +526,7 @@ class Editor extends $p.EditorInvisible {
   }
 
   set_text() {
-    const {handlers, project} = this;
+    const {handlers, project, tb_top} = this;
     const {props, handleIfaceState} = handlers;
     if(project._calc_order_row){
       const {ox} = project;
@@ -528,9 +537,21 @@ class Editor extends $p.EditorInvisible {
         value: title,
       });
 
+      const btns = ['stamp', 'save_close', 'calck', 'open_spec'];
+      if(project.is_read_only || project.ox.calc_order.is_read_only) {
+        for(const btn of btns) {
+          tb_top.buttons[btn].classList.add('disabledbutton');
+        }
+      }
+      else {
+        for(const btn of btns) {
+          tb_top.buttons[btn].classList.remove('disabledbutton');
+        }
+      }
+
       // проверяем ортогональность
       if(project.getItems({class: $p.EditorInvisible.Profile}).some((p) => {
-        return (p.angle_hor % 90) > 0.02;
+        return (p.angle_hor % 90) > 0.01;
       })){
         this._ortpos.style.display = '';
       }
@@ -559,7 +580,7 @@ class Editor extends $p.EditorInvisible {
 
   show_ortpos(hide) {
     for (const elm of this.project.getItems({class: $p.EditorInvisible.Profile})) {
-      if((elm.angle_hor % 90) > 0.02) {
+      if((elm.angle_hor % 90) > 0.01) {
         if(hide) {
           elm.path.fillColor = $p.EditorInvisible.BuilderElement.clr_by_clr.call(elm, elm._row.clr);
         }
@@ -1140,11 +1161,9 @@ class Editor extends $p.EditorInvisible {
       }
 
       // если выделено несколько, запланируем групповое выравнивание
-      if(name != 'delete' && profiles.length > 1){
-
+      if(name != 'delete'){
         if(changed){
           project.register_change(true);
-          setTimeout(this.profile_group_align.bind(this, name, profiles), 100);
         }
         else{
           this.profile_group_align(name);
@@ -1167,7 +1186,7 @@ class Editor extends $p.EditorInvisible {
     let	coordin = name == 'left' || name == 'bottom' ? Infinity : 0;
 
     if(!profiles){
-      profiles = this.project.selected_profiles();
+      profiles = this.project.selected_profiles(true);
     }
 
     if(!profiles.length){
@@ -1177,44 +1196,75 @@ class Editor extends $p.EditorInvisible {
     profiles.forEach(function (p) {
       switch (name){
         case 'left':
-          if(p.x1 < coordin)
+          if(p.x1 < coordin && (p.b.selected || !p.b.selected && !p.e.selected))
             coordin = p.x1;
-          if(p.x2 < coordin)
+          if(p.x2 < coordin && (p.e.selected || !p.e.selected && !p.b.selected))
             coordin = p.x2;
           break;
         case 'bottom':
-          if(p.y1 < coordin)
+          if(p.y1 < coordin && (p.b.selected || !p.b.selected && !p.e.selected))
             coordin = p.y1;
-          if(p.y2 < coordin)
+          if(p.y2 < coordin && (p.e.selected || !p.e.selected && !p.b.selected))
             coordin = p.y2;
           break;
         case 'top':
-          if(p.y1 > coordin)
+          if(p.y1 > coordin && (p.b.selected || !p.b.selected && !p.e.selected))
             coordin = p.y1;
-          if(p.y2 > coordin)
+          if(p.y2 > coordin && (p.e.selected || !p.e.selected && !p.b.selected))
             coordin = p.y2;
           break;
         case 'right':
-          if(p.x1 > coordin)
+          if(p.x1 > coordin && (p.b.selected || !p.b.selected && !p.e.selected))
             coordin = p.x1;
-          if(p.x2 > coordin)
+          if(p.x2 > coordin && (p.e.selected || !p.e.selected && !p.b.selected))
             coordin = p.x2;
           break;
       }
     });
 
+    let moved_selected;
+
     profiles.forEach(function (p) {
       switch (name){
         case 'left':
         case 'right':
-          p.x1 = p.x2 = coordin;
+          if(p.b.selected && !p.e.selected) {
+            p.x1 = coordin;
+            moved_selected = true;
+          }
+          else if(p.e.selected && !p.b.selected) {
+            p.x2 = coordin;
+            moved_selected = true;
+          }
           break;
         case 'bottom':
         case 'top':
-          p.y1 = p.y2 = coordin;
+          if(p.b.selected && !p.e.selected) {
+            p.y1 = coordin;
+            moved_selected = true;
+          }
+          else if(p.e.selected && !p.b.selected) {
+            p.y2 = coordin;
+            moved_selected = true;
+          }
           break;
       }
     });
+
+    if(!moved_selected) {
+      profiles.forEach(function (p) {
+        switch (name){
+          case 'left':
+          case 'right':
+            p.x1 = p.x2 = coordin;
+            break;
+          case 'bottom':
+          case 'top':
+            p.y1 = p.y2 = coordin;
+            break;
+        }
+      });
+    }
 
   }
 

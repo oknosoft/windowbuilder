@@ -103,7 +103,7 @@ export default function ($p) {
       if(field === 'len' || field === 'height') {
         this[field] = value;
         if(this.len != 0 && this.height != 0) {
-          this.s = (this.height * this.len / 1000000).round(3);
+          this.s = (this.height * this.len / 10e6).round(4);
         }
       }
 
@@ -177,6 +177,9 @@ export default function ($p) {
     case 'AdditionsExt':
       imodule = import('../../components/CalcOrder/AdditionsExt');
       break;
+    case 'Composition':
+      imodule = import('../../components/CalcOrder/Compound/Frame');
+      break;
     case 'Jalousie':
       imodule = import('../../components/CalcOrder/Jalousie');
       break;
@@ -189,6 +192,12 @@ export default function ($p) {
     case 'CutEvaluation':
       imodule = import('../../components/CalcOrder/CutEvaluation');
       break;
+    case 'CutEvaluation2D':
+        imodule = import('../../components/CalcOrder/CutEvaluation/C2D');
+        break;
+    case 'AgentOrder':
+      imodule = import('../../components/PurchaseOrder/AgentOrder');
+      break;
     case 'DeliveryAddr':
       imodule = import('../../components/DeliveryAddr');
       break;
@@ -199,7 +208,8 @@ export default function ($p) {
       imodule = import('../../components/CalcOrder/List/FromClipboard');
       break;
     }
-    imodule.then((module) => handlers.handleIfaceState({
+    imodule.then((module) => {
+      handlers.handleIfaceState({
         component: area,
         name: 'dialog',
         value: {
@@ -209,7 +219,8 @@ export default function ($p) {
           wnd: wnd,
           Component: module.default
         },
-      }));
+      });
+    });
   };
 
 }

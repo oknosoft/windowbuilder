@@ -8,9 +8,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import PropField from 'metadata-react/DataField/PropField';
 import LinkedProp from 'wb-forms/dist/Common/LinkedProp';
-import FieldEndConnection from 'wb-forms/dist/CatCnns/FieldEndConnection';
 import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
 
 class ElmInsetProps extends React.Component {
@@ -43,17 +41,6 @@ class ElmInsetProps extends React.Component {
     };
   }
 
-  select_b = () => {
-    const {elm} = this.props;
-    elm.b.selected = true;
-    elm.e.selected = false;
-  };
-  select_e = () => {
-    const {elm} = this.props;
-    elm.e.selected = true;
-    elm.b.selected = false;
-  };
-
   render() {
     const {elm, row, inset} = this.props;
     if(!elm || !row) {
@@ -63,20 +50,15 @@ class ElmInsetProps extends React.Component {
     const isProfile = elm instanceof Editor.ProfileItem;
     const content = [];
     if(isProfile) {
-      const _obj = row.region ? elm.region(row.region) : elm;
-      const {fields} = _obj._metadata;
-      if(row.region) {
-        const clr_group = $p.cat.clrs.selection_exclude_service(fields.clr, _obj, elm.ox);
-        content.push(
-          <FieldClr key="aip-clr" _obj={row} _fld="clr" _meta={fields.clr} clr_group={clr_group}/>,
-          <FieldEndConnection key="aip-cnn1" elm1={_obj} node="b" _fld="cnn1" onClick={this.select_b}/>,
-          <FieldEndConnection key="aip-cnn2" elm1={_obj} node="e" _fld="cnn2" onClick={this.select_e}/>
-        );
-      }
-      _obj.elm_props(row.inset).forEach((param) => {
+      const {fields} = elm._metadata;
+      const clr_group = $p.cat.clrs.selection_exclude_service(fields.clr, elm, elm.ox);
+      content.push(
+        <FieldClr key="aip-clr" _obj={row} _fld="clr" _meta={fields.clr} clr_group={clr_group}/>,
+      );
+      elm.elm_props(row.inset).forEach((param) => {
         const {ref} = param;
         const _fld = row.region ? ref : (row.inset.ref + ref);
-        content.push(<LinkedProp key={_fld} _obj={_obj} _fld={_fld} param={param} cnstr={-elm.elm} inset={row.inset} fields={fields}/>);
+        content.push(<LinkedProp key={_fld} _obj={elm} _fld={_fld} param={param} cnstr={-elm.elm} inset={row.inset} fields={fields}/>);
       });
     }
     else if (!elm.elm) {

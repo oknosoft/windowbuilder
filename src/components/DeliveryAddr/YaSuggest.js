@@ -23,7 +23,7 @@ const styles = {
     marginRight: 4
   },
   width: {
-    maxWidth: 140
+    maxWidth: 120
   }
 };
 
@@ -34,6 +34,7 @@ class YaSuggest extends React.Component {
     this.state = {
       query: props.query || '',
       flat: '',
+      floor: '',
     };
   }
 
@@ -44,10 +45,10 @@ class YaSuggest extends React.Component {
       this.inited = true;
     }
     const {v} = this.props;
-    if(fake && this.flat && v.flat) {
+    if(fake && this.flat && (v.flat || v.floor)) {
       const query = this.props.v.assemble_addr();
       this.suggestView && this.suggestView.state.set({panelClosed: true, request: query});
-      this.setState({query, flat: v.flat});
+      this.setState({query, flat: v.flat, floor: v.floor});
     }
   }
 
@@ -80,6 +81,11 @@ class YaSuggest extends React.Component {
     !fake && this.props.flatChange({target});
   };
 
+  onFloorChange = ({target, fake}) => {
+    this.setState({floor: target.value});
+    !fake && this.props.floorChange({target});
+  };
+
   delayedSelect = (exec) => {
     this.delay && clearTimeout(this.delay);
     if(exec === true) {
@@ -101,7 +107,7 @@ class YaSuggest extends React.Component {
 
   render() {
     const {classes: {width, flex, right}} = this.props;
-    let {query, flat} = this.state;
+    let {query, flat, floor} = this.state;
     return (
       <FormGroup row className={flex}>
         <TextField
@@ -118,6 +124,14 @@ class YaSuggest extends React.Component {
           onChange={this.onInputChange}
           onKeyDown={this.onInputKey}
           //onBlur={this.delayedSelect}
+        />
+        <TextField
+          margin="dense"
+          className={cn(width, right)}
+          inputRef={ (el) => {this.floor = el;} }
+          label="Этаж"
+          value={floor}
+          onChange={this.onFloorChange}
         />
         <TextField
           margin="dense"

@@ -25,7 +25,8 @@ export default class AdditionsGroups extends React.Component {
   }
 
   componentDidMount() {
-    fill_data.call(this, this.props.dialog.ref);
+    const {ref, cmd} = this.props.dialog;
+    fill_data.call(this, cmd?.calc_order || ref);
     const {cat, dp} = $p;
     fill_schemas.call(this, cat.scheme_settings.find_rows({obj: 'dp.buyers_order.production', user: ''}));
     dp.buyers_order.on('update', this.inset_change);

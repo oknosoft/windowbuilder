@@ -25,8 +25,8 @@ import plugin_react from 'metadata-react/plugin';
 plugin_react.constructor.call($p);
 
 // подключаем cron
-// import cron from 'metadata-abstract-ui/cron';
-// cron.constructor.call($p);
+//import cron from 'metadata-abstract-ui/cron';
+//cron.constructor.call($p);
 
 import reset_cache from './reset_cache';
 
@@ -66,7 +66,10 @@ export function init(store) {
       on_log_in() {
         return load_ram($p)
           .then(() => {
-            const {roles} = $p.current_user || {};
+            const {roles, branch} = $p.current_user || {};
+            if(!sessionStorage.branch && branch && !branch.empty?.()) {
+              sessionStorage.branch = branch.ref;
+            }
             if(roles && (roles.includes('ram_editor') || roles.includes('doc_full'))) {
               pouch.local.sync.ram = pouch.remote.ram.changes({
                 since: 'now',
@@ -87,7 +90,9 @@ export function init(store) {
           });
       },
     });
-    md.once('predefined_elmnts_inited', () => pouch.emit('pouch_complete_loaded'));
+    md.once('predefined_elmnts_inited', () => {
+      pouch.emit('pouch_complete_loaded');
+    });
 
     // читаем paperjs и deep-diff
     $p.load_script(process.env.NODE_ENV === 'production' ?
