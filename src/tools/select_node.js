@@ -78,7 +78,7 @@ class ToolSelectNode extends ToolElement {
 
   mousedown({event, modifiers, point}) {
 
-    const {_scope: {project, consts, eve}, hitItem} = this;
+    const {_scope: {project, consts, eve, Key}, hitItem} = this;
 
     this.mode = null;
     this.changed = false;
@@ -132,14 +132,26 @@ class ToolSelectNode extends ToolElement {
             item.selected = true;
           }
           if (item.selected) {
+            let cornSelected;
+            if(item.select_corn) {
+              for(const [key, corn] of ToolSelectNode.cornMap) {
+                if(Key.isDown(key)) {
+                  item.select_corn(corn, true);
+                  cornSelected = true;
+                }
+              }
+            }
+
             this.mode = consts.move_shapes;
-            project.deselect_all_points();
+            !cornSelected && project.deselect_all_points();
             this.mouseStartPos = point.clone();
             this.originalContent = this._scope.capture_selection_state();
 
             if(item.layer){
               eve.emit("layer_activated", item.layer);
             }
+
+
           }
         }
 
@@ -868,5 +880,20 @@ class ToolSelectNode extends ToolElement {
   }
 
 }
+
+ToolSelectNode.cornMap = new Map([
+  ['b', 'b'],
+  ['e', 'e'],
+  ['и', 'b'],
+  ['у', 'e'],
+  ['1', 1],
+  ['!', 1],
+  ['2', 2],
+  ['@', 2],
+  ['3', 3],
+  ['#', 3],
+  ['4', 4],
+  ['$', 4],
+])
 
 Editor.ToolSelectNode = ToolSelectNode;
