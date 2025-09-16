@@ -696,9 +696,22 @@ class ToolPen extends ToolElement {
 
   on_mousemove(event) {
 
+    const {project, addl_hit, _scope, profile, activeLayers} = this;
+
+    // если соединитель или добор снаружи, активируем корневой слой
+    const {elm_type} = profile;
+    if(project.activeLayer?.layer && (elm_type.is('linking') || elm_type.is('addition_outer'))) {
+      while (project.activeLayer.layer) {
+        project.activeLayer.layer.activate();
+      }
+      activeLayers.clear();
+      activeLayers.add(project.activeLayer);
+      this.decorate_layers();
+    }
+
     this.hitTest(event);
 
-    const {project, addl_hit, _scope, profile} = this;
+
     if(profile.elm_type.is('tearing')) {
       return;
     }
