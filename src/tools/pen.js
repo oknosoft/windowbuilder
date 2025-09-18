@@ -696,7 +696,7 @@ class ToolPen extends ToolElement {
 
   on_mousemove(event) {
 
-    const {project, addl_hit, _scope, profile, activeLayers} = this;
+    const {project, _scope, profile, activeLayers} = this;
 
     // если соединитель или добор снаружи, активируем корневой слой
     const {elm_type} = profile;
@@ -704,6 +704,7 @@ class ToolPen extends ToolElement {
       while (project.activeLayer.layer) {
         project.activeLayer.layer.activate();
       }
+      project.deselectAll();
       activeLayers.clear();
       activeLayers.add(project.activeLayer);
       this.decorate_layers();
@@ -715,6 +716,8 @@ class ToolPen extends ToolElement {
     if(profile.elm_type.is('tearing')) {
       return;
     }
+
+    const {addl_hit} = this;
 
     // елси есть addl_hit - рисуем прототип элемента
     if(addl_hit){
@@ -1128,22 +1131,25 @@ class ToolPen extends ToolElement {
 
   hitTest_addl_outer({point}) {
 
-    const hitSize = 16;
+    const hitSize = 20;
     const {project, _scope} = this;
 
     if (point){
-      this.hitItem = project.hitTest(point, { stroke:true, curves:true, tolerance: hitSize });
+      this.hitItem = project.activeLayer.hitTest(point, { stroke:true, curves:true, tolerance: hitSize });
     }
 
     if (this.hitItem) {
 
-      if(this.hitItem.item.layer == project.activeLayer &&
-        this.hitItem.item.parent instanceof Editor.ProfileItem && !(this.hitItem.item.parent instanceof Editor.Onlay)){
+      let {parent} = this.hitItem.item;
+      if(parent instanceof Editor.ProfileItem && !(parent instanceof Editor.Onlay)){
         // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
 
+        while (!(parent instanceof Editor.ProfileAddlOuter) && parent.nearest(true)) {
+          parent = parent.nearest(true);
+        }
         const hit = {
           point: this.hitItem.point,
-          profile: this.hitItem.item.parent
+          profile: parent
         };
 
         // выясним, с какой стороны примыкает профиль

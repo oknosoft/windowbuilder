@@ -7,7 +7,7 @@ import SelectProduct from './SelectProduct';
 import SelectMaterial from './SelectMaterial';
 import Props from './Props';
 
-let foroomApi;
+let foroomApi = new Error('Не удалось загрузить библиотеку Foroom жалюзи');
 let calc;
 
 const catalogs = {
@@ -28,21 +28,23 @@ const load_data = () => {
 };
 
 const load_script = () => {
-  return $p.adapters.pouch.fetch(`/adm/api/foroom/js`)
-    .then((res) => res.text())
-    .then((code) => {
-      //create a dom element to hold the code
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      //set the script tag text, including the debugger id at the end!!
-      script.text = code + `\n////# sourceURL=/adm/api/foroom/js\n`;
-      //append the code to the dom
-      document.getElementsByTagName('head')[0].appendChild(script);
-      foroomApi = window.foroomApi.default;
-      foroomApi.filter_params = function (v) {
-        return v.visible && v.enabled && !v.deleted && !['gab_width', 'gab_height'].includes(v.alias);
-      };
-    });
+
+  return Promise.reject(foroomApi);
+  // return $p.adapters.pouch.fetch(`/adm/api/foroom/js`)
+  //   .then((res) => res.text())
+  //   .then((code) => {
+  //     //create a dom element to hold the code
+  //     const script = document.createElement('script');
+  //     script.type = 'text/javascript';
+  //     //set the script tag text, including the debugger id at the end!!
+  //     script.text = code + `\n////# sourceURL=/adm/api/foroom/js\n`;
+  //     //append the code to the dom
+  //     document.getElementsByTagName('head')[0].appendChild(script);
+  //     foroomApi = window.foroomApi.default;
+  //     foroomApi.filter_params = function (v) {
+  //       return v.visible && v.enabled && !v.deleted && !['gab_width', 'gab_height'].includes(v.alias);
+  //     };
+  //   });
 };
 
 class Additions extends React.Component {
@@ -168,7 +170,7 @@ class Additions extends React.Component {
 
   componentWillUnmount() {
     const {goods_row, calc_order_row} = this;
-    if(!calc_order_row.len && !calc_order_row.width && !calc_order_row.first_cost) {
+    if(calc_order_row && !calc_order_row.len && !calc_order_row.width && !calc_order_row.first_cost) {
       calc_order_row._owner.del(calc_order_row);
       goods_row._owner.del(goods_row);
     }
@@ -267,6 +269,9 @@ class Additions extends React.Component {
   render() {
     if(!foroomApi) {
       return <LoadingMessage text="Загрузка библиотеки..."/>;
+    }
+    if(foroomApi instanceof Error) {
+      return <LoadingMessage text={foroomApi.message}/>;
     }
     if(!catalogs.data) {
       return <LoadingMessage text="Подготовка данных..."/>;

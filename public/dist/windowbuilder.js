@@ -6262,7 +6262,7 @@ class ToolPen extends ToolElement {
 
   on_mousemove(event) {
 
-    const {project, addl_hit, _scope, profile, activeLayers} = this;
+    const {project, _scope, profile, activeLayers} = this;
 
     // если соединитель или добор снаружи, активируем корневой слой
     const {elm_type} = profile;
@@ -6270,6 +6270,7 @@ class ToolPen extends ToolElement {
       while (project.activeLayer.layer) {
         project.activeLayer.layer.activate();
       }
+      project.deselectAll();
       activeLayers.clear();
       activeLayers.add(project.activeLayer);
       this.decorate_layers();
@@ -6281,6 +6282,8 @@ class ToolPen extends ToolElement {
     if(profile.elm_type.is('tearing')) {
       return;
     }
+
+    const {addl_hit} = this;
 
     // елси есть addl_hit - рисуем прототип элемента
     if(addl_hit){
@@ -6694,22 +6697,25 @@ class ToolPen extends ToolElement {
 
   hitTest_addl_outer({point}) {
 
-    const hitSize = 16;
+    const hitSize = 20;
     const {project, _scope} = this;
 
     if (point){
-      this.hitItem = project.hitTest(point, { stroke:true, curves:true, tolerance: hitSize });
+      this.hitItem = project.activeLayer.hitTest(point, { stroke:true, curves:true, tolerance: hitSize });
     }
 
     if (this.hitItem) {
 
-      if(this.hitItem.item.layer == project.activeLayer &&
-        this.hitItem.item.parent instanceof Editor.ProfileItem && !(this.hitItem.item.parent instanceof Editor.Onlay)){
+      let {parent} = this.hitItem.item;
+      if(parent instanceof Editor.ProfileItem && !(parent instanceof Editor.Onlay)){
         // для профиля, определяем внешнюю или внутреннюю сторону и ближайшее примыкание
 
+        while (!(parent instanceof Editor.ProfileAddlOuter) && parent.nearest(true)) {
+          parent = parent.nearest(true);
+        }
         const hit = {
           point: this.hitItem.point,
-          profile: this.hitItem.item.parent
+          profile: parent
         };
 
         // выясним, с какой стороны примыкает профиль
@@ -8286,10 +8292,18 @@ class ToolSelectNode extends ToolElement {
   keydown(event) {
     const {project} = this._scope;
     const {modifiers, event: {code, target}} = event;
-    const step = modifiers.shift ? 1 : 10;
+    let step = modifiers.shift ? 1 : 10;
     let j, segment, index, point, handle;
 
-    function move(point) {
+    const move = (point) => {
+      if(!modifiers.shift && (modifiers.control || modifiers.alt)) {
+        const selected = project.selected_profiles().filter(v => !v.nearest(true) || v instanceof Editor.ProfileAddlOuter);
+        if(selected.length === 1) {
+          point.length = 1;
+          return this.moveBind(point, selected[0]);
+        }
+        step = 100;
+      }
       const initialSelected = [...project.selectedItems];
       if(project.activeLayer?.kind === 4 && initialSelected.some((path) => path instanceof Editor.Filling)) {
         project.activeLayer.move(point);
@@ -8323,7 +8337,7 @@ class ToolSelectNode extends ToolElement {
           }
         }
       }
-    }
+    };
 
     if ('NumpadAdd,Insert'.includes(code)) {
 
@@ -8504,9 +8518,17 @@ class ToolSelectNode extends ToolElement {
 
     }
     else if (code === 'ArrowLeft') {
+      if(modifiers.alt) {
+        event.stop();
+        event.event.preventDefault();
+      }
       move(new paper.Point(-step, 0));
     }
     else if (code === 'ArrowRight') {
+      if(modifiers.alt) {
+        event.stop();
+        event.event.preventDefault();
+      }
       move(new paper.Point(step, 0));
     }
     else if (code === 'ArrowUp') {
@@ -8735,6 +8757,116 @@ class ToolSelectNode extends ToolElement {
     }
   }
 
+  moveBind(vector, profile) {
+    const {project, eve} = this._scope;
+    const allProfiles = project.getItems({class: Editor.ProfileItem}).filter(v => v !== profile);
+    const selected = [];
+    const corns = new Set(Array.from(ToolSelectNode.cornMap.values()));
+    for(const corn of corns) {
+      const point = profile.corns(corn);
+      if(point) {
+        const res = {point, corn};
+        profile.path.segments.forEach((segm) => {
+          if(segm.point.is_nearest(res.point)) {
+            res.segm = segm;
+          }
+        });
+        if(!res.segm && res.point == profile.b) {
+          res.segm = profile.generatrix.firstSegment;
+        }
+        if(!res.segm && res.point == profile.e) {
+          res.segm = profile.generatrix.lastSegment;
+        }
+        if(res.segm?.selected && !selected.find(v => v.point.is_nearest(point, 0))) {
+          selected.push(res);
+        }
+      }
+    }
+    let base;
+    const ort = vector.rotate(90).multiply(10000);
+    // двигаем узел
+    if(selected.length === 1) {
+      base = selected[0].point;
+    }
+    // двигаем весь профиль
+    else {
+      for(const corn of [1,2,3,4]) {
+        const pt = profile.corns(corn);
+        if(!base) {
+          base = pt;
+        }
+        if(vector.y > 0 && pt.y > base.y) {
+          base = pt;
+        }
+        else if(vector.y < 0 && pt.y < base.y) {
+          base = pt;
+        }
+        else if(vector.x > 0 && pt.x > base.x) {
+          base = pt;
+        }
+        else if(vector.x < 0 && pt.x < base.x) {
+          base = pt;
+        }
+      }
+    }
+
+    const delta = {
+      candidates: new Set(),
+      distance: Infinity,
+      profile: null,
+      checkPoint(distance, profile) {
+        if(distance > 0.1 && distance < this.distance) {
+          this.distance = distance;
+          this.profile = profile;
+          this.candidates.add(profile);
+        }
+      },
+      checkProfiles(line) {
+        for(const cp of allProfiles) {
+          if(!this.candidates.has(cp) && cp.path.getIntersections(line).length) {
+            for(const corn of corns) {
+              const pt = cp.corns(corn);
+              if(pt) {
+                if(vector.y > 0 && pt.y > base.y) {
+                  this.checkPoint(pt.y - base.y, cp);
+                }
+                else if(vector.y < 0 && pt.y < base.y) {
+                  this.checkPoint(base.y - pt.y, cp);
+                }
+                else if(vector.x > 0 && pt.x > base.x) {
+                  this.checkPoint(pt.x - base.x, cp);
+                }
+                else if(vector.x < 0 && pt.x < base.x) {
+                  this.checkPoint(base.x - pt.x, cp);
+                }
+              }
+            }
+          }
+        }
+      },
+    };
+    for(let i = 1; i < 1000; i++) {
+      const curr = base.add(vector.multiply(i));
+      delta.checkProfiles(new paper.Path({
+        insert: false,
+        segments: [curr.add(ort), curr.subtract(ort)],
+      }));
+    }
+    if(delta.distance < Infinity) {
+      const restoreSelect = selected.length === 1 && !'be'.includes(selected[0].corn) && selected[0].segm;
+      if(restoreSelect) {
+        project.deselect_all_points();
+        if(profile.b.getDistance(restoreSelect.point) < profile.e.getDistance(restoreSelect.point)) {
+          profile.b.selected = true;
+        }
+        else {
+          profile.e.selected = true;
+        }
+      }
+      project.move_points(vector.multiply(delta.distance), false);
+    }
+
+  }
 }
 
 ToolSelectNode.cornMap = new Map([
@@ -8746,11 +8878,19 @@ ToolSelectNode.cornMap = new Map([
   ['!', 1],
   ['2', 2],
   ['@', 2],
+  ['"', 2],
   ['3', 3],
   ['#', 3],
+  ['№', 3],
   ['4', 4],
   ['$', 4],
-])
+  [';', 4],
+  ['5', 5],
+  ['%', 5],
+  ['6', 6],
+  [':', 6],
+  ['^', 6],
+]);
 
 Editor.ToolSelectNode = ToolSelectNode;
 
