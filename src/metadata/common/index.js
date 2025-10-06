@@ -24,4 +24,13 @@ export default function ($p) {
   $p.iface.scale_svg = scale_svg;
   $p.utils.scale_svg = scale_svg;
   $p.utils.prm = () => qs.parse(location.search.replace('?',''));
+  const storageFrame = document.getElementById('storageFrame');
+  storageFrame.contentWindow.onstorage = function ({timeStamp, storageArea, ...other}) {
+    for (let i = 0; i < storageArea.length; i++) {
+      if(storageArea.key(i).startsWith('wb_')) {
+        return;
+      }
+    }
+    $p.record_log({class: 'storage', obj: {timeStamp, stack: console.trace()}});
+  };
 }
