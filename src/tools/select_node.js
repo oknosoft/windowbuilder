@@ -496,7 +496,8 @@ class ToolSelectNode extends ToolElement {
             const newpath = path.split(path.length * 0.5);
             path.lastSegment.point = path.lastSegment.point.add(newpath.getNormalAt(0).divide(10));
             newpath.firstSegment.point = path.lastSegment.point;
-            new Editor.Profile({generatrix: newpath, proto: path.parent});
+            const {clr, inset, elm_type, parent, layer} = path.parent;
+            new Editor.Profile({generatrix: newpath, proto: {clr, inset, elm_type, parent, layer}});
           }
         }
         else if (modifiers.shift || path.parent instanceof Editor.Sectional) {
