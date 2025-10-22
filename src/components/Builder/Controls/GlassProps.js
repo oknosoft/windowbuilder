@@ -8,6 +8,7 @@ import ElmInsets from './ElmInsets';
 import GlassComposite from './GlassComposite';
 import Coordinates from './Coordinates';
 import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
+import GlassSeparately from '../../PropFields/GlassSeparately';
 
 /**
  * Виртуальное заполнение
@@ -132,7 +133,12 @@ export default class GlassProps extends React.Component {
 
       {props.length ? <>
         <Bar>Свойства</Bar>
-        {props.map(({ref}, ind) => <PropField key={`ap-${ind}`} _obj={elm} _fld={ref} _meta={fields[ref]}/>)}
+        {props.map((prop, ind) => {
+          const {ref, predefined_name} = prop;
+          return predefined_name === 'glass_separately' ?
+            <GlassSeparately key={`ap-${ind}`} _obj={elm} prop={prop} elm/> :
+            <PropField key={`ap-${ind}`} _obj={elm} _fld={ref} _meta={fields[ref]}/>;
+        })}
       </> : null}
 
       {is_composite ? <GlassComposite elm={elm} row={row} set_row={this.set_row}/> : null}
