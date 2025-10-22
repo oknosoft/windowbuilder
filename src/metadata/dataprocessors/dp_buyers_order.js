@@ -26,8 +26,8 @@ export default function ($p) {
       if(!v || characteristic.clr == v) {
         return;
       }
-      this._manager.emit_async('update', this, {clr: characteristic.clr});
       characteristic.clr = v;
+      this._manager.emit('update', this, {clr: characteristic.clr});
       _data._modified = true;
     }
 
@@ -44,8 +44,8 @@ export default function ($p) {
       if(!v || characteristic.sys == v) {
         return;
       }
-      this._manager.emit_async('update', this, {sys: characteristic.sys});
       characteristic.sys = v;
+      this._manager.emit('update', this, {sys: characteristic.sys});
       _data._modified = true;
     }
 
@@ -148,7 +148,7 @@ export default function ($p) {
             });
 
           });
-          this._manager.emit_async('rows', _owner._owner, {product_params: true});
+          this._manager.emit('rows', _owner._owner, {product_params: true});
         }
       }
     }
