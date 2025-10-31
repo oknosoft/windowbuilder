@@ -91,7 +91,9 @@ export function init(store) {
       },
     });
     md.once('predefined_elmnts_inited', () => {
-      pouch.emit('pouch_complete_loaded');
+      import('../components/CatPartners/Search')
+        .then(({partnersSearch}) => partnersSearch($p))
+        .then(() => pouch.emit('pouch_complete_loaded'));
     });
 
     // читаем paperjs и deep-diff

@@ -168,6 +168,12 @@ export default function ($p) {
     case 'ClientOfDealerSearch':
       imodule = import('../../components/CalcOrder/ClientOfDealerSearch');
       break;
+    case 'PartnersList':
+      imodule = import('../../components/CatPartners/List');
+      break;
+    case 'PartnerObj':
+      imodule = import('../../components/CatPartners/Obj');
+      break;
     case 'PushUtils':
       imodule = import('../../components/PushUtils');
       break;

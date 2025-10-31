@@ -113,7 +113,7 @@
             'number_internal'
           ],
           'Контактная информация': [
-            'partner',
+            {id: 'partner', path: 'o.partner', synonym: 'Контрагент', type: 'partner'},
             {id: 'client_of_dealer', path: 'o.client_of_dealer', synonym: 'Клиент дилера', type: 'client'},
             'phone',
             {id: 'shipping_address', path: 'o.shipping_address', synonym: 'Адрес доставки', type: 'addr'}
@@ -233,6 +233,18 @@
               }
             })
             .then(() => {
+
+              for(const grid of [wnd.elmnts.pg_left, wnd.elmnts.pg_right]) {
+                grid.forEachRow((id) => {
+                  const v = o[id];
+                  if (v) {
+                    const {presentation} = v;
+                    if(presentation && presentation !== grid.cells(id,1).cell.innerText) {
+                      grid.cells(id,1).setCValue(presentation);
+                    }
+                  }
+                });
+              }
 
               const footer = {
                 columns: ",,,,#stat_t,,,#stat_s,,,,,#stat_t,,,#stat_t",
