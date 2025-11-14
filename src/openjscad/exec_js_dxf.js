@@ -3,11 +3,12 @@
  * Created by Evgeniy Malyarov on 24.11.2017.
  */
 
+const rectPoints = ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'];
 export function exec_dxf (scheme, Drawing) {
 
   let d = new Drawing();
 
-  const {contours, bounds, ox} = scheme;
+  const {contours, bounds, ox, _scope: {CompoundPath, Path}} = scheme;
   const glasses = scheme.selected_glasses();
   const h = bounds.height + bounds.y;
 
@@ -54,29 +55,43 @@ export function exec_dxf (scheme, Drawing) {
   }
 
   function export_glass(glass, withLay) {
+    const {elm, path, layer, imposts} = glass;
     // добавляем слой для заполнения
-    d.addLayer(`g_${glass.elm}`, Drawing.ACI.LAYER, 'CONTINUOUS');
-    d.setActiveLayer(`g_${glass.elm}`);
+    d.addLayer(`g_${elm}`, Drawing.ACI.LAYER, 'CONTINUOUS');
+    d.setActiveLayer(`g_${elm}`);
 
-    export_path(glass);
+    export_path({path});
 
     // разрывы
-    for(const tearing of glass.layer.tearings) {
+    for(const tearing of layer.tearings) {
       if(tearing.path.height && tearing.path.width) {
         export_path({path: tearing.profile_path});
       }
     }
 
+    // визуализация
+    for(const item of layer.l_visualization.by_spec.children) {
+      if(item instanceof CompoundPath) {
+        const {bounds, children} = item;
+        if(rectPoints.every(point => path.contains(bounds[point]))) {
+          for(const path of children) {
+            export_path({path});
+          }
+        }
+      }
+    }
 
-    if (withLay) {
+    // раскладки
+    if (withLay && imposts.length) {
       // добавляем слой для раскладки
-      d.addLayer(`lay_${glass.elm}`, Drawing.ACI.LAYER, 'CONTINUOUS');
-      d.setActiveLayer(`lay_${glass.elm}`);
+      d.addLayer(`lay_${elm}`, Drawing.ACI.LAYER, 'CONTINUOUS');
+      d.setActiveLayer(`lay_${elm}`);
 
-      for (const impost of glass.imposts) {
+      for (const impost of imposts) {
         export_path(impost);
       }
     }
+
   }
 
   if(glasses.length){
