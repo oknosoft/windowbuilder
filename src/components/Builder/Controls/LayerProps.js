@@ -14,16 +14,25 @@ export default function LayerProps(props) {
   if(!layer || !layer.isInserted()) {
     return <Typography>Текущий слой не выбран</Typography>;
   }
-  const {utils: {blank}, job_prm: {builder}}  = $p;
+  const {utils, job_prm: {builder}}  = $p;
   const cflipped = builder.hide_flipped ? null : <FieldFlipped _obj={layer} />;
+  let sys_meta;
+  const {own_sys} = layer;
+  if(own_sys) {
+    const {permitted_sys} = layer;
+    if(permitted_sys?.size) {
+      sys_meta = utils._clone(layer._metadata('sys'));
+      sys_meta.list = Array.from(permitted_sys);
+    }
+  }
   return <>
     <LayerToolbar {...props}/>
     <Bar>{layer.info}</Bar>
-    {layer.own_sys ?
+    {own_sys ?
       <>
-        <PropField _obj={layer} _fld="sys" />
+        <PropField _obj={layer} _fld="sys" _meta={sys_meta} />
         {cflipped}
-        <LinkedProps ts={layer.prms} cnstr={layer.cnstr} inset={blank.guid} layer={layer}/>
+        <LinkedProps ts={layer.prms} cnstr={layer.cnstr} inset={utils.blank.guid} layer={layer}/>
       </>
       :
       (layer.layer ?
@@ -32,7 +41,7 @@ export default function LayerProps(props) {
         <PropField _obj={layer} _fld="direction" />
         <PropField _obj={layer} _fld="h_ruch" />
         {cflipped}
-        <LinkedProps ts={ox.params} cnstr={layer.cnstr} inset={blank.guid} layer={layer}/>
+        <LinkedProps ts={ox.params} cnstr={layer.cnstr} inset={utils.blank.guid} layer={layer}/>
       </>
           :
         <>
