@@ -21,15 +21,25 @@ class Builder extends DhtmlxCell {
         this._root = null;
       }
     });
-    const {_acc} = this._editor;
+    const {_acc, consts} = this._editor;
     _acc.tabbar.attachEvent('onSelect', (tab, lastTab) => {
+      consts.tab = tab;
       if(tab !== lastTab) {
         this.createRoot({tab, cell: _acc.tabbar.cells(tab).cell.firstChild});
       }
+      if(tab === 'stv' || lastTab === 'stv') {
+        const {project} = this._editor;
+        for(const profile of project.selected_profiles(true)) {
+          profile.setSelection(1);
+        }
+        for(const layer of project.layers) {
+          layer.draw_selection?.();
+        }
+      }
       return true;
     });
-    const tab = _acc.tabbar.getActiveTab();
-    this.createRoot({tab, cell: _acc.tabbar.cells(tab).cell.firstChild});
+    consts.tab = _acc.tabbar.getActiveTab();
+    this.createRoot({tab: consts.tab, cell: _acc.tabbar.cells(consts.tab).cell.firstChild});
   }
 
   componentWillUnmount() {
