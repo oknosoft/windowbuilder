@@ -10,6 +10,7 @@ import SmallButton from '../../Toolbar/IconButton';
 import {useStyles} from '../../Toolbar/styles';
 import GoLayer from './GoLayer';
 import LayerKind from './LayerKind';
+import LayerAlign from './LayerAlign';
 
 function LayerToolbar({editor, layer, classes}) {
   if(!layer.hasChildren()) {
@@ -31,6 +32,7 @@ function LayerToolbar({editor, layer, classes}) {
       }}><FlipToBackIcon/></SmallButton>
     </Tip>
     <LayerKind layer={layer} />
+    <LayerAlign editor={editor} />
     <SmallButton disabled>|</SmallButton>
     <Tip title="Направление открывания: Левое">
       <SmallButton disabled={!furn || furn.empty()} onClick={() => {

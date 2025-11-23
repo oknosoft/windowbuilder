@@ -8061,6 +8061,8 @@ class ToolSelectNode extends ToolElement {
 
       this._scope.clear_selection_bounds();
 
+      project.draw_selection();
+
     }
     else if (hitItem && modifiers.alt) {
       project.deselectAll();
@@ -8154,6 +8156,7 @@ class ToolSelectNode extends ToolElement {
           });
         }
       }
+      project.draw_selection();
     }
 
     this._scope.clear_selection_bounds();
@@ -8291,7 +8294,7 @@ class ToolSelectNode extends ToolElement {
 
   keydown(event) {
     const {project} = this._scope;
-    const {modifiers, event: {code, target}} = event;
+    const {modifiers, event: {code, key, target}} = event;
     let step = modifiers.shift ? 1 : 10;
     let j, segment, index, point, handle;
 
@@ -8542,6 +8545,16 @@ class ToolSelectNode extends ToolElement {
       project.zoom_fit();
       project.view.update();
     }
+    else if(ToolSelectNode.cornMap.has(key)) {
+      const {profileOver} = this;
+      if(profileOver) {
+        const {firstSegment, lastSegment} = profileOver.generatrix;
+        for(const segm of [firstSegment, lastSegment, ...profileOver.path.segments]) {
+          segm.selected = false;
+        }
+        profileOver.select_corn(ToolSelectNode.cornMap.get(key), true);
+      }
+    }
   }
 
   testHot(type, event, mode) {
@@ -8555,6 +8568,7 @@ class ToolSelectNode extends ToolElement {
     const tolerance = 12;
     const {project} = this._scope;
     this.hitItem = null;
+    this.profileOver = null;
 
     if (point) {
 
@@ -8610,6 +8624,10 @@ class ToolSelectNode extends ToolElement {
         }
         else {
           this._scope.canvas_cursor('cursor-arrow-white-shape');
+        }
+
+        if(hitItem.item.parent instanceof Editor.ProfileItem) {
+          this.profileOver = hitItem.item.parent;
         }
       }
       else if (hitItem.type == 'segment' || hitItem.type == 'handle-in' || hitItem.type == 'handle-out') {

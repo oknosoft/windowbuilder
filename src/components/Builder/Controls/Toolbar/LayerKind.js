@@ -32,8 +32,7 @@ map.list = function () {
 };
 
 export default function LayerKind({layer}) {
-  const [kind, setKind] = React.useState(layer.kind.toFixed());
-  const title = map.get(kind);
+  const title = React.useMemo(() => map.get(layer.kind.toFixed()), [layer]);
   let Icon;
   let disabled = false;
   switch (layer.kind) {
@@ -65,17 +64,8 @@ export default function LayerKind({layer}) {
   }
 
   return <Tip title={<><b>Тип слоя:</b><br/><i>{title}</i></>}>
-    <IconButton disabled={disabled} onClick={() => $p.ui.dialogs.input_value({
-      title: "Тип слоя",
-      list: map.list(),
-      initialValue: layer.kind.toFixed()
-    })
-      .then((v) => {
-        layer._row.kind = Number(v);
-        setKind(layer.kind);
-      })
-    }>
-      <Icon  />
+    <IconButton onClick={null}>
+      <Icon />
     </IconButton>
   </Tip>;
 }

@@ -28,13 +28,7 @@ class Builder extends DhtmlxCell {
         this.createRoot({tab, cell: _acc.tabbar.cells(tab).cell.firstChild});
       }
       if(tab === 'stv' || lastTab === 'stv') {
-        const {project} = this._editor;
-        for(const profile of project.selected_profiles(true)) {
-          profile.setSelection(1);
-        }
-        for(const layer of project.layers) {
-          layer.draw_selection?.();
-        }
+        this._editor.project.draw_selection();
       }
       return true;
     });
