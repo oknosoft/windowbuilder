@@ -2447,11 +2447,11 @@ class OSvgs {
     }
 
     while (pics_area.firstChild){
-      pics_area.removeChild(pics_area.firstChild)
+      pics_area.removeChild(pics_area.firstChild);
     }
 
     res.forEach(({ref, svg}) => {
-      if(!svg || svg.substr(0, 1) != "<"){
+      if(!svg || !svg.startsWith('<')){
         return;
       }
       const svg_elm = document.createElement("div");
@@ -2510,7 +2510,7 @@ class OSvgs {
               if(!characteristic.is_new() && svg) {
                 keys.push({ref, svg});
                 if(characteristic.leading_product.empty()) {
-                  if($p.job_prm.builder.separate_frame_layers) {
+                  if($p.job_prm.builder.separate_frame_layers && _obj.obj_delivery_state != 'Шаблон') {
                     const contours = characteristic.constructions.find_rows({parent: 0}).map(v => v._row);
                     if(contours.length > 1) {
                       let min = Infinity, root;
@@ -2537,7 +2537,7 @@ class OSvgs {
             body.refs = refs;
           }
           if(!body.refs || body.refs.length) {
-            const db = pouch.db(calc_order)
+            const db = pouch.db(calc_order);
             await pouch.fetch(`${db.name}/doc.calc_order|${_obj.ref}?svgs`, {
               method: 'post',
               body: JSON.stringify(body),
