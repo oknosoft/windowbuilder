@@ -1086,17 +1086,17 @@ class ToolPen extends ToolElement {
         // выясним, с какой стороны примыкает профиль
         if(hit.profile.rays.inner.getNearestPoint(point).getDistance(point, true) <
           hit.profile.rays.outer.getNearestPoint(point).getDistance(point, true)){
-          hit.side = "inner";
+          hit.side = 'inner';
         }
         else{
-          hit.side = "outer";
+          hit.side = 'outer';
         }
 
         // бежим по всем заполнениям и находим ребро
         hit.profile.layer.glasses(false, true).some((glass) => {
           return glass.profiles.some((rib, index) => {
             if(rib.profile == hit.profile && rib.sub_path && rib.sub_path.getNearestPoint(hit.point).is_nearest(hit.point, true)){
-              if(hit.side == "outer" && rib.outer || hit.side == "inner" && !rib.outer){
+              if(hit.side == 'outer' && rib.outer || hit.side == 'inner' && !rib.outer){
                 hit.rib = index;
                 hit.glass = glass;
                 return true;
@@ -1135,7 +1135,8 @@ class ToolPen extends ToolElement {
     const {project, _scope} = this;
 
     if (point){
-      this.hitItem = project.activeLayer.hitTest(point, { stroke:true, curves:true, tolerance: hitSize });
+      const {activeLayer} = project;
+      this.hitItem = activeLayer.hitTest(point, ToolPen.root_match(activeLayer));
     }
 
     if (this.hitItem) {
@@ -1155,17 +1156,24 @@ class ToolPen extends ToolElement {
         // выясним, с какой стороны примыкает профиль
         if(hit.profile.rays.inner.getNearestPoint(point).getDistance(point, true) <
           hit.profile.rays.outer.getNearestPoint(point).getDistance(point, true)){
-          hit.side = "inner";
+          hit.side = 'inner';
         }
         else{
-          hit.side = "outer";
+          hit.side = 'outer';
         }
 
         // бежим по всем заполнениям и находим ребро
-        hit.profile.layer.glasses(false, true).some((glass) => {
+        hit.profile.layer.glasses(false, false).some((glass) => {
           return glass.profiles.some((rib, index) => {
-            if(rib.profile == hit.profile && rib.sub_path && rib.sub_path.getNearestPoint(hit.point).is_nearest(hit.point, true)){
-              if(hit.side == "outer" && rib.outer || hit.side == "inner" && !rib.outer){
+            if(rib instanceof Editor.ProfileItem && rib.nearest(true) === hit.profile) {
+              if(hit.side == 'outer' && !hit.profile.is_collinear(rib) || hit.side == 'inner' && hit.profile.is_collinear(rib)){
+                hit.rib = index;
+                hit.glass = glass;
+                return true;
+              }
+            }
+            else if(rib.profile === hit.profile && rib.sub_path && rib.sub_path.getNearestPoint(hit.point).is_nearest(hit.point, true)){
+              if(hit.side == 'outer' && rib.outer || hit.side == 'inner' && !rib.outer){
                 hit.rib = index;
                 hit.glass = glass;
                 return true;
@@ -1187,11 +1195,6 @@ class ToolPen extends ToolElement {
         _scope.canvas_cursor('cursor-pen-freehand');
       }
 
-    }
-    else {
-
-      this.hitItem = project.hitTest(point, { fill:true, visible: true, tolerance: hitSize  });
-      _scope.canvas_cursor('cursor-pen-freehand');
     }
 
   }
@@ -1229,14 +1232,14 @@ class ToolPen extends ToolElement {
       // выясним, с какой стороны примыкает профиль
       if(hit.profile.rays.inner.getNearestPoint(point).getDistance(point, true) <
         hit.profile.rays.outer.getNearestPoint(point).getDistance(point, true)){
-        hit.side = "inner";
+        hit.side = 'inner';
       }
       else{
-        hit.side = "outer";
+        hit.side = 'outer';
       }
 
       // для соединителей, нас интересуют только внешние рёбра
-      if(hit.side == "outer") {
+      if(hit.side == 'outer') {
         this.addl_hit = hit;
         _scope.canvas_cursor('cursor-pen-adjust');
       }
@@ -2048,13 +2051,13 @@ class ToolPen extends ToolElement {
       stroke:true,
       curves:true,
       tolerance: 20,
-      match(item) {
-        const {parent} = item.item;
+      match(hit) {
+        const {parent} = hit.item;
         if(parent instanceof Editor.ProfileItem && !(parent instanceof Editor.Onlay)){
           return parent.layer === layer;
         }
       },
-    }
+    };
   }
 
 }
