@@ -1092,13 +1092,28 @@ class Editor extends $p.EditorInvisible {
     else{
 
       const profiles = project.selected_profiles();
+      const nodes = project.selected_nodes();
       const contours = [];
       let changed;
 
-      profiles.forEach(function (profile) {
+      for(const profile of profiles) {
+        const corn = profile.selected_corn()?.point;
+        if(corn && nodes.length === 1 && corn !== nodes[0]) {
+          const node = nodes[0].point;
+          if(name == 'top'){
+            const delta = node.y - corn.y;
+            if(corn.getDistance(profile.b, true) < corn.getDistance(profile.e, true)) {
+              profile.y1 -= delta;
+            }
+            else {
+              profile.y2 -= delta;
+            }
+          }
+          continue;
+        }
 
         if(profile.angle_hor % 90 == 0){
-          return;
+          continue;
         }
 
         changed = true;
@@ -1151,8 +1166,7 @@ class Editor extends $p.EditorInvisible {
         else{
           $p.msg.show_msg({type: "info", text: $p.msg.align_invalid_direction});
         }
-
-      });
+      }
 
       // прочищаем размерные линии
       if(changed || profiles.length > 1){
