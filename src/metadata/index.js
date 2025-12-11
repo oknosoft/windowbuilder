@@ -56,7 +56,7 @@ export function init(store) {
     addMiddleware(customPouchMiddleware($p));
 
     // сообщяем адаптерам пути, суффиксы и префиксы
-    const {wsql, job_prm, classes, adapters: {pouch}, md} = $p;
+    const {wsql, job_prm, classes, adapters: {pouch}, md, utils} = $p;
     classes.PouchDB.plugin(proxy_login());
     pouch.init(wsql, job_prm);
     reset_cache(pouch);
@@ -67,7 +67,7 @@ export function init(store) {
         return load_ram($p)
           .then(() => {
             const {roles, branch} = $p.current_user || {};
-            if(!sessionStorage.branch && branch && !branch.empty?.()) {
+            if((!sessionStorage.branch || sessionStorage.branch === utils.blank.guid) && branch && !branch.empty?.()) {
               sessionStorage.branch = branch.ref;
             }
             if(roles && (roles.includes('ram_editor') || roles.includes('doc_full'))) {
