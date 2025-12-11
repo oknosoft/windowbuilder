@@ -1098,16 +1098,17 @@ class Editor extends $p.EditorInvisible {
 
       for(const profile of profiles) {
         const corn = profile.selected_corn()?.point;
-        if(corn && nodes.length === 1 && corn !== nodes[0]) {
+        if(corn && nodes.length === 1) {
           const node = nodes[0].point;
-          if(name == 'top'){
-            const delta = node.y - corn.y;
+          if(corn !== node) {
+            const delta = (name == 'top' || name == 'bottom' ) ?  new paper.Point(0, node.y - corn.y) : new paper.Point(node.x - corn.x, 0);
             if(corn.getDistance(profile.b, true) < corn.getDistance(profile.e, true)) {
-              profile.y1 -= delta;
+              profile.move_points(delta, false, null, [profile.generatrix.firstSegment]);
             }
             else {
-              profile.y2 -= delta;
+              profile.move_points(delta, false, null, [profile.generatrix.lastSegment]);
             }
+            changed = true;
           }
           continue;
         }
@@ -1170,7 +1171,7 @@ class Editor extends $p.EditorInvisible {
 
       // прочищаем размерные линии
       if(changed || profiles.length > 1){
-        profiles.forEach(({layer}) => contours.indexOf(layer) == -1 && contours.push(layer));
+        profiles.forEach(({layer}) => !contours.includes(layer) && contours.push(layer));
         contours.forEach(({l_dimensions}) => l_dimensions && l_dimensions.clear());
       }
 
@@ -1191,9 +1192,136 @@ class Editor extends $p.EditorInvisible {
   }
 
   /**
-   * ### Групповое выравнивание профилей
-   * @param name
-   * @param profiles
+   * @summary Cамовыравнивание доборов и соединителей
+   * @param {String} name
+   * @param {ProfileItem} profile
+   */
+  addl_align(name, profile) {
+    // отбросим ошибочные направления
+    const {layer, orientation} = profile;
+    if(orientation.is('hor') && (name === 'top' || name === 'bottom')) {
+      return;
+    }
+    if(orientation.is('vert') && (name === 'left' || name === 'right')) {
+      return;
+    }
+    // кого будем двигать?
+    let node, dir;
+    switch (name) {
+      case 'top':
+        node = profile.y2 > profile.y1 ? profile.e : profile.b;
+        dir = 'y';
+        break;
+      case 'bottom':
+        node = profile.y2 < profile.y1 ? profile.e : profile.b;
+        dir = 'y';
+        break;
+      case 'left':
+        node = profile.x2 < profile.x1 ? profile.e : profile.b;
+        dir = 'x';
+        break;
+      case 'right':
+        node = profile.x2 > profile.x1 ? profile.e : profile.b;
+        dir = 'x';
+        break;
+    }
+    // ищем ближайшие, куда можно сдвинуть
+    let pts = new Set();
+    let nearest;
+    const {ProfileConnective, ProfileAddlOuter, GeneratrixElement} = $p.EditorInvisible;
+    if(profile instanceof ProfileConnective) {
+      nearest = profile.joined_nearests().reduce((sum, curr) => {
+        if(!sum) {
+          return curr;
+        }
+        const ds = node.getDistance(sum.generatrix.getNearestPoint(node));
+        const dc = node.getDistance(curr.generatrix.getNearestPoint(node));
+        return dc < ds ? curr : sum;
+      }, null);
+    }
+    else {
+      nearest = profile.nearest(true);
+      while (nearest instanceof ProfileAddlOuter) {
+        nearest = profile.nearest();
+      }
+    }
+    const nearestNode = nearest.cnn_point(node.getDistance(nearest.b) < node.getDistance(nearest.e) ? 'b' : 'e');
+    if(nearestNode) {
+      pts.add(nearestNode.point[dir].round(1));
+      let next = nearestNode.profile;
+      if(next.nearest(true)) {
+        next = next.nearest(true);
+        while (next) {
+          pts.add(next.b[dir].round(1));
+          pts.add(next.e[dir].round(1));
+          for(let i = 1; i < 5; i++) {
+            pts.add(next.corns(i)[dir].round(1));
+          }
+          next = next.nearest(true);
+        }
+      }
+    }
+    pts = Array.from(pts).sort((a, b) => a - b);
+    if(dir === 'y' && name === 'top') {
+      pts.reverse();
+    }
+    let delta;
+    switch (name) {
+      case 'top':
+        if(node.y > pts[0] || node.y <= pts[pts.length - 1]) {
+          delta = [0, pts[0] - node.y];
+        }
+        else  {
+          for(let i = 1; i < pts.length; i++) {
+            if(node.y > pts[i]) {
+              delta = [0, pts[i] - node.y];
+              break;
+            }
+          }
+        }
+        break;
+      case 'bottom':
+        if(node.y < pts[0] || node.y >= pts[pts.length - 1]) {
+          delta = [0, pts[0] - node.y];
+        }
+        else  {
+          for(let i = 1; i < pts.length; i++) {
+            if(node.y < pts[i]) {
+              delta = [0, pts[i] - node.y];
+              break;
+            }
+          }
+        }
+        break;
+
+      case 'left':
+      case 'right':
+        if((node.x < pts[0] || node.x >= pts[pts.length - 1]) && Math.abs(pts[0] - node.x) > 0.1) {
+          delta = [pts[0] - node.x, 0];
+        }
+        else  {
+          for(let i = 1; i < pts.length; i++) {
+            if(node.x < pts[i] && Math.abs(pts[i] - node.x) > 0.1) {
+              delta = [pts[i] - node.x, 0];
+              break;
+            }
+          }
+        }
+        break;
+    }
+    delta = new paper.Point(delta);
+    if(delta.length > 0.1) {
+      GeneratrixElement.prototype.move_points.call(profile, delta, false, null, [node._owner]);
+      profile.redraw();
+      profile.setSelection(1);
+    }
+  }
+
+  /**
+   * @summary Групповое выравнивание профилей
+   * @desc Либо, самовыравнивание
+   * @param {String} name
+   * @param {Array.<ProfileItem>} profiles
    */
   profile_group_align(name, profiles) {
 
@@ -1206,8 +1334,14 @@ class Editor extends $p.EditorInvisible {
     if(!profiles.length){
       return;
     }
+    else if(profiles.length === 1) {
+      const {ProfileConnective, ProfileAddlOuter} = $p.EditorInvisible;
+      if(profiles[0] instanceof ProfileConnective || profiles[0] instanceof ProfileAddlOuter) {
+        return this.addl_align(name, profiles[0]);
+      }
+    }
 
-    profiles.forEach(function (p) {
+    for(const p of profiles) {
       switch (name){
         case 'left':
           if(p.x1 < coordin && (p.b.selected || !p.b.selected && !p.e.selected))
@@ -1234,11 +1368,11 @@ class Editor extends $p.EditorInvisible {
             coordin = p.x2;
           break;
       }
-    });
+    }
 
     let moved_selected;
 
-    profiles.forEach(function (p) {
+    for(const p of profiles) {
       switch (name){
         case 'left':
         case 'right':
@@ -1263,10 +1397,11 @@ class Editor extends $p.EditorInvisible {
           }
           break;
       }
-    });
+    }
+
 
     if(!moved_selected) {
-      profiles.forEach(function (p) {
+      for(const p of profiles) {
         switch (name){
           case 'left':
           case 'right':
@@ -1277,7 +1412,7 @@ class Editor extends $p.EditorInvisible {
             p.y1 = p.y2 = coordin;
             break;
         }
-      });
+      }
     }
 
   }
