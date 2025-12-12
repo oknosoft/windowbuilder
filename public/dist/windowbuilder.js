@@ -6155,7 +6155,7 @@ class ToolPen extends ToolElement {
 
   on_mouseup({event, modifiers}) {
 
-    const {_scope, addl_hit, profile, project, group} = this;
+    const {_scope, addl_hit, profile, project, group, activeLayers} = this;
     const {
       enm: {elm_types},
       EditorInvisible: {Sectional, ProfileAddl, ProfileAddlOuter, ProfileGlBead, ProfileConnective, Onlay, BaseLine, ProfileCut,
@@ -6209,7 +6209,27 @@ class ToolPen extends ToolElement {
         }
         connective.clear_joined();
         if(!modifiers.space) {
-          project.register_change(true, () => connective.move_linked());
+          project.register_change(true, () => {
+            connective.move_linked();
+            const nearests = connective.joined_nearests();
+            if(nearests.length === 2) {
+              const {utils, EditorInvisible: {GeneratrixElement}} = $p;
+              utils.sleep(50)
+                .then(() => project._ch.length ? utils.sleep(100) : null)
+                .then(() => {
+                  if(connective.cnn_side(nearests[0]) !== connective.cnn_side(nearests[1])) {
+                    const rama =  nearests.find(profile => profile.is_collinear(connective, 1, false));
+                    const db = generatrix.getNearestPoint(rama.corns(1)).subtract(rama.b);
+                    const de = generatrix.getNearestPoint(rama.corns(2)).subtract(rama.e);
+                    if(db.length > 1 || de.length > 1) {
+                      db.length > 1 && GeneratrixElement.prototype.move_points.call(connective, db, false, null, [generatrix.firstSegment]);
+                      de.length > 1 && GeneratrixElement.prototype.move_points.call(connective, de, false, null, [generatrix.lastSegment]);
+                      connective.redraw();
+                    }
+                  }
+                });
+            }
+          });
         }
       }
       // добор снаружи
