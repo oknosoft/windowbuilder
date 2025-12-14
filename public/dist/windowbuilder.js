@@ -2054,15 +2054,15 @@ class Editor extends $p.EditorInvisible {
     }
     const nearestNode = nearest.cnn_point(node.getDistance(nearest.b) < node.getDistance(nearest.e) ? 'b' : 'e');
     if(nearestNode) {
-      pts.add(nearestNode.point[dir].round(1));
+      pts.add(nearestNode.point[dir].round(2));
       let next = nearestNode.profile;
       if(next.nearest(true)) {
         next = next.nearest(true);
         while (next) {
-          pts.add(next.b[dir].round(1));
-          pts.add(next.e[dir].round(1));
+          pts.add(next.b[dir].round(2));
+          pts.add(next.e[dir].round(2));
           for(let i = 1; i < 5; i++) {
-            pts.add(next.corns(i)[dir].round(1));
+            pts.add(next.corns(i)[dir].round(2));
           }
           next = next.nearest(true);
         }
@@ -2121,6 +2121,10 @@ class Editor extends $p.EditorInvisible {
       GeneratrixElement.prototype.move_points.call(profile, delta, false, null, [node._owner]);
       profile.redraw();
       profile.setSelection(1);
+      if(profile instanceof ProfileAddlOuter) {
+        profile._attr.old.b = null;
+        profile._attr.old.e = null;
+      }
     }
   }
 
@@ -2212,11 +2216,15 @@ class Editor extends $p.EditorInvisible {
         switch (name){
           case 'left':
           case 'right':
-            p.x1 = p.x2 = coordin;
+            if(!p.orientation.is('hor')) {
+              p.x1 = p.x2 = coordin;
+            }
             break;
           case 'bottom':
           case 'top':
-            p.y1 = p.y2 = coordin;
+            if(!p.orientation.is('vert')) {
+              p.y1 = p.y2 = coordin;
+            }
             break;
         }
       }
