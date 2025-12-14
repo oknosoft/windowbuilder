@@ -2034,6 +2034,13 @@ class Editor extends $p.EditorInvisible {
     }
     // ищем ближайшие, куда можно сдвинуть
     let pts = new Set();
+    pts.corns = function (addl) {
+      this.add(addl.b[dir].round(2));
+      this.add(addl.e[dir].round(2));
+      for(let i = 1; i < 5; i++) {
+        this.add(addl.corns(i)[dir].round(2));
+      }
+    };
     let nearest;
     const {ProfileConnective, ProfileAddlOuter, GeneratrixElement} = $p.EditorInvisible;
     if(profile instanceof ProfileConnective) {
@@ -2049,21 +2056,28 @@ class Editor extends $p.EditorInvisible {
     else {
       nearest = profile.nearest(true);
       while (nearest instanceof ProfileAddlOuter) {
-        nearest = profile.nearest();
+        nearest = nearest.nearest(true);
       }
     }
     const nearestNode = nearest.cnn_point(node.getDistance(nearest.b) < node.getDistance(nearest.e) ? 'b' : 'e');
     if(nearestNode) {
       pts.add(nearestNode.point[dir].round(2));
       let next = nearestNode.profile;
+      let {addls} = next;
+      while (addls.length) {
+        const sub = [];
+        for(const addl of addls) {
+          pts.corns(addl);
+          if(addl.addls.length) {
+            sub.push(...addl.addls);
+          }
+        }
+        addls = sub;
+      }
       if(next.nearest(true)) {
         next = next.nearest(true);
         while (next) {
-          pts.add(next.b[dir].round(2));
-          pts.add(next.e[dir].round(2));
-          for(let i = 1; i < 5; i++) {
-            pts.add(next.corns(i)[dir].round(2));
-          }
+          pts.corns(next);
           next = next.nearest(true);
         }
       }
