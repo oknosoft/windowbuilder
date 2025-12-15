@@ -71,7 +71,7 @@ class ToolSelectNode extends ToolElement {
   deactivate() {
     this._scope.clear_selection_bounds();
     if(this.profile){
-      this.profile.detache_wnd();
+      this.profile.detache_wnd?.();
       delete this.profile;
     }
   }
@@ -214,7 +214,7 @@ class ToolSelectNode extends ToolElement {
       this.mode = 'box-select';
 
       if(!modifiers.shift && this.profile){
-        this.profile.detache_wnd();
+        this.profile.detache_wnd?.();
         eve.emit_async('elm_activated', null);
         delete this.profile;
       }
