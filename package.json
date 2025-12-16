@@ -52,7 +52,7 @@
     "react-treebeard": "^3.2.4",
     "wb-core": "github:oknosoft/windowbuilder-core#4a5186799bd1367692af0a27d52dc9ed464095c3",
     "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
-    "wb-forms": "github:oknosoft/windowbuilder-forms#99fc6caa4854bae2f572289e28bff9693f8ee5c1"
+    "wb-forms": "github:oknosoft/windowbuilder-forms#0246e61759663a7f41e48410090694e5127d7924"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
