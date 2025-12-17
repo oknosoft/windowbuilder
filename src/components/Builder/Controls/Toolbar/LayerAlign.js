@@ -15,8 +15,8 @@ import SubdirectoryArrowRightIcon from '@material-ui/icons/SubdirectoryArrowRigh
 function execJoin(smap, handleClose, editor, dir) {
   handleClose();
   const {order} = smap;
-  const l1 = smap.get(order[0]);
-  const l2 = smap.get(order[1]);
+  const l1 = smap.get(order[1]);
+  const l2 = smap.get(order[0]);
   switch (dir) {
     case 'rt':
       l2.move([l1.bounds.right - l2.bounds.left, l1.bounds.top - l2.bounds.top]);
