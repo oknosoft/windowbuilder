@@ -231,6 +231,56 @@ class ToolPen extends ToolElement {
     this.scheme_changed = this.scheme_changed.bind(this);
     this.layer_activated = this.layer_activated.bind(this);
 
+    this.activeLayers.expand = function (profiles, l_connective) {
+      const {length} = profiles;
+      const profile = profiles[0];
+      const group = [...profiles];
+      const {rays, b, e, layer} = profile;
+      const {ProfileConnective} = $p.EditorInvisible;
+      const sub_path = (profile instanceof ProfileConnective) ?
+        profile.generatrix.clone({insert: false}) : rays.outer.get_subpath(b, e);
+      let rb = rays.b, re = rays.e;
+
+      for(const curr of profiles) {
+        if(this.size > 1) {
+          const {b, e, layer} = curr;
+          for(const current of this) {
+            if(current !== layer && current !== l_connective && current.isInserted()) {
+              // ищем близкий профиль того же направления
+              for(const profile of current.profiles) {
+                if(profile.is_collinear(profile)) {
+                  if(profile.b.is_nearest(e, true)) {
+                    const pt = profile.rays.outer.getNearestPoint(profile.e);
+                    const np = sub_path.getNearestPoint(pt);
+                    if(np.is_nearest(sub_path.lastSegment.point)) {
+                      sub_path.lastSegment.point = pt;
+                      re = profile.rays.e;
+                      if(!group.includes(profile)) {
+                        group.push(profile);
+                      }
+                    }
+                  }
+                  else if(profile.e.is_nearest(b, true)) {
+                    const pt = profile.rays.outer.getNearestPoint(profile.b);
+                    const np = sub_path.getNearestPoint(pt);
+                    if(np.is_nearest(sub_path.firstSegment.point)) {
+                      sub_path.firstSegment.point = pt;
+                      rb = profile.rays.b;
+                      if(!group.includes(profile)) {
+                        group.push(profile);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return group.length > profiles.length ? this.expand(group, l_connective) : {sub_path, rb, re};
+    };
+
   }
 
   // подключает окно редактора
@@ -1011,37 +1061,9 @@ class ToolPen extends ToolElement {
       return;
     }
 
-    const {rays, b, e, layer} = addl_hit.profile;
-    const {ProfileConnective, ProfileAddlOuter} = $p.EditorInvisible;
-    let rb = rays.b, re = rays.e;
+    const {ProfileAddlOuter} = $p.EditorInvisible;
 
-    let sub_path = (addl_hit.profile instanceof ProfileConnective) ?
-      addl_hit.profile.generatrix.clone({insert: false}) : rays.outer.get_subpath(b, e);
-    for(const current of activeLayers) {
-      if(current !== layer && current !== l_connective && current.isInserted()) {
-        // ищем близкий профиль того же направления
-        for(const profile of current.profiles) {
-          if(profile.is_collinear(addl_hit.profile)) {
-            if(profile.b.is_nearest(e, true)) {
-              const pt = profile.rays.outer.getNearestPoint(profile.e);
-              const np = sub_path.getNearestPoint(pt);
-              if(np.is_nearest(sub_path.lastSegment.point)) {
-                sub_path.lastSegment.point = pt;
-                re = profile.rays.e;
-              }
-            }
-            else if(profile.e.is_nearest(b, true)) {
-              const pt = profile.rays.outer.getNearestPoint(profile.b);
-              const np = sub_path.getNearestPoint(pt);
-              if(np.is_nearest(sub_path.firstSegment.point)) {
-                sub_path.firstSegment.point = pt;
-                rb = profile.rays.b;
-              }
-            }
-          }
-        }
-      }
-    }
+    let {sub_path, rb, re} = activeLayers.expand([addl_hit.profile], l_connective);
 
     let addls = rb.profile?.addls?.filter(p => p instanceof ProfileAddlOuter);
     if(addls?.length) {
@@ -1070,10 +1092,20 @@ class ToolPen extends ToolElement {
 
     // рисуем внутреннюю часть прототипа пути доборного профиля
     const nom = this.profile.inset.nom();
-    this.path.addSegments(sub_path.equidistant(nom.width / 2 || 10).segments);
+    let {sizeb} = this.profile.inset;
+    if(sizeb === -1100) {
+      sizeb = nom.sizeb;
+    }
+    else if (sizeb === -1200) {
+      sizeb = nom.width / 2;
+    }
+    const width = nom.width < 10 ? 10 : nom.width;
+    this.path.addSegments(sub_path.equidistant(width - sizeb).segments);
 
     // завершим рисование прототипа пути доборного профиля
-    sub_path = sub_path.equidistant(-(nom.width || 10));
+    if(sizeb) {
+      sub_path = sub_path.equidistant(-sizeb);
+    }
     sub_path.reverse();
     this.path.addSegments(sub_path.segments);
     sub_path.removeSegments();
