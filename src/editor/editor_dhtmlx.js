@@ -1237,7 +1237,7 @@ class Editor extends $p.EditorInvisible {
     let nearest;
     const {ProfileConnective, ProfileAddlOuter, GeneratrixElement} = $p.EditorInvisible;
     if(profile instanceof ProfileConnective) {
-      nearest = profile.joined_nearests().reduce((sum, curr) => {
+      const findNearest = (profile) => profile.joined_nearests().reduce((sum, curr) => {
         if(!sum) {
           return curr;
         }
@@ -1245,6 +1245,10 @@ class Editor extends $p.EditorInvisible {
         const dc = node.getDistance(curr.generatrix.getNearestPoint(node));
         return dc < ds ? curr : sum;
       }, null);
+      nearest = findNearest(profile);
+      while (nearest instanceof ProfileConnective) {
+        nearest = findNearest(nearest);
+      }
     }
     else {
       nearest = profile.nearest(true);
@@ -1253,7 +1257,7 @@ class Editor extends $p.EditorInvisible {
       }
     }
     const nearestNode = nearest.cnn_point(node.getDistance(nearest.b) < node.getDistance(nearest.e) ? 'b' : 'e');
-    if(nearestNode) {
+    if(nearestNode?.profile) {
       pts.add(nearestNode.point[dir].round(2));
       let next = nearestNode.profile;
       let {addls} = next;
