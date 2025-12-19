@@ -236,8 +236,7 @@ class ToolPen extends ToolElement {
       const profile = profiles[0];
       const group = [...profiles];
       const {rays, b, e, layer} = profile;
-      const {ProfileConnective} = $p.EditorInvisible;
-      const sub_path = (profile instanceof ProfileConnective) ?
+      const sub_path = (profile instanceof Editor.ProfileConnective) ?
         profile.generatrix.clone({insert: false}) : rays.outer.get_subpath(b, e);
       let rb = rays.b, re = rays.e;
 
@@ -491,10 +490,9 @@ class ToolPen extends ToolElement {
   on_mouseup({event, modifiers}) {
 
     const {_scope, addl_hit, profile, project, group, activeLayers} = this;
-    const {
-      enm: {elm_types},
-      EditorInvisible: {Sectional, ProfileAddl, ProfileAddlOuter, ProfileGlBead, ProfileConnective, Onlay, BaseLine, ProfileCut,
-        ProfileAdjoining, Profile, ProfileItem, Filling, Contour}} = $p;
+    const {elm_types} = $p.enm;
+    const {Sectional, ProfileAddl, ProfileAddlOuter, ProfileGlBead, ProfileConnective, Onlay, BaseLine, ProfileCut,
+      ProfileAdjoining, Profile, ProfileItem, Filling, Contour} = Editor;
 
     group?.removeChildren();
 
@@ -1061,7 +1059,7 @@ class ToolPen extends ToolElement {
       return;
     }
 
-    const {ProfileAddlOuter} = $p.EditorInvisible;
+    const {ProfileAddlOuter} = Editor;
 
     let {sub_path, rb, re} = activeLayers.expand([addl_hit.profile], l_connective);
 
@@ -1290,8 +1288,8 @@ class ToolPen extends ToolElement {
         hit.side = 'outer';
       }
 
-      // для соединителей, нас интересуют только внешние рёбра
-      if(hit.side == 'outer') {
+      // для соединителей, нас интересуют только внешние рёбра, к которым не примыкают заполнения
+      if(hit.side == 'outer' && !hit.profile.nearest_glasses.outer.length) {
         this.addl_hit = hit;
         _scope.canvas_cursor('cursor-pen-adjust');
       }
