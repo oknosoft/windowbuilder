@@ -236,37 +236,39 @@ class ToolPen extends ToolElement {
       const profile = profiles[0];
       const group = [...profiles];
       const {rays, b, e, layer} = profile;
-      const sub_path = (profile instanceof Editor.ProfileConnective) ?
-        profile.generatrix.clone({insert: false}) : rays.outer.get_subpath(b, e);
+      const is_connective = profile instanceof Editor.ProfileConnective;
+      const sub_path = is_connective ? profile.generatrix.clone({insert: false}) : rays.outer.get_subpath(b, e);
       let rb = rays.b, re = rays.e;
 
-      for(const curr of profiles) {
-        if(this.size > 1) {
-          const {b, e, layer} = curr;
-          for(const current of this) {
-            if(current !== layer && current !== l_connective && current.isInserted()) {
-              // ищем близкий профиль того же направления
-              for(const profile of current.profiles) {
-                if(profile.is_collinear(profile)) {
-                  if(profile.b.is_nearest(e, true)) {
-                    const pt = profile.rays.outer.getNearestPoint(profile.e);
-                    const np = sub_path.getNearestPoint(pt);
-                    if(np.is_nearest(sub_path.lastSegment.point)) {
-                      sub_path.lastSegment.point = pt;
-                      re = profile.rays.e;
-                      if(!group.includes(profile)) {
-                        group.push(profile);
+      if(!is_connective) {
+        for(const curr of profiles) {
+          if(this.size > 1) {
+            const {b, e, layer} = curr;
+            for(const current of this) {
+              if(current !== layer && current !== l_connective && current.isInserted()) {
+                // ищем близкий профиль того же направления
+                for(const profile of current.profiles) {
+                  if(profile.is_collinear(profile)) {
+                    if(profile.b.is_nearest(e, true)) {
+                      const pt = profile.rays.outer.getNearestPoint(profile.e);
+                      const np = sub_path.getNearestPoint(pt);
+                      if(np.is_nearest(sub_path.lastSegment.point)) {
+                        sub_path.lastSegment.point = pt;
+                        re = profile.rays.e;
+                        if(!group.includes(profile)) {
+                          group.push(profile);
+                        }
                       }
                     }
-                  }
-                  else if(profile.e.is_nearest(b, true)) {
-                    const pt = profile.rays.outer.getNearestPoint(profile.b);
-                    const np = sub_path.getNearestPoint(pt);
-                    if(np.is_nearest(sub_path.firstSegment.point)) {
-                      sub_path.firstSegment.point = pt;
-                      rb = profile.rays.b;
-                      if(!group.includes(profile)) {
-                        group.push(profile);
+                    else if(profile.e.is_nearest(b, true)) {
+                      const pt = profile.rays.outer.getNearestPoint(profile.b);
+                      const np = sub_path.getNearestPoint(pt);
+                      if(np.is_nearest(sub_path.firstSegment.point)) {
+                        sub_path.firstSegment.point = pt;
+                        rb = profile.rays.b;
+                        if(!group.includes(profile)) {
+                          group.push(profile);
+                        }
                       }
                     }
                   }
