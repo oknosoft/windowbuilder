@@ -75,7 +75,30 @@ class CachedSearch {
   }
 }
 
-export function partnersSearch({cat, wsql}) {
-  cat.partners.search = new CachedSearch(cat.partners, wsql);
-  return cat.partners.search.init();
+export function partnersSearch({cat: {partners}, dp, wsql, CatPartners}) {
+  // case 'PartnersList':
+  //   imodule = import('../../components/CatPartners/List');
+  //   break;
+  // case 'PartnerObj':
+  //   imodule = import('../../components/CatPartners/Obj');
+  //   break;
+  // partners.form_selection = function (wnd, {_obj, _field, ...other}) {
+  //   dp.buyers_order.open_component(wnd, {
+  //     ref: _obj.ref,
+  //     cmd: _field,
+  //     _mgr: partners,
+  //     ...other
+  //   }, null, 'PartnersList');
+  // };
+  // CatPartners.prototype.form_obj = function (wnd, attr = {}) {
+  //   const {_obj, _field, ...other} = attr;
+  //   dp.buyers_order.open_component(wnd, {
+  //     ref: _obj.ref,
+  //     cmd: _field,
+  //     _mgr: partners,
+  //     ...other
+  //   }, null, 'PartnerObj');
+  // };
+  partners.search = new CachedSearch(partners, wsql);
+  return partners.search.init();
 }

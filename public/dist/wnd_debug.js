@@ -3666,8 +3666,6 @@ class eXcell_partner extends eXcell {
     super(cell);
     if (cell){
       this.cell = cell;
-      this.open_selection = this.open_selection.bind(this);
-      this.open_obj = this.open_obj.bind(this);
       this.combo_change = this.combo_change.bind(this);
       this.edit = eXcell_partner.prototype.edit.bind(this);
       this.detach = eXcell_partner.prototype.detach.bind(this);
@@ -3676,44 +3674,6 @@ class eXcell_partner extends eXcell {
 
   get grid() {
     return this.cell.parentNode.grid;
-  }
-
-  ti_keydown(e) {
-    const {code, ctrlKey} = e;
-    const {grid} = this;
-    // по {F4} открываем форму списка
-    if(code === 'F4' || (ctrlKey && code === 'KeyF')) {
-      return this.open_selection(e);
-    }
-    // по {F2} открываем форму объекта
-    if(code === 'F2') {
-      return this.open_obj(e);
-    }
-
-    // по {enter} заканчиваем редактирование
-    if(code === 'Enter') {
-      // если текст только цифры длиной 10 или 12 символов, запрашиваем на сервере
-      grid.editStop();
-      return $p.iface.cancel_bubble(e);
-    }
-  }
-
-  open_selection(e) {
-    const v = this.grid.get_cell_field();
-    if(v && v.field) {
-      v.obj[v.field] = this.getValue();
-      this.grid.xcell_action && this.grid.xcell_action('PartnersList', v.field);
-    }
-    return $p.iface.cancel_bubble(e);
-  }
-
-  open_obj(e) {
-    const v = this.grid.get_cell_field();
-    if(v?.field) {
-      v.obj[v.field] = this.getValue();
-      this.grid.xcell_action && this.grid.xcell_action('PartnerObj', v.field);
-    }
-    return $p.iface.cancel_bubble(e);
   }
 
   get_option_list({_attr, _dhtmlx, _top, presentation, ...other}) {
@@ -3731,10 +3691,7 @@ class eXcell_partner extends eXcell {
     if(presentation) {
       query.selector.$and.push({search: presentation.like});
     }
-    return this.adapter.fetch('/r/_find', {
-      method: 'POST',
-      body: JSON.stringify(query),
-    })
+    return this.adapter.fetch('/r/_find', {method: 'POST', body: JSON.stringify(query)})
     //return this.get_option_list(other)
       .then((res) => res.json())
       .then(({docs}) => {
