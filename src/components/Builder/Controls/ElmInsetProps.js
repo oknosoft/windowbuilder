@@ -56,26 +56,32 @@ class ElmInsetProps extends React.Component {
         <FieldClr key="aip-clr" _obj={row} _fld="clr" _meta={fields.clr} clr_group={clr_group}/>,
       );
       elm.elm_props(row.inset).forEach((param) => {
-        const {ref} = param;
-        const _fld = row.region ? ref : (row.inset.ref + ref);
-        content.push(<LinkedProp key={_fld} _obj={elm} _fld={_fld} param={param} cnstr={-elm.elm} inset={row.inset} fields={fields}/>);
+        if(!param.inheritance) {
+          const {ref} = param;
+          const _fld = row.region ? ref : (row.inset.ref + ref);
+          content.push(<LinkedProp key={_fld} _obj={elm} _fld={_fld} param={param} cnstr={-elm.elm} inset={row.inset} fields={fields}/>);
+        }
       });
     }
     else if (!elm.elm) {
       const {fields} = elm._metadata;
       const _obj = elm.region(row);
       for(const param of row.inset.used_params()) {
-        const {ref} = param;
-        content.push(<LinkedProp key={`prm0-${ref}`} _obj={_obj} _fld={ref} param={param} cnstr={0} inset={row.inset} fields={fields} />);
+        if(!param.inheritance) {
+          const {ref} = param;
+          content.push(<LinkedProp key={`prm0-${ref}`} _obj={_obj} _fld={ref} param={param} cnstr={0} inset={row.inset} fields={fields} />);
+        }
       }
     }
     else if(elm instanceof Editor.Filling) {
       for(const param of row.inset.used_params()) {
-        const {ref} = param;
-        const _obj = row._owner._owner.params.find({cnstr: row.cnstr, region: 0, inset: row.inset, param});
-        if(_obj) {
-          const {fields} = _obj._metadata();
-          content.push(<LinkedProp key={`prm0-${ref}`} _obj={_obj} param={param} cnstr={row.cnstr} inset={row.inset} fields={fields} />);
+        if(!param.inheritance) {
+          const {ref} = param;
+          const _obj = row._owner._owner.params.find({cnstr: row.cnstr, region: 0, inset: row.inset, param});
+          if(_obj) {
+            const {fields} = _obj._metadata();
+            content.push(<LinkedProp key={`prm0-${ref}`} _obj={_obj} param={param} cnstr={row.cnstr} inset={row.inset} fields={fields} />);
+          }
         }
       }
     }
