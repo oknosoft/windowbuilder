@@ -23,6 +23,59 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
 		};
 	}
 
+  function dereference(rows) {
+    const {cat, utils: {blank}, adapters: {pouch}} = $p;
+    const tmp = {partners: {}, users: {}};
+    for(const {doc} of rows) {
+      if(doc.manager && !tmp.users.hasOwnProperty(doc.manager)) {
+        if(doc.manager === blank.guid) {
+          doc.manager = '';
+        }
+        else {
+          const manager = cat.users.get(doc.manager);
+          if(manager.is_new()) {
+            tmp.users[doc.manager] = manager;
+          }
+          else {
+            doc.manager = manager.name;
+          }
+        }
+      }
+      if(doc.partner && !tmp.partners.hasOwnProperty(doc.partner)) {
+        if(doc.partner === blank.guid) {
+          doc.partner = '';
+        }
+        else {
+          const partner = cat.partners.get(doc.partner);
+          if(partner.is_new()) {
+            tmp.partners[doc.partner] = partner;
+          }
+          else {
+            doc.partner = partner.name;
+          }
+        }
+      }
+    }
+    const refs = [];
+    for(const area in tmp) {
+      for(const ref in tmp[area]) {
+        refs.push(`${cat[area].class_name}|${ref}`);
+      }
+    }
+    return (refs.length ? pouch.load_array(null, refs, false, pouch.remote.ram)
+      .then(() => {
+        for(const {doc} of rows) {
+          if(tmp.partners[doc.partner]) {
+            doc.partner = tmp.partners[doc.partner].name;
+          }
+          if(tmp.users[doc.manager]) {
+            doc.manager = tmp.users[doc.manager].name;
+          }
+        }
+      }) : Promise.resolve())
+      .then(() => ({docs: rows.map((v) => v.doc)}));
+  }
+
   return new Promise((resolve, reject) => {
 
     attr._index = {
@@ -135,8 +188,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                   value: filter.replace(/\s\s/g, ' ').split(' ').filter(v => v),
                 },
               });
-              res.docs = res.docs.sort(utils.sort('date', 'desc')).map(v => Object.assign({_id: `doc.calc_order|${v.ref}`}, v._obj));
-              return Promise.resolve(res);
+              return dereference(res.docs.sort(utils.sort('date', 'desc')).map(v => ({doc: Object.assign({_id: `doc.calc_order|${v.ref}`}, v._obj)})));
             }
             // строку, в которой 11 символов, из которых не менее 6 числа, считаем номером
             if(filter.length === 11 && filter.replace(/\D/g, '').length > 5) {
@@ -151,9 +203,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
                     key: ['doc.calc_order', date_till.getFullYear() - 1, filter]
                   });
                 })
-                .then(({rows}) => {
-                  return {docs: rows.map((v) => v.doc)};
-                });
+                .then(({rows}) => dereference(rows));
             }
             return attr._index;
           }
