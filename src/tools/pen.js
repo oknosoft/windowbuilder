@@ -720,16 +720,26 @@ class ToolPen extends ToolElement {
           this._controls.blur();
         }
 
-        if(item.layer){
+        let {layer} = item;
+        if(layer){
           if(item.selected) {
-            if(!profile.elm_type.is('linking') && !profile.elm_type.is('addition_outer')) {
+            if(profile.elm_type.is('linking') || profile.elm_type.is('addition_outer')) {
+              while (layer.layer) {
+                layer = layer.layer;
+              }
+            }
+            else {
               this.activeLayers.clear();
             }
-            this.activeLayers.add(item.layer);
-            item.layer.activate(true);
+            this.activeLayers.add(layer);
+            layer.activate(true);
           }
           else {
-            this.activeLayers.delete(item.layer);
+            this.activeLayers.delete(layer);
+            while (layer.layer) {
+              layer = layer.layer;
+            }
+            this.activeLayers.delete(layer);
           }
           this.decorate_layers();
         }
