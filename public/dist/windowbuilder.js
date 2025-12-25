@@ -2098,7 +2098,7 @@ class Editor extends $p.EditorInvisible {
         }
         else  {
           for(let i = 1; i < pts.length; i++) {
-            if(node.y > pts[i]) {
+            if(node.y > pts[i] && Math.abs(pts[i] - node.y) > 0.1) {
               delta = [0, pts[i] - node.y];
               break;
             }
@@ -2111,7 +2111,7 @@ class Editor extends $p.EditorInvisible {
         }
         else  {
           for(let i = 1; i < pts.length; i++) {
-            if(node.y < pts[i]) {
+            if(node.y < pts[i] && Math.abs(pts[i] - node.y) > 0.1) {
               delta = [0, pts[i] - node.y];
               break;
             }

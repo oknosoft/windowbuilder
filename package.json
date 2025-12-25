@@ -25,7 +25,7 @@
     "url": "https://github.com/oknosoft/windowbuilder/issues"
   },
   "homepage": "https://light.oknosoft.ru/",
-  "proxy": "https://develop.ecookna.ru/",
+  "proxy1": "https://develop.ecookna.ru/",
   "proxy2111": "https://develop.ecookna.ru:2111/",
   "proxy2": "https://start.ecookna.ru/",
   "proxy3": "https://start.phototech.ru/",
@@ -41,6 +41,7 @@
   "proxy13": "https://tg.oknosoft.ru:2310/",
   "proxy14": "https://steklotorg.oknosoft.ru:2310/",
   "proxy15": "https://stdev.oknosoft.ru/",
+  "proxy": "https://dvlp.ecookna.ru:2621/",
   "dependencies": {
     "@turf/points-within-polygon": "^7.3",
     "dxf-writer": "^1.18",
