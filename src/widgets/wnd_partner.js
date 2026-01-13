@@ -65,7 +65,11 @@ class eXcell_partner extends eXcell {
           combo.setComboText("");
         }
       }
-      curr.obj[curr?.field] = val;
+      const partner = $p.cat.partners.get(val);
+      (partner.is_new() ? partner.load() : Promise.resolve())
+        .then(() => {
+          curr.obj[curr?.field] = partner;
+        });
     }
   }
 
