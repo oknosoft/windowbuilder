@@ -22,4 +22,9 @@ export default function ($p) {
   doc_debit_bank_order($p);
   doc_selling($p);
   doc_purchase_order($p);
+
+  import('../../components/PushUtils/FlexibleReplication')
+    .then((module) => {
+      $p.ui.FlexibleReplication = module.FlexibleReplication;
+    });
 }

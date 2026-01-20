@@ -178,7 +178,7 @@ class SchemeLayers {
       const props = {
         auto_lines: 'Авторазмерные линии',
         custom_lines: 'Доп. размерные линии',
-        cnns: 'Соединители',
+        cnns: 'Соединители и внешние доборы',
         visualization: 'Визуализация доп. элементов',
         glass_regions: 'Ряды заполнений',
         //profile_regions: 'Ряды профилей',
