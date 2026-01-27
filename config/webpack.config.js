@@ -679,7 +679,7 @@ module.exports = function (webpackEnv) {
         fs.existsSync(swSrc) &&
         new WorkboxWebpackPlugin.InjectManifest({
           swSrc,
-          dontCacheBustURLsMatching: new RegExp('(^/auth/|^/adm/|^/user/|^/couchdb/|^/help/|^/r/|^/a/|\.[0-9a-f]{8}\.)'),
+          dontCacheBustURLsMatching: new RegExp('(^/auth/|^/adm/|^/user/|^/couchdb/|^/help/|^/print/|^/r/|^/a/|\.[0-9a-f]{8}\.)'),
 
           exclude: [/\.map$/, /asset-manifest\.json$/, /LICENSE/],
           // Bump up the default maximum size (2mb) that's precached,
