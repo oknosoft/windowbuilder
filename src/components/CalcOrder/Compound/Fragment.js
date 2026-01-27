@@ -43,7 +43,7 @@ class CompositionRow {
         row.value[ref] = v.valueOf();
       }
     }
-    else if(utils.is_guid(v)) {
+    else if(utils.is_guid(v, true)) {
       if(row.value.all == v) {
         delete row.value[ref];
       }

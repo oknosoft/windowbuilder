@@ -24,7 +24,7 @@ function GroupedSelect({obj, rows, extClasses, classes}) {
     }
     else {
       compoundRow = rows[0].compoundRow(true);
-      compoundRow.value.all = utils.is_guid(value) ? value.valueOf() : false;
+      compoundRow.value.all = utils.is_guid(value, true) ? value.valueOf() : false;
       Object.keys(compoundRow.value).forEach(key => {
         key !== 'all' && delete compoundRow.value[key];
       });

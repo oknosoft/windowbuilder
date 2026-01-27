@@ -70,7 +70,7 @@ class AdditionsGroup extends React.Component {
       if(key === 'clr') {
         $p.cat.clrs.selection_exclude_service(mf, this.selectedRow.inset);
       }
-      else if($p.utils.is_guid(key)) {
+      else if($p.utils.is_guid(key, true)) {
         this.selectedRow.tune(key, mf, column);
       }
     }
