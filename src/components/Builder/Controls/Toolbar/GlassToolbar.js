@@ -177,7 +177,9 @@ function GlassToolbar({editor, elm, classes}) {
       </SmallButton>
     </Tip>
     <Tip title="Уравнять">
-      <SmallButton disabled={!reflect_grp} onClick={() => editor.glass_align()}>
+      <SmallButton disabled={!reflect_grp} onClick={(ev) => {
+        editor.glass_align('auto', null, ev.altKey || ev.ctrlKey || ev.shiftKey);
+      }}>
         <OpenWithIcon/>
       </SmallButton>
     </Tip>
