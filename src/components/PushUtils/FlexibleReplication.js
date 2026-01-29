@@ -9,10 +9,10 @@ export function FlexibleReplication({obj, handleOk, handleIfaceState, handleNavi
 
   const [index, setIndex] = React.useState(0);
 
-  let branch = sessionStorage.branch && sessionStorage.branch !== utils.blank.guid && branches.get(sessionStorage.branch);
-  const babies = branch ? branch._children() : [];
-  if(!branch) {
-    branch = abonents.current;
+  let currentBranch = sessionStorage.branch && sessionStorage.branch !== utils.blank.guid && branches.get(sessionStorage.branch);
+  const babies = currentBranch ? currentBranch._children() : [];
+  if(!currentBranch) {
+    currentBranch = abonents.current;
     for(const item of branches) {
       if(!item.is_new()) {
         babies.push(item);
@@ -21,19 +21,22 @@ export function FlexibleReplication({obj, handleOk, handleIfaceState, handleNavi
   }
 
   const currentRoute = obj.route.split(',').concat(obj.force_route.split(',')).map(ref => {
+    if(obj.exclude_route.includes(ref)) {
+      return null;
+    }
     const v = branches.by_ref[ref] || abonents.by_ref[ref];
     return v && !v.empty() ? v : null;
   }).filter(v => v);
 
   const list = babies.filter(v => !currentRoute.includes(v)).sort(utils.sort('name'));
-  const elist = currentRoute.filter(v => v !== branch);
-
-
+  const elist = currentRoute.filter(v => v !== currentBranch);
 
   const fin = () => {
     if(obj.obj_delivery_state.is('Черновик')) {
       obj.obj_delivery_state = 'Отозван';
     }
+    obj._manager.emit_async('rows', obj, {'extra_fields': true});
+    setIndex(index + 1);
   };
   const add = () => {
     ui.dialogs.input_value({
@@ -43,12 +46,17 @@ export function FlexibleReplication({obj, handleOk, handleIfaceState, handleNavi
       flat: true,
     })
       .then((branch) => {
-        const {ref} = branch;
-        const {force_route} = obj;
-        const prefix = force_route.length ? `${ref},` : ref;
-        obj.force_route = prefix + force_route;
+        const {route} = obj;
+        for(const {ref} of [branch, ...branch._parents()]) {
+          const {force_route, exclude_route} = obj;
+          if(!route.includes(ref) && !force_route.includes(ref) && currentBranch != ref) {
+            obj.force_route = (force_route.length ? `${ref},` : ref) + force_route;
+          }
+          if(exclude_route.includes(ref)) {
+            obj.exclude_route = exclude_route.replace(ref, '').replace(/,,/g, ',').replace(/(,$|^,)/, '');
+          }
+        }
         fin();
-        setIndex(index + 1);
       })
       .catch(err => null);
   };
@@ -59,27 +67,24 @@ export function FlexibleReplication({obj, handleOk, handleIfaceState, handleNavi
       _owner: {_meta: {choice_params: [{name: 'ref', path: elist.map(v => v.ref)}]}},
       flat: true,
     })
-      .then(({ref}) => {
-        let {route, exclude_route, force_route} = obj;
-        route = route.replace(ref, '').replace(',,', ',').replace(/,$/, '');
-        force_route = force_route.replace(ref, '').replace(',,', ',').replace(/,$/, '');
-        if(!exclude_route.includes(ref)) {
-          if(exclude_route.length) {
-            exclude_route += ',';
+      .then((branch) => {
+        for(const {ref} of [branch, ...branch._children()]) {
+          let {route, exclude_route, force_route} = obj;
+          force_route = force_route.replace(ref, '').replace(/,,/g, ',').replace(/(,$|^,)/, '');
+          if(!exclude_route.includes(ref)) {
+            if(exclude_route.length) {
+              exclude_route += ',';
+            }
+            exclude_route += ref;
           }
-          exclude_route += ref;
-        }
-        if(obj.route != route) {
-          obj.route = route;
-        }
-        if(obj.force_route != force_route) {
-          obj.force_route = force_route;
-        }
-        if(obj.exclude_route != exclude_route) {
-          obj.exclude_route = exclude_route;
+          if(obj.force_route != force_route) {
+            obj.force_route = force_route;
+          }
+          if(obj.exclude_route != exclude_route) {
+            obj.exclude_route = exclude_route;
+          }
         }
         fin();
-        setIndex(index + 1);
       })
       .catch(err => null);
   };

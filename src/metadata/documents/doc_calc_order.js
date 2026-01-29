@@ -146,6 +146,41 @@ export default function ({doc, dp, utils, DocCalc_order}) {
         selector.use_index = ["mango_calc_order", "list"];
         return _mgr.find_rows_remote(selector);
       }
+    },
+
+    get_property_grid_xml: {
+      value(oxml, o, extra) {
+        const xml = this.constructor.prototype.get_property_grid_xml.call(this, oxml, o, extra);
+        if(oxml.Аналитика) {
+          let {branch, force_route, exclude_route} = o;
+          if(force_route || exclude_route) {
+            try {
+              const xmlDoc = (new DOMParser()).parseFromString(xml, "text/xml");
+              const {lastChild} = xmlDoc.getElementsByTagName('rows')[0].children[1].children.branch;
+              const {by_ref} = $p.cat.branches;
+              if(force_route) {
+                lastChild.innerHTML += `&lt;span style="color: blue;"&gt; &lt;b&gt;+&lt;/b&gt;${force_route.split(',')
+                  .map((ref) => by_ref[ref])
+                  .filter(v => v)
+                  .map(v => v.name)
+                  .join(',')
+                }&lt;/span&gt;`;
+              }
+              if(exclude_route) {
+                lastChild.innerHTML += `&lt;span style="color: red;"&gt; &lt;b&gt;-&lt;/b&gt;${exclude_route.split(',')
+                  .map((ref) => by_ref[ref])
+                  .filter(v => v)
+                  .map(v => v.name)
+                  .join(',')
+                }&lt;/span&gt;`;
+              }
+              return xmlDoc.firstChild.outerHTML;
+            }
+            catch (e) {}
+          }
+        }
+        return xml;
+      }
     }
   });
 
