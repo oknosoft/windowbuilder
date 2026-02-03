@@ -236,11 +236,13 @@
 
               for(const grid of [wnd.elmnts.pg_left, wnd.elmnts.pg_right]) {
                 grid.forEachRow((id) => {
-                  const v = o[id];
-                  if (v) {
-                    const {presentation} = v;
-                    if(presentation && presentation !== grid.cells(id,1).cell.innerText) {
-                      grid.cells(id,1).setCValue(presentation);
+                  if(id !== 'branch') {
+                    const v = o[id];
+                    if (v) {
+                      const {presentation} = v;
+                      if(presentation && presentation !== grid.cells(id,1).cell.innerText) {
+                        grid.cells(id,1).setCValue(presentation);
+                      }
                     }
                   }
                 });
