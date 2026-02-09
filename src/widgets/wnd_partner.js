@@ -19,6 +19,7 @@ class eXcell_partner extends eXcell {
   }
 
   get_option_list({_attr, _dhtmlx, _top, presentation, ...other}) {
+
     const curr = _attr.grid.get_cell_value();
     const query = {
       selector: {
@@ -33,7 +34,46 @@ class eXcell_partner extends eXcell {
     if(presentation) {
       query.selector.$and.push({search: presentation.like});
     }
-    return this.adapter.fetch('/r/_find', {method: 'POST', body: JSON.stringify(query)})
+
+    const {adapter, _owner: {branches, partners, $p: {utils}}} = this;
+    let currentBranch = sessionStorage.branch && sessionStorage.branch !== utils.blank.guid && branches.get(sessionStorage.branch);
+    if(currentBranch?.partners?.count() && currentBranch.partners.count() < 200) {
+      const res = new Set(), refs = new Set();
+      for(const {acl_obj} of currentBranch.partners) {
+        if(acl_obj && !acl_obj.empty()) {
+          res.add(acl_obj);
+          if(acl_obj.is_new()) {
+            refs.add(acl_obj.ref);
+          }
+        }
+      }
+      return (refs.size ? adapter.load_array(partners, Array.from(refs)) : Promise.resolve())
+        .then(() => {
+          let all = Array.from(res).map(v => ({class_name: partners.class_name, ...v._obj}));
+          if(all.length > 5) {
+            const selector = {};
+            for(const elm of query.selector.$and){
+              const key = Object.keys(elm)[0];
+              if(key === 'search') {
+                const like = elm[key];
+                selector.presentation = (o) => {
+                  return ['name', 'inn', 'id'].some((fld) => utils._like(o[fld], like));
+                };
+              }
+              else {
+                selector[key] = elm[key];
+              }
+            }
+            all = utils._find_rows(all, selector).sort(utils.sort('name'));
+          }
+          return all.map(v => ({
+            text: v.name,
+            value: v.ref,
+          }));
+        });
+    }
+
+    return adapter.fetch('/r/_find', {method: 'POST', body: JSON.stringify(query)})
     //return this.get_option_list(other)
       .then((res) => res.json())
       .then(({docs}) => {
