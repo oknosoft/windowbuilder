@@ -4,7 +4,6 @@ import Typography from '@material-ui/core/Typography';
 
 const {cat: {branches, abonents}, utils, ui} = $p;
 
-
 export function FlexibleReplication({obj, handleOk, handleIfaceState, handleNavigate}) {
 
   const [index, setIndex] = React.useState(0);
@@ -20,6 +19,21 @@ export function FlexibleReplication({obj, handleOk, handleIfaceState, handleNavi
     }
   }
 
+  const fin = () => {
+    if(obj.obj_delivery_state.is('Черновик') && obj.branch !== currentBranch) {
+      obj.obj_delivery_state = 'Проверяется';
+    }
+    obj._manager.emit_async('rows', obj, {'extra_fields': true});
+    setIndex(index + 1);
+  };
+
+  if(obj.obj_delivery_state.is('Черновик') && obj.branch !== currentBranch) {
+    obj.obj_delivery_state = 'Проверяется';
+    obj.save()
+      .then(fin)
+      .catch(err => null);
+  }
+
   const currentRoute = obj.route.split(',').concat(obj.force_route.split(',')).map(ref => {
     if(obj.exclude_route.includes(ref)) {
       return null;
@@ -31,13 +45,6 @@ export function FlexibleReplication({obj, handleOk, handleIfaceState, handleNavi
   const list = babies.filter(v => !currentRoute.includes(v)).sort(utils.sort('name'));
   const elist = currentRoute.filter(v => v !== currentBranch);
 
-  const fin = () => {
-    if(obj.obj_delivery_state.is('Черновик')) {
-      obj.obj_delivery_state = 'Отозван';
-    }
-    obj._manager.emit_async('rows', obj, {'extra_fields': true});
-    setIndex(index + 1);
-  };
   const add = () => {
     ui.dialogs.input_value({
       title: 'Укажите отдел',
@@ -60,6 +67,7 @@ export function FlexibleReplication({obj, handleOk, handleIfaceState, handleNavi
       })
       .catch(err => null);
   };
+
   const rm = () => {
     ui.dialogs.input_value({
       title: 'Укажите отдел',
@@ -67,8 +75,20 @@ export function FlexibleReplication({obj, handleOk, handleIfaceState, handleNavi
       _owner: {_meta: {choice_params: [{name: 'ref', path: elist.map(v => v.ref)}]}},
       flat: true,
     })
-      .then((branch) => {
-        for(const {ref} of [branch, ...branch._children()]) {
+      .then((selectedBranch) => {
+        const test = [selectedBranch];
+        for(let branch of [currentBranch, obj.branch, ...currentRoute]) {
+          if(branch._hierarchy(selectedBranch)) {
+            while (!test.includes(branch)) {
+              test.push(branch);
+              branch = branch.parent;
+              if(branch.empty()) {
+                break;
+              }
+            }
+          }
+        }
+        for(const {ref} of test) {
           let {route, exclude_route, force_route} = obj;
           force_route = force_route.replace(ref, '').replace(/,,/g, ',').replace(/(,$|^,)/, '');
           if(!exclude_route.includes(ref)) {
@@ -89,12 +109,21 @@ export function FlexibleReplication({obj, handleOk, handleIfaceState, handleNavi
       .catch(err => null);
   };
 
+  const handleSave = () => {
+    obj.save()
+      .then(handleOk)
+      .catch(err => null);
+  };
+
   return <>
     <Typography style={{minWidth: 640}}>{`Текущий маршрут: ${currentRoute.length ? currentRoute.map(v => v.name).join(', ') : 'Пустой'}`}</Typography>
     {!babies.length && <Typography color="error">У текущего отдела или абонента нет детей</Typography>}
-    <div style={{marginBottom: 16}}/>
-    <Button disabled={!list.length} onClick={add} color="primary">Добавить</Button>
-    <Button disabled={!elist.length} onClick={rm} color="primary">Исключить</Button>
+    <div style={{marginTop: 16, display: 'flex'}}>
+      <Button disabled={!list.length} onClick={add} color="primary">Добавить</Button>
+      <Button disabled={!elist.length} onClick={rm} color="primary">Исключить</Button>
+      <div style={{flex: 1}}/>
+      <Button disabled={index === 0} onClick={handleSave} color="secondary" title="Применить и записать">Ok</Button>
+    </div>
   </>;
 }
 
