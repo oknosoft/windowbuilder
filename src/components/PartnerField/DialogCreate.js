@@ -2,7 +2,7 @@ import React from 'react';
 import Dialog from 'metadata-react/App/Dialog';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import Button from '@material-ui/core/Button';
-import RefField from 'metadata-ui/DataField/RefField';
+import RefField from 'metadata-react/DataField/PropField';
 
 export default function DialogCreate({raw, obj, fld, handleClose, handleSubmit}) {
   const {value, data: {inn, ogrn, ogrn_date, address}} = raw[0];
@@ -14,7 +14,7 @@ export default function DialogCreate({raw, obj, fld, handleClose, handleSubmit})
     title="Контрагент по ИНН"
     actions={<>
       <Button onClick={handleClose}>Отмена</Button>
-      <Button onClick={handleSubmit}>Создать</Button>
+      <Button disabled onClick={handleSubmit}>Создать</Button>
     </>}
   >
     <DialogContentText>{`Создать контрагента '${value}'?`}</DialogContentText>
@@ -24,7 +24,7 @@ export default function DialogCreate({raw, obj, fld, handleClose, handleSubmit})
     {obj? <>
       <hr/>
       <DialogContentText>{`Уточните организацию для основного договора`}</DialogContentText>
-      <RefField obj={obj} fld={fld || "organization"} />
+      <RefField _obj={obj} _fld={fld || "organization"} />
     </> : null}
   </Dialog>;
 }

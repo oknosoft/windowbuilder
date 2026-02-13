@@ -6,6 +6,7 @@ import FieldNumberNative from 'metadata-react/DataField/FieldNumberNative';
 import PropField from 'metadata-react/DataField/PropField';
 import AgencySrc from './AgencySrc';
 import AgencyAmount from './AgencyAmount';
+import PartnerField from '../PartnerField';
 
 const {utils, job_prm, cat: {nom_groups, nom}} = $p;
 
@@ -26,9 +27,11 @@ export default function AgentOrder({dialog, handlers}) {
   const calc_order = _mgr.by_ref[ref];
   let [grouped, setGrouped] = React.useState([]);
   const [dialogRef, registerDialod] = React.useState(null);
+  const [partnerIndex, setPartnerIndex] = React.useState(1);
 
   const {handleCancel, handleCommit, obj, orderRow, cmeta, pmeta} = React.useMemo(() => {
     const obj = calc_order.agent_order();
+    obj._data._loading = false;
     const orderRow = calc_order.orders.find({invoice: obj});
     const cmeta = utils._clone(calc_order._metadata());
     const pmeta = utils._clone(obj._metadata());
@@ -178,7 +181,12 @@ export default function AgentOrder({dialog, handlers}) {
       </Grid>
       <Grid item xs={12} sm={6}>
         <PropField _obj={obj} _fld="organization" _meta={pmeta.fields.organization}/>
-        <PropField _obj={obj} _fld="partner" _meta={pmeta.fields.partner}/>
+        <PartnerField key={`p-${partnerIndex}`} obj={obj} fld="partner" meta={pmeta.fields.partner} onChange={() => {
+          setTimeout(() => {
+            setPartnerIndex(partnerIndex + 1);
+            recalc(true);
+          }, 20);
+        }} />
         <PropField _obj={obj} _fld="contract" handleValueChange={recalc} />
         <PropField Component={AgencyAmount} _obj={orderRow} _fld="amount" handleCalc={recalc} _meta={cmeta.tabular_sections.orders.fields.amount}/>
       </Grid>
