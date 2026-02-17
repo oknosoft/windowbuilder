@@ -23,7 +23,7 @@ function GlassLayerProps ({elm, row, inset}) {
   const content = [<PropField fullWidth key={`clr-${inset.ref}-${row.row}`} _obj={_obj} _fld="clr" _meta={clr} empty_text="Авто"/>];
   for (const prm of inset.used_params()) {
     const {ref} = prm;
-    content.push(<LinkedProp key={`${ref}-${row.row}`} param={prm} _obj={_obj} _fld={ref} fields={fields}/>);
+    content.push(<LinkedProp key={`${ref}-${row.row}`} param={prm} inset={inset} _obj={_obj} _fld={ref} fields={fields}/>);
   }
   return content;
 }
