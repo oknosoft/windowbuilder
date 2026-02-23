@@ -15,7 +15,11 @@ import Stepper from './Stepper';
 
 const title = 'Пересчет с заменой параметров';
 
-const {cat: {clrs}, dp: {buyers_order}, ui: {dialogs}} = $p;
+const {cat: {clrs}, dp: {buyers_order}, ui: {dialogs}, utils} = $p;
+const ichoice_param = buyers_order.metadata('inset').choice_params.find(v => v.name === "insert_glass_type");
+if(ichoice_param && !ichoice_param.path.includes(utils.blank.guid)) {
+  ichoice_param.path.push(utils.blank.guid);
+}
 
 class ChangeRecalc extends React.Component {
 

@@ -32,7 +32,9 @@ function PropFld({classes, checked, handleChange, dp, fld, title}) {
       control={<Switch checked={checked} onChange={handleChange} name={fld} />}
       label={checked ? 'Установить' : 'Не изменять'}
     />
-    <DataField _obj={dp} _fld={fld} read_only={!checked} />
+    <div style={{minWidth: 320, flex: 1, paddingRight: 16}}>
+      <DataField _obj={dp} _fld={fld} read_only={!checked} label_position="hide"/>
+    </div>
   </FormGroup>;
 }
 
