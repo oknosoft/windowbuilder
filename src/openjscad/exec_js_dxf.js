@@ -72,10 +72,16 @@ export function exec_dxf (scheme, Drawing) {
     // визуализация
     for(const item of layer.l_visualization.by_spec.children) {
       if(item instanceof CompoundPath) {
-        const {bounds, children} = item;
+        const {bounds, children, data} = item;
         if(rectPoints.every(point => path.contains(bounds[point]))) {
-          for(const path of children) {
-            export_path({path});
+          if(data.primitive === 'circle') {
+            const {size, center} = item.bounds;
+            d.drawCircle(center.x.round(1), (h - center.y).round(1), ((size.width + size.height) / 4).round(1));
+          }
+          else {
+            for(const path of children) {
+              export_path({path});
+            }
           }
         }
       }
