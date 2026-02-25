@@ -430,9 +430,12 @@ class ToolCut extends ToolElement{
         else if(cnns.length) {
           cnn.cnn = cnns[0];
         }
-        cnn = cnn.profile.cnn_point(cnn.profile_point);
-        if(cnn.profile === rack1.profile) {
-          cnn.cnn = null;
+        const {profile_point} = cnn;
+        if(profile_point === 'b' || profile_point === 'e') {
+          cnn = cnn.profile.cnn_point(profile_point);
+          if(cnn.profile === rack1.profile) {
+            cnn.cnn = null;
+          }
         }
       }
     }
