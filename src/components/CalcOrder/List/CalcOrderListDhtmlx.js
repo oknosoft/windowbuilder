@@ -12,7 +12,14 @@ class CalcOrderList extends DhtmlxCell {
   componentDidMount() {
 
     let {location, state_filter, handleIfaceState} = this.props;
-    const search = $p.job_prm.parse_url_str(location.search);
+    const {doc: {calc_order}, job_prm, utils} = $p;
+    const search = job_prm.parse_url_str(location.search);
+    if(search.goto && utils.is_guid(search.goto)) {
+      setTimeout(() => {
+        this.handlers.handleNavigate(`/${calc_order.class_name}/${search.goto}`);
+      }, 100);
+      return super.componentDidMount();
+    }
     if (search.state_filter && search.state_filter != state_filter) {
       state_filter = search.state_filter;
     }
@@ -23,7 +30,6 @@ class CalcOrderList extends DhtmlxCell {
 
     super.componentDidMount();
     const {cell, handlers, export_start, export_ok, export_err, import_start} = this;
-    const {calc_order} = $p.doc;
     calc_order.form_list(cell, null, handlers);
     calc_order.on({export_start, export_ok, export_err, import_start});
   }

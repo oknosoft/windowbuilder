@@ -110,7 +110,8 @@
           ' ': [
             {id: 'number_doc', path: 'o.number_doc', synonym: 'Номер', type: 'ro'},
             {id: 'date', path: 'o.date', synonym: 'Дата', type: 'ro', txt: moment(o.date).format(moment._masks.date_time)},
-            'number_internal'
+            'number_internal',
+            {id: 'basis', path: 'o.basis', synonym: 'Ведущий заказ', type: 'ro'},
           ],
           'Контактная информация': [
             {id: 'partner', path: 'o.partner', synonym: 'Контрагент', type: 'partner'},
@@ -271,7 +272,8 @@
 
               // табчасть продукции со специфическим набором кнопок
               attr.tabular_init('production', $p.injected_data['toolbar_calc_order_production.xml'], footer);
-              attr.tabular_init('planning');
+              attr.tabular_init('links');
+              //attr.tabular_init('planning');
 
               const {production} = wnd.elmnts.grids;
               production.disable_sorting = true;
@@ -296,8 +298,22 @@
               toolbar.attachEvent('onclick', toolbar_click);
 
               // табчасть планирования
-              toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
-              toolbar.addButton('btn_fill_plan', 3, 'Заполнить');
+              //toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
+              //toolbar.addButton('btn_fill_plan', 3, 'Заполнить');
+              //toolbar.attachEvent('onclick', toolbar_click);
+
+              // табчасть связанных заказов
+              toolbar = wnd.elmnts.tabs.tab_links.getAttachedToolbar();
+              toolbar.removeItem('btn_add');
+              toolbar.removeItem('btn_delete');
+              if(o.basis.empty()) {
+                toolbar.addButton('btn_link_add', 0, 'Добавить');
+                toolbar.addButton('btn_link_del', 1, 'Удалить');
+                toolbar.addButton('btn_goto_linked', 2, 'Перейти к связанному');
+              }
+              else {
+                toolbar.addButton('btn_goto_basis', 0, 'Перейти к ведущему');
+              }
               toolbar.attachEvent('onclick', toolbar_click);
 
               // подключаемые действия
@@ -570,6 +586,45 @@
         clone_calc_order(o);
         break;
 
+      case 'btn_link_add':
+        ui.dialogs.alert({
+          title: `Свободные заказы контрагента '${o.partner.name}'`,
+          timeout: 0,
+          Component: ui.CalcOrderLinkedSelect,
+          props: {obj: o},
+          //initFullScreen: true,
+          hide_btn: true,
+          //noSpace: true,
+        });
+        break;
+
+      case 'btn_link_del': {
+        const index = production_get_sel_index('links');
+        if(typeof index === 'number') {
+          o.links.del(index);
+        }
+        break;
+      }
+
+      case 'btn_goto_basis':
+        return (o._modified ? ui.dialogs.confirm({
+          title: 'Связанные заказы',
+          text: 'Текущий документ изменён\nЗакрыть без сохранения?',
+          timeout: 10000,
+        }) : Promise.resolve(true))
+          .then(() => handlers.handleNavigate(`/?ref=${o.ref}&goto=${o.basis.ref}`));
+
+      case 'btn_goto_linked': {
+        const index = production_get_sel_index('links');
+        if(typeof index === 'number') {
+          const row = o.links.get(index);
+          if(row) {
+            handlers.handleNavigate(`/?ref=${o.ref}&goto=${row.calc_order.ref}`);
+          }
+        }
+        break;
+      }
+
       case 'btn_print':
         if(o._modified) {
           ui.dialogs.alert({
@@ -718,15 +773,19 @@
      * вспомогательные функции
      */
 
-    function production_get_sel_index() {
-      const selId = wnd.elmnts.grids.production.getSelectedRowId();
+    function production_get_sel_index(ts) {
+      if(!ts) {
+        ts = 'production';
+      }
+      const selId = wnd.elmnts.grids[ts].getSelectedRowId();
       if(selId && !isNaN(Number(selId))) {
         return Number(selId) - 1;
       }
 
+      const tsMeta = _mgr.metadata(ts);
       $p.msg.show_msg({
         type: 'alert-warning',
-        text: $p.msg.no_selected_row.replace('%1', 'Продукция'),
+        text: $p.msg.no_selected_row.replace('%1', tsMeta.synonym || tsMeta.name),
         title: o.presentation
       });
     }
@@ -852,7 +911,7 @@
         (o.obj_delivery_state == Отправлен || o.obj_delivery_state == Отклонен);
 
       grids.production.setEditable(!ro);
-      grids.planning.setEditable(!ro);
+      //grids.planning.setEditable(!ro);
       pg_left.setEditable(!ro);
       pg_right.setEditable(!ro);
 
@@ -876,8 +935,8 @@
         const disable = (itemId) => toolbar.disableItem(itemId);
         toolbar = tabs.tab_production.getAttachedToolbar();
         toolbar.forEachItem(disable);
-        toolbar = tabs.tab_planning.getAttachedToolbar();
-        toolbar.forEachItem(disable);
+        //toolbar = tabs.tab_planning.getAttachedToolbar();
+        //toolbar.forEachItem(disable);
       }
       else {
         // шаблоны никогда не надо отправлять
@@ -893,8 +952,8 @@
         const enable = (itemId) => toolbar.enableItem(itemId);
         toolbar = tabs.tab_production.getAttachedToolbar();
         toolbar.forEachItem(enable);
-        toolbar = tabs.tab_planning.getAttachedToolbar();
-        toolbar.forEachItem(enable);
+        //toolbar = tabs.tab_planning.getAttachedToolbar();
+        //toolbar.forEachItem(enable);
       }
       if(retrieve_enabed) {
         frm_toolbar.enableListOption('bs_more', 'btn_retrieve');
