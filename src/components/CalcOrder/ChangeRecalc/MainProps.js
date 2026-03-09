@@ -91,6 +91,9 @@ class MainProps extends React.Component {
           }
         });
       }
+      // патч метаданных
+      const sys_meta = dp._metadata('sys');
+      delete sys_meta.choice_params;
     });
   }
 
