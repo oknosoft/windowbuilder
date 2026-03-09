@@ -16,7 +16,7 @@ function LayerToolbar({editor, layer, classes}) {
   if(!layer.hasChildren()) {
     return '';
   }
-  const {furn, project, direction} = layer;
+  const {furn, project, direction, own_sys} = layer;
   const contours = project.getItems({class: editor.constructor.Contour});
   return <Toolbar disableGutters>
     <Tip title="Поднять на передний план">
@@ -47,8 +47,8 @@ function LayerToolbar({editor, layer, classes}) {
     <div className={classes.title}/>
     <Tip title="Обновить параметры">
       <IconButton
-        disabled={!layer.layer}
-        onClick={() => layer.own_sys ? layer.refill_prm() : furn.refill_prm(layer)}>
+        disabled={!own_sys}
+        onClick={() => own_sys ? layer.refill_prm() : furn.refill_prm(layer)}>
         <i className="fa fa-retweet" />
       </IconButton>
     </Tip>
