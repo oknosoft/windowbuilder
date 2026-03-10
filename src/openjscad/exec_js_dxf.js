@@ -17,17 +17,10 @@ export function exec_dxf (scheme, Drawing) {
   name = name.substring(0, name.indexOf('/'));
 
   function export_path(src) {
-    const path = src.path.clone({insert: false});
-    const {closed, curves} = path;
+    const {closed, curves} = src.path;
     let prev;
-    if(path.hasHandles()) {
-      path.flatten(0.6);
-    }
     curves.forEach((curve, index) => {
       let {point1, point2} = curve;
-      if(curve.hasHandles()) {
-
-      }
       if(!prev){
         prev = point1;
       }
@@ -37,7 +30,17 @@ export function exec_dxf (scheme, Drawing) {
       else if(prev.getDistance(point2) < 1){
           return;
       }
-      d.drawLine(prev.x, h - prev.y, point2.x, h - point2.y);
+      if(curve.hasHandles()) {
+        const controlPoints = [[prev.x, h - prev.y]];
+        for(let time = 0.1; time <= 1; time += 0.1) {
+          const loc = curve.getLocationAtTime(time);
+          controlPoints.push([loc.point.x, h - loc.point.y]);
+        }
+        d.drawSpline(controlPoints);
+      }
+      else {
+        d.drawLine(prev.x, h - prev.y, point2.x, h - point2.y);
+      }
       prev = point2;
     });
   }
