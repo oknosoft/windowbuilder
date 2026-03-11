@@ -6,10 +6,11 @@ import Typography from '@material-ui/core/Typography';
 import Tip from 'metadata-react/App/Tip';
 import InfoButton from 'metadata-react/App/InfoButton';
 import {useStyles} from '../../Toolbar/styles';
+import OrderTotals from '../OrderTotals';
 
 function open_spec(ox) {
   const {ui: {dialogs}, cat: {characteristics}, msg} = $p;
-  return dialogs.alert({
+  dialogs.alert({
     timeout: 0,
     title: `${msg.product_spec} ${ox.prod_name(true)}`,
     Component: characteristics.SpecFragment,
@@ -17,6 +18,18 @@ function open_spec(ox) {
     initFullScreen: true,
     hide_btn: true,
     noSpace: true,
+  });
+}
+
+function open_totals(ox, calc_order) {
+  $p.ui.dialogs.alert({
+    timeout: 0,
+    title: `Состав заказа`,
+    Component: OrderTotals,
+    props: {ox, calc_order},
+    //initFullScreen: true,
+    hide_btn: true,
+    //noSpace: true,
   });
 }
 
@@ -29,11 +42,9 @@ function RootToolbar({ox, _dp: {sys}, project, classes}) {
     <Tip title={$p.msg.layer_spec}>
       <IconButton onClick={() => open_spec(ox)}><i className="fa fa-table" /></IconButton>
     </Tip>
-    {sys?.note &&
-      <Tip title='Информация' >
-        <InfoButton text={sys.note} />
-      </Tip>
-    }
+    <Tip title='Информация' >
+      <InfoButton onClick={() => open_totals(ox)} />
+    </Tip>
   </Toolbar>;
 }
 
