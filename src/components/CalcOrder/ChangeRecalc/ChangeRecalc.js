@@ -68,7 +68,12 @@ class ChangeRecalc extends React.Component {
       .then(this.handleCancel)
       .catch((err) => {
         this.setState({loading: false});
-        dialogs.alert({title, text: err.message});
+        if(err.text && err.title) {
+          dialogs.alert({title: err.title, text: err.text});
+        }
+        else {
+          dialogs.alert({title, text: err.message});
+        }
       });
   };
 
