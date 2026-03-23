@@ -1,48 +1,202 @@
 import React from 'react';
 import {Treebeard, decorators, filters, theme} from 'wb-forms/dist/Treebeard';
 
-const width = {width: 90, textAlign: 'right'};
+function Column({text}) {
+  return <span style={{width: 92, textAlign: 'right'}}>{text}</span>;
+}
+
+function Amount({text}) {
+  return <span style={{width: 102, textAlign: 'right'}}>{text}</span>;
+}
+
+function Nom({text}) {
+  return <span style={{flex: 1}}>{text}</span>;
+}
+
+function Row({values}) {
+  const [nom, q, s, m, p, a] = values;
+  return <>
+    <Nom text={nom} />
+    <Column text={q} />
+    <Column text={s} />
+    <Column text={m} />
+    <Column text={p} />
+    <Amount text={a} />
+  </>;
+}
+
+const {utils, cat: {characteristics}} =  $p;
+
 function getStruct(raw) {
+  const {Аксессуары, Материалы, Услуги, Продукция, СоставныеИзделия, ВсегоИзделий, ВсегоМасса, ВсегоМассаЗаполнений, ВсегоПлощадьИзделий, СуммаДокумента} = raw;
   const struct = {
-    key: 'root',
+    key: 'order',
+    width: 1120,
     frozen: true,
-    width: 920,
-    //icon: 'icon',
-    name: <>
-      <span style={{flex: 1}}><hr style={{marginTop: 13, opacity: 0.3}}/></span>
-      <span style={width}>Колич</span>
-      <span style={width}>Площадь</span>
-      <span style={width}>Масса</span>
-      <span style={width}>Цена</span>
-      <span style={width}>Сумма</span>
-    </>,
-    children: [{
-      key: 'order',
-      width: 900,
-      //frozen: true,
-      //icon: 'icon',
-      name: <>
-        <span style={{flex: 1}}>{`Заказ ${raw.ЗаказНомер} от ${raw.ДатаЗаказаФорматD}`}</span>
-        <span style={width}>0</span>
-        <span style={width}>0</span>
-        <span style={width}>0</span>
-        <span style={width}>0</span>
-        <span style={width}>0</span>
-      </>,
-      children: [],
-      toggled: true,
-    }],
+    name: <Row values={[`Заказ ${raw.ЗаказНомер} от ${raw.ДатаЗаказаФорматD}`, '', ВсегоПлощадьИзделий, ВсегоМасса.round(1), '', parseFloat(СуммаДокумента).round()]}/>,
+    children: [],
     toggled: true,
   };
+  for(const [cx, det] of СоставныеИзделия) {
+    const {calc_order_row} = cx;
+    const compositeRow = {
+      key: `c-${cx.ref}`,
+      width: 1100,
+      //frozen: true,
+      //icon: 'icon',
+      name: <Row values={[
+        `Составное ${cx.name.split('/').filter((v, i) => i <= 1).join('/')}/${cx.owner.name}`,
+        calc_order_row.quantity,
+        det.ПлощадьИзделий + det.ПлощадьДопов,
+        det.Масса.round(1) + det.МассаДопов.round(1),
+        '',
+        det.Сумма + det.СуммаДопов,
+      ]}/>,
+      children: [
+        {
+          key: `cpg-${cx.ref}`,
+          width: 1082,
+          name: <Row values={['Изделия', '', det.ПлощадьИзделий, det.Масса.round(1), '', det.Сумма]}/>,
+          children: [],
+        }
+      ],
+      toggled: true,
+    };
+    for(const sub of det.Изделия) {
+      const {characteristic} = sub;
+      const subRow = {
+        key: `cp-${characteristic.ref}`,
+        width: 1066,
+        name: <Row values={[
+          `${characteristic.prod_name(true)}/${characteristic.x.round()}x${characteristic.y.round()}`,
+          '',
+          characteristic.s,
+          characteristic.weight?.round(1),
+          sub.price,
+          sub.amount,
+        ]}/>,
+      };
+      compositeRow.children[0].children.push(subRow);
+    }
+    struct.children.push(compositeRow);
+    if(det.Допы.length) {
+      compositeRow.children.push({
+        key: `cpd-${cx.ref}`,
+        width: 1082,
+        //frozen: true,
+        //icon: 'icon',
+        name: <Row values={['Допы', '', det.ПлощадьДопов || '', det.МассаДопов.round(1), '', det.СуммаДопов]}/>,
+        children: [],
+      });
+      for(const sub of det.Допы) {
+        const {characteristic} = sub;
+        const subRow = {
+          key: `cd-${characteristic.ref}`,
+          width: 1066,
+          name: <Row values={[
+            `${characteristic.name.split('/').filter((v, i) => i > 1 && !v.startsWith('m:') && !v.startsWith('s:')).join('/')}`,
+            '',
+            characteristic.s || '',
+            characteristic.weight?.round(1),
+            sub.price,
+            sub.amount,
+          ]}/>,
+        };
+        compositeRow.children[1].children.push(subRow);
+      }
+    }
+  }
+
+  function isFree(ref) {
+    const ox = characteristics.get(ref);
+    for(const [cx, det] of СоставныеИзделия) {
+      if(cx === ox) {
+        return false;
+      }
+      for(const sub of det.Изделия.concat(det.Допы)) {
+        if(sub.characteristic === ox) {
+          return false;
+        }
+      }
+    }
+    return ox;
+  }
+
+  for(const prod of Продукция) {
+    const cx = isFree(prod.ref);
+    if(cx) {
+      if(cx.coordinates.count()) {
+        const prodRow = {
+          key: `p-${prod.ref}`,
+          width: 1100,
+          name: <Row values={[
+            `${cx.prod_name(true)}/${cx.x.round()}x${cx.y.round()}`,
+            prod.Количество,
+            cx.s,
+            cx.weight?.round(1),
+            prod.Цена,
+            prod.Сумма,
+          ]}/>,
+          children: [],
+          frozen: true,
+          toggled: true,
+        };
+        struct.children.push(prodRow);
+      }
+      else {
+        Аксессуары.push(prod);
+      }
+    }
+  }
+  for(const prod of Аксессуары) {
+    const cx = characteristics.get(prod.ref);
+    const prodRow = {
+      key: `d-${cx.ref}`,
+      width: 1100,
+      name: <Row values={[
+        `${cx.name.split('/').filter((v, i) => i > 1 && !v.startsWith('m:') && !v.startsWith('s:')).join('/')}`,
+        prod.Количество,
+        cx.s || '',
+        cx.weight?.round(1) || '',
+        prod.Цена,
+        prod.Сумма,
+      ]}/>,
+      children: [],
+      frozen: true,
+      toggled: true,
+    };
+    struct.children.push(prodRow);
+  }
+  for(const prod of Услуги) {
+    const cx = characteristics.get(prod.ref);
+    const part = cx.name.split('/').filter((v, i) => i > 1);
+    const last = part[part.length - 1].split('|').filter((v) => !v.startsWith('m:') && !v.startsWith('s:'));
+    const prodRow = {
+      key: `u-${prod.ref}`,
+      width: 1100,
+      name: <Row values={[
+        `${cx.prod_name(true)}/${last.join('/')}`,
+        prod.Количество,
+        cx.s,
+        '',
+        prod.Цена,
+        prod.Сумма,
+      ]}/>,
+      children: [],
+      frozen: true,
+      toggled: true,
+    };
+    struct.children.push(prodRow);
+  }
   return struct;
 }
 
-const style = $p.utils._clone(theme);
+const style = utils._clone(theme);
 Object.assign(style.tree.node.header.title, {display: 'flex'});
 
-export default function OrderTotals({ox, calc_order}) {
+export function OrderTotals({ox, calc_order, obj}) {
   if(!calc_order) {
-    calc_order = ox.calc_order;
+    calc_order = ox?.calc_order || obj;
   }
   const [struct, setStruct] = React.useState(null);
   React.useEffect(() => {
@@ -69,6 +223,7 @@ export default function OrderTotals({ox, calc_order}) {
   };
 
   return struct ? <div className="dsn-tree" style={{minHeight: 420}}>
+    <div style={{display: 'flex', width: 1144}}><Row values={[<hr style={{marginTop: 13, opacity: 0.3}}/>, 'Колич', 'Площ.изд', 'Масса', 'Цена', 'Сумма']} /></div>
     <Treebeard
       data={struct}
       decorators={decorators}

@@ -26,6 +26,10 @@ export default function ($p) {
   import('../../components/PushUtils/FlexibleReplication')
     .then((module) => {
       $p.ui.FlexibleReplication = module.FlexibleReplication;
+      return import('../../components/Builder/Controls/OrderTotals');
+    })
+    .then((module) => {
+      $p.ui.OrderTotals = module.OrderTotals;
     })
     .then(() => import('../../components/CalcOrder/Linked'));
 }

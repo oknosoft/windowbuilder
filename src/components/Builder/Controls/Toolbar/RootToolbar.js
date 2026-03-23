@@ -6,7 +6,7 @@ import Typography from '@material-ui/core/Typography';
 import Tip from 'metadata-react/App/Tip';
 import InfoButton from 'metadata-react/App/InfoButton';
 import {useStyles} from '../../Toolbar/styles';
-import OrderTotals from '../OrderTotals';
+import {OrderTotals} from '../OrderTotals';
 
 function open_spec(ox) {
   const {ui: {dialogs}, cat: {characteristics}, msg} = $p;
