@@ -33,7 +33,7 @@ function getStruct(raw) {
     key: 'order',
     width: 1120,
     frozen: true,
-    name: <Row values={[`Заказ ${raw.ЗаказНомер} от ${raw.ДатаЗаказаФорматD}`, '', ВсегоПлощадьИзделий, ВсегоМасса.round(1), '', parseFloat(СуммаДокумента).round()]}/>,
+    name: <Row values={[`Заказ ${raw.ЗаказНомер} от ${raw.ДатаЗаказаФорматD}`, '', ВсегоПлощадьИзделий.round(2), ВсегоМасса.round(1), '', parseFloat(СуммаДокумента).round()]}/>,
     children: [],
     toggled: true,
   };
@@ -47,8 +47,8 @@ function getStruct(raw) {
       name: <Row values={[
         `Составное ${cx.name.split('/').filter((v, i) => i <= 1).join('/')}/${cx.owner.name}`,
         calc_order_row.quantity,
-        det.ПлощадьИзделий + det.ПлощадьДопов,
-        det.Масса.round(1) + det.МассаДопов.round(1),
+        (det.ПлощадьИзделий + det.ПлощадьДопов).round(2),
+        (det.Масса + det.МассаДопов).round(1),
         '',
         det.Сумма + det.СуммаДопов,
       ]}/>,
@@ -56,7 +56,7 @@ function getStruct(raw) {
         {
           key: `cpg-${cx.ref}`,
           width: 1082,
-          name: <Row values={['Изделия', '', det.ПлощадьИзделий, det.Масса.round(1), '', det.Сумма]}/>,
+          name: <Row values={['Изделия', '', det.ПлощадьИзделий.round(2), det.Масса.round(1), '', det.Сумма]}/>,
           children: [],
         }
       ],
@@ -70,7 +70,7 @@ function getStruct(raw) {
         name: <Row values={[
           `${characteristic.prod_name(true)}/${characteristic.x.round()}x${characteristic.y.round()}`,
           '',
-          characteristic.s,
+          characteristic.s.round(2),
           characteristic.weight?.round(1),
           sub.price,
           sub.amount,
@@ -85,7 +85,7 @@ function getStruct(raw) {
         width: 1082,
         //frozen: true,
         //icon: 'icon',
-        name: <Row values={['Допы', '', det.ПлощадьДопов || '', det.МассаДопов.round(1), '', det.СуммаДопов]}/>,
+        name: <Row values={['Допы', '', det.ПлощадьДопов.round(2) || '', det.МассаДопов.round(1), '', det.СуммаДопов]}/>,
         children: [],
       });
       for(const sub of det.Допы) {
@@ -96,7 +96,7 @@ function getStruct(raw) {
           name: <Row values={[
             `${characteristic.name.split('/').filter((v, i) => i > 1 && !v.startsWith('m:') && !v.startsWith('s:')).join('/')}`,
             '',
-            characteristic.s || '',
+            characteristic.s.round(2) || '',
             characteristic.weight?.round(1),
             sub.price,
             sub.amount,
@@ -132,7 +132,7 @@ function getStruct(raw) {
           name: <Row values={[
             `${cx.prod_name(true)}/${cx.x.round()}x${cx.y.round()}`,
             prod.Количество,
-            cx.s,
+            cx.s.round(2),
             cx.weight?.round(1),
             prod.Цена,
             prod.Сумма,
@@ -156,7 +156,7 @@ function getStruct(raw) {
       name: <Row values={[
         `${cx.name.split('/').filter((v, i) => i > 1 && !v.startsWith('m:') && !v.startsWith('s:')).join('/')}`,
         prod.Количество,
-        cx.s || '',
+        cx.s.round(2) || '',
         cx.weight?.round(1) || '',
         prod.Цена,
         prod.Сумма,
@@ -177,7 +177,7 @@ function getStruct(raw) {
       name: <Row values={[
         `${cx.prod_name(true)}/${last.join('/')}`,
         prod.Количество,
-        cx.s,
+        cx.s.round(2) || '',
         '',
         prod.Цена,
         prod.Сумма,
