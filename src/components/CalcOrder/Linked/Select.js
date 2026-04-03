@@ -12,13 +12,14 @@ const columns = [
   {key: 'count', name: 'Строк', width: 100},
 ];
 
-const {ui, adapters: {pouch}, doc: {calc_order}} = $p;
+const {ui, adapters: {pouch}, doc: {calc_order}, utils} = $p;
 
 function CalcOrderLinkedSelect({obj, handleOk}) {
 
   const [gridRef, setGridRef] = React.useState(null);
   const [rows, setRows] = React.useState(null);
   const [selectedRows, setSelectedRows] = React.useState(new Set());
+  const scheme = React.useMemo(() => ({_search: ''}), [obj]);
 
   const onCellSelected = (v) => {
     const key = Array.from(selectedRows)[0];
@@ -36,15 +37,15 @@ function CalcOrderLinkedSelect({obj, handleOk}) {
       descending: true,
     })
       .then(({rows}) => {
-        setRows(rows.map(({id, key, value}) => ({
+        scheme.rows = rows.map(({id, key, value}) => ({
           ref: id.substring(15),
           date: key[2],
           number_doc: value[0],
           number_internal: value[1],
           amount: value[2],
           count: value[3],
-        })).filter(v => v.ref != obj)
-        );
+        })).filter(v => v.ref != obj);
+        setRows(scheme.rows);
       });
   }, [obj]);
 
@@ -76,8 +77,20 @@ function CalcOrderLinkedSelect({obj, handleOk}) {
       .then(handleOk);
   };
 
+  const handleFilterChange = () => {
+    const {_search, rows} = scheme;
+    if(rows) {
+      if(_search) {
+        setRows(rows.filter(({number_doc, number_internal}) => utils._like(number_doc, _search) || number_internal && utils._like(number_internal, _search)));
+      }
+      else {
+        setRows(rows);
+      }
+    }
+  };
+
   return rows ? <div style={{minWidth: 640}}>
-    <SelectToolbar row={row} handleSelect={handleSelect} />
+    <SelectToolbar row={row} handleSelect={handleSelect} scheme={scheme} handleFilterChange={handleFilterChange}/>
     <ReactDataGrid
       ref={(el) => el && setGridRef(el)}
       columns={columns}
