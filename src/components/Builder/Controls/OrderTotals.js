@@ -25,7 +25,7 @@ function Row({values}) {
   </>;
 }
 
-const {utils, cat: {characteristics}} =  $p;
+const {utils, cat: {characteristics}, job_prm} =  $p;
 
 function getStruct(raw) {
   const {Аксессуары, Материалы, Услуги, Продукция, СоставныеИзделия, ВсегоИзделий, ВсегоМасса, ВсегоМассаЗаполнений, ВсегоПлощадьИзделий, СуммаДокумента} = raw;
@@ -37,7 +37,7 @@ function getStruct(raw) {
     children: [],
     toggled: true,
   };
-  for(const [cx, det] of СоставныеИзделия) {
+  for(const [cx, {Изделия, ...det}] of СоставныеИзделия) {
     const {calc_order_row} = cx;
     const compositeRow = {
       key: `c-${cx.ref}`,
@@ -45,49 +45,51 @@ function getStruct(raw) {
       //frozen: true,
       //icon: 'icon',
       name: <Row values={[
-        `Составное ${cx.name.split('/').filter((v, i) => i <= 1).join('/')}/${cx.owner.name}`,
+        `${Изделия.length > 1 ? 'Составное ' : ''}${cx.name.split('/').filter((v, i) => i <= 1).join('/')}/${cx.owner.name}`,
         calc_order_row.quantity,
         (det.ПлощадьИзделий + det.ПлощадьДопов).round(2),
         (det.Масса + det.МассаДопов).round(1),
         '',
         det.Сумма + det.СуммаДопов,
       ]}/>,
-      children: [
-        {
-          key: `cpg-${cx.ref}`,
-          width: 1082,
-          name: <Row values={['Изделия', '', det.ПлощадьИзделий.round(2), det.Масса.round(1), '', det.Сумма]}/>,
-          children: [],
-        }
-      ],
+      children: [],
       toggled: true,
     };
-    for(const sub of det.Изделия) {
-      const {characteristic} = sub;
-      const subRow = {
-        key: `cp-${characteristic.ref}`,
-        width: 1066,
-        name: <Row values={[
-          `${characteristic.prod_name(true)}/${characteristic.x.round()}x${characteristic.y.round()}`,
-          '',
-          characteristic.s.round(2),
-          characteristic.weight?.round(1),
-          sub.price,
-          sub.amount,
-        ]}/>,
-      };
-      compositeRow.children[0].children.push(subRow);
+    if(Изделия.length > 1) {
+      compositeRow.children.push({
+        key: `cpg-${cx.ref}`,
+        width: 1082,
+        name: <Row values={['Изделия', '', det.ПлощадьИзделий.round(2), det.Масса.round(1), '', det.Сумма]}/>,
+        children: [],
+      });
+      for(const sub of Изделия) {
+        const {characteristic} = sub;
+        const subRow = {
+          key: `cp-${characteristic.ref}`,
+          width: 1066,
+          name: <Row values={[
+            `${characteristic.prod_name(true)}/${characteristic.x.round()}x${characteristic.y.round()}`,
+            '',
+            characteristic.s.round(2),
+            characteristic.weight?.round(1),
+            sub.price,
+            sub.amount,
+          ]}/>,
+        };
+        compositeRow.children[0].children.push(subRow);
+      }
     }
     struct.children.push(compositeRow);
     if(det.Допы.length) {
-      compositeRow.children.push({
+      const dopRow = {
         key: `cpd-${cx.ref}`,
         width: 1082,
         //frozen: true,
         //icon: 'icon',
         name: <Row values={['Допы', '', det.ПлощадьДопов.round(2) || '', det.МассаДопов.round(1), '', det.СуммаДопов]}/>,
         children: [],
-      });
+      };
+      compositeRow.children.push(dopRow);
       for(const sub of det.Допы) {
         const {characteristic} = sub;
         const subRow = {
@@ -102,7 +104,7 @@ function getStruct(raw) {
             sub.amount,
           ]}/>,
         };
-        compositeRow.children[1].children.push(subRow);
+        dopRow.children.push(subRow);
       }
     }
   }
@@ -133,6 +135,24 @@ function getStruct(raw) {
             `${cx.prod_name(true)}/${cx.x.round()}x${cx.y.round()}`,
             prod.Количество,
             cx.s.round(2),
+            cx.weight?.round(1),
+            prod.Цена,
+            prod.Сумма,
+          ]}/>,
+          children: [],
+          frozen: true,
+          toggled: true,
+        };
+        struct.children.push(prodRow);
+      }
+      else if(cx.owner === job_prm.nom.accessories) {
+        const prodRow = {
+          key: `p-${prod.ref}`,
+          width: 1100,
+          name: <Row values={[
+            prod.Номенклатура,
+            prod.Количество,
+            '',
             cx.weight?.round(1),
             prod.Цена,
             prod.Сумма,
