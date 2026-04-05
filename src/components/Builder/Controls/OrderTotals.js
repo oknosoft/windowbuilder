@@ -54,6 +54,7 @@ function getStruct(raw) {
       ]}/>,
       children: [],
       toggled: true,
+      svg: cx.svg,
     };
     if(Изделия.length > 1) {
       compositeRow.children.push({
@@ -75,6 +76,7 @@ function getStruct(raw) {
             sub.price,
             sub.amount,
           ]}/>,
+          svg: characteristic.leading_elm ? characteristic.svg : characteristic.constructions.find({parent: 0}).dop.svg,
         };
         compositeRow.children[0].children.push(subRow);
       }
@@ -218,6 +220,7 @@ export function OrderTotals({ox, calc_order, obj}) {
   if(!calc_order) {
     calc_order = ox?.calc_order || obj;
   }
+  const [svg, setSvg] = React.useState('');
   const [struct, setStruct] = React.useState(null);
   React.useEffect(() => {
     calc_order.print_data().then((raw) => {
@@ -234,15 +237,15 @@ export function OrderTotals({ox, calc_order, obj}) {
     }
   };
 
-  const onClickHeader = () => {
-
+  const onClickHeader = (node) => {
+    setSvg(node.svg || '');
   };
 
   const handleMenuOpen = () => {
 
   };
 
-  return struct ? <div className="dsn-tree" style={{minHeight: 420}}>
+  return struct ? <div className="dsn-tree" style={{minHeight: 480, position: 'relative'}}>
     <div style={{display: 'flex', width: 1144}}><Row values={[<hr style={{marginTop: 13, opacity: 0.3}}/>, 'Колич', 'Площ.изд', 'Масса', 'Цена', 'Сумма']} /></div>
     <Treebeard
       data={struct}
@@ -253,5 +256,8 @@ export function OrderTotals({ox, calc_order, obj}) {
       onRightClickHeader={handleMenuOpen}
       style={style}
     />
+    <div style={{width: 220, height: 88, position: 'absolute', bottom: 0}} dangerouslySetInnerHTML={{
+      __html: svg ? utils.scale_svg(svg, {width: 200, height: 82, zoom: 0.2}, 0) : 'Изделие не выбрано',
+    }} />
   </div> : 'Получаем данные...';
 }
