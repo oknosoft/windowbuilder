@@ -144,6 +144,7 @@ function getStruct(raw) {
           children: [],
           frozen: true,
           toggled: true,
+          svg: cx.svg,
         };
         struct.children.push(prodRow);
       }
@@ -186,6 +187,7 @@ function getStruct(raw) {
       children: [],
       frozen: true,
       toggled: true,
+      svg: cx.svg,
     };
     struct.children.push(prodRow);
   }
