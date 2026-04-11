@@ -9,6 +9,7 @@
     <item type="button" id="btn_additions" text="&lt;i class='fa fa-cart-plus fa-fw'&gt;&lt;/i&gt; Аксессуары и услуги" />
     <item type="button" id="btn_composition" text="&lt;i class='fa fa-check-square-o fa-fw'&gt;&lt;/i&gt; Настроить состав" />
     <item type="button" id="btn_jalousie" text="&lt;i class='fa fa-sun-o fa-fw'&gt;&lt;/i&gt; Жалюзи" />
+    <item type="button" id="btn_glasses" text="&lt;i class='fa fa-clipboard fa-fw'&gt;&lt;/i&gt; Стеклопакеты" />
     <item type="button" id="btn_clone" text="&lt;i class='fa fa-clone fa-fw'&gt;&lt;/i&gt; Скопировать изделие" />
     <item id="sep_prod" type="separator"/>
     <item type="button" id="btn_recalc_row" text="&lt;i class='fa fa-repeat fa-fw'&gt;&lt;/i&gt; Пересчитать строку" />

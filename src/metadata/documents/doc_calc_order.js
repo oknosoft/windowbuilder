@@ -9,7 +9,8 @@
 import RepParams from 'wb-forms/dist/CalcOrder/FrmList/Params';
 import RevsDetales from 'wb-forms/dist/CalcOrder/RevsDetales';
 
-export default function ({doc, dp, utils, DocCalc_order}) {
+export default function ($p) {
+  const {doc, dp, utils, DocCalc_order} = $p;
   const {calc_order: _mgr} = doc;
 
   // если хотим по умолчанию читать из 'couchdb'...
@@ -183,5 +184,8 @@ export default function ({doc, dp, utils, DocCalc_order}) {
       }
     }
   });
+
+  import('../../components/CalcOrder/ImportGlasses')
+    .then((module) => module.patch($p));
 
 }

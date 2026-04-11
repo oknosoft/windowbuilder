@@ -104,4 +104,4 @@ function CalcOrderLinkedSelect({obj, handleOk}) {
   </div>  : `Запрос к серверу...`;
 }
 
-$p.ui.CalcOrderLinkedSelect = CalcOrderLinkedSelect;
+ui.CalcOrderLinkedSelect = CalcOrderLinkedSelect;

@@ -123,7 +123,8 @@
             'obj_delivery_state',
             'category',
             {id: 'manager', path: 'o.manager', synonym: 'Автор', type: 'ro'},
-            'leading_manager'
+            'leading_manager',
+            'buyer_main_manager',
           ]
         }
       };
@@ -484,6 +485,9 @@
       case 'btn_jalousie':
         open_jalousie(true);
         break;
+
+      case 'btn_glasses':
+        return o.importGlasses({interactive: true, wnd});
 
       case 'cut_evaluation':
       case 'cut_evaluation_2d':
