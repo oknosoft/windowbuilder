@@ -47,7 +47,7 @@ function LayerToolbar({editor, layer, classes}) {
     <div className={classes.title}/>
     <Tip title="Обновить параметры">
       <IconButton
-        disabled={!own_sys}
+        disabled={!own_sys && furn.empty()}
         onClick={() => own_sys ? layer.refill_prm() : furn.refill_prm(layer)}>
         <i className="fa fa-retweet" />
       </IconButton>
