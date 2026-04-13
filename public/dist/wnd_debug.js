@@ -1168,7 +1168,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
         break;
 
       case 'btn_glasses':
-        return o.importGlasses({interactive: true, wnd, handlers});
+        return o.importGlasses({interactive: true, wnd});
 
       case 'cut_evaluation':
       case 'cut_evaluation_2d':
