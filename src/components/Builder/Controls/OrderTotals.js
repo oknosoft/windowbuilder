@@ -38,7 +38,7 @@ function getStruct(raw) {
     toggled: true,
   };
   for(const [cx, {Изделия, ...det}] of СоставныеИзделия) {
-    const {calc_order_row, extra, x, y} = cx;
+    const {calc_order_row, extra} = cx;
     const compositeRow = {
       key: `c-${cx.ref}`,
       width: 1100,
@@ -46,7 +46,7 @@ function getStruct(raw) {
       //icon: 'icon',
       name: <Row values={[
         `${Изделия.length > 1 ? 'Составное ' : ''}${cx.name.split('/').filter((v, i) => i <= 1).join('/')}/${
-        cx.owner.name}/${(extra.dimensions?.width || x).round()}x${(extra.dimensions?.height || y).round()}`,
+        cx.owner.name}${extra.dimensions ? `/${(extra.dimensions.width).round()}x${(extra.dimensions.height).round()}` : ''}`,
         calc_order_row.quantity,
         (det.ПлощадьИзделий + det.ПлощадьДопов).round(2),
         (det.Масса + det.МассаДопов).round(1),
