@@ -1,5 +1,5 @@
 
-const {enm: {inserts_types}, cat: {inserts}, cch, doc: {calc_order}, current_user, job_prm, utils, EditorInvisible} = $p;
+const {enm: {inserts_types}, cat: {inserts}, cch, doc: {calc_order}, current_user, job_prm, utils, EditorInvisible, ui: {dialogs}} = $p;
 
 // доступные типы вставок
 export const itypes = [inserts_types.glass, inserts_types.composite];
@@ -93,7 +93,7 @@ const normalize = {
 const importParams = [cch.properties.by_name('Маркировка')];
 
 const alert = (text) => {
-  $p.ui.dialogs.alert({
+  dialogs.alert({
     title: 'Импорт стеклопакетов',
     text,
   });
@@ -291,7 +291,6 @@ export const execute = async (obj, text, wnd) => {
       }
     }
 
-    //await obj.save();
     await utils.sleep(200);
     //obj._data.chrows.clear();
     wnd.progressOff();
@@ -300,6 +299,18 @@ export const execute = async (obj, text, wnd) => {
       const formulas = Array.from(problems).join('\n');
       $p.record_log({class: 'formulas', obj: formulas});
       alert(`Не найдено соответствия для формул:\n ${formulas}`);
+    }
+    else {
+      dialogs.confirm({
+        title: 'Импорт стеклопакетов',
+        text: `Загружено ${newRows.length} строк\nЗаписать изменения?`,
+      })
+        .then(async () => {
+          wnd.progressOn();
+          await obj.save();
+          wnd.progressOff();
+        })
+        .catch(e => wnd.progressOff());
     }
   }
   else {
