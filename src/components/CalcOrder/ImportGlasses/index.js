@@ -1,12 +1,9 @@
 import React from 'react';
 import {ClipBoard} from './ClipBoard';
+import {execute} from './data';
 
 export function patch($p) {
   const {ui, DocCalc_order, doc: {calc_order}, utils} = $p;
-
-  function execute(obj, text) {
-    obj[text];
-  }
 
   Object.defineProperties(DocCalc_order.prototype, {
     importGlasses: {

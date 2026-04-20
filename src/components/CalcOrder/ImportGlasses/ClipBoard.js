@@ -3,7 +3,7 @@ import Button from '@material-ui/core/Button';
 
 export function ClipBoard(props) {
 
-  const {execute, handleOk, obj} = props;
+  const {execute, handleOk, obj, wnd} = props;
   const textRef = React.createRef();
   const onKeyDown = (event) => {
     const {key} = event;
@@ -32,7 +32,7 @@ export function ClipBoard(props) {
     catch (e) {}
   };
   const onOk = () => {
-    execute(obj, textRef.current.value.replace(/⟶/g, '\t'));
+    execute(obj, textRef.current.value.replace(/⟶/g, '\t'), wnd);
     handleOk();
   };
 
