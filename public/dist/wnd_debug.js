@@ -1688,7 +1688,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
           }
           if(ox) {
             wnd.progressOn();
-            ox.recalc()
+            ox.recalc({svg: true})
               .catch((err) => {
                 $p.msg.show_msg({
                   title: $p.msg.bld_title,
@@ -1702,7 +1702,7 @@ $p.doc.calc_order.form_list = function(pwnd, attr, handlers){
       }
       else {
         wnd.progressOn();
-        o.recalc({save: true})
+        o.recalc({save: true, svg: true})
           .catch((err) => {
             $p.msg.show_msg({
               title: $p.msg.bld_title,

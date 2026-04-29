@@ -1007,7 +1007,7 @@
           }
           if(ox) {
             wnd.progressOn();
-            ox.recalc()
+            ox.recalc({svg: true})
               .catch((err) => {
                 $p.msg.show_msg({
                   title: $p.msg.bld_title,
@@ -1021,7 +1021,7 @@
       }
       else {
         wnd.progressOn();
-        o.recalc({save: true})
+        o.recalc({save: true, svg: true})
           .catch((err) => {
             $p.msg.show_msg({
               title: $p.msg.bld_title,
