@@ -2,7 +2,7 @@ import React from 'react';
 import TabularSection from 'metadata-react/TabularSection';
 import {_meta} from './Additions2DCutsIn';
 
-export const {credit} = $p.enm.debit_credit_kinds;
+export const {debit, credit} = $p.enm.debit_credit_kinds;
 const filter = (collection) => {
   const res = [];
   collection.find_rows({record_kind: credit}, (row) => {
