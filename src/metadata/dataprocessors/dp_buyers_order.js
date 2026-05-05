@@ -15,7 +15,7 @@ export default function ($p) {
 
     get clr() {
       const {characteristic} = this;
-      return characteristic.empty() ? this._getter('clr') : characteristic.clr;
+      return characteristic.empty() ? $p.cat.clrs.getter(this._obj.clr) : characteristic.clr;
     }
 
     set clr(v) {
