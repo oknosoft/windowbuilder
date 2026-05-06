@@ -24,7 +24,7 @@ const styles = (theme) => ({
   }
 });
 
-function PropFld({classes, checked, handleChange, dp, fld, title, handleValueChange}) {
+function PropFld({classes, checked, handleChange, dp, fld, title, fullControl, handleValueChange}) {
   return <FormGroup row className={classes.group}>
     <Typography className={classes.synonim}>{title}</Typography>
     <FormControlLabel
@@ -33,7 +33,7 @@ function PropFld({classes, checked, handleChange, dp, fld, title, handleValueCha
       label={checked ? 'Установить' : 'Не изменять'}
     />
     <div style={{minWidth: 320, flex: 1, paddingRight: 16}}>
-      <DataField _obj={dp} _fld={fld} read_only={!checked} label_position="hide" handleValueChange={handleValueChange}/>
+      <DataField _obj={dp} _fld={fld} read_only={!checked} label_position="hide" fullControl={fullControl} handleValueChange={handleValueChange}/>
     </div>
   </FormGroup>;
 }
@@ -109,10 +109,7 @@ class MainProps extends React.Component {
       <Grid item xs={12} lg={6}>
         <FormGroup>
           <PropFld classes={classes} checked={state.sys} handleChange={handleChange} dp={dp} fld="sys" title="Система профилей:"/>
-          <PropFld classes={classes} checked={state.clr} handleChange={handleChange} dp={dp} fld="clr" title="Цвет:"
-                   handleValueChange={() => {
-                     this.forceUpdate();
-                   }}/>
+          <PropFld classes={classes} checked={state.clr} handleChange={handleChange} dp={dp} fld="clr" title="Цвет:" fullControl handleValueChange={() => this.forceUpdate()}/>
           <PropFld classes={classes} checked={state.inset} handleChange={handleChange} dp={dp} fld="inset" title="Заполнения:"/>
         </FormGroup>
       </Grid>
