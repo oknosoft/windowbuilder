@@ -186,6 +186,10 @@ export default function ($p) {
   });
 
   import('../../components/CalcOrder/ImportGlasses')
+    .then((module) => {
+      module.patch($p);
+      return import('../../components/CalcOrder/MontageBag');
+    })
     .then((module) => module.patch($p));
 
 }

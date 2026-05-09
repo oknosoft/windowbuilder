@@ -489,6 +489,9 @@
       case 'btn_glasses':
         return o.importGlasses({interactive: true, wnd});
 
+      case 'btn_bag':
+        return o.montageBag({interactive: true, wnd});
+
       case 'cut_evaluation':
       case 'cut_evaluation_2d':
         cut_evaluation(btn_id === 'cut_evaluation_2d');
