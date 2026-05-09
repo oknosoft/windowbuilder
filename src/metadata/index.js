@@ -14,32 +14,41 @@ import {customPouchMiddleware} from '../redux/reducers/pouchdb';
 import init_meta from 'wb-core/dist/init_meta';
 import init_sql from 'wb-core/dist/init_sql';
 import init_classes from 'wb-core/dist/init';
-import modifiers from './modifiers';
 import proxy_login, {load_ram, load_common} from 'metadata-react/common/proxy';
+import {plugins} from './externalPlugins';
+import reset_cache from './reset_cache';
 
 // загружаем metadata.transition и экспортируем $p глобально
-import $p from 'metadata-dhtmlx';
 
-// подключаем react-специфичные методы
-import plugin_react from 'metadata-react/plugin';
-plugin_react.constructor.call($p);
+
+export function create() {
+
+  // подключаем внешние модификаторы
+  return plugins()
+    .then((MetaEngine) => {
+
+      // создаём экземпляр матадаты
+      const $p = new MetaEngine();
+      global.$p = $p;
+
+      //plugin_react.constructor.call($p);
 
 // подключаем cron
 //import cron from 'metadata-abstract-ui/cron';
 //cron.constructor.call($p);
 
-import reset_cache from './reset_cache';
 
-global.$p = $p;
+      // параметры сеанса и метаданные инициализируем без лишних проволочек
+      $p.wsql.init(settings.prm(settings));
+      settings.cnn($p);
 
-// параметры сеанса и метаданные инициализируем без лишних проволочек
-$p.wsql.init(settings.prm(settings));
-settings.cnn($p);
+      // со скрипом инициализации метаданных, так же - не затягиваем
+      init_meta($p);
+      init_sql($p);
+      init_classes($p);
+    });
+}
 
-// со скрипом инициализации метаданных, так же - не затягиваем
-init_meta($p);
-init_sql($p);
-init_classes($p);
 
 // запускаем проверку единственности экземпляра
 //$p.utils.single_instance_checker.init();
@@ -48,6 +57,10 @@ init_classes($p);
 export function init(store) {
 
   try {
+    const {wsql, job_prm, classes, adapters: {pouch}, md, utils, constructor} = $p;
+    const {external} = constructor._plugins;
+
+    external?.beforeInit($p);
 
     const {dispatch} = store;
 
@@ -56,7 +69,7 @@ export function init(store) {
     addMiddleware(customPouchMiddleware($p));
 
     // сообщяем адаптерам пути, суффиксы и префиксы
-    const {wsql, job_prm, classes, adapters: {pouch}, md, utils} = $p;
+
     classes.PouchDB.plugin(proxy_login());
     pouch.init(wsql, job_prm);
     reset_cache(pouch);
@@ -117,17 +130,20 @@ export function init(store) {
       .then(() => {
 
         // выполняем модификаторы
-        modifiers($p);
+        import('./modifiers').then((module) => module.default($p))
+          .then(() => {
+            // информируем хранилище о готовности MetaEngine
+            dispatch(metaActions.META_LOADED($p));
 
-        // информируем хранилище о готовности MetaEngine
-        dispatch(metaActions.META_LOADED($p));
+            // скрипт qrcode грузим асинхронно
+            $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script');
+            $p.load_script('/dist/qrcodejs/qrcode.tosjis.min.js', 'script');
 
-        // скрипт qrcode грузим асинхронно
-        $p.load_script('/dist/qrcodejs/qrcode.min.js', 'script');
-        $p.load_script('/dist/qrcodejs/qrcode.tosjis.min.js', 'script');
-
-        // читаем локальные данные в ОЗУ
-        return load_common($p);
+            // читаем локальные данные в ОЗУ
+            external?.beforeRamLoad($p);
+            return load_common($p)
+              .then(() => external?.afterCommonLoad($p));
+          });
 
       })
       .catch((err) => {

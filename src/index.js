@@ -26,7 +26,10 @@ class RootProvider extends React.Component {
 
     // скрипт инициализации структуры метаданных и модификаторы
     import('./metadata')
-      .then((module) => module.init(store))
+      .then((module) => {
+        return module.create()
+          .then(() => module.init(store));
+      })
       .then(() => new Promise((resolve) => {
         setTimeout(() => import('wb-cutting').then(resolve), 1000);
       }))
