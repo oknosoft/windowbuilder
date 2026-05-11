@@ -212,11 +212,13 @@ export const execute = async (obj, text, wnd) => {
         }
         if(candidates.length) {
           const stub = {ilist, sublist};
+          const error = new Set();
           clarification = parts.map((id, ind) => {
             const pre = sublist.find((curr) => curr.name.toLowerCase() === id || curr.article.toLowerCase() === id);
             if(pre) {
               return pre;
             }
+            error.add(id);
             const th = normalize.number(id);
             const c2 = sublist.filter((curr) => {
               if(curr.thickness() === th) {
@@ -230,6 +232,9 @@ export const execute = async (obj, text, wnd) => {
             }
             return sublist[0]._manager.get();
           });
+          if(error.size) {
+            Object.defineProperty(clarification, 'error', {value: Array.from(error)});
+          }
         }
       }
       if(candidates.length) {
@@ -251,6 +256,7 @@ export const execute = async (obj, text, wnd) => {
         const glassRow = findGlass(rowProd.characteristic);
         const glass = editor.elm(glassRow.elm);
         glass.set_inset(candidates[0].inset, false, true);
+        // по прямому совпадению не получилось - пробуем по вставкам
         if(clarification) {
           let ind = 0;
           for(const sprow of project.ox.glass_specification) {
@@ -262,8 +268,10 @@ export const execute = async (obj, text, wnd) => {
               }
             }
           }
-          const inset = job_prm.builder.composite_formula_err;
-          project.ox.glass_specification.add({elm: glassRow.elm, inset});
+          if(clarification.error) {
+            const inset = job_prm.builder.composite_formula_err;
+            project.ox.glass_specification.add({elm: glassRow.elm, inset});
+          }
         }
         const {bottom, right} = project.l_dimensions;
         right.sizes_wnd({wnd: right, size: height, name: 'auto'});
@@ -273,19 +281,22 @@ export const execute = async (obj, text, wnd) => {
         }
         rowProd.quantity = project._dp.quantity = quantity;
         rowProd.note = project._dp.note = project.ox.note = note;
-        project.ox.extra = {clarification, formula};
+        const extra = {clarification, formula};
+        if(clarification?.error) {
+          extra.error = clarification.error;
+        }
+        project.ox.extra = extra;
         let i = 10;
         while (project._ch.length && i > 0) {
           project.redraw();
           i--;
         }
-        await project.save_coordinates({});
+        await project.save_coordinates({svg: true});
         rowProd.characteristic.before_save({});
         rowProd.characteristic._modified = true;
         rowProd.s = rowProd.characteristic.s;
         unloadEditor(editor);
       }
-      // по прямому совпадению не получилось - пробуем по вставкам
       else {
         problems.add(formula);
       }
