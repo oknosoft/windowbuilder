@@ -9,7 +9,7 @@ export function patch($p) {
       value({interactive, text='', wnd}) {
         if(interactive) {
           ui.dialogs.alert({
-            title: 'Монтажный мешок',
+            title: 'Монтажные мешки',
             timeout: 0,
             Component: MontageBag,
             props: {obj: this, wnd},
