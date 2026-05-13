@@ -2,23 +2,23 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import DataGrid from 'react-data-grid';
 
-const formatters = {
+export const formatters = {
 
   get(fld) {
     if(!this[fld]) {
       this[fld] = function SzFormatter(attr) {
         const {row, value} = attr;
-        const [text, setText] = React.useState(value?.toString());
+        const [text, setText] = React.useState(value?.toLocaleString());
 
         React.useEffect(() => {
           const {_manager} = row;
           function update(o) {
             if(o === row) {
-              setText(row[fld].toString());
+              setText(row[fld].toLocaleString());
             }
           }
           _manager.on({update});
-          if(row[fld].toString() !== text) {
+          if(row[fld].toLocaleString() !== text) {
             update(row);
           }
           return () => _manager.off({update});

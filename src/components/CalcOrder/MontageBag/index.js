@@ -1,5 +1,11 @@
 import React from 'react';
-import {MontageBag} from './Frame';
+const MontageBagFrame = React.lazy(() => import('./Frame'));
+
+function MontageBag(props) {
+  return <React.Suspense fallback="Загрузка...">
+      <MontageBagFrame {...props}/>
+    </React.Suspense>;
+}
 
 export function patch($p) {
   const {ui, DocCalc_order, doc: {calc_order}, utils} = $p;

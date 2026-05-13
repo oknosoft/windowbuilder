@@ -185,11 +185,14 @@ export default function ($p) {
     }
   });
 
-  import('../../components/CalcOrder/ImportGlasses')
-    .then((module) => {
-      module.patch($p);
-      return import('../../components/CalcOrder/MontageBag');
-    })
-    .then((module) => module.patch($p));
+  Promise.all([
+    import('../../components/CalcOrder/ImportGlasses'),
+    import('../../components/CalcOrder/MontageBag'),
+  ])
+    .then((modules) => {
+      for(const module of modules) {
+        module.patch($p);
+      }
+    });
 
 }
