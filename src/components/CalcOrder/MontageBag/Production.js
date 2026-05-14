@@ -1,30 +1,36 @@
 import React from 'react';
 import ReactDataGrid from 'react-data-grid';
 import SimpleToolbar from './SimpleToolbar';
-import {columns} from './columns';
+import {columns, product} from './columns';
 
 const {cat: {characteristics}, utils} = $p;
 
-const gridElement = {
-  el: null,
-  ref(el) {
-    if(el) {
-      gridElement.el = el;
+class GridElement {
+  constructor() {
+    this.el = null;
+    this.ref = (el) => {
+      if(el) {
+        this.el = el;
+        el.grid.querySelector('.react-grid-Canvas').style.overflowX = 'hidden'
+      }
+    };
+    this.select = (pos, editMode) => {
+      const {el} = this;
+      el?.grid?.focus();
+      el?.scrollToColumn?.(pos);
+      el?.selectCell?.(pos, editMode);
     }
-  },
-  unload() {
-    gridElement.el = null;
-  },
-  select(pos) {
-    const {el} = gridElement;
-    el?.grid?.focus();
-    el?.scrollToColumn?.(pos);
-    el?.selectCell?.(pos);
   }
 }
 
-export default function Production({obj, prodRow, setProdRow, product}) {
-  const [prodRows, setProdRows] = React.useState([]);
+export function gridContext() {
+  const [rows, setRows] = React.useState([]);
+  const gridElement = React.useMemo(() => new GridElement(), []);
+  return [rows, setRows, gridElement];
+}
+
+export default function Production({obj, prodRow, setProdRow}) {
+  const [prodRows, setProdRows, gridElement] = gridContext();
   const selectedRows = React.useMemo(
     () => prodRow ? new Set([prodRow]) : new Set(), [prodRow]);
   const onCellSelected = (v) => {
@@ -54,6 +60,7 @@ export default function Production({obj, prodRow, setProdRow, product}) {
       product: row.row,
     }, false, true);
     cx.name = cx.prod_name();
+    cx._data._loading = false;
     const newRows = [...prodRows, row];
     setProdRows(newRows);
     select(row, newRows.indexOf(row));
@@ -71,7 +78,6 @@ export default function Production({obj, prodRow, setProdRow, product}) {
         add();
       }
     }
-    return gridElement.unload;
   }, [obj]);
 
   const rowSelection = prodRow ? {
@@ -81,9 +87,9 @@ export default function Production({obj, prodRow, setProdRow, product}) {
   } : undefined;
 
   return <div style={{height: '20vh', minHeight: 160, minWidth: 820}}>
-    <SimpleToolbar row={prodRow} title="Строки заказа"/>
+    <SimpleToolbar row={prodRow} add={add} title="Строки заказа"/>
     <ReactDataGrid
-      minHeight={prodRows.length * 35 + 80}
+      minHeight={prodRows.length * 35 + 77}
       ref={gridElement.ref}
       columns={columns.production}
       rowGetter={i => prodRows[i]}

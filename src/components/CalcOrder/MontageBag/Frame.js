@@ -1,17 +1,15 @@
 import React from 'react';
 import Production from './Production';
 import Materials from './Materials';
+import '../../Cmdk/linear.scss';
 
-const {cat: nom, job_prm} = $p;
-const [product, ...predefined] = job_prm.nom.montage_bag;
-
-function MontageBag({obj, wnd}) {
+function MontageBag({obj, wnd, dialogRef}) {
 
   const [prodRow, setProdRow] = React.useState(null);
 
   return <>
-    <Production obj={obj} prodRow={prodRow} setProdRow={setProdRow} product={product}/>
-    <Materials prodRow={prodRow} predefined={predefined}/>
+    <Production obj={obj} prodRow={prodRow} setProdRow={setProdRow}/>
+    <Materials prodRow={prodRow} dialogRef={dialogRef}/>
   </>;
 }
 

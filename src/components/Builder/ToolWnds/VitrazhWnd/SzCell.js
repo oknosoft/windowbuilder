@@ -26,8 +26,8 @@ export const formatters = {
 
         return <div>{text}</div>;
       };
-      return this[fld];
     }
+    return this[fld];
   }
 };
 
