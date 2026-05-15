@@ -31,7 +31,7 @@ export const formatters = {
   }
 };
 
-class SzEditor extends DataGrid.editors.SimpleTextEditor {
+export class SzEditor extends DataGrid.editors.SimpleTextEditor {
 
   commit() {
     const {props: {column, rowData, onCommit}, tree} = this;

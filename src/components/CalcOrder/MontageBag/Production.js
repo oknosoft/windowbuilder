@@ -29,7 +29,9 @@ export function gridContext() {
   return [rows, setRows, gridElement];
 }
 
-export default function Production({obj, prodRow, setProdRow}) {
+const style = {height: '20vh', minHeight: 160, minWidth: 820};
+
+export default function Production({obj, prodRow, setProdRow, dialogRef}) {
   const [prodRows, setProdRows, gridElement] = gridContext();
   const selectedRows = React.useMemo(
     () => prodRow ? new Set([prodRow]) : new Set(), [prodRow]);
@@ -66,6 +68,19 @@ export default function Production({obj, prodRow, setProdRow}) {
     select(row, newRows.indexOf(row));
   };
 
+  const del = () => {
+    prodRows.splice(prodRows.indexOf(prodRow),1);
+    obj.production.del(prodRow);
+    setProdRows([...prodRows]);
+    if(prodRows.length) {
+      const last = prodRows.length - 1;
+      select(prodRows[last], last);
+    }
+    else {
+      setProdRow(null);
+    }
+  };
+
   React.useEffect(() => {
     if(!prodRows.length) {
       const rows = [];
@@ -86,10 +101,10 @@ export default function Production({obj, prodRow, setProdRow}) {
     }
   } : undefined;
 
-  return <div style={{height: '20vh', minHeight: 160, minWidth: 820}}>
-    <SimpleToolbar row={prodRow} add={add} title="Строки заказа"/>
+  return <div style={style}>
+    <SimpleToolbar row={prodRow} add={add} del={del} title="Строки заказа"/>
     <ReactDataGrid
-      minHeight={prodRows.length * 35 + 77}
+      minHeight={style.minHeight - 49}
       ref={gridElement.ref}
       columns={columns.production}
       rowGetter={i => prodRows[i]}
@@ -98,6 +113,7 @@ export default function Production({obj, prodRow, setProdRow}) {
       rowSelection={rowSelection}
       onCellSelected={onCellSelected}
       //onGridKeyDown={onKeyDown}
+      editorPortalTarget={dialogRef?.portalTarget()}
     />
   </div>;
 

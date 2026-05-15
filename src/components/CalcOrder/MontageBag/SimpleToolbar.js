@@ -17,8 +17,9 @@ export default function SimpleToolbar({row, add, del, title}) {
       <IconButton disabled={!row} onClick={del}><DeleteOutlineIcon/></IconButton>
     </HtmlTooltip>
 
-    <Divider orientation="vertical" flexItem style={{margin: 4, marginRight: 16}} />
+    {/*<Divider orientation="vertical" flexItem style={{margin: 4, marginRight: 16}} />*/}
 
+    <span style={{flex: 1}}></span>
     {title}
 
   </MUIToolbar>;

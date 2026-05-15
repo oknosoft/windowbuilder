@@ -8,7 +8,7 @@ function MontageBag({obj, wnd, dialogRef}) {
   const [prodRow, setProdRow] = React.useState(null);
 
   return <>
-    <Production obj={obj} prodRow={prodRow} setProdRow={setProdRow}/>
+    <Production obj={obj} prodRow={prodRow} setProdRow={setProdRow} dialogRef={dialogRef}/>
     <Materials prodRow={prodRow} dialogRef={dialogRef}/>
   </>;
 }

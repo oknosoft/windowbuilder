@@ -3,7 +3,8 @@ import ReactDataGrid from 'react-data-grid';
 import SimpleToolbar from './SimpleToolbar';
 import {columns} from './columns';
 import {gridContext} from './Production';
-import RecentField from './RecentField';
+
+const {calc_count_area_mass} = $p.ProductsBuilding;
 
 export default function Materials({prodRow, dialogRef}) {
   const [rows, setRows, gridElement] = gridContext();
@@ -72,11 +73,25 @@ export default function Materials({prodRow, dialogRef}) {
     }
   }, [prodRow]);
 
+  React.useEffect(() => {
+    if(row) {
+      const {_manager} = row;
+      const update = (o, flds) => {
+        if(o === row && ('qty' in flds || 'nom' in flds)) {
+          calc_count_area_mass(row, row._owner);
+          _manager.emit('update', prodRow, {quantity: prodRow.quantity});
+        }
+      };
+      _manager.on({update});
+      return () => _manager.off({update});
+    }
+  }, [row]);
 
-  return <div style={{height: '30vh', minHeight: 340}}>
+
+  return <div style={{height: '30vh', minHeight: 340}} className={prodRow ? undefined : 'gl disabled'}>
     <SimpleToolbar row={row} add={add} del={del} title="Материалы"/>
     <ReactDataGrid
-      minHeight={290}
+      minHeight={291}
       ref={gridElement.ref}
       columns={columns.materials}
       rowGetter={i => rows[i]}
