@@ -12,11 +12,12 @@ export default function Materials({prodRow, dialogRef}) {
 
   const selectedRows = React.useMemo(
     () => row ? new Set([row]) : new Set(), [row]);
-  const onCellSelected = (v) => {
-    const current = rows[v.rowIdx] || null;
+  const onCellSelected = ({idx, rowIdx}) => {
+    const current = rows[rowIdx] || null;
     if(row !== current) {
       setRow(current);
     }
+    gridElement.lastCell = {idx, rowIdx};
   };
 
   const select = (row, rowIdx, editMode) => {
@@ -78,8 +79,13 @@ export default function Materials({prodRow, dialogRef}) {
       const {_manager} = row;
       const update = (o, flds) => {
         if(o === row && ('qty' in flds || 'nom' in flds)) {
+          const {_obj, _owner} = row;
+          _obj.totqty = 0;
+          _obj.totqty1 = 0;
           calc_count_area_mass(row, row._owner);
-          _manager.emit('update', prodRow, {quantity: prodRow.quantity});
+          const {quantity} = prodRow;
+          prodRow.value_change('quantity', null, quantity);
+          _manager.emit('update', prodRow, {quantity});
         }
       };
       _manager.on({update});
@@ -100,6 +106,7 @@ export default function Materials({prodRow, dialogRef}) {
       rowSelection={rowSelection}
       onCellSelected={onCellSelected}
       //onGridKeyDown={onKeyDown}
+      onRowClick={gridElement.onRowClick}
       editorPortalTarget={dialogRef?.portalTarget()}
     />
   </div>;

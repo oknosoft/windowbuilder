@@ -20,6 +20,19 @@ class GridElement {
       el?.scrollToColumn?.(pos);
       el?.selectCell?.(pos, editMode);
     }
+    this.onRowClick = (rowIdx, row, column) => {
+      const {idx} = column;
+      if(this.lastCell?.rowIdx === rowIdx && this.lastCell?.idx === idx) {
+        setTimeout(() => {
+          if(column.editor) {
+            this.el.openCellEditor(rowIdx, idx);
+          }
+          else {
+            this.select({rowIdx, idx});
+          }
+        }, 66);
+      }
+    }
   }
 }
 
@@ -35,11 +48,12 @@ export default function Production({obj, prodRow, setProdRow, dialogRef}) {
   const [prodRows, setProdRows, gridElement] = gridContext();
   const selectedRows = React.useMemo(
     () => prodRow ? new Set([prodRow]) : new Set(), [prodRow]);
-  const onCellSelected = (v) => {
-    const row = prodRows[v.rowIdx] || null;
+  const onCellSelected = ({idx, rowIdx}) => {
+    const row = prodRows[rowIdx] || null;
     if(row !== prodRow) {
       setProdRow(row);
     }
+    gridElement.lastCell = {idx, rowIdx};
   };
 
   const select = (row, rowIdx) => {
@@ -113,6 +127,7 @@ export default function Production({obj, prodRow, setProdRow, dialogRef}) {
       rowSelection={rowSelection}
       onCellSelected={onCellSelected}
       //onGridKeyDown={onKeyDown}
+      onRowClick={gridElement.onRowClick}
       editorPortalTarget={dialogRef?.portalTarget()}
     />
   </div>;
