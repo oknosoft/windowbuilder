@@ -36,7 +36,9 @@ export default function Materials({prodRow, dialogRef}) {
 
   const del = () => {
     rows.splice(rows.indexOf(row), 1);
-    prodRow.characteristic.specification.del(row);
+    const {quantity, characteristic} = prodRow;
+    characteristic.specification.del(row);
+    prodRow.value_change('quantity', null, quantity);
     setRows([...rows]);
     if(rows.length) {
       const last = rows.length - 1;
@@ -85,7 +87,6 @@ export default function Materials({prodRow, dialogRef}) {
           calc_count_area_mass(row, row._owner);
           const {quantity} = prodRow;
           prodRow.value_change('quantity', null, quantity);
-          _manager.emit('update', prodRow, {quantity});
         }
       };
       _manager.on({update});
@@ -94,7 +95,7 @@ export default function Materials({prodRow, dialogRef}) {
   }, [row]);
 
 
-  return <div style={{height: '30vh', minHeight: 340}} className={prodRow ? undefined : 'gl disabled'}>
+  return <div style={{height: '44vh', minHeight: 340}} className={prodRow ? undefined : 'gl disabled'}>
     <SimpleToolbar row={row} add={add} del={del} title="Материалы"/>
     <ReactDataGrid
       minHeight={291}

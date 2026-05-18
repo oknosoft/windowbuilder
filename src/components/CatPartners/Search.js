@@ -1,10 +1,10 @@
 
 function sort(a, b) {
   const va = this[a], vb = this[b];
-  if(va.c < vb.c) {
+  if(va.c > vb.c) {
     return -1;
   }
-  else if(va.c > vb.c) {
+  else if(va.c < vb.c) {
     return 1;
   }
   else {
@@ -18,11 +18,29 @@ function sort(a, b) {
   }
 }
 
-class CachedSearch {
-  constructor(mgr, wsql) {
+/**
+ * @summary Сортирует структуру ссылок
+ * @param refs
+ */
+function top(refs) {
+  return Object.keys(refs).sort(sort.bind(refs));
+}
+
+export class CachedSearch {
+  constructor({mgr, wsql, key, limit, predefined}) {
     this.mgr = mgr;
     this.wsql = wsql;
-    this.key = mgr.class_name.replace('.', '_');
+    this.key = key || mgr.class_name.replace('.', '_');
+    this.limit = limit || 20;
+    if(predefined) {
+      const refs = wsql.get_user_param(this.key, 'object') || {};
+      if(!Object.keys(refs).length) {
+        for(const item of predefined) {
+          refs[item.valueOf()] = {c: 1, t: Date.now()};
+        }
+        wsql.set_user_param(this.key, refs);
+      }
+    }
   }
 
   /**
@@ -37,10 +55,11 @@ class CachedSearch {
 
   /**
    * @summary Сортирует структуру ссылок
-   * @param refs
    */
-  top(refs) {
-    return Object.keys(refs).sort(sort.bind(refs));
+  top() {
+    const {mgr, wsql, key} = this;
+    const refs = wsql.get_user_param(key, 'object') || {};
+    return top(refs).map(ref => mgr.get(ref));
   }
 
   /**
@@ -48,16 +67,16 @@ class CachedSearch {
    * @param {uid|DataObj} v
    */
   async handleSelect(v) {
-    const {mgr, wsql, key} = this;
+    const {mgr, wsql, key, limit} = this;
     const obj = mgr.get(v);
     if(obj.is_new()) {
       await obj.load();
     }
     const refs = wsql.get_user_param(key, 'object') || {};
     const count = refs[obj.ref]?.c || 0;
-    if(!count && Object.keys(refs) > 9) {
-      const top = this.top(refs);
-      const last = top[top.length - 1];
+    if(!count && Object.keys(refs).length > limit) {
+      const ordered = top(refs);
+      const last = ordered[ordered.length - 1];
       delete refs[last];
     }
     refs[obj.ref] = {c: count + 1, t: Date.now()};
@@ -99,6 +118,6 @@ export function partnersSearch({cat: {partners}, dp, wsql, CatPartners}) {
   //     ...other
   //   }, null, 'PartnerObj');
   // };
-  partners.search = new CachedSearch(partners, wsql);
+  partners.search = new CachedSearch({mgr: partners, wsql});
   return partners.search.init();
 }

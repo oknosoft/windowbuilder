@@ -1,13 +1,15 @@
 import React from 'react';
 import DataGrid from 'react-data-grid';
 import {Command} from '../../Cmdk/index.tsx';
+import {CachedSearch} from '../../CatPartners/Search';
 const {EditorBase} = DataGrid.editors;
 
-function commandItem() {
-
-}
 
 export function componentWrapper(predefined, all) {
+
+  const {cat, wsql} = $p;
+  const search = new CachedSearch({mgr: cat.nom, wsql, key: 'montage_bag', limit: 10, predefined});
+
   class RecentCell extends EditorBase {
 
     getValue() {
@@ -24,6 +26,7 @@ export function componentWrapper(predefined, all) {
           const {rowData, column, onCommit} = this.props;
           rowData[column.key] = value;
           onCommit();
+          search.handleSelect(rowData[column.key]);
         }}
       >
         {item.name}
@@ -33,6 +36,7 @@ export function componentWrapper(predefined, all) {
     render() {
       const {commandItem, props: {rowData, column, onCommitCancel}} = this;
       const value = rowData[column.key];
+      const top = search.top();
       return <div className="linear">
         <Command
           onKeyDown={(e) => {
@@ -46,11 +50,11 @@ export function componentWrapper(predefined, all) {
           <Command.List>
             <Command.Empty>Нет подходящих материалов</Command.Empty>
             <Command.Group heading="Недавние">
-              {predefined.map(commandItem)}
+              {top.map(commandItem)}
             </Command.Group>
             <Command.Separator />
             <Command.Group heading="Все">
-              {all.map(commandItem)}
+              {all.filter(v => !top.includes(v)).map(commandItem)}
             </Command.Group>
           </Command.List>
         </Command>
