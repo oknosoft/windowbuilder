@@ -21,16 +21,18 @@ class GridElement {
       el?.selectCell?.(pos, editMode);
     }
     this.onRowClick = (rowIdx, row, column) => {
-      const {idx} = column;
-      if(this.lastCell?.rowIdx === rowIdx && this.lastCell?.idx === idx) {
-        setTimeout(() => {
-          if(column.editor) {
-            this.el.openCellEditor(rowIdx, idx);
-          }
-          else {
-            this.select({rowIdx, idx});
-          }
-        }, 66);
+      if(column) {
+        const {idx} = column;
+        if(this.lastCell?.rowIdx === rowIdx && this.lastCell?.idx === idx) {
+          setTimeout(() => {
+            if(column.editor) {
+              this.el.openCellEditor(rowIdx, idx);
+            }
+            else {
+              this.select({rowIdx, idx});
+            }
+          }, 66);
+        }
       }
     }
   }

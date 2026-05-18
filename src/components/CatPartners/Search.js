@@ -69,18 +69,20 @@ export class CachedSearch {
   async handleSelect(v) {
     const {mgr, wsql, key, limit} = this;
     const obj = mgr.get(v);
-    if(obj.is_new()) {
-      await obj.load();
+    if(!obj.empty()) {
+      if(obj.is_new()) {
+        await obj.load();
+      }
+      const refs = wsql.get_user_param(key, 'object') || {};
+      const count = refs[obj.ref]?.c || 0;
+      if(!count && Object.keys(refs).length > limit) {
+        const ordered = top(refs);
+        const last = ordered[ordered.length - 1];
+        delete refs[last];
+      }
+      refs[obj.ref] = {c: count + 1, t: Date.now()};
+      wsql.set_user_param(key, refs);
     }
-    const refs = wsql.get_user_param(key, 'object') || {};
-    const count = refs[obj.ref]?.c || 0;
-    if(!count && Object.keys(refs).length > limit) {
-      const ordered = top(refs);
-      const last = ordered[ordered.length - 1];
-      delete refs[last];
-    }
-    refs[obj.ref] = {c: count + 1, t: Date.now()};
-    wsql.set_user_param(key, refs);
     return obj;
   }
 
