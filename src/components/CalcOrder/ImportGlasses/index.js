@@ -1,6 +1,11 @@
 import React from 'react';
-import {ClipBoard} from './ClipBoard';
-import {execute} from './data';
+const ClipBoard = React.lazy(() => import('./ClipBoard'));
+
+function ImportGlasses(props) {
+  return <React.Suspense fallback="Загрузка...">
+    <ClipBoard {...props}/>
+  </React.Suspense>;
+}
 
 export function patch($p) {
   const {ui, DocCalc_order, doc: {calc_order}, utils} = $p;
@@ -12,8 +17,8 @@ export function patch($p) {
           ui.dialogs.alert({
             title: 'Импорт стеклопакетов',
             timeout: 0,
-            Component: ClipBoard,
-            props: {obj: this, execute, wnd},
+            Component: ImportGlasses,
+            props: {obj: this, wnd},
             large: true,
             //initFullScreen: true,
             hide_btn: true,

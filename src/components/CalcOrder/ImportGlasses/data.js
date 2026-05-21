@@ -90,7 +90,7 @@ const normalize = {
   }
 };
 
-const importParams = [cch.properties.by_name('Маркировка')];
+const importParams = [cch.properties.predefined('builder/mark_latin')];
 
 const alert = (text) => {
   dialogs.alert({

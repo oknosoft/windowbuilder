@@ -1,9 +1,11 @@
 import React from 'react';
 import Button from '@material-ui/core/Button';
 
-export function ClipBoard(props) {
+import {execute} from './data';
 
-  const {execute, handleOk, obj, wnd} = props;
+export default function ClipBoard(props) {
+
+  const {handleOk, obj, wnd} = props;
   const textRef = React.createRef();
   const onKeyDown = (event) => {
     const {key} = event;
