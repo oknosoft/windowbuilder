@@ -19,30 +19,46 @@ export function exec_dxf (scheme, Drawing) {
   function export_path(src) {
     const {closed, curves} = src.path;
     let prev;
-    curves.forEach((curve, index) => {
-      let {point1, point2} = curve;
-      if(!prev){
-        prev = point1;
-      }
-      if(closed && index === curves.length - 1){
-        point2 = curves[0].point1;
-      }
-      else if(prev.getDistance(point2) < 1){
-          return;
-      }
-      if(curve.hasHandles()) {
-        const controlPoints = [[prev.x, h - prev.y]];
-        for(let time = 0.1; time <= 1; time += 0.1) {
-          const loc = curve.getLocationAtTime(time);
-          controlPoints.push([loc.point.x, h - loc.point.y]);
+    const controlPoints = [];
+    if(src.path.hasHandles()) {
+      for(const curve of curves) {
+        let {point1, point2} = curve;
+        if(!prev){
+          prev = point1;
+          controlPoints.push([prev.x, h - prev.y]);
         }
-        d.drawSpline(controlPoints);
+        if(curve.hasHandles()) {
+          for(let time = 0.1; time <= 1; time += 0.1) {
+            const loc = curve.getLocationAtTime(time);
+            controlPoints.push([loc.point.x, h - loc.point.y]);
+          }
+        }
+        else {
+          controlPoints.push([point2.x, h - point2.y]);
+        }
+        prev = point2;
       }
-      else {
-        d.drawLine(prev.x, h - prev.y, point2.x, h - point2.y);
+      const {length} = controlPoints;
+      if(closed && (controlPoints[length - 1][0] !== controlPoints[0][0] || controlPoints[length - 1][1] !== controlPoints[0][1])){
+        controlPoints[length - 1].push([controlPoints[0][0], controlPoints[0][1]]);
       }
-      prev = point2;
-    });
+      d.drawSpline(controlPoints);
+    }
+    else if(curves.length > 1) {
+      for(const {point1, point2} of curves) {
+        if(!prev){
+          prev = point1;
+          controlPoints.push([prev.x, h - prev.y]);
+        }
+        controlPoints.push([point2.x, h - point2.y]);
+        prev = point2;
+      }
+      d.drawPolyline(controlPoints, closed);
+    }
+    else {
+      let {point1, point2} = curves[0];
+      d.drawLine(point1.x, h - point1.y, point2.x, h - point2.y);
+    }
   }
 
   function export_contour(layer) {
