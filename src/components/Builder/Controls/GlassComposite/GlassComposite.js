@@ -20,12 +20,12 @@ import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
 import TabularSection from 'metadata-react/TabularSection';
 import Tip from 'metadata-react/App/Tip';
-import GlassLayerProps from './GlassLayerProps';
+import GlassLayerProps from '../GlassLayerProps';
 import CompositeChains from './GlassCompositeChains';
 import GlassCompositeExt from './GlassCompositeExt';
 
-import useStyles from './stylesAccordion';
-import {useOpenContext} from './OpenContext';
+import useStyles from '../stylesAccordion';
+import {useOpenContext} from '../OpenContext';
 
 const reflect = ({project, reflect_grp}) => {
   if(reflect_grp) {

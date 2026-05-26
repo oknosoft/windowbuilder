@@ -5,7 +5,7 @@ import PropField from 'metadata-react/DataField/PropField';
 import GlassToolbar from './Toolbar/GlassToolbar';
 import Bar from './Bar';
 import ElmInsets from './ElmInsets';
-import GlassComposite from './GlassComposite';
+import GlassComposite from './GlassComposite/GlassComposite';
 import Coordinates from './Coordinates';
 import FieldClr from 'wb-forms/dist/CatClrs/FieldClr';
 import GlassSeparately from '../../PropFields/GlassSeparately';

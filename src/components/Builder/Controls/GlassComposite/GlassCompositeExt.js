@@ -5,14 +5,17 @@ import IconButton from '@material-ui/core/IconButton';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import LinkIcon from '@material-ui/icons/Link';
+import AccessibilityNewIcon from '@material-ui/icons/AccessibilityNew';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
-import Frame from './GlassRegionCnns/Frame';
+import RegionCnns from '../GlassRegionCnns/Frame';
+import Spread from '../GlassSpread/Frame';
 
 export default function GlassCompositeExt({elm}) {
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [open, setOpen] = React.useState(false);
+  const [cnnsOpen, setCnnsOpen] = React.useState(false);
+  const [spreadOpen, setSpreadOpen] = React.useState(false);
   const handleClose = () => setAnchorEl(null);
   const {wsql} = $p;
   const [checked, rawSetChecked] = React.useState(wsql.get_user_param('glass_composit_ign_forcibly', 'boolean'));
@@ -35,9 +38,13 @@ export default function GlassCompositeExt({elm}) {
         .catch(handleClose);
     }
   };
-  const closeFrame = () => {
+  const openCnns = () => {
     handleClose();
-    setOpen(true);
+    setCnnsOpen(true);
+  };
+  const openSpread = () => {
+    handleClose();
+    setSpreadOpen(true);
   };
   return <>
     <div style={{flex: 1}}/>
@@ -48,7 +55,7 @@ export default function GlassCompositeExt({elm}) {
       open={Boolean(anchorEl)}
       onClose={handleClose}
     >
-      <MenuItem onClick={closeFrame}>
+      <MenuItem onClick={openCnns}>
         <ListItemIcon><LinkIcon/></ListItemIcon>
         <ListItemText>Соединения рёбер заполнения</ListItemText>
       </MenuItem>
@@ -56,7 +63,13 @@ export default function GlassCompositeExt({elm}) {
         <ListItemIcon>{checked ? <CheckBoxOutlineBlankIcon/> : <CheckBoxIcon/>}</ListItemIcon>
         <ListItemText>Сброс умолчаний при изменении состава</ListItemText>
       </MenuItem>
+      <MenuItem onClick={openSpread}>
+        <ListItemIcon><AccessibilityNewIcon/></ListItemIcon>
+        <ListItemText>Распространить...</ListItemText>
+      </MenuItem>
+
     </Menu>
-    <Frame open={open} elm={elm} handleClose={() => setOpen(false)} />
+    {cnnsOpen && <RegionCnns open elm={elm} handleClose={() => setCnnsOpen(false)} />}
+    {spreadOpen && <Spread open elm={elm} handleClose={() => setSpreadOpen(false)} />}
   </>;
 }
