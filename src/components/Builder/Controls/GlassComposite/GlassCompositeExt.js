@@ -44,7 +44,16 @@ export default function GlassCompositeExt({elm}) {
   };
   const openSpread = () => {
     handleClose();
-    setSpreadOpen(true);
+    if(elm.reflect_grp) {
+      $p.ui.dialogs.alert({
+        title: 'Распространить формулу',
+        text: 'Выделено несколько заполнений\nУкажите конкретное',
+        timeout: 10000,
+      })
+    }
+    else {
+      setSpreadOpen(true);
+    }
   };
   return <>
     <div style={{flex: 1}}/>

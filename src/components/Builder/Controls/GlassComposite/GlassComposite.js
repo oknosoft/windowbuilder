@@ -118,12 +118,15 @@ class GlassComposite extends React.Component {
 
   value_change = (obj, flds) => {
     if(obj instanceof $p.CatCharacteristicsGlass_specificationRow && ('inset' in flds || 'dop' in flds || 'clr' in flds)) {
-      // значения по умолчанию
-      if('inset' in flds) {
-        this.props.elm.default_params();
+      const {elm} = this.props;
+      if(obj._owner._owner === elm.project.ox) {
+        // значения по умолчанию
+        if('inset' in flds) {
+          this.props.elm.default_params();
+        }
+        reflect(this.props.elm);
+        this.forceUpdate();
       }
-      reflect(this.props.elm);
-      this.forceUpdate();
     }
   };
 
