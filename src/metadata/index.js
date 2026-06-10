@@ -104,6 +104,13 @@ export function init(store) {
       },
     });
     md.once('predefined_elmnts_inited', () => {
+      // аварийный канал МК2
+      const {margin_coefficients, abonents} = $p.cat;
+      if(!margin_coefficients.alatable.length) {
+        margin_coefficients.find_rows_remote({owner: abonents.current.ref});
+      }
+
+      // структура поиска контрагентов
       import('../components/CatPartners/Search')
         .then(({partnersSearch}) => partnersSearch($p))
         .then(() => pouch.emit('pouch_complete_loaded'));
@@ -147,11 +154,11 @@ export function init(store) {
 
       })
       .catch((err) => {
-        $p.record_log(err);
+        $p?.record_log(err);
       });
   }
   catch (err) {
-    $p && $p.record_log(err);
+    $p?.record_log(err);
   }
 }
 
