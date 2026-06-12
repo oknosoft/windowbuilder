@@ -35,6 +35,24 @@ class eXcell_partner extends eXcell {
       query.selector.$and.push({search: presentation.like});
     }
 
+    function fin(rows) {
+      if(presentation?.like) {
+        const {like} = presentation;
+        if((like.length === 10 || like.length === 12) && /^\d*$/.test(like)) {
+          if(!rows.find(v => v.inn === like)) {
+            rows.unshift({
+              name: `Создать по ИНН ${like}`,
+              ref: parseInt(like, 10),
+            });
+          }
+        }
+      }
+      return rows.map(v => ({
+        text: v.name,
+        value: v.ref,
+      }))
+    }
+
     const {adapter, _owner: {branches, partners, $p: {utils}}} = this;
     let currentBranch = sessionStorage.branch && sessionStorage.branch !== utils.blank.guid && branches.get(sessionStorage.branch);
     if(currentBranch?.partners?.count() && currentBranch.partners.count() < 200) {
@@ -66,10 +84,7 @@ class eXcell_partner extends eXcell {
             }
             all = utils._find_rows(all, selector).sort(utils.sort('name'));
           }
-          return all.map(v => ({
-            text: v.name,
-            value: v.ref,
-          }));
+          return fin(all);
         });
     }
 
@@ -84,15 +99,13 @@ class eXcell_partner extends eXcell {
           //   selected: true,
           // });
         }
-        return docs.map(v => ({
-          text: v.name,
-          value: v.ref,
-        }));
+        return fin(docs);
       });
   }
 
   combo_change() {
     const {combo, grid} = this;
+    const {ui: {dialogs}, cat: {partners}, adapters: {pouch}} = $p;
     const curr = grid.get_cell_field();
     if(curr?.field) {
       let val = combo.getSelectedValue();
@@ -105,11 +118,42 @@ class eXcell_partner extends eXcell {
           combo.setComboText("");
         }
       }
-      const partner = $p.cat.partners.get(val);
-      (partner.is_new() ? partner.load() : Promise.resolve())
-        .then(() => {
-          curr.obj[curr?.field] = partner;
-        });
+      if(typeof val === 'number') {
+        curr.obj[curr.field] = '';
+        pouch.fetch(`/r/partners/${val}`)
+          .then((res) => res.json())
+          .then((raw) => {
+            if(raw.error) {
+              throw raw.message;
+            }
+            if(Array.isArray(raw)) {
+              dialogs.alert({
+                timeout: 0,
+                title: `Контрагент по ИНН`,
+                Component: partners.DialogCreate,
+                props: {raw, obj: curr.obj},
+                //initFullScreen: true,
+                hide_btn: true,
+                //noSpace: true,
+              });
+              raw;
+            }
+          })
+          .catch((err) => {
+            //setValue(obj[fld]);
+            dialogs.alert({
+              title: 'Контрагент по ИНН',
+              text: err?.message || err,
+            });
+          });
+      }
+      else {
+        const partner = partners.get(val);
+        (partner.is_new() ? partner.load() : Promise.resolve())
+          .then(() => {
+            curr.obj[curr.field] = partner;
+          });
+      }
     }
   }
 

@@ -9,12 +9,17 @@ import meta_cnns from 'wb-forms/dist/CatCnns/meta';
 import meta_inserts from 'wb-forms/dist/CatInserts/meta';
 import meta_furns from 'wb-forms/dist/CatFurns/meta';
 import select_template from 'wb-core/dist/select_template';
+import DialogCreate from '../../components/PartnerField/DialogCreate';
 
 export default function ($p) {
   const {cat} = $p;
+
   cat.characteristics.SpecFragment = SpecFragment;
   cat.characteristics.RevsDetales = RevsDetales;
+
   cat.production_params.FrmList = ProductionParamsList;
+
+  cat.partners.DialogCreate = DialogCreate;
 
   cat.clrs.Editor = FieldClr;
   meta_clrs($p);
