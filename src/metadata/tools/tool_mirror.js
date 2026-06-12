@@ -179,6 +179,8 @@ export default function tool_mirror ({Editor}) {
         newLayer.dop = layer.sys;
       }
       profilesMap.set(layer, newLayer);
+
+      const {params} = project.ox;
       // TODO: соединители
       // TODO: раскладки
       // TODO: разрывы и типы заполнений /builder/10e86ca0-5b34-11f0-a440-e31382da7398?order=6aec9930-5731-11f0-aebe-475b4b61bfad
@@ -200,12 +202,16 @@ export default function tool_mirror ({Editor}) {
           attr._nearest = profilesMap.get(nearest).profile;
         }
         mapped.profile = new newLayer.ProfileConstructor(attr);
+        // параметры профиля
+        params.find_rows({cnstr: -proto.elm}, ({inset, param, value, hide}) => {
+          const prow = params.find({cnstr: -mapped.profile.elm, inset, param}) || params.add({cnstr: -mapped.profile.elm, inset, param, value, hide});
+          prow.value = value;
+        });
       }
 
       this.createGlasses(layer, newLayer, profilesMap);
 
       if(parent) {
-        const {params} = project.ox;
         newLayer.direction = layer.direction.inverse;
         newLayer.furn = layer.furn;
         newLayer.h_ruch = layer.h_ruch;
