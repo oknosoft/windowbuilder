@@ -931,14 +931,22 @@ class Editor extends $p.EditorInvisible {
   }
 
   elm_spec(elm) {
-    const {ui: {dialogs}, msg} = $p;
+    const {ui: {dialogs}, msg, job_prm} = $p;
     if(!elm) {
       elm = this.project.selected_elm;
     }
     if(elm) {
+      let ox = elm.layer.prod_ox;
+      if(elm instanceof Editor.Filling) {
+        const {glass_separately} = job_prm.properties;
+        if(elm[glass_separately.ref]) {
+          ox = elm.ox.find_create_cx(elm.elm, null, false);
+        }
+      }
+
       return this.fragment_spec({
         elm: elm.elm,
-        ox: elm.layer.prod_ox,
+        ox,
         name: elm.inset.toString(),
       });
     }
