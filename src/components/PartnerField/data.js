@@ -45,3 +45,29 @@ export const getOptions = (obj, fld, meta) => {
     return res;
   };
 };
+
+export const handleSubmit = ({raw, obj}) => {
+  // запрос на создание
+  pouch.fetch(`/r/partners`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      raw,
+      organization: obj.organization.ref,
+      department: obj.department.ref,
+    })}
+  )
+    .then((res) => res.json())
+    .then((raw) => {
+      if(raw.error) {
+        throw raw.message;
+      }
+      partners.load_array([raw]);
+      obj.partner = raw.ref;
+    })
+    .catch((err) => {
+      dialogs.alert({
+        title: 'Контрагент по ИНН',
+        text: err?.message || err,
+      });
+    });
+};

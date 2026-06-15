@@ -10,7 +10,7 @@ import RepParams from 'wb-forms/dist/CalcOrder/FrmList/Params';
 import RevsDetales from 'wb-forms/dist/CalcOrder/RevsDetales';
 
 export default function ($p) {
-  const {doc, dp, utils, DocCalc_order, job_prm: {divisions}} = $p;
+  const {doc, dp, utils, DocCalc_order} = $p;
   const {calc_order: _mgr} = doc;
 
   // если хотим по умолчанию читать из 'couchdb'...
@@ -185,28 +185,10 @@ export default function ($p) {
     }
   });
 
-  // отбор по подразделению договора
-  const {choice_links} = _mgr.metadata('contract');
-  if(!choice_links.find(v => v.name.includes('department'))) {
-    choice_links.push({
-      name: ['selection', 'department'],
-      path: [function (o, fld, selection) {
-        if(!divisions?.in_contracts) {
-          return true;
-        }
-        const {department} = o;
-        if(!department || department.empty()) {
-          return true;
-        }
-        const doc = selection?._attr?.obj;
-        return !doc || doc.department.empty() || doc.department == department;
-      }],
-    });
-  }
-
   Promise.all([
     import('../../components/CalcOrder/ImportGlasses'),
     import('../../components/CalcOrder/MontageBag'),
+    import('./doc_calc_order_contract_department'),
   ])
     .then((modules) => {
       for(const module of modules) {
