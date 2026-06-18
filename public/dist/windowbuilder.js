@@ -338,6 +338,7 @@ class EditorAccordion {
         //{name: 'nested_layer', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Добавить вложенное изделие', float: 'left'},
         {name: 'virtual_layer', text: '<i class="fa fa-file-excel-o fa-fw"></i>', tooltip: 'Вставить виртуальный слой', float: 'left'},
         {name: 'region_layer', text: '<i class="fa fa-file-powerpoint-o fa-fw"></i>', tooltip: 'Добавить cлой ряда', float: 'left'},
+        {name: 'template_layer', text: '<i class="fa fa-file-image-o fa-fw"></i>', tooltip: 'Слой из шаблона', float: 'left'},
         {name: 'sep_0', text: '', float: 'left'},
         {name: 'inserts_to_product', text: '<i class="fa fa-tags fa-fw"></i>', tooltip: msg.additional_inserts + ' ' + msg.to_product, float: 'left'},
         {name: 'additions', text: '<i class="fa fa-cart-plus fa-fw"></i>', tooltip: 'Аксессуары изделия', float: 'left'},
@@ -394,6 +395,10 @@ class EditorAccordion {
           }
           break;
         }
+
+        case 'template_layer':
+          ui.dialogs.template_layer(_editor.project);
+          break;
 
         case 'drop_layer':
           this.tree_layers.drop_layer();
@@ -2345,6 +2350,10 @@ class Editor extends $p.EditorInvisible {
     _pwnd.detachObject(true);
 
     super.unload();
+
+  }
+
+  template_layer() {
 
   }
 

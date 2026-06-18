@@ -1541,6 +1541,10 @@ class Editor extends $p.EditorInvisible {
 
   }
 
+  template_layer() {
+
+  }
+
 };
 
 
