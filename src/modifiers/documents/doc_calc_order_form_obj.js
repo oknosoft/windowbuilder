@@ -1138,8 +1138,10 @@
                   // заполняем продукцию копией данных текущей строки
                   characteristic._mixin(row.characteristic._obj, null,
                     'ref,name,calc_order,product,leading_product,leading_elm,origin,partner'.split(','), true);
-                  characteristic._data._is_new = true;
-                  return characteristic.save();
+                  // characteristic._data._is_new = true;
+                  // return characteristic.save();
+                  Object.assign(characteristic._data, {_is_new: false, _modified: true});
+                  return characteristic;
                 })
                 .then((cx) => {
                   // при необходимости, установим признак перезаполнять параметры изделия и фурнитуры
