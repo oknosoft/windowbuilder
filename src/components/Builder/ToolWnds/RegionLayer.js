@@ -120,10 +120,11 @@ export function region_layer({Editor, EditorInvisible, ui: {dialogs}, job_prm, c
         timeout: 10000,
       });
     }
-    dialogs.templates_inline()
-      .then(async (base_block) => {
-        const _obj = templates._select_template;
-        if(base_block === _obj.base_block) {
+    templates._select_template.init()
+      .then(() => dialogs.templates_inline())
+      .then(async (selected) => {
+        const {base_block, refill, sys, clr, params} = templates._select_template;
+        if(selected === base_block) {
           // const {templates_nested} = job_prm.builder;
 
           // останавливаем перерисовку
@@ -147,9 +148,26 @@ export function region_layer({Editor, EditorInvisible, ui: {dialogs}, job_prm, c
             _scope.activate();
           };
 
-          tproject.load(tx, true, _obj.calc_order)
-            .then(() => tproject.load_stamp(_obj.base_block, false, true, true))
+          tproject.load(tx, true, ox.calc_order)
             .then(() => {
+              if(refill) {
+                tproject._dp._data._loading = true;
+              }
+              return tproject.load_stamp(selected, false, true, true);
+            })
+            .then(() => {
+              if(refill) {
+                !sys.empty() && tproject.set_sys(sys, params, refill);
+                tproject._dp._data._loading = false;
+                if(!clr.empty()){
+                  tx.clr = clr;
+                  tproject.getItems({class: Editor.BuilderElement}).forEach((elm) => {
+                    if(!(elm instanceof Editor.Onlay) && !(elm instanceof Editor.Filling)) {
+                      elm.clr = clr;
+                    }
+                  });
+                }
+              }
               // подгоняем размеры под проём
               while (tproject._ch.length) {
                 tproject.redraw();
@@ -157,10 +175,10 @@ export function region_layer({Editor, EditorInvisible, ui: {dialogs}, job_prm, c
               const {bottom, right} = tproject.l_dimensions;
               const root = tproject.contours[0];
               if(!root) {
-                throw new Error(`Нет слоёв в шаблоне ${_obj.base_block.name}`);
+                throw new Error(`Нет слоёв в шаблоне ${base_block.name}`);
               }
               else if(tproject.contours.length > 1) {
-                throw new Error(`В шаблоне ${_obj.base_block.name} более 1 рамного слоя`);
+                throw new Error(`В шаблоне ${base_block.name} более 1 рамного слоя`);
               }
               bottom.redraw();
               right.redraw();
@@ -227,8 +245,8 @@ export function region_layer({Editor, EditorInvisible, ui: {dialogs}, job_prm, c
                     utils._mixin(nrow, tmp._obj, null, ['row', 'elm', 'cnstr', 'parent']);
                   }
                   const row = cmap.get(root._row);
-                  if(tproject.sys !== project.sys) {
-                    row.dop = {sys: tproject.sys};
+                  if(project._dp.sys !== sys) {
+                    row.dop = {sys: sys.valueOf()};
                   }
                   project.load_contour(Editor.Contour.create({project, parent, row: cmap.get(root._row)}));
                 });
