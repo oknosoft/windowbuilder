@@ -120,109 +120,131 @@ export function region_layer({Editor, EditorInvisible, ui: {dialogs}, job_prm, c
         timeout: 10000,
       });
     }
-    dialogs.templates_nested()
-      .then(async (selected) => {
-        if(selected === true) {
-          const _obj = templates._select_template;
-          const {templates_nested} = job_prm.builder;
-          if(templates_nested && templates_nested.includes(_obj.calc_order)) {
-            // останавливаем перерисовку
-            _attr._lock = true;
-            // создаём новое пустое изделие
-            const tx = characteristics.create({calc_order: _obj.calc_order}, false, true);
-            // заполняем его из шаблона устанавливаем систему и параметры
-            const teditor = new EditorInvisible();
-            const tproject = teditor.create_scheme();
-            const {bounds} = activeLayer;
+    dialogs.templates_inline()
+      .then(async (base_block) => {
+        const _obj = templates._select_template;
+        if(base_block === _obj.base_block) {
+          // const {templates_nested} = job_prm.builder;
 
-            const fin = () => {
-              // возобновляем перерисовку
-              _attr._lock = false;
+          // останавливаем перерисовку
+          _attr._lock = true;
+          // создаём новое пустое изделие
+          const tx = characteristics.create({calc_order: ox.calc_order}, false, true);
+          // заполняем его из шаблона устанавливаем систему и параметры
+          const teditor = new EditorInvisible();
+          const tproject = teditor.create_scheme();
+          const {bounds, layer: parent} = activeLayer;
 
-              // выгружаем временный проект
-              const {calc_order_row} = tx;
-              calc_order_row && tx.calc_order.production.del(calc_order_row);
-              teditor.unload();
-              !tx.is_new() && tx.unload();
-              _scope.activate();
-            };
+          const fin = () => {
+            // возобновляем перерисовку
+            _attr._lock = false;
 
-            tproject.load(tx, true, _obj.calc_order)
-              .then(() => tproject.load_stamp(_obj.base_block, false, true, true))
-              .then(() => {
-                // подгоняем размеры под проём
+            // выгружаем временный проект
+            const {calc_order_row} = tx;
+            calc_order_row && tx.calc_order.production.del(calc_order_row);
+            teditor.unload();
+            !tx.is_new() && tx.unload();
+            _scope.activate();
+          };
+
+          tproject.load(tx, true, _obj.calc_order)
+            .then(() => tproject.load_stamp(_obj.base_block, false, true, true))
+            .then(() => {
+              // подгоняем размеры под проём
+              while (tproject._ch.length) {
+                tproject.redraw();
+              }
+              const {bottom, right} = tproject.l_dimensions;
+              const root = tproject.contours[0];
+              if(!root) {
+                throw new Error(`Нет слоёв в шаблоне ${_obj.base_block.name}`);
+              }
+              else if(tproject.contours.length > 1) {
+                throw new Error(`В шаблоне ${_obj.base_block.name} более 1 рамного слоя`);
+              }
+              bottom.redraw();
+              right.redraw();
+              const dx = (bounds.width - bottom.size).round(1);
+              const dy = (bounds.height - right.size).round(1);
+              dx && bottom._move_points({size: bounds.width - dx / 2, name: 'left'}, 'x');
+              dy && right._move_points({size: bounds.height - dy / 2, name: 'bottom'}, 'y');
+              root.redraw();
+              dx && bottom._move_points({size: bounds.width, name: 'right'}, 'x');
+              dy && right._move_points({size: bounds.height, name: 'top'}, 'y');
+              root.redraw();
+              // пересчитываем, не записываем
+              root.refresh_prm_links(true);
+              if(tproject._scope.eve._async?.move_points?.timer) {
+                clearTimeout(tproject._scope.eve._async.move_points.timer);
+                delete tproject._scope.eve._async.move_points.timer;
+              }
+              while (tproject._ch.length) {
+                tproject.redraw();
+              }
+              const tbounds = root.bounds;
+              const delta = new teditor.Point((bounds.x - tbounds.x).round(1), (bounds.y - tbounds.y).round(1));
+              if(delta.length) {
+                root.move(delta);
                 while (tproject._ch.length) {
                   tproject.redraw();
                 }
-                const {bottom, right} = tproject.l_dimensions;
-                const root = tproject.contours[0];
-                if(!root) {
-                  throw new Error(`Нет слоёв в шаблоне ${_obj.base_block.name}`);
-                }
-                else if(tproject.contours.length > 1) {
-                  throw new Error(`В шаблоне ${_obj.base_block.name} более 1 рамного слоя`);
-                }
-                bottom.redraw();
-                right.redraw();
-                const dx = (bounds.width - bottom.size).round(1);
-                const dy = (bounds.height - right.size).round(1);
-                dx && bottom._move_points({size: bounds.width - dx / 2, name: 'left'}, 'x');
-                dy && right._move_points({size: bounds.height - dy / 2, name: 'bottom'}, 'y');
-                root.redraw();
-                dx && bottom._move_points({size: bounds.width, name: 'right'}, 'x');
-                dy && right._move_points({size: bounds.height, name: 'top'}, 'y');
-                root.redraw();
-                // пересчитываем, не записываем
-                root.refresh_prm_links(true);
-                if(tproject._scope.eve._async?.move_points?.timer) {
-                  clearTimeout(tproject._scope.eve._async.move_points.timer);
-                  delete tproject._scope.eve._async.move_points.timer;
-                }
-                while (tproject._ch.length) {
-                  tproject.redraw();
-                }
-                const tbounds = root.bounds;
-                const delta = new teditor.Point((bounds.x - tbounds.x).round(1), (bounds.y - tbounds.y).round(1));
-                if(delta.length) {
-                  root.move(delta);
-                  while (tproject._ch.length) {
-                    tproject.redraw();
+              }
+              activeLayer.remove();
+              return tproject.save_coordinates({svg: false, no_recalc: true})
+                .then(() => {
+                  const {cnstr} = root;
+                  const cmap = new Map();
+                  for(const tmp of tx.constructions) {
+                    const nrow = ox.constructions.add({cnstr: ox.constructions.aggregate([], ['cnstr'], 'MAX') + 1});
+                    if(parent && !tmp.parent) {
+                      cmap.set(0, parent.cnstr);
+                    }
+                    cmap.set(tmp, nrow);
+                    cmap.set(tmp.cnstr, nrow.cnstr);
                   }
-                }
-                activeLayer.clear(true);
-                return tproject.save_coordinates({svg: false, no_recalc: true})
-                  .then(() => {
-                    const {cnstr} = root;
-                    const cmap = new Map();
-                    for(const tmprow of tx.constructions) {
-                      const nrow = tmprow === root._row ? activeLayer._row : ox.constructions.add();
-                      if(!nrow.cnstr) {
-                        nrow.cnstr = ox.constructions.aggregate([], ['cnstr'], 'MAX') + 1;
-                      }
-                      cmap.set(tmprow, nrow);
-                      cmap.set(tmprow.cnstr, nrow.cnstr);
-                      utils._mixin(nrow, tmprow._obj, null, ['row', 'cnstr']);
+                  for(const tmp of tx.constructions) {
+                    const nrow = cmap.get(tmp);
+                    const parentNum = cmap.get(tmp.parent);
+                    if(parentNum) {
+                      nrow.parent = parentNum;
                     }
-                    for(const tmprow of tx.constructions) {
-                      const nrow = cmap.get(tmprow);
-                      const parent = cmap.get(nrow.parent);
-                      if(parent) {
-                        nrow.parent = parent;
-                      }
+                    utils._mixin(nrow, tmp._obj, null, ['row', 'cnstr', 'parent']);
+                  }
+                  const emap = new Map();
+                  for(const tmp of tx.coordinates) {
+                    const nrow = ox.coordinates.add({
+                      elm: ox.coordinates.aggregate([], ['elm'], 'max') + 1,
+                      cnstr: cmap.get(tmp.cnstr),
+                    });
+                    emap.set(tmp, nrow);
+                    emap.set(tmp.elm, nrow.elm);
+                  }
+                  for(const tmp of tx.coordinates) {
+                    const nrow = emap.get(tmp);
+                    if(tmp.parent) {
+                      nrow.parent = emap.get(tmp.parent);
                     }
-                  });
-              })
-              .then(() => {
+                    utils._mixin(nrow, tmp._obj, null, ['row', 'elm', 'cnstr', 'parent']);
+                  }
+                  const row = cmap.get(root._row);
+                  if(tproject.sys !== project.sys) {
+                    row.dop = {sys: tproject.sys};
+                  }
+                  project.load_contour(Editor.Contour.create({project, parent, row: cmap.get(root._row)}));
+                });
+            })
+            .then(() => {
 
-              })
-              .then(fin)
-              .catch((err) => {
-                fin();
-                dialogs.alert({title: 'Вставка вложенного изделия', text: err.message});
-              });
-
-          }
+            })
+            .then(fin)
+            .catch((err) => {
+              fin();
+              dialogs.alert({title: 'Вставка вложенного изделия', text: err.message});
+            });
         }
+      })
+      .catch((err) => {
+        return null;
       });
   }
 }
