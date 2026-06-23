@@ -207,6 +207,7 @@ export function region_layer({Editor, EditorInvisible, ui: {dialogs}, job_prm, c
                   tproject.redraw();
                 }
               }
+              activeLayer.clear();
               activeLayer.remove();
               return tproject.save_coordinates({svg: false, no_recalc: true})
                 .then(() => {
@@ -243,6 +244,45 @@ export function region_layer({Editor, EditorInvisible, ui: {dialogs}, job_prm, c
                       nrow.parent = emap.get(tmp.parent);
                     }
                     utils._mixin(nrow, tmp._obj, null, ['row', 'elm', 'cnstr', 'parent']);
+                  }
+                  for(const tmp of tx.cnn_elmnts) {
+                    ox.cnn_elmnts.add({
+                      elm1: emap.get(tmp.elm1),
+                      elm2: emap.get(tmp.elm2),
+                      node1: tmp.node1,
+                      node2: tmp.node2,
+                      cnn: tmp.cnn.valueOf(),
+                      aperture_len: tmp.aperture_len,
+                    });
+                  }
+                  for(let {cnstr, inset, param, value, hide} of tx.params) {
+                    if(cnstr > 0) {
+                      cnstr = cmap.get(cnstr);
+                    }
+                    else if(cnstr < 0) {
+                      cnstr = -emap.get(-cnstr);
+                    }
+                    const prow = ox.params.find({cnstr, inset, param});
+                    if(!prow) {
+                      ox.params.add({
+                        cnstr,
+                        inset: inset.valueOf(),
+                        param: param.valueOf(),
+                        value: value?.valueOf() || value,
+                        hide,
+                      });
+                    }
+                  }
+                  for(let {elm, gno, inset, clr, dop} of tx.glass_specification) {
+                    const nrow = ox.glass_specification.add({
+                      elm: emap.get(elm),
+                      gno: gno,
+                      inset: inset.valueOf(),
+                      clr: clr?.valueOf(),
+                    });
+                    if(Object.keys(dop).length) {
+                      nrow.dop = dop;
+                    }
                   }
                   const row = cmap.get(root._row);
                   if(project._dp.sys !== sys) {
