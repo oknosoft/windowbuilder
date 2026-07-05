@@ -135,9 +135,27 @@ export default class GlassProps extends React.Component {
         <Bar>Свойства</Bar>
         {props.map((prop, ind) => {
           const {ref, predefined_name} = prop;
-          return predefined_name === 'glass_separately' ?
-            <GlassSeparately key={`ap-${ind}`} _obj={elm} prop={prop} elm/> :
-            <PropField key={`ap-${ind}`} _obj={elm} _fld={ref} _meta={fields[ref]}/>;
+          if(predefined_name === 'glass_separately') {
+            return <GlassSeparately key={`ap-${ind}`} _obj={elm} prop={prop} elm/>;
+          }
+          const meta = fields[ref];
+          const links = prop.params_links({grid: {selection: {}}, obj: elm});
+          if(links.length) {
+            // TODO: подумать про установку умолчаний
+            //prm.linked_values(links, this);
+            const filter = {}
+            prop.filter_params_links(filter, null, links);
+            if(filter.ref) {
+              if(!meta.choice_params) {
+                meta.choice_params = [];
+              }
+              meta.choice_params.push({
+                name: 'ref',
+                path: filter.ref,
+              });
+            }
+          }
+          return <PropField key={`ap-${ind}`} _obj={elm} _fld={ref} _meta={meta}/>;
         })}
       </> : null}
 
