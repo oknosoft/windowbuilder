@@ -7080,7 +7080,10 @@ class ToolPen extends ToolElement {
     const rootLayer = project.rootLayer();
 
     if(point) {
-      this.hitItem = rootLayer.hitTest(point, {stroke: true, curves: true, tolerance});
+      this.hitItem = rootLayer.hitTest(point, {
+        ...ToolPen.root_match(rootLayer),
+        tolerance,
+      });
     }
 
     if (this.hitItem) {
