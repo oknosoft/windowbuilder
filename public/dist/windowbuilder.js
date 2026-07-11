@@ -122,9 +122,6 @@ class SchemeLayers {
   }
 
   contour_redrawed(contour, bounds) {
-    if(contour instanceof Editor.ContourNestedContent) {
-      return;
-    }
     const {tree} = this;
     if(tree && tree.setItemText){
       const text = contour.presentation(bounds);
@@ -355,7 +352,12 @@ class EditorAccordion {
           const fillings = _editor.project.getItems({class: Editor.Filling, selected: true});
           if(fillings.length) {
             if(name === 'nested_layer') {
-              ui.dialogs.templates_nested()
+              return ui.dialogs.alert({
+                title: 'Вложенное изделие',
+                text: 'Функция заблокирована в текущей версии',
+              });
+              /*
+                            ui.dialogs.templates_nested()
                 .then((selected) => {
                   if(selected === true) {
                     const {cat: {templates}, job_prm} = $p;
@@ -364,23 +366,13 @@ class EditorAccordion {
                     if(templates_nested && templates_nested.includes(_obj.calc_order)) {
                       let {layer} = fillings[0];
                       // если текущий слой уже является вложенным - перезаполняем содержимое из шаблона
-                      if(layer instanceof Editor.ContourNestedContent) {
-                        while (layer) {
-                          layer = layer.layer;
-                          if(layer instanceof Editor.ContourNested) {
-                            break;
-                          }
-                        }
-                        layer.load_stamp();
-                      }
-                      else {
-                        // создаём новое вложенное изделие
-                        fillings[0].create_leaf(name);
-                      }
+                      // создаём новое вложенное изделие
+                      fillings[0].create_leaf(name);
                     }
                   }
                 })
                 .catch((err) => null);
+              */
             }
             else {
               fillings[0].create_leaf(name);
@@ -8383,7 +8375,7 @@ class ToolSelectNode extends ToolElement {
         const profiles = [];
         this._scope.paths_intersecting_rect(box).forEach((path) => {
           if(path.parent instanceof Editor.ProfileItem){
-            if(!profiles.includes(path.parent) && !(path.parent instanceof Editor.ProfileParent)){
+            if(!profiles.includes(path.parent)){
               profiles.push(path.parent);
               path.parent.selected = !path.parent.selected;
             }
@@ -8398,9 +8390,6 @@ class ToolSelectNode extends ToolElement {
         const selectedSegments = this._scope.segments_in_rect(box);
         if (selectedSegments.length) {
           for(const segm of selectedSegments) {
-            if(segm.path.parent instanceof Editor.ProfileParent) {
-              continue;
-            }
             segm.selected = !segm.selected;
           }
         }
@@ -8408,7 +8397,7 @@ class ToolSelectNode extends ToolElement {
           const profiles = [];
           this._scope.paths_intersecting_rect(box).forEach((path) => {
             if(path.parent instanceof Editor.ProfileItem){
-              if(!profiles.includes(path.parent) && !(path.parent instanceof Editor.ProfileParent)){
+              if(!profiles.includes(path.parent)){
                 profiles.push(path.parent);
                 path.parent.selected = !path.parent.selected;
               }
@@ -8499,9 +8488,6 @@ class ToolSelectNode extends ToolElement {
 
   mousewheel(event) {
     const {wheel, wheelEnd, _scope: {project}} = this;
-    if(project.rootLayer() instanceof Editor.ContourParent) {
-      return;
-    }
     const {wheelDelta, shiftKey} = event;
     const {center} = project.bounds;
     const angle = wheelDelta / (shiftKey ? 300 : 60);

@@ -258,7 +258,7 @@ class ToolSelectNode extends ToolElement {
         const profiles = [];
         this._scope.paths_intersecting_rect(box).forEach((path) => {
           if(path.parent instanceof Editor.ProfileItem){
-            if(!profiles.includes(path.parent) && !(path.parent instanceof Editor.ProfileParent)){
+            if(!profiles.includes(path.parent)){
               profiles.push(path.parent);
               path.parent.selected = !path.parent.selected;
             }
@@ -273,9 +273,6 @@ class ToolSelectNode extends ToolElement {
         const selectedSegments = this._scope.segments_in_rect(box);
         if (selectedSegments.length) {
           for(const segm of selectedSegments) {
-            if(segm.path.parent instanceof Editor.ProfileParent) {
-              continue;
-            }
             segm.selected = !segm.selected;
           }
         }
@@ -283,7 +280,7 @@ class ToolSelectNode extends ToolElement {
           const profiles = [];
           this._scope.paths_intersecting_rect(box).forEach((path) => {
             if(path.parent instanceof Editor.ProfileItem){
-              if(!profiles.includes(path.parent) && !(path.parent instanceof Editor.ProfileParent)){
+              if(!profiles.includes(path.parent)){
                 profiles.push(path.parent);
                 path.parent.selected = !path.parent.selected;
               }
@@ -374,9 +371,6 @@ class ToolSelectNode extends ToolElement {
 
   mousewheel(event) {
     const {wheel, wheelEnd, _scope: {project}} = this;
-    if(project.rootLayer() instanceof Editor.ContourParent) {
-      return;
-    }
     const {wheelDelta, shiftKey} = event;
     const {center} = project.bounds;
     const angle = wheelDelta / (shiftKey ? 300 : 60);

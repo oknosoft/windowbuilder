@@ -113,9 +113,6 @@ class SchemeLayers {
   }
 
   contour_redrawed(contour, bounds) {
-    if(contour instanceof Editor.ContourNestedContent) {
-      return;
-    }
     const {tree} = this;
     if(tree && tree.setItemText){
       const text = contour.presentation(bounds);
@@ -346,7 +343,12 @@ class EditorAccordion {
           const fillings = _editor.project.getItems({class: Editor.Filling, selected: true});
           if(fillings.length) {
             if(name === 'nested_layer') {
-              ui.dialogs.templates_nested()
+              return ui.dialogs.alert({
+                title: 'Вложенное изделие',
+                text: 'Функция заблокирована в текущей версии',
+              });
+              /*
+                            ui.dialogs.templates_nested()
                 .then((selected) => {
                   if(selected === true) {
                     const {cat: {templates}, job_prm} = $p;
@@ -355,23 +357,13 @@ class EditorAccordion {
                     if(templates_nested && templates_nested.includes(_obj.calc_order)) {
                       let {layer} = fillings[0];
                       // если текущий слой уже является вложенным - перезаполняем содержимое из шаблона
-                      if(layer instanceof Editor.ContourNestedContent) {
-                        while (layer) {
-                          layer = layer.layer;
-                          if(layer instanceof Editor.ContourNested) {
-                            break;
-                          }
-                        }
-                        layer.load_stamp();
-                      }
-                      else {
-                        // создаём новое вложенное изделие
-                        fillings[0].create_leaf(name);
-                      }
+                      // создаём новое вложенное изделие
+                      fillings[0].create_leaf(name);
                     }
                   }
                 })
                 .catch((err) => null);
+              */
             }
             else {
               fillings[0].create_leaf(name);
