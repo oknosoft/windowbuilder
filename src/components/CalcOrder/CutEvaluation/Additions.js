@@ -163,6 +163,7 @@ class Additions extends React.Component {
       calc_order._slave_recalc = false;
     }
     tmp.unload();
+    calc_order.spread_min_volume();
     calc_order.production.sync_grid(dialog.wnd.elmnts.grids.production);
     return Promise.resolve({close: true});
   }
