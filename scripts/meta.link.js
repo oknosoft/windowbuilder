@@ -17,7 +17,6 @@ const repos = [
     remote: '..\\wb-core',
     dir: 'dist',
   },
-  /*
   {
     local: 'wb-forms',
     remote: '..\\wb-forms',
@@ -38,16 +37,15 @@ const repos = [
     remote: '..\\metadata\\packages\\metadata-abstract-ui',
     dir: '',
   },
-  */
 ];
 
-// for(const local of Object.keys(dependencies).filter(v => /^metadata-/.test(v))) {
-//   repos.push({
-//     local,
-//     remote: `..\\metadata\\packages\\${local}`,
-//     dir: '',
-//   });
-// }
+for(const local of Object.keys(dependencies).filter(v => /^metadata-/.test(v))) {
+  repos.push({
+    local,
+    remote: `..\\metadata\\packages\\${local}`,
+    dir: '',
+  });
+}
 
 function fromDir(startPath, filter, callback) {
 
