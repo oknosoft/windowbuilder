@@ -431,7 +431,7 @@ class ToolSelectNode extends ToolElement {
     let j, segment, index, point, handle;
 
     const move = (point) => {
-      if(!modifiers.shift && (modifiers.control || modifiers.alt)) {
+      if(!modifiers.shift && (modifiers.control && !modifiers.alt || !modifiers.control && modifiers.alt)) {
         const selected = project.selected_profiles().filter(v => !v.nearest(true) || v instanceof Editor.ProfileAddlOuter);
         if(selected.length === 1) {
           point.length = 1;
