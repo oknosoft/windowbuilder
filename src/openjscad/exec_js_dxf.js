@@ -61,6 +61,45 @@ export function exec_dxf (scheme, Drawing) {
     }
   }
 
+  function export_fragments(src) {
+    const {closed, curves} = src.path;
+    let prev;
+    curves.forEach((curve, index) => {
+      let {point1, point2} = curve;
+      if(!prev){
+        prev = point1;
+      }
+      if(closed && index === curves.length - 1){
+        point2 = curves[0].point1;
+      }
+      else if(prev.getDistance(point2) < 1){
+        return;
+      }
+      if(curve.hasHandles()) {
+        const controlPoints = [[prev.x, h - prev.y]];
+        let step = 0.1;
+        if(curve.length < 10) {
+          step = 0.2;
+        }
+        if(curve.length < 4) {
+          step = 0.3;
+        }
+        for(let time = 0.1; time <= 1; time += step) {
+          const loc = curve.getLocationAtTime(time);
+          controlPoints.push([loc.point.x, h - loc.point.y]);
+        }
+        if(step === 0.2) {
+          controlPoints.push([point2.x, h - point2.y]);
+        }
+        d.drawSpline(controlPoints);
+      }
+      else {
+        d.drawLine(prev.x, h - prev.y, point2.x, h - point2.y);
+      }
+      prev = point2;
+    });
+  }
+
   function export_contour(layer) {
     d.addLayer(`l_${layer.cnstr}`, Drawing.ACI.LAYER, 'CONTINUOUS');
     d.setActiveLayer(`l_${layer.cnstr}`);
@@ -86,12 +125,12 @@ export function exec_dxf (scheme, Drawing) {
     d.addLayer(`g_${elm}`, Drawing.ACI.LAYER, 'CONTINUOUS');
     d.setActiveLayer(`g_${elm}`);
 
-    export_path({path});
+    export_fragments({path});
 
     // разрывы
     for(const tearing of layer.tearings) {
       if(tearing.path.height && tearing.path.width) {
-        export_path({path: tearing.profile_path});
+        export_fragments({path: tearing.profile_path});
       }
     }
 
