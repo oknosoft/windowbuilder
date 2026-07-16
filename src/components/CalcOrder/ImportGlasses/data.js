@@ -272,6 +272,9 @@ export const execute = async (obj, text, wnd) => {
             const inset = job_prm.builder.composite_formula_err;
             project.ox.glass_specification.add({elm: glassRow.elm, inset});
           }
+          else {
+            glass.default_params();
+          }
         }
         const {bottom, right} = project.l_dimensions;
         right.sizes_wnd({wnd: right, size: height, name: 'auto'});
