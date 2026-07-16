@@ -23,7 +23,8 @@ function beforeRamLoad($p) {
 }
 
 function afterCommonLoad($p) {
-
+  import('./browserVersion.js')
+    .then(({browserVersion}) => browserVersion($p));
 }
 
 function afterRamLoad($p) {
