@@ -24,7 +24,9 @@ function beforeRamLoad($p) {
 
 function afterCommonLoad($p) {
   import('./browserVersion.js')
-    .then(({browserVersion}) => browserVersion($p));
+    .then(({browserVersion}) => browserVersion($p))
+    .then(() => import('./defaultPartners.js'))
+    .then(({defaultPartners}) => defaultPartners($p));
 }
 
 function afterRamLoad($p) {
