@@ -27,14 +27,13 @@ Object.defineProperties($p.cat.divisions, {
             list.add(acl_obj);
             acl_obj._children().forEach((o) => list.add(o));
           }
-
-          for(const o of pre) {
-            if(!ex.has(o)) {
-              list.add(o);
-            }
-          }
         }
       });
+      for(const o of pre) {
+        if(!ex.has(o)) {
+          list.add(o);
+        }
+      }
       if(!list.size){
         return this.constructor.prototype.get_option_list.call(this, selection, val);
       }

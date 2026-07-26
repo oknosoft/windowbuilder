@@ -223,14 +223,32 @@ Object.defineProperties($p.cat.clrs, {
 Object.defineProperties($p.cat.divisions, {
   get_option_list: {
     value(selection, val) {
-      const list = [];
-      $p.current_user.acl_objs.find_rows({type: "cat.divisions"}, ({acl_obj}) => {
-        if(acl_obj && list.indexOf(acl_obj) == -1){
-          list.push(acl_obj);
-          acl_obj._children().forEach((o) => list.indexOf(o) == -1 && list.push(o));
+      const list = new Set(), pre = new Set(), ex = new Set();
+      const {acl_objs, branch} = $p.current_user;
+      if(!branch.empty()) {
+        for(const {acl_obj} of branch.divisions) {
+          pre.add(acl_obj);
+          acl_obj._children().forEach((o) => pre.add(o));
+        }
+      }
+      acl_objs.find_rows({type: "cat.divisions"}, ({acl_obj, exclude}) => {
+        if(acl_obj){
+          if(exclude) {
+            ex.add(acl_obj);
+            acl_obj._children().forEach((o) => ex.add(o));
+          }
+          else {
+            list.add(acl_obj);
+            acl_obj._children().forEach((o) => list.add(o));
+          }
         }
       });
-      if(!list.length){
+      for(const o of pre) {
+        if(!ex.has(o)) {
+          list.add(o);
+        }
+      }
+      if(!list.size){
         return this.constructor.prototype.get_option_list.call(this, selection, val);
       }
 
@@ -241,7 +259,7 @@ Object.defineProperties($p.cat.divisions, {
       }
 
       const l = [];
-      $p.utils._find_rows.call(this, list, selection, (v) => l.push(check({text: v.presentation, value: v.ref})));
+      $p.utils._find_rows.call(this, Array.from(list), selection, (v) => l.push(check({text: v.presentation, value: v.ref})));
 
       l.sort(function(a, b) {
         if (a.text < b.text){
