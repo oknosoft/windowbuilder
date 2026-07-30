@@ -47,10 +47,13 @@ export class CachedSearch {
    * @summary Читает до 100 последних использовавшихся элементов
    * @return {Promise<void>}
    */
-  init() {
+  init(refs = new Set()) {
     const {mgr, wsql, key} = this;
-    const refs = wsql.get_user_param(key, 'object') || {};
-    return  mgr.adapter.load_array(mgr, Object.keys(refs));
+    const stored = wsql.get_user_param(key, 'object') || {};
+    for(const ref of Object.keys(stored)) {
+      refs.add(ref);
+    }
+    return  mgr.adapter.load_array(mgr, Array.from(refs));
   }
 
   /**
@@ -96,7 +99,7 @@ export class CachedSearch {
   }
 }
 
-export function partnersSearch({cat: {partners}, dp, wsql, CatPartners}) {
+export function partnersSearch({cat: {partners}, dp, wsql, CatPartners, current_user}) {
   // case 'PartnersList':
   //   imodule = import('../../components/CatPartners/List');
   //   break;
@@ -120,6 +123,19 @@ export function partnersSearch({cat: {partners}, dp, wsql, CatPartners}) {
   //     ...other
   //   }, null, 'PartnerObj');
   // };
+
+  const refs = new Set();
+  const add = ({_obj}) => {
+    const partner =  partners.by_ref[_obj.acl_obj]
+    if(!partner || partner.is_new()) {
+      refs.add(_obj.acl_obj);
+    }
+  };
+  current_user.acl_objs.find_rows({type: 'cat.partners', by_default: true}, add);
+  if(!current_user.branch.empty()) {
+    current_user.branch.partners.find_rows({by_default: true}, add);
+  }
+
   partners.search = new CachedSearch({mgr: partners, wsql});
-  return partners.search.init();
+  return partners.search.init(refs);
 }
