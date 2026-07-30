@@ -12,7 +12,7 @@ import configureStore, {history} from './redux';
 import RootView from './components/App/RootView';
 
 // sw для оффлайна и прочих дел
-import * as serviceWorker from './serviceWorker';
+import * as serviceWorker from './sw/client';
 
 export const store = configureStore();
 

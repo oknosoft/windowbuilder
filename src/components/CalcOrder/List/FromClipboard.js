@@ -129,6 +129,7 @@ export default function FromClipboard(props) {
     onClose={queryClose}
     actions={[
       <FormControlLabel
+        key="label"
         control={<Checkbox checked={refill} onChange={handleChange} />}
         label="Свойства из системы"
       />,

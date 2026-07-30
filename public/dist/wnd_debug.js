@@ -3948,6 +3948,7 @@ class eXcell_partner extends eXcell {
         (partner.is_new() ? partner.load() : Promise.resolve())
           .then(() => {
             curr.obj[curr.field] = partner;
+            partners.search.handleSelect(partner);
           });
       }
     }

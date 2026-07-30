@@ -1,9 +1,11 @@
 /**
- * уточнения к сервисворкеру
+ * Уточнения к сервисворкеру workbox
+ * Кеширует фиксированный список файлов
  */
 
 import {skipWaiting} from 'workbox-core';
 import {precacheAndRoute} from 'workbox-precaching';
+//import './respondWith';
 
 // в отладочном режиме, обновляем cache раз в день
 const dkey = new Date().toJSON().substring(0, 10);
@@ -11,7 +13,7 @@ const dkey = new Date().toJSON().substring(0, 10);
 export default function () {
   skipWaiting();
 
-  const revision = '20260720';
+  const revision = '20260721';
   const persistent = '20250001';
 
   precacheAndRoute([
@@ -24,7 +26,7 @@ export default function () {
     {url: '/dist/docxtemplater.min.js', revision: persistent },
     {url: '/dist/docxtemplater-image-module.min.js', revision: persistent },
     {url: '/dynamic-settings.js', revision },
-    //{url: '/couchdb/mdm/92/common', revision: dkey },
+    {url: '/manifest.json', revision },
     //{url: '/styles/app.0c9a31.css', revision: null},
   ]);
 
