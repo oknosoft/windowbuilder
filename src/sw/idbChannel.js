@@ -1,12 +1,12 @@
 
-let idb;
 const props = {
   name: 'metadata-channel',
   version: 1,
   store: 'store',
+  idb: null,
 };
 
-function hasDiff(v1, v2) {
+export function hasDiff(v1, v2) {
 
   if(typeof v1 === 'object' && typeof v2 === 'object') {
     // Find updated or added keys
@@ -34,8 +34,8 @@ function hasDiff(v1, v2) {
 export const idbChannel = {
 
   open() {
-    if(idb) {
-      return Promise.resolve(idb);
+    if(props.idb) {
+      return Promise.resolve(props.idb);
     }
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(props.name, props.version);
@@ -48,8 +48,8 @@ export const idbChannel = {
       };
 
       request.onsuccess = (event) => {
-        idb = event.target.result;
-        resolve(idb);
+        props.idb = event.target.result;
+        resolve(props.idb);
       };
       request.onerror = (event) => reject(event.target.error);
     });
@@ -62,8 +62,13 @@ export const idbChannel = {
       const request = store.get(key);
 
       request.onsuccess = () => {
-        const {key, ...value} = request.result;
-        resolve(value);
+        if(request.result) {
+          const {key, ...value} = request.result;
+          resolve(value);
+        }
+        else {
+          resolve();
+        }
       };
       request.onerror = () => {
         reject(request.error);
@@ -76,7 +81,7 @@ export const idbChannel = {
       .then(test => {
           if(hasDiff(test, value)) {
             return new Promise((resolve, reject) => {
-              const transaction = idb.transaction(props.store, 'readwrite');
+              const transaction = props.idb.transaction(props.store, 'readwrite');
               const store = transaction.objectStore(props.store);
               const request = store.put({key, ...value});
 

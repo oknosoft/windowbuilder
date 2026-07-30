@@ -1,7 +1,7 @@
 
 let cachePointer;
 
-function hasDiff(v1, v2) {
+export function hasDiff(v1, v2) {
 
   if(typeof v1 === 'object' && typeof v2 === 'object') {
     // Find updated or added keys
