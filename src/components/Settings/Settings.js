@@ -173,6 +173,7 @@ class Settings extends Component {
           <FormControl>
             <FormControlLabel
               control={<Switch
+                disabled
                 onChange={(event, checked) => this.setState({couch_direct: checked})}
                 checked={Boolean(couch_direct)}/>}
               label={couch_direct ? "Прямое подключение к серверу" : "Работа через IDB браузера" }

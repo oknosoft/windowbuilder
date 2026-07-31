@@ -8,13 +8,14 @@ import Confirm from 'metadata-react/App/Confirm';   // диалог вопрос
 import Popup from 'metadata-react/App/Popup';       // контекстное меню и прочие всплывающие штучки
 import WindowPortal from 'metadata-react/App/WindowPortal';     // контент в новом окне (например, для печати)
 import Login, {FrmLogin} from 'metadata-react/FrmLogin/Proxy';  // логин и свойства подключения
-import NeedAuth from 'metadata-react/App/NeedAuth'; // страница "необхлдима авторизация"
+import NeedAuth from 'metadata-react/App/NeedAuth'; // страница "необходима авторизация"
 import Header from 'metadata-react/Header';         // навигация
 import DumbScreen from '../DumbScreen';             // заставка "загрузка занных"
 import DataRoute from './DataRoute';                // вложенный маршрутизатор страниц с данными
 import AboutPage from '../About';                   // информация о программе
 import HelpPage from '../Help';                     // руководство пользователя
-import Settings from '../Settings';                 // настройки
+import Settings from '../Settings/Settings';        // основные настройки
+import OfflineSettings from '../Settings/Offline';  // настройки автономного режима
 import NotFoundPage from '../NotFoundPage';         // 404
 import {lazy} from './lazy';                        // конструкторы для контекста
 import browserVersion from './browserVersion';
@@ -131,6 +132,7 @@ class AppRoot extends Component {
               <Route path="/help" component={HelpPage} />
               <Route path="/login" render={(tprops) => <Login {...tprops} {...auth_props} />} />
               <Route path="/settings" component={Settings} />
+              <Route path="/offline" component={OfflineSettings} />
               <Route path="/waiting" render={(tprops) => <DumbScreen {...tprops} repl={props.repl} />} />
               <Route component={NotFoundPage} />
             </Switch>

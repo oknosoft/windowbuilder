@@ -25,6 +25,8 @@ export default function () {
     {url: '/dist/xlsx.full.min', revision: persistent },
     {url: '/dist/docxtemplater.min.js', revision: persistent },
     {url: '/dist/docxtemplater-image-module.min.js', revision: persistent },
+    {url: '/dist/qrcodejs/qrcode.min.js', revision: persistent },
+    {url: '/dist/qrcodejs/qrcode.tosjis.min.js', revision: persistent },
     {url: '/dynamic-settings.js', revision },
     {url: '/manifest.json', revision },
     //{url: '/styles/app.0c9a31.css', revision: null},

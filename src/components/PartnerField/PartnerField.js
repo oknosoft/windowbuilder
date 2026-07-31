@@ -18,7 +18,9 @@ export default function PartnerField({obj, fld, meta, label, onChange, fullWidth
     if(!label && label !== false && meta) {
       label = meta.synonym;
     }
-    return (params) => <TextField label={label} fullWidth={fullWidth} {...params} />;
+    return function PartnerInput (params) {
+      return <TextField label={label} fullWidth={fullWidth} {...params} />
+    };
   }, [label]);
 
   const filter = React.useMemo(() => {
