@@ -5,31 +5,78 @@ import {PromisifiedChannel} from './messageChannel';
 const regex = {
   common: /mdm\/\d+\/common/,
   zone: /mdm\/(.*?)\/common/,
-  delimiter: '/couchdb/mdm/'
+  auth: /auth\/(.*?)|couchdb\/wb_\d+_(doc|ram)\/$/,
+  delimiter: '/couchdb/mdm/',
+  mdm: /couchdb\/mdm\/\d+\/$/,
+  doc: /couchdb\/wb_\d+_doc/,
+  ram: /couchdb\/wb_\d+_ram/,
+  templates: /couchdb\/mdm\/\d+\/templates\/.+/,
 }
 
 const context = {
 
   messages: new PromisifiedChannel(event => {
     const {data} = event;
-    if(data.type === 'useOffline') {
-      context.useOffline = data.value;
-      idbChannel.set('useOffline', {value: data.value});
+    switch (data.type) {
+      case 'useOffline':
+      case 'forceOffline':
+        context[data.type] = data.value;
+        idbChannel.set(data.type, data.value);
+        break;
     }
   }),
 
-  useOffline: false,
+  useOffline: false,  // кешируем и отвечаем при недоступности
+  forceOffline: false,// отвечаем из локального кеша вне зависимости от доступности сервера
   stamp: 0,
   manifestTimeout: 60000,
 
   init() {
-    idbChannel.get('useOffline').then(v => {
-      if(v?.value) {
-        context.useOffline = true;
-      }
-    });
+    return Promise.resolve(self.addEventListener('fetch', onFetch))
+      .then(() => idbChannel.get('useOffline').then(v => {
+        if(v) {
+          context.useOffline = true;
+        }
+      }))
+      .then(() => idbChannel.get('forceOffline').then(v => {
+        if(v) {
+          context.useOffline = true;
+          context.forceOffline = true;
+        }
+      }));
+  },
 
-    self.addEventListener('fetch', onFetch);
+  get onLine() {
+    return navigator.onLine && !this.forceOffline;
+  },
+
+  cyrb128(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+      h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+    }
+    return h;
+  },
+
+  async postUrl(request) {
+    const {url, method} = request;
+    if(request.method === 'POST') {
+      const cloned = request.clone();
+      const body = await cloned.text();
+      const hash = this.cyrb128(body);
+      return url + `${url.endsWith('/') ? '' : (url.includes('?') ? '&hash=' : '/')}${hash}`;
+    }
+    return url;
+  },
+
+  query(request, url) {
+    return fetch(request)
+      .then(async (resp) => {
+        if(resp.status === 200) {
+          await this.cache.put(url, resp.clone());
+        }
+        return resp;
+      });
   },
 
   /**
@@ -62,7 +109,7 @@ const context = {
    * @return {Promise<T>}
    */
   refreshManifest() {
-    const {slice, stamp, zone, manifestTimeout} = this;
+    const {slice, stamp, zone, manifestTimeout, onLine } = this;
     return this.openCache()
       .then(cache => {
         if(slice && Date.now() - stamp < manifestTimeout) {
@@ -70,7 +117,7 @@ const context = {
         }
 
         const manifestURL = `/couchdb/mdm/${zone}/manifest`;
-        if(navigator.onLine) {
+        if(onLine) {
           return fetch(`/couchdb/mdm/${zone}/common`, {method: 'HEAD'})
             .then((res) => {
               const {status, statusText} = res;
@@ -98,7 +145,7 @@ const context = {
       });
   },
 
-  respond(event) {
+  respondMDM(event) {
     const {request} = event;
     const url = new URL(request.url);
     const key = url.pathname.split(regex.delimiter)[1];
@@ -109,20 +156,20 @@ const context = {
           const raw = resp.headers.get('manifest');
           if(raw) {
             const currentSlice = JSON.parse(raw);
-            const {slice} = this;
+            const {slice, onLine} = this;
 
             if(key.includes('common')) {
-              if(!navigator.onLine || !hasDiff(slice.common, currentSlice.common)) {
+              if(onLine || !hasDiff(slice.common, currentSlice.common)) {
                 return {resp, cached: true};
               }
             }
             else {
               const type = url.search.split('=')[1];
               const id = type && (this.ids[type] || type);
-              if(id && slice[id] && slice[id][0] === currentSlice[id]?.[0]) {
+              if(id && slice[id] && !hasDiff(slice[id], currentSlice[id])) {
                 return {resp, cached: true};
               }
-              else if(currentSlice?.other && slice.other[0] === currentSlice.other[0]) {
+              else if(currentSlice?.other && !hasDiff(slice.other, currentSlice.other)) {
                 return {resp, cached: true};
               }
             }
@@ -140,6 +187,35 @@ const context = {
     );
   },
 
+  respondDefault(event) {
+    const {request} = event;
+    event.respondWith(
+      this.openCache()
+      .then(() => this.postUrl(request))
+      .then((url) => {
+        if(this.onLine) {
+          // освежаем кеш
+          return this.query(request, url);
+        }
+        else {
+          // ищем в кеше и делаем запрос, если не нашли и сеть доступна
+          return this.cache.match(url).then((resp) => {
+            if(resp) {
+              return resp;
+            }
+            else if(navigator.onLine) {
+              return this.query(request, url);
+            }
+          })
+        }
+      })
+    );
+  },
+
+  respondDOC(event) {
+
+  }
+
 };
 context.init();
 
@@ -148,7 +224,16 @@ function onFetch(event) {
     const {url} = event.request;
     if(regex.common.test(url)) {
       context.parseZone(url);
-      context.respond(event);
+      context.respondMDM(event);
+    }
+    else if(regex.auth.test(url) || regex.ram.test(url) || regex.templates.test(url)) {
+      context.respondDefault(event);
+    }
+    else if(regex.mdm.test(url)) {
+      context.respondMDM(event);
+    }
+    else if(regex.doc.test(url)) {
+      context.respondDOC(event);
     }
   }
 }

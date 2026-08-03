@@ -63,7 +63,7 @@ export const idbChannel = {
 
       request.onsuccess = () => {
         if(request.result) {
-          const {key, ...value} = request.result;
+          const {key, value} = request.result;
           resolve(value);
         }
         else {
@@ -83,7 +83,7 @@ export const idbChannel = {
             return new Promise((resolve, reject) => {
               const transaction = props.idb.transaction(props.store, 'readwrite');
               const store = transaction.objectStore(props.store);
-              const request = store.put({key, ...value});
+              const request = store.put({key, value});
 
               request.onsuccess = () => resolve(request.result);
               request.onerror = () => reject(request.error);

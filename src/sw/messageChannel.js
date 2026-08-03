@@ -5,7 +5,7 @@ export class PromisifiedChannel extends BroadcastChannel {
     super(name);
     const echo = (event) => {
       if(!onMessage?.(event) && event.data?.stamp) {
-        this.postMessage({type: event.data.stamp, ok: true});
+        this.postMessage({type: event.data.type, stamp: event.data.stamp, ok: true});
       }
     };
     this.addEventListener('message', echo);

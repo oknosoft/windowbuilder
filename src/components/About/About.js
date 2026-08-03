@@ -5,7 +5,7 @@ import Grid from '@material-ui/core/Grid';
 
 import {withIface} from 'metadata-redux';
 
-const styleSheet = {
+export const styleSheet = {
   root: {
     flexGrow: 1,
     marginLeft: 12,

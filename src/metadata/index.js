@@ -83,21 +83,26 @@ export function init(store) {
             if((!sessionStorage.branch || sessionStorage.branch === utils.blank.guid) && branch && !branch.empty?.()) {
               sessionStorage.branch = branch.ref;
             }
-            if(roles && (roles.includes('ram_editor') || roles.includes('doc_full'))) {
-              pouch.local.sync.ram = pouch.remote.ram.changes({
-                since: 'now',
-                live: true,
-                include_docs: true
-              })
-                .on('change', (change) => {
-                  // информируем слушателей текущего сеанса об изменениях
-                  if(change.doc.class_name !== 'doc.nom_prices_setup' && change.doc.obj_delivery_state !== 'Шаблон') {
-                    pouch.load_changes({docs: [change.doc]});
-                    pouch.emit('ram_change', change);
+            if(roles && (roles.includes('ram_editor') || roles.includes('doc_full')) && navigator.onLine) {
+              utils.idbChannel.get('forceOffline')
+                .then(forceOffline => {
+                  if(!forceOffline) {
+                    pouch.local.sync.ram = pouch.remote.ram.changes({
+                      since: 'now',
+                      live: true,
+                      include_docs: true
+                    })
+                      .on('change', (change) => {
+                        // информируем слушателей текущего сеанса об изменениях
+                        if(change.doc.class_name !== 'doc.nom_prices_setup' && change.doc.obj_delivery_state !== 'Шаблон') {
+                          pouch.load_changes({docs: [change.doc]});
+                          pouch.emit('ram_change', change);
+                        }
+                      })
+                      .on('error', (err) => {
+                        $p.record_log(err);
+                      });
                   }
-                })
-                .on('error', (err) => {
-                  $p.record_log(err);
                 });
             }
           });

@@ -1,12 +1,12 @@
 import {connect} from 'react-redux';
 import {withRouter} from 'react-router';
-import {push} from 'react-router-redux';
+import {push, goBack} from 'react-router-redux';
 
 import {withMeta} from 'metadata-redux';
 
 // Redux action creator
 const mapDispatchToProps = (dispatch) => ({
-  handleNavigate: (path) => dispatch(push(path)),
+  handleNavigate: (path) => dispatch(path === -1 ? goBack() : push(path)),
 });
 
 const mapStateToProps = (state, props) => {

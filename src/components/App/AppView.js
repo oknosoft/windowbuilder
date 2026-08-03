@@ -15,7 +15,7 @@ import DataRoute from './DataRoute';                // вложенный мар
 import AboutPage from '../About';                   // информация о программе
 import HelpPage from '../Help';                     // руководство пользователя
 import Settings from '../Settings/Settings';        // основные настройки
-import OfflineSettings from '../Settings/Offline';  // настройки автономного режима
+import OfflineSettings from '../PushUtils/OfflineSettings';  // настройки автономного режима
 import NotFoundPage from '../NotFoundPage';         // 404
 import {lazy} from './lazy';                        // конструкторы для контекста
 import browserVersion from './browserVersion';

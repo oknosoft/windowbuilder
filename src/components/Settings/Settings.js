@@ -191,21 +191,19 @@ class Settings extends Component {
             <FormHelperText style={{marginTop: -4}}>Новый источник данных для динсписков</FormHelperText>
           </FormControl>
 
-          {
-            <FormControl>
-              <FormControlLabel
-                control={<Switch
+          <FormControl>
+            <FormControlLabel
+              control={<Switch
                 disabled={!enable_restrictions}
                 onChange={(event, checked) => {
                   job_prm.builder.ign_tech_restrictions = checked;
                   this.setState({ign_tech_restrictions: checked});
                 }}
                 checked={ign_tech_restrictions}/>}
-                label="Игнорировать ограничения технологии"
-              />
-              <FormHelperText style={{marginTop: -4}}>Делает доступными все цвета и фурнитуры + отключает связи параметров в полях ввода</FormHelperText>
-            </FormControl>
-          }
+              label="Игнорировать ограничения технологии"
+            />
+            <FormHelperText style={{marginTop: -4}}>Делает доступными все цвета и фурнитуры + отключает связи параметров в полях ввода</FormHelperText>
+          </FormControl>
 
         </FormGroup>
 
