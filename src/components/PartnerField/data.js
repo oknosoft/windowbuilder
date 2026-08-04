@@ -46,7 +46,7 @@ export const getOptions = (obj, fld, meta) => {
   };
 };
 
-export const handleSubmit = ({raw, obj}) => {
+export const handleSubmit = ({raw, obj, ...other}) => {
   // запрос на создание
   pouch.fetch(`/r/partners`, {
     method: 'PUT',
@@ -54,6 +54,7 @@ export const handleSubmit = ({raw, obj}) => {
       raw,
       organization: obj.organization.ref,
       department: obj.department.ref,
+      ...other,
     })}
   )
     .then((res) => res.json())
