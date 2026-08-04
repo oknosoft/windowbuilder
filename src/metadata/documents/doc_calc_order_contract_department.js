@@ -59,17 +59,16 @@ export function patch($p) {
               raw.number_doc = obj.number_doc;
               raw.name = obj.number_doc;
             }
+            const o = contracts.create(raw, false, true);
+            o._modified = true;
             return ui.dialogs.alert({
               title: 'Новый договор',
               Component: Contract,
               Actions,
-              props: {obj: contracts.create(raw, false, true), kind},
+              props: {obj, o, kind, on_select},
               hide_btn: true,
               timeout: 200000,
             });
-          })
-          .then(o => {
-            o;
           })
           .catch(e => null);
       };
@@ -88,7 +87,7 @@ export function patch($p) {
           title: `Договор: ${o.name}`,
           Component: Contract,
           Actions,
-          props: {obj: o, kind: o.parent.empty() ? '1' : '0', mode: 'edit'},
+          props: {obj: o, o, kind: o.parent.empty() ? '1' : '0', mode: 'edit'},
           hide_btn: true,
           timeout: 200000,
         });

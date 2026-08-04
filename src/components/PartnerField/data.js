@@ -1,6 +1,6 @@
 import { createFilterOptions } from '@material-ui/lab/Autocomplete';
 
-const {adapters: {pouch}, ui: {dialogs}, cat: {partners}, utils} = $p;
+const {adapters: {pouch}, ui: {dialogs}, cat: {partners}, utils, DocCalc_order} = $p;
 
 const filter = createFilterOptions({
   stringify(v) {
@@ -46,7 +46,7 @@ export const getOptions = (obj, fld, meta) => {
   };
 };
 
-export const handleSubmit = ({raw, obj, ...other}) => {
+export const handleSubmit = ({raw, obj, on_select, ...other}) => {
   // запрос на создание
   pouch.fetch(`/r/partners`, {
     method: 'PUT',
@@ -63,7 +63,12 @@ export const handleSubmit = ({raw, obj, ...other}) => {
         throw raw.message;
       }
       partners.load_array([raw]);
-      obj.partner = raw.ref;
+      if(obj instanceof DocCalc_order) {
+        obj.partner = raw.ref;
+        if(other?.mode === 'contract') {
+          on_select ? on_select(other.ref) : obj.contract = other.ref;
+        }
+      }
     })
     .catch((err) => {
       dialogs.alert({
