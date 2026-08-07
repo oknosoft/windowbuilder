@@ -1,6 +1,7 @@
 
 import {idbChannel, hasDiff} from './idbChannel';
 import {PromisifiedChannel} from './messageChannel';
+//import {imitator} from './respondDOC';
 
 const regex = {
   common: /mdm\/\d+\/common/,
@@ -9,6 +10,7 @@ const regex = {
   delimiter: '/couchdb/mdm/',
   mdm: /couchdb\/mdm\/\d+\/$/,
   doc: /couchdb\/wb_\d+_doc/,
+  find: /couchdb\/wb_\d+_doc.*?\/_find/,
   ram: /couchdb\/wb_\d+_ram/,
   templates: /couchdb\/mdm\/\d+\/templates\/.+/,
 }
@@ -22,6 +24,11 @@ const context = {
       case 'forceOffline':
         context[data.type] = data.value;
         idbChannel.set(data.type, data.value);
+        //imitator.init(context);
+        break;
+
+      case 'replicate':
+        //imitator.replicate();
         break;
     }
   }),
@@ -91,6 +98,7 @@ const context = {
         this.zone = parts[1];
       }
     }
+    //imitator.init(context);
     return this.zone;
   },
 
@@ -212,9 +220,6 @@ const context = {
     );
   },
 
-  respondDOC(event) {
-
-  }
 
 };
 context.init();
@@ -233,7 +238,7 @@ function onFetch(event) {
       context.respondMDM(event);
     }
     else if(regex.doc.test(url)) {
-      context.respondDOC(event);
+      //imitator.respond(event);
     }
   }
 }
