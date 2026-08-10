@@ -115,6 +115,7 @@
           ],
           'Контактная информация': [
             {id: 'partner', path: 'o.partner', synonym: 'Контрагент', type: 'partner'},
+            {id: 'confederate', path: 'o.confederate', synonym: 'Партнёр (Головной КА)', type: 'ro'},
             {id: 'client_of_dealer', path: 'o.client_of_dealer', synonym: 'Клиент дилера', type: 'client'},
             'phone',
             {id: 'shipping_address', path: 'o.shipping_address', synonym: 'Адрес доставки', type: 'addr'}
