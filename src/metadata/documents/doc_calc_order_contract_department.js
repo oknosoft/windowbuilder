@@ -67,7 +67,7 @@ export function patch($p) {
               Actions,
               props: {obj, o, kind, on_select},
               hide_btn: true,
-              timeout: 200000,
+              timeout: 300000,
             });
           })
           .catch(e => null);
@@ -89,7 +89,7 @@ export function patch($p) {
           Actions,
           props: {obj: o, o, kind: o.parent.empty() ? '1' : '0', mode: 'edit'},
           hide_btn: true,
-          timeout: 200000,
+          timeout: 300000,
         });
       };
 

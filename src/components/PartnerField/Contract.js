@@ -10,6 +10,18 @@ import {handleSubmit} from './data';
 
 import {prepayment_meta} from './DialogCreate';
 
+const manager_meta = {
+  type: {
+    is_ref:true,
+    types: ['cat.users'],
+  },
+  get tooltip() {
+    return this.synonym;
+  },
+  synonym: 'Основной менеджер',
+}
+
+
 export function Actions({obj, o, kind, mode, handleOk, on_select}) {
 
   const [modified, setModified] = React.useState(o._modified);
@@ -48,6 +60,9 @@ export function Actions({obj, o, kind, mode, handleOk, on_select}) {
 
 export function Contract({o, kind}) {
 
+  const {buyer_main_manager: property} = $p.job_prm.properties;
+  const main_manager_row = property && (o.extra_fields.find({property}) || o.extra_fields.add({property}));
+
   return <div style={{maxWidth: 800}}>
     <RefField _obj={o} _fld="owner" read_only />
     <RefField _obj={o} _fld="organization" read_only />
@@ -71,6 +86,8 @@ export function Contract({o, kind}) {
       <RefField _obj={o} _fld="number_doc" Component={FieldText}  />
       <RefField _obj={o} _fld="date" Component={FieldDate}  />
     </>}
+    <RefField _obj={o} _fld="confederate" />
+    {main_manager_row && <RefField _obj={main_manager_row} _meta={manager_meta} _fld="value" />}
     <RefField _obj={o} _fld="name" Component={FieldText} read_only={kind === '0'} />
     <RefField _obj={o} _fld="note" Component={FieldText} />
   </div>;

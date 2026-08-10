@@ -115,7 +115,6 @@
           ],
           'Контактная информация': [
             {id: 'partner', path: 'o.partner', synonym: 'Контрагент', type: 'partner'},
-            {id: 'confederate', path: 'o.confederate', synonym: 'Партнёр (Головной КА)', type: 'ro'},
             {id: 'client_of_dealer', path: 'o.client_of_dealer', synonym: 'Клиент дилера', type: 'client'},
             'phone',
             {id: 'shipping_address', path: 'o.shipping_address', synonym: 'Адрес доставки', type: 'addr'}
@@ -125,7 +124,8 @@
             'category',
             {id: 'manager', path: 'o.manager', synonym: 'Автор', type: 'ro'},
             'leading_manager',
-            'buyer_main_manager',
+            {id: 'confederate', path: 'o.confederate', synonym: 'Партнер (головной КА)', type: 'ro'},
+            {id: 'buyer_main_manager', path: 'o.buyer_main_manager', synonym: 'Осн. менеджер покупателя', type: 'ro'}, //refc
           ]
         }
       };
