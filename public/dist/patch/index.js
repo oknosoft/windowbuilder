@@ -9,27 +9,52 @@ function beforeCreate(MetaEngine) {
       beforeInit,
       beforeRamLoad,
       afterCommonLoad,
-      afterRamLoad,
+      beforeCompleteLoaded,
+      afterCompleteLoaded,
     }
   });
 }
 
+/**
+ * Перед выполнением метода init, конструирующего менеджеров данных
+ * @param $p
+ */
 function beforeInit($p) {
 
 }
 
+/**
+ * Перед загрузкой образа данных
+ * @param $p
+ */
 function beforeRamLoad($p) {
 
 }
 
+/**
+ * После загрузки общих данных, не требующих авторизации
+ * @param $p
+ */
 function afterCommonLoad($p) {
-  import('./browserVersion.js')
-    .then(({browserVersion}) => browserVersion($p));
-    // .then(() => import('./defaultPartners.js'))
-    // .then(({defaultPartners}) => defaultPartners($p));
+  // import('./browserVersion.js')
+  //   .then(({browserVersion}) => browserVersion($p));
+  //   .then(() => import('./defaultPartners.js'))
+  //   .then(({defaultPartners}) => defaultPartners($p));
 }
 
-function afterRamLoad($p) {
+/**
+ * После загрузки всех справочников, но до выполнения подписок complete_loaded
+ * @param $p
+ */
+function beforeCompleteLoaded($p) {
+
+}
+
+/**
+ * После загрузки всех справочников и после выполнения подписок complete_loaded
+ * @param $p
+ */
+function afterCompleteLoaded($p) {
 
 }
 

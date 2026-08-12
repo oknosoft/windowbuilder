@@ -83,6 +83,7 @@ export function init(store) {
             if((!sessionStorage.branch || sessionStorage.branch === utils.blank.guid) && branch && !branch.empty?.()) {
               sessionStorage.branch = branch.ref;
             }
+            // админы слушают изменения базы ram
             if(roles && (roles.includes('ram_editor') || roles.includes('doc_full')) && navigator.onLine) {
               utils.idbChannel.get('forceOffline')
                 .then(forceOffline => {
@@ -118,7 +119,11 @@ export function init(store) {
       // структура поиска контрагентов
       import('../components/CatPartners/Search')
         .then(({partnersSearch}) => partnersSearch($p))
-        .then(() => pouch.emit('pouch_complete_loaded'));
+        .then(() => {
+          external?.beforeCompleteLoaded($p);
+          pouch.emit('pouch_complete_loaded');
+          external?.afterCompleteLoaded($p);
+        });
     });
 
     // читаем paperjs и deep-diff
@@ -154,7 +159,11 @@ export function init(store) {
             // читаем локальные данные в ОЗУ
             external?.beforeRamLoad($p);
             return load_common($p)
-              .then(() => external?.afterCommonLoad($p));
+              .then(() => {
+                external?.afterCommonLoad($p);
+                import('./common/browser_version')
+                  .then(({browser_version}) => browser_version($p));
+              });
           });
 
       })
