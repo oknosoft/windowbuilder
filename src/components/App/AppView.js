@@ -18,7 +18,6 @@ import Settings from '../Settings/Settings';        // основные наст
 import OfflineSettings from '../PushUtils/OfflineSettings';  // настройки автономного режима
 import NotFoundPage from '../NotFoundPage';         // 404
 import {lazy} from './lazy';                        // конструкторы для контекста
-import browserVersion from './browserVersion';
 
 import {withNavigateAndMeta} from 'metadata-redux';
 import Builder from '../Builder';
@@ -48,7 +47,6 @@ class AppRoot extends Component {
   componentDidMount() {
     const {handleNavigate, handleIfaceState} = this.props;
     $p.ui.dialogs.init({handleIfaceState, handleNavigate, lazy});
-    browserVersion($p.ui.dialogs);
     let comp;
     if($p.wsql.get_user_param('ram_indexer')) {
       comp = import('wb-forms/dist/CalcOrder/FrmList/CalcOrderList');

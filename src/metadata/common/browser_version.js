@@ -1,5 +1,5 @@
 
-const text = `Рекомендуется Google Chrome версии 149 или выше\n
+const text = `Рекомендуется Google Chrome версии 148 или выше\n
 Возможны ошибки в расчёте и ценах и сбои в графическом построителе`;
 
 export function browser_version({ui}) {
@@ -9,7 +9,7 @@ export function browser_version({ui}) {
   }
   else {
     const num = parseInt(parts[1].split('.')[0]);
-    if(isNaN(num) || num < 149) {
+    if(isNaN(num) || num < 148) {
       ui.dialogs.alert({title: 'Устаревший браузер', text});
     }
   }
