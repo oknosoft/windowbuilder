@@ -99,7 +99,7 @@ const alert = (text) => {
   });
 };
 
-export const execute = async (obj, text, wnd) => {
+export const execute = async (obj, text, wnd, flipFormula) => {
   if(text.startsWith('{')) {
     return alert('Неверная строка для импорта');
   }
@@ -161,6 +161,10 @@ export const execute = async (obj, text, wnd) => {
       }
       newRow.formula = newRow.formula.toLowerCase();
       newRow.note = newRow.note.join('\xA0');
+      if(flipFormula) {
+        const parts = normalize.split(newRow.formula).reverse();
+        newRow.formula = parts.join(normalize.symbol);
+      }
       irows.push(newRow);
     }
   }

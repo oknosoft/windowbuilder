@@ -1,9 +1,18 @@
 import React from 'react';
 import Button from '@material-ui/core/Button';
+import Toolbar from '@material-ui/core/Toolbar';
+import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 
 import {execute} from './data';
 
+const {wsql} = $p;
+
 export default function ClipBoard(props) {
+
+  const [flipFormula, setFlipFormula] = React.useState(wsql.get_user_param('flip_formula', 'boolean'));
+  const [triangles, setTriangles] = React.useState(false);
+  const [flipTriangles, setFlipTriangles] = React.useState(false);
 
   const {handleOk, obj, wnd} = props;
   const textRef = React.createRef();
@@ -34,11 +43,30 @@ export default function ClipBoard(props) {
     catch (e) {}
   };
   const onOk = () => {
-    execute(obj, textRef.current.value.replace(/⟶/g, '\t'), wnd);
+    execute(obj, textRef.current.value.replace(/⟶/g, '\t'), wnd, flipFormula);
     handleOk();
   };
 
   return <>
+    <Toolbar disableGutters>
+      <FormControlLabel
+        control={<Checkbox color="primary" checked={flipFormula} onChange={({target}) => {
+          wsql.set_user_param('flip_formula', target.checked);
+          setFlipFormula(target.checked);
+        }} />}
+        label="Перевернуть формулу"
+      />
+      <FormControlLabel
+        control={<Checkbox color="primary" checked={triangles} onChange={({target}) => setTriangles(target.checked)} />}
+        label="Треугольники"
+        disabled
+      />
+      <FormControlLabel
+        control={<Checkbox color="primary" checked={flipTriangles} onChange={({target}) => setFlipTriangles(target.checked)} />}
+        label="Перевернуть треугольники"
+        disabled
+      />
+    </Toolbar>
     <textarea
       ref={textRef}
       placeholder="Вставьте содержимое буфера обмена или введите текст..."
