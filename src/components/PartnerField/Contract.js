@@ -1,6 +1,4 @@
 import React from 'react';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogActions from '@material-ui/core/DialogActions';
 import Button from '@material-ui/core/Button';
 import RefField from 'metadata-react/DataField/PropField';
 import FieldNumber from 'metadata-react/DataField/FieldNumberNative';
@@ -84,10 +82,10 @@ export function Contract({o, kind}) {
     />
     {kind !== '0' && <>
       <RefField _obj={o} _fld="number_doc" Component={FieldText}  />
-      <RefField _obj={o} _fld="date" Component={FieldDate}  />
+      <RefField _obj={o} _fld="date" Component={FieldDate} />
     </>}
-    <RefField _obj={o} _fld="confederate" />
-    {main_manager_row && <RefField _obj={main_manager_row} _meta={manager_meta} _fld="value" />}
+    <RefField _obj={o} _fld="confederate" hide_open />
+    {main_manager_row && <RefField _obj={main_manager_row} _meta={manager_meta} _fld="value" hide_open />}
     <RefField _obj={o} _fld="name" Component={FieldText} read_only={kind === '0'} />
     <RefField _obj={o} _fld="note" Component={FieldText} />
   </div>;
