@@ -21,10 +21,14 @@ const initFill = async () => {
     }
   });
   sublist.sort(utils.sort('name'));
-  const {glasses_template} = job_prm.builder;
-  if(glasses_template.is_new()) {
-    glasses_template.obj_delivery_state = 'Шаблон';
-    return glasses_template.load();
+  const {glasses_template: square, glasses_template_triangle: triangle} = job_prm.builder;
+  if(square?.is_new()) {
+    square.obj_delivery_state = 'Шаблон';
+    await square.load();
+  }
+  if(triangle?.is_new()) {
+    triangle.obj_delivery_state = 'Шаблон';
+    await triangle.load();
   }
 };
 
@@ -99,7 +103,7 @@ const alert = (text) => {
   });
 };
 
-export const execute = async (obj, text, wnd, flipFormula) => {
+export const execute = async ({obj, text, wnd, flipFormula, triangles, flipTriangles}) => {
   if(text.startsWith('{')) {
     return alert('Неверная строка для импорта');
   }
@@ -148,6 +152,9 @@ export const execute = async (obj, text, wnd, flipFormula) => {
         else if(numbers === 1) {
           newRow.height = n;
         }
+        else if(triangles) {
+          newRow.third = n;
+        }
         else if(!newRow.quantity) {
           newRow.quantity = n;
         }
@@ -155,7 +162,7 @@ export const execute = async (obj, text, wnd, flipFormula) => {
       }
     });
 
-    if(newRow?.formula && newRow.height) {
+    if(newRow?.formula && triangles ? newRow.third : newRow.height) {
       if(!newRow.quantity) {
         newRow.quantity = 1;
       }
@@ -172,7 +179,7 @@ export const execute = async (obj, text, wnd, flipFormula) => {
     wnd.progressOn();
     const newRows = [];
     const problems = new Set();
-    for(const {formula, len, height, quantity, note, ...params} of irows) {
+    for(const {formula, len, height, third, quantity, note, ...params} of irows) {
       const candidates = [];
       let clarification;
       for(const inset of ilist) {
@@ -245,7 +252,7 @@ export const execute = async (obj, text, wnd, flipFormula) => {
         candidates.sort((a, b) => b.weight - a.weight);
         const rowProd = await obj.create_product_row({create: true});
         newRows.push(rowProd);
-        const tmp = utils._clone(job_prm.builder.glasses_template.toJSON());
+        const tmp = utils._clone(job_prm.builder[`glasses_template${triangles ? '_triangle' : ''}`].toJSON());
         utils._mixin(rowProd.characteristic._set_loaded(), tmp, null, 'ref,name,calc_order,timestamp,_rev,specification,class_name'.split(','), true);
         // параметры из колонок
         for(const param in params) {
@@ -281,8 +288,38 @@ export const execute = async (obj, text, wnd, flipFormula) => {
           }
         }
         const {bottom, right} = project.l_dimensions;
-        right.sizes_wnd({wnd: right, size: height, name: 'auto'});
         bottom.sizes_wnd({wnd: bottom, size: len, name: 'auto'});
+        if(third) {
+          // получим координаты вершин треугольника по трём сторонам
+          let [a, b, c] = [third, height, len];
+          if(flipTriangles) {
+            [a, b] = [b, a];
+          }
+          const x = (b*b + c*c - a*a) / (2 * c);
+          if(b*b < x*x) {
+            problems.add(`Невозможный треугольник ${c} ${a} ${b}`);
+            unloadEditor(editor);
+            continue;
+          }
+          const pt = new editor.Point({x, y: -Math.sqrt(b*b - x*x)});
+
+          while (editor.eve._async?.move_points?.timer) {
+            await utils.sleep(20);
+          }
+
+          // в шаблоне, 3 - низ, 4 - лево, 1 - право
+          const {e} = project.activeLayer.getItem({elm: 3});
+          const profile = project.activeLayer.getItem({elm: 1});
+          b = profile.b;
+          b.selected = true;
+          const delta = e.add(pt).subtract(b);
+          if(delta.length) {
+            profile.move_points(delta);
+          }
+        }
+        else {
+          right.sizes_wnd({wnd: right, size: height, name: 'auto'});
+        }
         while (editor.eve._async?.move_points?.timer) {
           await utils.sleep(20);
         }

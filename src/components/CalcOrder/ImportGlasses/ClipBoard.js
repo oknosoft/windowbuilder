@@ -43,7 +43,14 @@ export default function ClipBoard(props) {
     catch (e) {}
   };
   const onOk = () => {
-    execute(obj, textRef.current.value.replace(/⟶/g, '\t'), wnd, flipFormula);
+    execute({
+      obj,
+      text: textRef.current.value.replace(/⟶/g, '\t'),
+      wnd,
+      flipFormula,
+      triangles,
+      flipTriangles
+    });
     handleOk();
   };
 
@@ -59,12 +66,10 @@ export default function ClipBoard(props) {
       <FormControlLabel
         control={<Checkbox color="primary" checked={triangles} onChange={({target}) => setTriangles(target.checked)} />}
         label="Треугольники"
-        disabled
       />
       <FormControlLabel
         control={<Checkbox color="primary" checked={flipTriangles} onChange={({target}) => setFlipTriangles(target.checked)} />}
         label="Перевернуть треугольники"
-        disabled
       />
     </Toolbar>
     <textarea
