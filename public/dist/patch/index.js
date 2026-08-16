@@ -36,10 +36,12 @@ function beforeRamLoad($p) {
  * @param $p
  */
 function afterCommonLoad($p) {
-  // import('./browserVersion.js')
-  //   .then(({browserVersion}) => browserVersion($p));
-  //   .then(() => import('./defaultPartners.js'))
-  //   .then(({defaultPartners}) => defaultPartners($p));
+  import('./orderFrmObj.js')
+    .then(({orderFrmObj}) => orderFrmObj($p));
+    // .then(() => import('./browserVersion.js'))
+    // .then(({browserVersion}) => browserVersion($p))
+    // .then(() => import('./defaultPartners.js'))
+    // .then(({defaultPartners}) => defaultPartners($p));
 }
 
 /**
