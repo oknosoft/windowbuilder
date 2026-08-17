@@ -210,13 +210,26 @@
 
     attr.on_close = frm_close;
 
-    return this.constructor.prototype.form_obj.call(this, pwnd, attr)
+    return _mgr.get(attr.hasOwnProperty("ref") ? attr.ref : attr, true, true)
+      .then(async (o) => {
+        if(!o.is_new()) {
+          if(o.obj_delivery_state.is('Шаблон')) {
+            await o.load_templates();
+          }
+          else {
+            await o.load_linked_refs();
+          }
+          o._data._loading = true;
+        }
+      })
+      .then(() => this.constructor.prototype.form_obj.call(this, pwnd, attr))
       .then((res) => {
         if(res) {
           o = res.o;
           wnd = res.wnd;
           wnd.prompt = prompt;
           wnd.close_confirmed = true;
+          o._data._loading = false;
           if(handlers) {
             wnd.handleNavigate = handlers.handleNavigate;
             wnd.handleIfaceState = handlers.handleIfaceState;
