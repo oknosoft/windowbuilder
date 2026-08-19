@@ -7,7 +7,7 @@
     "url": "https://github.com/oknosoft/windowbuilder.git"
   },
   "engines": {
-    "node": ">=20.11",
+    "node": ">=20.19",
     "yarn": "^1.22"
   },
   "keywords": [
@@ -54,7 +54,7 @@
     "metadata-redux": "2.0.40-beta.2",
     "react-highlight-words": "^0.21",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#4c87e9bd7bd446df4e46b443739120af03fd608d",
+    "wb-core": "github:oknosoft/windowbuilder-core#8f59dec642503db7c8736a42953819f1a1335b40",
     "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
     "wb-forms": "github:oknosoft/windowbuilder-forms#bae0b5a81fac681a59d6d1626d3cb818e4f27c1c"
   },

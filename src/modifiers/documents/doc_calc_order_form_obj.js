@@ -1078,7 +1078,7 @@
           }
           else if(row.characteristic.coordinates.count()) {
             const json = JSON.stringify(utils._mixin({class_name: row.characteristic.class_name}, row.characteristic._obj, [],
-              'ref,_rev,branch,name,calc_order,product,leading_product,leading_elm,origin,partner,department,specification,svg,class_name'.split(',')));
+              'ref,_rev,branch,name,calc_order,product,leading_product,leading_elm,origin,partner,department,specification,svg,class_name,struct'.split(',')));
             navigator.clipboard.writeText(json)
               .then(() => dialogs.alert({
                 title: 'Экспорт данных',
@@ -1151,7 +1151,7 @@
                   nrow.note = row.note;
                   // заполняем продукцию копией данных текущей строки
                   characteristic._mixin(row.characteristic._obj, null,
-                    'ref,name,calc_order,product,leading_product,leading_elm,origin,partner'.split(','), true);
+                    'ref,name,calc_order,product,leading_product,leading_elm,origin,partner,struct'.split(','), true);
                   // characteristic._data._is_new = true;
                   // return characteristic.save();
                   Object.assign(characteristic._data, {_is_new: false, _modified: true});
@@ -1177,7 +1177,7 @@
           .then(({characteristic}) => {
             if(typeof create_new === 'object') {
               // заполняем продукцию сырыми данными
-              characteristic._mixin(create_new, null, 'ref,name,calc_order,product,leading_product,leading_elm,origin,partner'.split(','), true);
+              characteristic._mixin(create_new, null, 'ref,name,calc_order,product,leading_product,leading_elm,origin,partner,struct'.split(','), true);
               if(refill === true) {
                 characteristic._data.refill_props = true;
               }
