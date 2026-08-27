@@ -253,7 +253,7 @@ export const execute = async ({obj, text, wnd, flipFormula, triangles, flipTrian
         const rowProd = await obj.create_product_row({create: true});
         newRows.push(rowProd);
         const tmp = utils._clone(job_prm.builder[`glasses_template${triangles ? '_triangle' : ''}`].toJSON());
-        utils._mixin(rowProd.characteristic._set_loaded(), tmp, null, 'ref,name,calc_order,timestamp,_rev,specification,class_name'.split(','), true);
+        utils._mixin(rowProd.characteristic._set_loaded(), tmp, null, 'ref,name,calc_order,timestamp,_rev,specification,class_name,struct'.split(','), true);
         // параметры из колонок
         for(const param in params) {
           const prow = rowProd.characteristic.params.find({cnstr: 0, param});
