@@ -54,7 +54,7 @@ export default function Additions2DReport({obj}) {
           <TableCell>Изделий</TableCell>
           <TableCell>Заготовок</TableCell>
           <TableCell>Деловая обрезь</TableCell>
-          <TableCell>Коэфф читсый</TableCell>
+          <TableCell>Коэфф чистый</TableCell>
           <TableCell>С учетом обрези</TableCell>
         </TableRow>
       </TableHead>
