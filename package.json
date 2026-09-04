@@ -7,8 +7,8 @@
     "url": "https://github.com/oknosoft/windowbuilder.git"
   },
   "engines": {
-    "node": ">=20.19",
-    "yarn": "^1.22"
+    "node": ">=24.19",
+    "pnpm": "^8.15"
   },
   "keywords": [
     "metadata",
@@ -54,7 +54,7 @@
     "metadata-redux": "2.0.40-beta.2",
     "react-highlight-words": "^0.21",
     "react-treebeard": "^3.2.4",
-    "wb-core": "github:oknosoft/windowbuilder-core#0df7535e7677fda175c3714852ee2255880a4e0f",
+    "wb-core": "github:oknosoft/windowbuilder-core#2859ae3fc534cbb6368ebffe7d7d6d5140439d71",
     "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
     "wb-forms": "github:oknosoft/windowbuilder-forms#bd302666132af8b9238a2747268eccb66bb5e1a5"
   },
@@ -129,12 +129,13 @@
     "workbox-webpack-plugin": "^6.4.1",
     "xlsx": "^0.18.5"
   },
-  "packageManager": "yarn@1.22.22",
+  "packageManager": "pnpm@8.15",
   "files": [
     "LICENSE",
     "LICENSE.ru.md"
   ],
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "start": "node scripts/start.js",
     "build": "node scripts/build.js && node scripts/appcache.js",
     "test": "node scripts/test.js",
