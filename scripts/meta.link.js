@@ -21,22 +21,7 @@ const repos = [
     local: 'wb-forms',
     remote: '..\\wb-forms',
     dir: 'dist',
-  },
-  {
-    local: 'metadata-core',
-    remote: '..\\metadata\\packages\\metadata-core',
-    dir: '',
-  },
-  {
-    local: 'metadata-pouchdb',
-    remote: '..\\metadata\\packages\\metadata-pouchdb',
-    dir: '',
-  },
-  {
-    local: 'metadata-abstract-ui',
-    remote: '..\\metadata\\packages\\metadata-abstract-ui',
-    dir: '',
-  },
+  }
 ];
 
 for(const local of Object.keys(dependencies).filter(v => /^metadata-/.test(v))) {
@@ -72,7 +57,7 @@ function fromDir(startPath, filter, callback) {
 };
 
 // исполняем
-let copied;
+let copied = true;
 for(const {local, remote, dir} of repos) {
   const lpath = path.resolve(localNodeModules, local, dir);
   const rpath = path.resolve(remote, dir);
@@ -95,7 +80,6 @@ for(const {local, remote, dir} of repos) {
     console.log(`from ${rpath} written ${i} files`);
   }
 }
-
 
 if(copied){
   // чистим cache webpack

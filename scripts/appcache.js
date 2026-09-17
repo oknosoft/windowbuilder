@@ -13,8 +13,7 @@ const fs = require('fs-extra');
 
 const paths = require('../config/paths');
 const packageData = require('../package.json');
-const moment = require('moment');
-const build = `{"build": "v${packageData.version} (${packageData.dependencies['metadata-react']}), ${moment().format()}"}`;
+const build = `{"build": "v${packageData.version} (${packageData.dependencies['metadata-react']}), ${new Date().toISOString()}"}`;
 fs.remove(paths.appBuild + '/dynamic-settings.js');
 fs.writeFile(path.resolve(paths.appBuild + '/build.json'), build, 'utf8', function (err) {
   if(err) {
