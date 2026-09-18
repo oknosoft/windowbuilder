@@ -1,6 +1,6 @@
 allowBuilds:
-  '@parcel/watcher': set this to true or false
-  core-js: set this to true or false
-  core-js-pure: set this to true or false
-  es5-ext: set this to true or false
+  '@parcel/watcher': false
+  core-js: false
+  core-js-pure: false
+  es5-ext: false
 blockExoticSubdeps: false
