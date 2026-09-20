@@ -81,7 +81,7 @@
     "react-window": "^1.8.11",
     "react-window-infinite-loader": "^1.0.10",
     "url-join": "^5.0",
-    "wb-core": "github:oknosoft/windowbuilder-core#f3579a1d3046f1f45c4d29ba454cb9fc23fb8ef1",
+    "wb-core": "github:oknosoft/windowbuilder-core#ba6750fe0692083117283a9f6f0ab6e2b0955c8a",
     "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
     "wb-forms": "github:oknosoft/windowbuilder-forms#bd302666132af8b9238a2747268eccb66bb5e1a5",
     "yamljs": "^0.3"
@@ -167,8 +167,8 @@
     "workbox-core": "^6.6",
     "workbox-expiration": "^6.6",
     "workbox-precaching": "^6.6",
-    "workbox-routing": "~6.6.1",
-    "workbox-strategies": "~6.6.1",
+    "workbox-routing": "^6.6",
+    "workbox-strategies": "^6.6",
     "workbox-webpack-plugin": "^6.6",
     "xlsx": "^0.18.5"
   },
@@ -177,10 +177,10 @@
     "LICENSE.ru.md"
   ],
   "scripts": {
-    "preinstall": "npx only-allow pnpm",
     "start": "node scripts/start.js",
     "build": "node --max_old_space_size=6144 scripts/build.js && node scripts/appcache.js",
     "test": "node scripts/test.js",
+    "preinstall": "npx only-allow pnpm",
     "meta:link": "node scripts/meta.link.js"
   },
   "eslintConfig": {
