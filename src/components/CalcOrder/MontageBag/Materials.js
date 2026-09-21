@@ -3,6 +3,7 @@ import ReactDataGrid from 'react-data-grid';
 import SimpleToolbar from './SimpleToolbar';
 import {columns} from './columns';
 import {gridContext} from './Production';
+import {ByInset} from './ByInset';
 
 const {calc_count_area_mass} = $p.ProductsBuilding;
 
@@ -96,7 +97,13 @@ export default function Materials({prodRow, dialogRef}) {
 
 
   return <div style={{height: '44vh', minHeight: 340}} className={prodRow ? undefined : 'gl disabled'}>
-    <SimpleToolbar row={row} add={add} del={del} title="Материалы"/>
+    <SimpleToolbar row={row} add={add} del={del} title="Материалы" btns={<ByInset
+      rows={rows}
+      prodRow={prodRow}
+      setRows={setRows}
+      setRow={setRow}
+      select={select}
+    />}/>
     <ReactDataGrid
       minHeight={291}
       ref={gridElement.ref}

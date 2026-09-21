@@ -3,6 +3,7 @@ import {componentWrapper} from './RecentCell';
 
 const {cat, job_prm, utils} = $p;
 const [product, ...predefined] = job_prm.nom.montage_bag;
+const {montage_bag_insets} = job_prm.nom;
 const folders = predefined.filter(o => o.is_folder);
 for(const folder of folders) {
   predefined.splice(predefined.indexOf(folder), 1);
@@ -17,7 +18,7 @@ for(const o of cat.nom) {
   }
 }
 all.sort(utils.sort('name'));
-export {product, predefined, folders, all};
+export {product, predefined, folders, all, montage_bag_insets as insets};
 
 const RecentCell = componentWrapper(predefined, all);
 
