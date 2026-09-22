@@ -349,7 +349,7 @@ class FakeAddrObj extends BaseDataObj{
 
 function mapStateToProps(state, props) {
   return {
-    handleCalck() {
+    async handleCalck() {
       const {props:{dialog: {ref, _mgr}}, obj, v} = this;
       obj.shipping_address = v.assemble_addr(true);
       if(!obj.shipping_address) {
@@ -358,7 +358,11 @@ function mapStateToProps(state, props) {
       if(!obj.coordinates) {
         return Promise.reject({msg: {text: 'Укажите координаты адреса', title: 'Пустые координаты'}});
       }
-      return Promise.resolve(Object.assign(_mgr.by_ref[ref], obj._obj));
+      const doc = _mgr.by_ref[ref];
+      for(const f of 'address_fields,delivery_area,shipping_address,coordinates'.split(',')) {
+        await doc.set_async(f, obj._obj[f]);
+      }
+      return doc;
     },
 
     handleCancel() {
