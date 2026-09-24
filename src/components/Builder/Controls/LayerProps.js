@@ -17,7 +17,7 @@ export default function LayerProps(props) {
   const {utils, job_prm: {builder}}  = $p;
   const cflipped = builder.hide_flipped ? null : <FieldFlipped _obj={layer} />;
   let sys_meta;
-  const {own_sys} = layer;
+  const {own_sys, has_furn} = layer;
   if(own_sys) {
     const {permitted_sys} = layer;
     if(permitted_sys?.size) {
@@ -35,14 +35,17 @@ export default function LayerProps(props) {
         <LinkedProps ts={layer.prms} cnstr={layer.cnstr} inset={utils.blank.guid} layer={layer}/>
       </>
       :
-      (layer.layer ?
-      <>
-        <FieldFurn _obj={layer} _fld="furn" fullWidth />
-        <PropField _obj={layer} _fld="direction" />
-        <PropField _obj={layer} _fld="h_ruch" />
-        {cflipped}
-        <LinkedProps ts={ox.params} cnstr={layer.cnstr} inset={utils.blank.guid} layer={layer}/>
-      </>
+      (layer.layer ? (
+            has_furn ?
+              <>
+                <FieldFurn _obj={layer} _fld="furn" fullWidth />
+                <PropField _obj={layer} _fld="direction" />
+                <PropField _obj={layer} _fld="h_ruch" />
+                {cflipped}
+                <LinkedProps ts={ox.params} cnstr={layer.cnstr} inset={utils.blank.guid} layer={layer}/>
+              </> :
+              <Typography>Слой ряда не имеет свойств фурнитуры</Typography>
+          )
           :
         <>
           {cflipped}
