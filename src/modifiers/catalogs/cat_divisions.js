@@ -35,7 +35,12 @@ Object.defineProperties($p.cat.divisions, {
         }
       }
       if(!list.size){
-        return this.constructor.prototype.get_option_list.call(this, selection, val);
+        if(val?.empty && !val.empty()) {
+          list.add(val);
+        }
+        else {
+          return this.constructor.prototype.get_option_list.call(this, selection, val);
+        }
       }
 
       function check(v){
