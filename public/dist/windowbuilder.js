@@ -2793,6 +2793,7 @@ class UndoRedo {
 
     this._editor = _editor;
     this._pos = -1;
+    this._first = true;
 
     this._diff = [];
     this.run_snapshot = this.run_snapshot.bind(this);
@@ -2817,7 +2818,8 @@ class UndoRedo {
       this._snap_timer = setTimeout(this.run_snapshot, 600);
     }
     else{
-      this._pos >= 0 && project.save_coordinates({snapshot: true, clipboard: false});
+      this._pos >= 0 && project.save_coordinates({snapshot: true, clipboard: false, no_recalc: this._first});
+      this._first = false;
     }
   }
 
