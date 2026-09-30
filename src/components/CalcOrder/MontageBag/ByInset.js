@@ -7,7 +7,7 @@ import HtmlTooltip from 'metadata-react/App/Tip';
 import {insets} from './columns';
 import LinkedProp from 'wb-forms/dist/Common/LinkedProp';
 
-const {ui: {dialogs}, cat} = $p;
+const {ui: {dialogs}, cat, job_prm} = $p;
 
 export function ByInset({rows, prodRow, setRows, setRow, select}) {
   const delAll = () => {
@@ -29,7 +29,11 @@ export function ByInset({rows, prodRow, setRows, setRow, select}) {
       const {characteristic: ox, quantity} = prodRow;
       const elm = {
         elm: 0,
-        layer: null,
+        layer: {
+          get perimeter() {
+            return [];
+          }
+        },
         nom: prodRow.nom,
         inset,
         is_linear() {
@@ -58,11 +62,14 @@ export function ByInset({rows, prodRow, setRows, setRow, select}) {
           timeout: 90000,
         }).catch(e => null);
       }
+      ox.specification.clear({specify: inset});
+      ox.specification.clear({nom: job_prm.nom.montage_bag_error});
       inset.calculate_spec({
         elm,
         ox,
         spec: ox.specification,
         fake: true,
+        own_specify: inset,
       });
       prodRow.value_change('quantity', null, quantity);
       const newRows = Array.from(prodRow.characteristic.specification);
