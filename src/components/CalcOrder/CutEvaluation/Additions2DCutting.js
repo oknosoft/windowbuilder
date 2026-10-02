@@ -11,7 +11,7 @@ export default function Additions2DCutting({obj, div}) {
   const [loading, setBackdrop] = React.useState(false);
 
   return <>
-    <LoadingModal open={loading} text="Оптимизация на сервере" />
+    <LoadingModal open={Boolean(loading)} text={`Оптимизация на сервере${typeof loading === "number" ? ` ${loading}%` : ''}`} />
     <TabularSection
       _obj={obj}
       _meta={_meta}

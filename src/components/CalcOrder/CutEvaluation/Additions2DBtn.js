@@ -42,12 +42,39 @@ function run2D(obj, setBackdrop) {
       //   const edgeRight = nom._extra('edgeRight');
       //   params.options.edges = {dx: edgeLeft || edgeRight || 15, dy: edgeTop || edgeBottom || 15};
       // }
+      // http://localhost:3707
       return pouch.fetch('/adm/api/cut', {
         method: 'POST',
+        headers: new Headers({
+          Accept: 'multipart/related; type=text/plain',
+          'Content-Type': 'application/json',
+        }),
         body: JSON.stringify(params),
       });
     })
-      .then((res) => res.json())
+      .then(async (res) => {
+        const {body, headers, status, statusText} = res;
+        if (status > 200) {
+
+        }
+        const boundary = headers.get('content-type').split('boundary=')[1];
+        let chunks = [];
+        const stream = body.pipeThrough(new TextDecoderStream('utf-8', {fatal: true}));
+        const reader = stream.getReader();
+        for (;;) {
+          const {done, value} = await reader.read();
+          if (done) {
+            const last = chunks[chunks.length-1].split(`\r\n\r\n`)[1].replace(`--${boundary}--`, '');
+            return JSON.parse(last);
+          }
+          if(value.startsWith('proc:')) {
+            setBackdrop(parseFloat(value.substring(5).trimEnd()));
+          }
+          else {
+            chunks.push(value);
+          }
+        }
+      })
       .then((data) => setSticks({obj, data, record}));
   }
   return res

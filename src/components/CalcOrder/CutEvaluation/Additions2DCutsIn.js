@@ -32,7 +32,7 @@ export default function Additions2DCutsIn({obj, div}) {
 
   return  <Resize handleWidth="6px" onResizeStop={resize}  onResizeWindow={resize}>
     <ResizeHorizon width={`${(clientWidth * 8/12).toFixed()}px`} minWidth="300px">
-      <LoadingModal open={loading} text="Оптимизация на сервере" />
+      <LoadingModal open={Boolean(loading)} text={`Оптимизация на сервере${typeof loading === "number" ? ` ${loading}%` : ''}`} />
       <TabularSection
         _obj={obj}
         _meta={_meta}
