@@ -179,6 +179,7 @@ function setSticks({obj, data, record}) {
   const refresh = new Set();
 
   for(const scrap of scrapsIn) {
+    layer.removeChildren();
     const path = new Path.Rectangle(-0.5, -0.5 - dy, scrap.length + 1 + dx /2, scrap.height + 1 + dy /2);
     path.set({...attr.path, strokeWidth: 1.5});
 

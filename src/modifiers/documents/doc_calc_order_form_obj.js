@@ -124,7 +124,7 @@
             'category',
             {id: 'manager', path: 'o.manager', synonym: 'Автор', type: 'ro'},
             'leading_manager',
-            {id: 'confederate', path: 'o.confederate', synonym: 'Партнер (головной КА)', type: 'ro'},
+            //{id: 'confederate', path: 'o.confederate', synonym: 'Партнер (головной КА)', type: 'ro'},
             {id: 'buyer_main_manager', path: 'o.buyer_main_manager', synonym: 'Осн. менеджер покупателя', type: 'ro'}, //refc
           ]
         }
