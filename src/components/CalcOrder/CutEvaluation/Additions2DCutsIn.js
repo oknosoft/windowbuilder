@@ -30,6 +30,17 @@ export default function Additions2DCutsIn({obj, div}) {
     setRow(rows[rowIdx]);
   };
 
+  // const rowSelection = row ? {
+  //   showCheckbox: false,
+  //   enableShiftSelect: false,
+  //   selectBy: {
+  //     keys: {
+  //       rowKey: 'row',
+  //       values: [row.row],
+  //     }
+  //   }
+  // } : null;
+
   return  <Resize handleWidth="6px" onResizeStop={resize}  onResizeWindow={resize}>
     <ResizeHorizon width={`${(clientWidth * 8/12).toFixed()}px`} minWidth="300px">
       <LoadingModal open={Boolean(loading)} text={`Оптимизация на сервере${typeof loading === "number" ? ` ${loading}%` : ''}`} />
@@ -42,7 +53,8 @@ export default function Additions2DCutsIn({obj, div}) {
         minHeight={clientHeight - 50}
         denyReorder
         onCellSelected={selectedRowsChange}
-        btns={<Additions2DBtn obj={obj} setBackdrop={setBackdrop}/>}
+        //rowSelection={rowSelection}
+        btns={<Additions2DBtn obj={obj} setBackdrop={setBackdrop} row={row} mode="cuts" />}
       />
     </ResizeHorizon>
     <ResizeHorizon overflow="hidden auto" width={`${(clientWidth * 4/12).toFixed()}px`} minWidth="200px">

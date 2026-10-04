@@ -5,8 +5,9 @@ import ViewQuiltIcon from '@material-ui/icons/ViewQuilt';
 import LayersClearIcon from '@material-ui/icons/LayersClear';
 import LayersIcon from '@material-ui/icons/Layers';
 import {debit, credit} from './Additions2DCutsOut';
+import {ToolbarMenu} from './ToolbarMenu';
 
-const {adapters: {pouch}, ui: {dialogs}, utils, EditorInvisible} = $p;
+const {adapters: {pouch}, ui: {dialogs}, utils, enm: {debit_credit_kinds}, EditorInvisible} = $p;
 
 const attr = {
   path: {
@@ -62,11 +63,17 @@ function getSvg(options) {
   return options?.scale ? utils.scale_svg(svg.outerHTML, options.scale.size, options.scale.padding) : svg.outerHTML;
 }
 
-function run2D(obj, setBackdrop) {
+function run2D(obj, setBackdrop, row, mode) {
+  if(mode !== 'all' && !row) {
+    return dialogs.alert({
+      title: 'Раскрой 2D',
+      text: 'Укажите строку изделия или обрези',
+    });
+  }
   setBackdrop(true);
   let res = Promise.resolve();
   const errors = new Map();
-  for(const [nom, params] of obj.fragments2D()) {
+  for(const [nom, params] of obj.fragments2D(mode !== 'all' && row.nom, mode === 'currentScrap' && row)) {
     const record = (msg) => {
       if(!errors.has(nom)) {
         errors.set(nom, []);
@@ -329,12 +336,51 @@ function setSticks({obj, data, record}) {
   return utils.sleep(1000);
 }
 
-export default function Additions2DBtn({obj, setBackdrop}) {
+export default function Additions2DBtn({obj, setBackdrop, row, mode}) {
+
+  const reset_sticks = (what) => {
+    if(!row && (what === 'currentNom' || what === 'currentScrap')) {
+      return dialogs.alert({
+        title: 'Очистка данных раскроя',
+        text: 'Укажите строку изделия или обрези',
+      });
+    }
+    setBackdrop(true);
+    obj._data._loading = mode === 'cuts';
+    if(what === 'refill') {
+      obj.cuts.clear();
+      obj.fill_by_keys({c2d: true});
+    }
+    else {
+      obj.reset_sticks('', what === 'currentNom' && row.nom, what === 'currentScrap' && row.stick);
+    }
+    Promise.resolve()
+      .then(setBackdrop)
+      .then(() => {
+        if(obj._data._loading) {
+          obj._data._loading = false;
+          obj._manager.emit('rows', obj, {cuts: true, cutting: true});
+          requestAnimationFrame(() => {
+            for(const row of obj.cuts) {
+              if(row.record_kind === debit_credit_kinds.debit) {
+                obj._manager.emit('update', row, {indicator: true});
+              }
+            }
+          });
+        }
+      });
+  };
+
   return <>
-    <IconButton
+    <ToolbarMenu
       title="Выполнить раскрой стекла"
-      onClick={() => run2D(obj, setBackdrop)}
-    ><ViewQuiltIcon/></IconButton>
+      icon={<ViewQuiltIcon/>}
+      items={[
+        {text: 'Оптимизировать всё', action() {run2D(obj, setBackdrop, row, 'all')}},
+        {text: 'Текущую номенклатуру', action() {run2D(obj, setBackdrop, row, 'currentNom')}},
+        {text: 'Только на текущем листе', action() {run2D(obj, setBackdrop, row, 'currentScrap')}},
+      ]}
+    />
     <IconButton
       title="Добавить типовые заготовки"
       onClick={() => {
@@ -343,14 +389,15 @@ export default function Additions2DBtn({obj, setBackdrop}) {
         Promise.resolve().then(setBackdrop);
       }}
     ><LayersIcon/></IconButton>
-    <IconButton
-      title="Удалить данные оптимизации раскроя"
-      onClick={() => {
-        setBackdrop(true);
-        obj.reset_sticks();
-        Promise.resolve().then(setBackdrop);
-      }}
-    ><LayersClearIcon/></IconButton>
+    <ToolbarMenu
+      title="Удалить данные оптимизации"
+      icon={<LayersClearIcon/>}
+      items={[
+        {text: 'Полностью', action() {reset_sticks('all')}},
+        {text: 'Текущей номенклатуры', action() {reset_sticks('currentNom')}},
+        {text: 'Только на текущем листе', action() {reset_sticks('currentScrap')}},
+      ]}
+    />
 
   </>;
 }
