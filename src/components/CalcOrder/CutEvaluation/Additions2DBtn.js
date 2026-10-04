@@ -83,7 +83,8 @@ function run2D(obj, setBackdrop) {
               scrapsOut: [],
               products: [],
             };
-          }
+          },
+          status: 400,
         };
       }
       if(!params.options) {
@@ -108,24 +109,25 @@ function run2D(obj, setBackdrop) {
     })
       .then(async (res) => {
         const {body, headers, status, statusText} = res;
-        if (status > 200) {
-
+        const contentType = headers?.get('content-type');
+        if (status > 200 || contentType.includes('application/json')) {
+          return res.json();
         }
-        const boundary = headers.get('content-type').split('boundary=')[1];
-        let chunks = [];
+        const boundary = contentType.split('boundary=')[1];
+        let chunks = '';
         const stream = body.pipeThrough(new TextDecoderStream('utf-8', {fatal: true}));
         const reader = stream.getReader();
         for (;;) {
           const {done, value} = await reader.read();
           if (done) {
-            const last = chunks[chunks.length-1].split(`\r\n\r\n`)[1].replace(`--${boundary}--`, '');
-            return JSON.parse(last);
+            const data = chunks.split(`--${boundary}`)[1].split(`\r\n\r\n`)[1];
+            return JSON.parse(data);
           }
           if(value.startsWith('proc:')) {
             setBackdrop(parseFloat(value.substring(5).trimEnd()));
           }
           else {
-            chunks.push(value);
+            chunks += value;
           }
         }
       })
