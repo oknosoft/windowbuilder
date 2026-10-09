@@ -4,6 +4,7 @@ import Typography from '@material-ui/core/Typography';
 import ViewQuiltIcon from '@material-ui/icons/ViewQuilt';
 import LayersClearIcon from '@material-ui/icons/LayersClear';
 import LayersIcon from '@material-ui/icons/Layers';
+import BackspaceIcon from '@material-ui/icons/Backspace';
 import {debit, credit} from './Additions2DCutsOut';
 import {ToolbarMenu} from './ToolbarMenu';
 
@@ -345,7 +346,7 @@ function setSticks({obj, data, record}) {
   return utils.sleep(1000);
 }
 
-export default function Additions2DBtn({obj, setBackdrop, row, mode}) {
+export default function Additions2DBtn({obj, setBackdrop, setRow, row, mode}) {
 
   const reset_sticks = (what) => {
     if(!row && (what === 'currentNom' || what === 'currentScrap')) {
@@ -380,6 +381,61 @@ export default function Additions2DBtn({obj, setBackdrop, row, mode}) {
       });
   };
 
+  const exclude = (what) => {
+    if(!row) {
+      return dialogs.alert({
+        title: 'Удалить из задания',
+        text: 'Укажите строку изделия или обрези',
+      });
+    }
+    setBackdrop(true);
+    let {nom, stick} = row;
+    if(!stick) {
+      stick = -1;
+    }
+    const rm = [], keys = [];
+    for(const row of obj.cutting) {
+      let push;
+      if(what === 'currentNom' ? row.nom === nom : row.stick === stick) {
+        push = true;
+      }
+      if(push) {
+        rm.push(row);
+        if(!row.obj.empty()) {
+          keys.push(row.obj);
+        }
+      }
+    }
+    for(const row of rm) {
+      obj.cutting.del(row);
+    }
+    rm.length = 0;
+    for(const row of obj.set) {
+      if(keys.includes(row.obj)) {
+        rm.push(row);
+      }
+    }
+    for(const row of rm) {
+      obj.set.del(row);
+    }
+    rm.length = 0;
+    for(const row of obj.cuts) {
+      if(what === 'currentNom') {
+        if(row.nom === nom) {
+          rm.push(row);
+        }
+      }
+      else if(row.stick === stick) {
+        row.dop = {svg: '', rez: null};
+      }
+    }
+    for(const row of rm) {
+      obj.cuts.del(row);
+    }
+    setRow?.(null);
+    setBackdrop(false);
+  };
+
   return <>
     <ToolbarMenu
       title="Выполнить раскрой стекла"
@@ -407,6 +463,15 @@ export default function Additions2DBtn({obj, setBackdrop, row, mode}) {
         {text: 'Только на текущем листе', action() {reset_sticks('currentScrap')}},
       ]}
     />
+    {mode === 'cuts' ? <ToolbarMenu
+      title="Исключить из задания"
+      icon={<BackspaceIcon/>}
+      items={[
+        {text: 'Изделия текущей номенклатуры', action() {exclude('currentNom')}},
+        {text: 'Изделия на текущем листе', action() {exclude('currentScrap')}},
+      ]}
+    /> : null}
+
 
   </>;
 }

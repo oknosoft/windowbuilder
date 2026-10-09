@@ -54,7 +54,7 @@ export default function Additions2DCutsIn({obj, div}) {
         denyReorder
         onCellSelected={selectedRowsChange}
         //rowSelection={rowSelection}
-        btns={<Additions2DBtn obj={obj} setBackdrop={setBackdrop} row={row} mode="cuts" />}
+        btns={<Additions2DBtn obj={obj} setBackdrop={setBackdrop} row={row} setRow={setRow} mode="cuts" />}
       />
     </ResizeHorizon>
     <ResizeHorizon overflow="hidden auto" width={`${(clientWidth * 4/12).toFixed()}px`} minWidth="200px">
