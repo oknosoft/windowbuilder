@@ -1,5 +1,5 @@
 
-const {enm: {inserts_types}, cat: {inserts}, cch, doc: {calc_order}, current_user, job_prm, utils, EditorInvisible, ui: {dialogs}} = $p;
+const {enm: {inserts_types, inserts_glass_types}, cat: {inserts}, cch, doc: {calc_order}, current_user, job_prm, utils, EditorInvisible, ui: {dialogs}} = $p;
 
 // доступные типы вставок
 export const itypes = [inserts_types.glass, inserts_types.composite];
@@ -9,11 +9,21 @@ const ioptions = [];
 const ilist = [];
 const sublist = [];
 const initFill = async () => {
+  const iglt = [
+    inserts_glass_types.get(),
+    inserts_glass_types.glass,
+    inserts_glass_types.glass_clr,
+    inserts_glass_types.glass_energy,
+    inserts_glass_types.glass_ft,
+    inserts_glass_types.glass_heating,
+    inserts_glass_types.glass_tempered,
+    inserts_glass_types.triplex,
+  ];
   inserts.find_rows({insert_type: {in: itypes}, _top: 10e6}, (o) => {
     if(o.available) {
       ioptions.push(o);
     }
-    if(o.insert_glass_type.empty() || o.insert_glass_type.is('Заполнение')) {
+    if(iglt.includes(o.insert_glass_type)) {
       ilist.push(o);
     }
     if(!o.insert_glass_type.empty()) {
