@@ -8,23 +8,29 @@ import TableRow from '@material-ui/core/TableRow';
 
 function calcStat(obj) {
   const stat = new Map();
-  for(const row of obj.cuts) {
-    if(!stat.has(row.nom)) {
-      stat.set(row.nom, {
-        debit: {count: 0, area: 0},
-        credit: {count: 0, area: 0},
-        product: {count: 0, area: 0},
-      });
-    }
-    const res = stat.get(row.nom);
-    const mark = row.record_kind.is('debit') ? res.debit : res.credit;
-    mark.count += 1;
-    mark.area += row.len * row.width / 1e6;
-  }
+  const sticks = new Set();
   for(const row of obj.cutting) {
-    const res = stat.get(row.nom);
-    res.product.count += 1;
-    res.product.area += row.len * row.width / 1e6;
+    if(row.stick) {
+      sticks.add(row.stick);
+      if(!stat.has(row.nom)) {
+        stat.set(row.nom, {
+          debit: {count: 0, area: 0},
+          credit: {count: 0, area: 0},
+          product: {count: 0, area: 0},
+        });
+      }
+      const res = stat.get(row.nom);
+      res.product.count += 1;
+      res.product.area += (row.alp1 || row.len * row.width) / 1e6;
+    }
+  }
+  for(const row of obj.cuts) {
+    if(sticks.has(row.stick)) {
+      const res = stat.get(row.nom);
+      const mark = row.record_kind.is('debit') ? res.debit : res.credit;
+      mark.count += 1;
+      mark.area += row.len * row.width / 1e6;
+    }
   }
   for(const [nom, res] of stat) {
     res.useArea = res.debit.area - res.credit.area;

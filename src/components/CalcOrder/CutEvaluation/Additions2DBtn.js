@@ -208,6 +208,7 @@ function setSticks({obj, data, record}) {
         };
         const path = new Path(pathAttr);
         path.closePath();
+        product.dop.area = path.area;
         if(product.info) {
           const center = pathAttr.segments.reduce((sum, curr) => ({
             x: sum.x + curr.x,
@@ -316,14 +317,21 @@ function setSticks({obj, data, record}) {
       throw new Error(`Нет отрезка №${row.id}`);
     }
     docRow.stick = sticksMap.get(row.stick);
-    if(row.length === row.height) {
-      docRow.rotated = false;
-    }
-    else if(docRow.width === row.height && docRow.len === row.length) {
-      docRow.rotated = true;
+    if(row.dop?.segments) {
+      docRow.rotated = row.rotate;
+      docRow.alp1 = row.dop.area;
     }
     else {
-      docRow.rotated = false;
+      docRow.alp1 = 0;
+      if(row.length === row.height) {
+        docRow.rotated = false;
+      }
+      else if(docRow.width === row.height && docRow.len === row.length) {
+        docRow.rotated = true;
+      }
+      else {
+        docRow.rotated = false;
+      }
     }
 
     docRow.x = row.x;
