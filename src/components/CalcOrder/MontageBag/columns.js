@@ -32,6 +32,6 @@ export const columns = {
   ],
   materials: [
     {key: 'nom', name: 'Материал', formatter: formatters.get('nom'), editor: RecentCell},
-    {key: 'qty', name: 'Колич.', width: 80, editor: SzEditor, formatter: formatters.get('qty')}
+    {key: 'totqty', name: 'Колич.', width: 80, editor: SzEditor, formatter: formatters.get('totqty')}
   ]
 };

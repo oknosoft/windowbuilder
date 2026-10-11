@@ -29,7 +29,7 @@ export default function Materials({prodRow, dialogRef}) {
   };
 
   const add = () => {
-    const row = prodRow.characteristic.specification.add({qty: 1});
+    const row = prodRow.characteristic.specification.add({qty: 1, totqty: 1, totqty1: 1});
     const newRows = [...rows, row];
     setRows(newRows);
     select(row, newRows.length - 1, true);
@@ -81,13 +81,10 @@ export default function Materials({prodRow, dialogRef}) {
     if(row) {
       const {_manager} = row;
       const update = (o, flds) => {
-        if(o === row && ('qty' in flds || 'nom' in flds)) {
+        if(o === row && ('totqty' in flds || 'nom' in flds)) {
           const {_obj, _owner} = row;
-          _obj.totqty = 0;
-          _obj.totqty1 = 0;
-          calc_count_area_mass(row, row._owner);
-          const {quantity} = prodRow;
-          prodRow.value_change('quantity', null, quantity);
+          _obj.totqty1 = _obj.totqty;
+          prodRow.value_change('quantity', null, prodRow.quantity);
         }
       };
       _manager.on({update});
