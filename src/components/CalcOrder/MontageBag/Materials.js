@@ -5,8 +5,6 @@ import {columns} from './columns';
 import {gridContext} from './Production';
 import {ByInset} from './ByInset';
 
-const {calc_count_area_mass} = $p.ProductsBuilding;
-
 export default function Materials({prodRow, dialogRef}) {
   const [rows, setRows, gridElement] = gridContext();
   const [row, setRow] = React.useState(null);

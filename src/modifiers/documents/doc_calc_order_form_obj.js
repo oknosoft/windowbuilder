@@ -506,6 +506,9 @@
       case 'btn_bag':
         return o.montageBag({interactive: true, wnd});
 
+      case 'min_volumes':
+        return o.minVolumes(wnd);
+
       case 'cut_evaluation':
       case 'cut_evaluation_2d':
         cut_evaluation(btn_id === 'cut_evaluation_2d');

@@ -20,7 +20,7 @@ for(const o of cat.nom) {
 all.sort(utils.sort('name'));
 export {product, predefined, folders, all, montage_bag_insets as insets};
 
-const RecentCell = componentWrapper(predefined, all);
+const RecentCell = componentWrapper(predefined, all, 'montage_bag');
 
 export const columns = {
   production: [

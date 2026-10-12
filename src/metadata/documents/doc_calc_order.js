@@ -188,6 +188,7 @@ export default function ($p) {
   Promise.all([
     import('../../components/CalcOrder/ImportGlasses'),
     import('../../components/CalcOrder/MontageBag'),
+    import('../../components/CalcOrder/MinVolume'),
     import('./doc_calc_order_contract_department'),
   ])
     .then((modules) => {

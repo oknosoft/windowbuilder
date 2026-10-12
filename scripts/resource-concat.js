@@ -79,5 +79,5 @@ module.exports = function (fileName, converter) {
 		cb();
 	}
 
-	return through.obj(bufferContents, endStream);
+	return through.objectTransform(bufferContents, endStream);
 };

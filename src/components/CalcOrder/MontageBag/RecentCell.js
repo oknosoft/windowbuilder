@@ -12,10 +12,10 @@ import Dialog from 'metadata-react/App/Dialog';
 const {EditorBase} = DataGrid.editors;
 
 
-export function componentWrapper(predefined, all) {
+export function componentWrapper(predefined, all, key) {
 
   const {cat, dp, wsql, utils, job_prm} = $p;
-  const search = new CachedSearch({mgr: cat.nom, wsql, key: 'montage_bag', limit: 10, predefined});
+  const search = new CachedSearch({mgr: cat.nom, wsql, key, limit: 10, predefined});
   const _owner =  {
     _meta: utils._clone(dp.buyers_order.metadata('nom'))
   };
