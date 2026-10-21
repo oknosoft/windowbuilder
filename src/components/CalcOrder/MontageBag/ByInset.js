@@ -56,11 +56,14 @@ export function ByInset({rows, prodRow, setRows, setRow, select}) {
           }
           render.push(<LinkedProp key={index} param={param} inset={inset} _obj={prow} fields={fields}/>);
         });
-        await dialogs.input_value({
+        const input_res = await dialogs.input_value({
           title: 'Уточните параметры авторасчёта',
           render: <div style={{margin: '8px'}}>{render}</div>,
           timeout: 90000,
-        }).catch(e => null);
+        }).catch(e => false);
+        if(input_res === false) {
+          return;
+        }
       }
       ox.specification.clear({specify: inset});
       ox.specification.clear({nom: job_prm.nom.montage_bag_error});
