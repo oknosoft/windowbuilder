@@ -10,7 +10,7 @@
     "node": ">=24.20",
     "pnpm": ">=12"
   },
-  "packageManager": "pnpm@12.14.0",
+  "packageManager": "pnpm@12.16.1",
   "keywords": [
     "metadata",
     "order dealer",
@@ -81,7 +81,7 @@
     "react-window": "^1.8.11",
     "react-window-infinite-loader": "^1.0.10",
     "url-join": "^5.0",
-    "wb-core": "github:oknosoft/windowbuilder-core#9f3b0d1f0e8f32fbd8e2f46864efd1f980863105",
+    "wb-core": "github:oknosoft/windowbuilder-core#75c30859238ff52feb415d5fc0cb68ce3db93da9",
     "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
     "wb-forms": "github:oknosoft/windowbuilder-forms#bd302666132af8b9238a2747268eccb66bb5e1a5",
     "yamljs": "^0.3"
