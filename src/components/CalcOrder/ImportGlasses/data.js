@@ -349,6 +349,8 @@ export const execute = async ({obj, text, wnd, flipFormula, triangles, flipTrian
         rowProd.characteristic.before_save({});
         rowProd.characteristic._modified = true;
         rowProd.s = rowProd.characteristic.s;
+        rowProd.len = rowProd.characteristic.x;
+        rowProd.width = rowProd.characteristic.y;
         unloadEditor(editor);
       }
       else {
