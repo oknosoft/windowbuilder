@@ -35,7 +35,8 @@
      * @param source
      */
     if(!_meta_patched) {
-      (function (source, user) {
+      (function (meta, user) {
+        const source = meta.form.obj.tabular_sections.production;
         // TODO: штуки сейчас спрятаны в ro и имеют нулевую ширину
         if($p.wsql.get_user_param('hide_price_dealer')) {
           source.headers = '№,Номенклатура,Характеристика,Комментарий,Штук,Длина,Высота,Площадь,Колич.,Ед,Скидка,Цена,Сумма,Скидка&nbsp;дил,Цена&nbsp;дил,Сумма&nbsp;дил';
@@ -60,9 +61,19 @@
           source.types = 'cntr,ref,ref,txt,ro,ro,ro,ro,calck,ref,ro,calck,ro,calck,calck,ro';
         }
 
+        const {fields} = meta.tabular_sections.production;
+        fields.nom_group = {
+          choice_groups_elm: 'elm',
+          synonym: 'Ном. группа',
+          type: {
+            is_ref: true,
+            types: ['cat.nom_groups'],
+          }
+        };
+
         _meta_patched = true;
 
-      })($p.doc.calc_order.metadata().form.obj.tabular_sections.production, $p.current_user);
+      })(_mgr.metadata(), $p.current_user);
     }
 
     attr.draw_tabular_sections = (o, wnd, tabular_init) => {
@@ -558,6 +569,10 @@
         show_discount();
         break;
 
+      case 'btn_nom_groups':
+        show_nom_groups();
+        break;
+
       case 'btn_go_connection':
         go_connection();
         break;
@@ -723,6 +738,36 @@
       if(!wnd.elmnts.discount) {
         wnd.elmnts.discount = $p.dp.buyers_order.create();
       }
+
+      function refill_discount(dp) {
+
+        if(!dp._mode) {
+          dp._disable_internal = !$p.current_user.role_available('РедактированиеСкидок');
+          dp._mode = dp._disable_internal ? 'discount_percent_internal' : 'discount_percent';
+          dp._calc_order = o;
+        }
+
+        const {charges_discounts} = dp;
+        const groups = new Set();
+        dp._data._loading = true;
+        charges_discounts.clear();
+        o.production.forEach((row) => {
+          const group = {nom_kind: row.nom.nom_kind};
+          if(!groups.has(group.nom_kind)) {
+            groups.add(group.nom_kind);
+            charges_discounts.add(group);
+          }
+          charges_discounts.find_rows(group, (sub) => {
+            const percent = row[dp._mode];
+            if(percent > sub.discount_percent) {
+              sub.discount_percent = percent;
+            }
+          });
+        });
+        dp._data._loading = false;
+        dp._manager.emit_async('rows', dp, {'charges_discounts': true});
+      }
+
       // перезаполняем
       refill_discount(wnd.elmnts.discount);
 
@@ -763,33 +808,60 @@
       toolbar.setItemText('bs', toolbar.getListOptionText('bs', wnd.elmnts.discount._mode));
     }
 
-    function refill_discount(dp) {
+    function show_nom_groups() {
 
-      if(!dp._mode) {
-        dp._disable_internal = !$p.current_user.role_available('РедактированиеСкидок');
-        dp._mode = dp._disable_internal ? 'discount_percent_internal' : 'discount_percent';
-        dp._calc_order = o;
+      if(!wnd.elmnts.discount) {
+        wnd.elmnts.discount = $p.dp.buyers_order.create();
       }
 
-      const {charges_discounts} = dp;
-      const groups = new Set();
-      dp._data._loading = true;
-      charges_discounts.clear();
-      o.production.forEach((row) => {
-        const group = {nom_kind: row.nom.nom_kind};
-        if(!groups.has(group.nom_kind)) {
-          groups.add(group.nom_kind);
-          charges_discounts.add(group);
-        }
-        charges_discounts.find_rows(group, (sub) => {
-          const percent = row[dp._mode];
-          if(percent > sub.discount_percent) {
-            sub.discount_percent = percent;
-          }
-        });
+      // перезаполняем
+      const {production} = wnd.elmnts.discount;
+      wnd.elmnts.discount._data._loading = true;
+      production.clear();
+      for(const row of o.production) {
+        production.add({
+          nom: row.nom.valueOf(),
+          characteristic: row.characteristic.valueOf(),
+          nom_group: row.nom_group.valueOf(),
+        })
+      }
+      wnd.elmnts.discount._data._loading = false;
+      wnd.elmnts.discount._manager.emit_async('rows', wnd.elmnts.discount, {'production': true});
+
+      const discount = $p.iface.dat_blank(null, {
+        width: 720,
+        height: 400,
+        allow_close: true,
+        allow_minmax: false,
+        caption: 'Номгруппы строк заказа',
       });
-      dp._data._loading = false;
-      dp._manager.emit_async('rows', dp, {'charges_discounts': true});
+      discount.setModal(true);
+      discount.attachTabular({
+        obj: wnd.elmnts.discount,
+        ts: 'production',
+        reorder: false,
+        disable_add_del: true,
+        toolbar_struct: $p.injected_data['toolbar_nom_groups.xml'],
+        ts_captions: {
+          'fields': ['characteristic', 'nom_group'],
+          'headers': 'Продукция,Ном.группа',
+          'widths': '*,*',
+          'min_widths': '200,120',
+          'aligns': '',
+          'sortings': 'na,na',
+          'types': 'ro,ref'
+        },
+      });
+      const toolbar = discount.getAttachedToolbar();
+      toolbar.attachEvent('onclick', (btn) => {
+        for(const nrow of production) {
+          const row = o.production.get(nrow.row - 1);
+          if(nrow.nom_group !== row.nom_group) {
+            row.nom_group = nrow.nom_group;
+          }
+        }
+        discount.close();
+      });
     }
 
 

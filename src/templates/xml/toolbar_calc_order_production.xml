@@ -23,6 +23,7 @@
   <item type="button" id="btn_edit" text="&lt;i class='fa fa-object-ungroup fa-fw'&gt;&lt;/i&gt;" title="Редактировать изделие построителя" />
   <item type="button" id="btn_spec" text="&lt;i class='fa fa-table fa-fw'&gt;&lt;/i&gt;" title="Открыть спецификацию изделия" />
   <item type="button" id="btn_delete" text="&lt;i class='fa fa-times fa-fw'&gt;&lt;/i&gt;" title="Удалить строку заказа" />
+  <item type="button" id="btn_nom_groups" text="&lt;i class='fa fa-bar-chart fa-fw'&gt;&lt;/i&gt;" title="Ном.группы строк заказа"/>
   <item type="button" id="btn_discount" text="&lt;i class='fa fa-percent fa-fw'&gt;&lt;/i&gt;" title="Скидки по типам строк заказа"/>
   <item id="sep1" type="separator"/>
 

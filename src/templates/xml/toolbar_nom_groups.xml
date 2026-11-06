@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding='utf-8'?>
+<toolbar>
+  <item id="btn_apply_nom_groups" type="button" text="Применить" title="Записать номгруппы в заказ"  />
+</toolbar>
