@@ -298,7 +298,7 @@
 
               // табчасть продукции со специфическим набором кнопок
               attr.tabular_init('production', $p.injected_data['toolbar_calc_order_production.xml'], footer);
-              attr.tabular_init('links');
+              //attr.tabular_init('links');
               //attr.tabular_init('planning');
 
               const {production} = wnd.elmnts.grids;
@@ -327,20 +327,6 @@
               //toolbar = wnd.elmnts.tabs.tab_planning.getAttachedToolbar();
               //toolbar.addButton('btn_fill_plan', 3, 'Заполнить');
               //toolbar.attachEvent('onclick', toolbar_click);
-
-              // табчасть связанных заказов
-              toolbar = wnd.elmnts.tabs.tab_links.getAttachedToolbar();
-              toolbar.removeItem('btn_add');
-              toolbar.removeItem('btn_delete');
-              if(o.basis.empty()) {
-                toolbar.addButton('btn_link_add', 0, 'Добавить');
-                toolbar.addButton('btn_link_del', 1, 'Удалить');
-                toolbar.addButton('btn_goto_linked', 2, 'Перейти к связанному');
-              }
-              else {
-                toolbar.addButton('btn_goto_basis', 0, 'Перейти к ведущему');
-              }
-              toolbar.attachEvent('onclick', toolbar_click);
 
               // подключаемые действия
               fill_btns(wnd);
@@ -625,26 +611,6 @@
         clone_calc_order(o);
         break;
 
-      case 'btn_link_add':
-        ui.dialogs.alert({
-          title: `Свободные заказы контрагента '${o.partner.name}'`,
-          timeout: 0,
-          Component: ui.CalcOrderLinkedSelect,
-          props: {obj: o},
-          //initFullScreen: true,
-          hide_btn: true,
-          //noSpace: true,
-        });
-        break;
-
-      case 'btn_link_del': {
-        const index = production_get_sel_index('links');
-        if(typeof index === 'number') {
-          o.links.del(index);
-        }
-        break;
-      }
-
       case 'btn_goto_basis':
         return (o._modified ? ui.dialogs.confirm({
           title: 'Связанные заказы',
@@ -652,17 +618,6 @@
           timeout: 10000,
         }) : Promise.resolve(true))
           .then(() => handlers.handleNavigate(`/?ref=${o.ref}&goto=${o.basis.ref}`));
-
-      case 'btn_goto_linked': {
-        const index = production_get_sel_index('links');
-        if(typeof index === 'number') {
-          const row = o.links.get(index);
-          if(row) {
-            handlers.handleNavigate(`/?ref=${o.ref}&goto=${row.calc_order.ref}`);
-          }
-        }
-        break;
-      }
 
       case 'btn_print':
         if(o._modified) {

@@ -176,8 +176,15 @@ function GlassToolbar({editor, elm, classes}) {
         <BorderHorizontalIcon/>
       </SmallButton>
     </Tip>
-    <Tip title="Уравнять">
-      <SmallButton disabled={!reflect_grp} onClick={(ev) => editor.glass_align('auto', null, ev.altKey || ev.ctrlKey || ev.shiftKey)}>
+    <Tip title={<>
+      <div style={{fontWeight: 'bold'}}>Уравнять:</div>
+      <div>{`{Shift} - по вертикали`}</div>
+      <div>{`{Ctrl} или {Alt} - геометрически`}</div>
+      <div>Если функциональные клавиши не зажаты - уравнивание по световому проёму</div>
+    </>}>
+      <SmallButton disabled={!reflect_grp} onClick={(ev) => {
+        editor.glass_align(ev.shiftKey ? 'height' : 'auto', null, ev.altKey || ev.ctrlKey)
+      }}>
         <OpenWithIcon/>
       </SmallButton>
     </Tip>
