@@ -81,7 +81,7 @@
     "react-window": "^1.8.11",
     "react-window-infinite-loader": "^1.0.10",
     "url-join": "^5.0",
-    "wb-core": "github:oknosoft/windowbuilder-core#52aca481d11b1be1c621950642001555cb8a6dea",
+    "wb-core": "github:oknosoft/windowbuilder-core#9590511e67d02f7864b373537b55b15f59561bca",
     "wb-cutting": "github:oknosoft/genetic-cutting#f1fa48a521b5850caa68f108622eb641c9b27a71",
     "wb-forms": "github:oknosoft/windowbuilder-forms#bd302666132af8b9238a2747268eccb66bb5e1a5",
     "yamljs": "^0.3"
