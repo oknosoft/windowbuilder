@@ -5,9 +5,9 @@ allowBuilds:
   es5-ext: false
 blockExoticSubdeps: false
 minimumReleaseAgeExclude:
-  - metadata-abstract-ui@2.0.41-beta.1
-  - metadata-core@2.0.41-beta.1
-  - metadata-dhtmlx@2.0.41-beta.1
-  - metadata-pouchdb@2.0.41-beta.1
-  - metadata-react@2.0.41-beta.1
-  - metadata-redux@2.0.41-beta.1
+  - metadata-abstract-ui@2.0.41-beta.1 || 2.0.41-beta.2
+  - metadata-core@2.0.41-beta.1 || 2.0.41-beta.2
+  - metadata-dhtmlx@2.0.41-beta.1 || 2.0.41-beta.2
+  - metadata-pouchdb@2.0.41-beta.1 || 2.0.41-beta.2
+  - metadata-react@2.0.41-beta.1 || 2.0.41-beta.2
+  - metadata-redux@2.0.41-beta.1 || 2.0.41-beta.2
