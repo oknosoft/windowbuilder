@@ -127,11 +127,15 @@ export function init(store) {
     });
 
     // читаем paperjs и deep-diff
-    $p.load_script(process.env.NODE_ENV === 'production' ?
-      '/dist/paperjs-deep-diff.min.js' : '/dist/paperjs-deep-diff.js', 'script')
+    $p.load_script('/dist/deep-diff.min.js', 'script')
+      .then(() => process.env.NODE_ENV === 'production' ?
+        import('paper/dist/paper-core.min.js') : import('paper/dist/paper-core.js'))
 
       // читаем базовый скрипт рисовалки
-      .then(() => import('wb-core/dist/drawer'))
+      .then((module) => {
+        window.paper = module.default;
+        return import('wb-core/dist/drawer');
+      })
 
       .then((module) => {
         module.default({$p, paper});

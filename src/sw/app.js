@@ -20,7 +20,7 @@ export default function () {
     {url: '/dist/dhtmlx.min.js', revision: persistent },
     {url: '/dist/windowbuilder.js', revision },
     {url: '/dist/wnd_debug.js', revision },
-    {url: '/dist/paperjs-deep-diff.min.js', revision: persistent },
+    {url: '/dist/deep-diff.min.js', revision: persistent },
     {url: '/dist/jszip.min', revision: persistent },
     {url: '/dist/xlsx.full.min', revision: persistent },
     {url: '/dist/docxtemplater.min.js', revision: persistent },
